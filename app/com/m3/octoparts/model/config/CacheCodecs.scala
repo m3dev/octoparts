@@ -5,21 +5,16 @@ import java.nio.charset.StandardCharsets
 import shade.memcached.Codec
 import shade.memcached.MemcachedCodecs.AnyRefBinaryCodec
 
-/**
- * Created by Lloyd on 9/4/14.
- */
 object CacheCodecs {
 
-  implicit def optionCodecFor[A: Codec]: Codec[Option[A]] = new Codec[Option[A]] {
-    def serialize(value: Option[A]): Array[Byte] = value.fold("None".getBytes(StandardCharsets.UTF_8)) { v =>
-      implicitly[Codec[A]].serialize(v)
-    }
+  private val NoneStringBytes: Array[Byte] = None.toString.getBytes(StandardCharsets.UTF_8)
 
-    def deserialize(data: Array[Byte]): Option[A] = if (new String(data, StandardCharsets.UTF_8) == "None") {
-      None
-    } else {
-      Some(implicitly[Codec[A]].deserialize(data))
-    }
+  implicit def optionCodecFor[A: Codec]: Codec[Option[A]] = new Codec[Option[A]] {
+    def serialize(value: Option[A]): Array[Byte] =
+      value.fold(NoneStringBytes)(implicitly[Codec[A]].serialize)
+
+    def deserialize(data: Array[Byte]): Option[A] =
+      if (data == NoneStringBytes) None else Some(implicitly[Codec[A]].deserialize(data))
   }
 
   implicit val cacheGroupCodec = AnyRefBinaryCodec[CacheGroup]
