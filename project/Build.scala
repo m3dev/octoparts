@@ -194,15 +194,6 @@ object OctopartsBuild extends Build {
   )
 
   // -------------------------------------------------------
-  // M3 OpenID implementation of the authentication plugin
-  // -------------------------------------------------------
-  lazy val m3openidPlugin = Project(id = "m3-openid-plugin", base = file("plugins/m3-openid"), settings = commonSettings).settings(
-    libraryDependencies ++= Seq(
-      ws
-    )
-  ).dependsOn(authPluginApi)
-
-  // -------------------------------------------------------
   // Model classes
   // -------------------------------------------------------
   lazy val models = Project(id = "models", base = file("models"), settings = nonPlayAppSettings)
