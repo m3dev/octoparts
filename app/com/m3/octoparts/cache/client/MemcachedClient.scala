@@ -39,7 +39,7 @@ class MemcachedClient(
 
     import shade.memcached.MemcachedCodecs.AnyRefBinaryCodec
 
-    val partResponseCodec = AnyRefBinaryCodec[PartResponse]
+    private val partResponseCodec = AnyRefBinaryCodec[PartResponse]
 
     def pollPartResponse(cacheKey: PartCacheKey) = memcachedAccessor.doGet[PartResponse](cacheKey)
 

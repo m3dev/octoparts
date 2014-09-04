@@ -4,13 +4,14 @@ import com.m3.octoparts.cache.client.CacheAccessor
 import com.m3.octoparts.cache.key.{ CacheGroupCacheKey, CacheKey, HttpPartConfigCacheKey }
 import com.m3.octoparts.http.HttpClientPool
 import play.api.Logger
-import shade.memcached.MemcachedCodecs._
+import shade.memcached.Codec
 import skinny.util.LTSV
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.postfixOps
 import scala.util.control.NonFatal
+import com.m3.octoparts.model.config.CacheCodecs._
 
 trait CachingRepository extends ConfigsRepository {
   implicit def executionContext: ExecutionContext
@@ -27,7 +28,7 @@ trait CachingRepository extends ConfigsRepository {
   /**
    * Generic method for putting something into cache using any kind of identifier
    */
-  def put[A](cacheKey: CacheKey, maybeCacheable: Option[A]): Future[Unit] = {
+  def put[A: Codec](cacheKey: CacheKey, maybeCacheable: Option[A]): Future[Unit] = {
     cacheAccessor.doPut(cacheKey, maybeCacheable, Some(Duration.Inf)).recover {
       // no need to propagate cache put errors
       case NonFatal(cacheFailure) =>
@@ -52,7 +53,7 @@ trait CachingRepository extends ConfigsRepository {
    * Given a function that returns a Future Sequence of A and a function that turns
    * each A into a CacheKey, performs a find-and-cache
    */
-  private def findAllAndCache[A](findAll: => Future[Seq[A]])(cacheKey: A => CacheKey): Future[Seq[Unit]] = {
+  private def findAllAndCache[A: Codec](findAll: => Future[Seq[A]])(cacheKey: A => CacheKey): Future[Seq[Unit]] = {
     for {
       seq <- findAll
       seqFPut <- Future.sequence(seq.map(obj => put(cacheKey(obj), Some(obj))))
@@ -83,7 +84,7 @@ trait CachingRepository extends ConfigsRepository {
    * cache-fetch miss, fetch2 finishes with an error and we end up trying to do another fetch from
    * the database but that is hard to side-step (and might not be such a bad thing)
    */
-  private def fetchFromCacheOrElse[A, B](identifier: A)(notFromCacheFind: A => Future[Option[B]], cacheKey: A => CacheKey): Future[Option[B]] = {
+  private def fetchFromCacheOrElse[A, B: Codec](identifier: A)(notFromCacheFind: A => Future[Option[B]], cacheKey: A => CacheKey): Future[Option[B]] = {
     cacheAccessor.doGet[Option[B]](cacheKey(identifier)).flatMap {
       _.fold {
         val fMaybeDBConfig = notFromCacheFind(identifier)

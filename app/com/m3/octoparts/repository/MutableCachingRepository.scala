@@ -3,7 +3,8 @@ package com.m3.octoparts.repository
 import com.m3.octoparts.cache.client.CacheAccessor
 import com.m3.octoparts.cache.key.HttpPartConfigCacheKey
 import com.m3.octoparts.http.HttpClientPool
-import com.m3.octoparts.model.config.ConfigModel
+import com.m3.octoparts.model.config.{ HttpPartConfig, ConfigModel }
+import com.m3.octoparts.model.config.CacheCodecs._
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -25,7 +26,7 @@ class MutableCachingRepository(
       configs <- findAllConfigs()
       deletedCount <- deleteAllConfigs() //This runs after findAllConfigs
     } yield {
-      configs.foreach(c => put(HttpPartConfigCacheKey(c.partId), None))
+      configs.foreach(c => put[Option[HttpPartConfig]](HttpPartConfigCacheKey(c.partId), None))
       deletedCount
     }
   }
@@ -33,7 +34,7 @@ class MutableCachingRepository(
   def deleteConfigByPartId(partId: String): Future[Int] = reloadCacheAfter {
     for {
       deletedCount <- delegate.deleteConfigByPartId(partId)
-      _ <- put(HttpPartConfigCacheKey(partId), None)
+      _ <- put[Option[HttpPartConfig]](HttpPartConfigCacheKey(partId), None)
     } yield deletedCount
   }
 
