@@ -187,7 +187,8 @@ object OctopartsBuild extends Build {
   // -------------------------------------------------------
   // Interface for authentication plugins
   // -------------------------------------------------------
-  lazy val authPluginApi = Project(id = "auth-plugin-api", base = file("plugins/auth-plugin-api"), settings = commonSettings).settings(
+  lazy val authPluginApi = Project(id = "auth-plugin-api", base = file("plugins/auth-plugin-api"), settings = nonPlayAppSettings).settings(
+    name := "octoparts-auth-plugin-api",
     libraryDependencies ++= Seq(
       "com.typesafe.play" %% "play" % thePlayVersion % "provided"
     )
@@ -251,7 +252,7 @@ object OctopartsBuild extends Build {
   lazy val app = Project(id = "octoparts", base = file("."), settings = playAppSettings)
     .enablePlugins(PlayScala)
     .dependsOn(models, authPluginApi)
-    .aggregate(scalaWsClient, javaClient, models)
+    .aggregate(scalaWsClient, javaClient, models, authPluginApi)
 
   // Settings for publishing to Maven Central
   lazy val publishSettings = Seq(
