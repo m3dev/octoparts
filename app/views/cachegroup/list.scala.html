@@ -1,0 +1,50 @@
+@(cacheGroups: Seq[com.m3.octoparts.model.config.CacheGroup])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
+
+@views.html.adminlayout(Messages("cacheGroups.list")) {
+    <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.css" />
+    <style type="text/css">
+    <!--
+    th {
+        font-weight:bold;
+    }
+    form {
+        display:inline;
+    }
+    -->
+    </style>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    @views.html.datatables()
+} {
+
+    <a href="@controllers.routes.AdminController.newCacheGroup" class="btn btn-primary" style="margin: 5px 0;">@Messages("cacheGroups.create")</a>
+
+    <table class="dataTable">
+        <thead>
+            <tr>
+                <th>@Messages("cacheGroups.name")</th>
+                <th>@Messages("cacheGroups.description")</th>
+                <th>@Messages("cacheGroups.owner")</th>
+                <th>@Messages("cacheGroups.numParts")</th>
+                <th>@Messages("cacheGroups.numParameters")</th>
+                <th>@Messages("action")</th>
+            </tr>
+        </thead>
+        <tbody>
+        @for(group <- cacheGroups) {
+            <tr>
+                <td>@group.name</td>
+                <td>@group.description</td>
+                <td>@group.owner</td>
+                <td>@group.httpPartConfigs.size</td>
+                <td>@group.partParams.size</td>
+                <td width="150px">
+                    <a href="@controllers.routes.AdminController.editCacheGroup(group.name)" class="btn btn-primary">@Messages("edit")</a>
+                    <form action="@controllers.routes.AdminController.deleteCacheGroup(group.name)" method="post">
+                        <input type="submit" value="@Messages("delete")" class="btn btn-danger" />
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}

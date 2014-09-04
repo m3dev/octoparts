@@ -1,0 +1,43 @@
+- name: Install Posgres
+  yum: name={{item}} state=installed
+  with_items:
+    - postgresql93
+    - postgresql93-devel
+    - postgresql93-server
+    - python-psycopg2
+
+- name: Initialize Postgres
+  command: /sbin/service postgresql-9.3 initdb creates=/var/lib/pgsql/9.3/data/base
+
+- name: Start Postgres
+  service: name=postgresql-9.3 state=started enabled=yes
+
+- name: Add development and development test databases
+  sudo_user: postgres
+  postgresql_db: name={{item}}
+  with_items:
+    - "{{ db_name }}"
+    - "{{ db_name }}_test"
+
+- name: Ensure user has access to databases
+  sudo_user: postgres
+  postgresql_user: db={{item}} name={{db_user}} password={{db_password}} priv=ALL
+  with_items:
+    - "{{ db_name }}"
+    - "{{ db_name }}_test"
+
+- name: Ensure user does not have unnecessary privilege
+  sudo_user: postgres
+  postgresql_user: name={{db_user}} role_attr_flags=NOSUPERUSER,NOCREATEDB
+
+- name: Customise pg_hba.conf to allow password connect and allow connections from addresses to all connections
+  copy: >
+    src=hba_conf dest=/var/lib/pgsql/9.3/data/pg_hba.conf
+    owner=root group=root mode=755
+  notify: Restart Postgres
+
+- name: Customise postgresql.conf to listen to all addresses
+  copy: >
+    src=postgres dest=/var/lib/pgsql/9.3/data/postgresql.conf
+    owner=root group=root mode=755
+  notify: Restart Postgres

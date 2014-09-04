@@ -1,0 +1,14 @@
+{
+    "template": "octoparts_partrequests*",
+    "settings": {
+        "number_of_replicas": 0
+    },
+    "mappings": {
+        "partrequests": {
+            "properties": {
+                "timeoutMs": { "type": "integer" },
+                "responseMs": { "type": "integer" }
+            }
+        }
+    }
+}

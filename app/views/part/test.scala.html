@@ -1,0 +1,107 @@
+@(part: presentation.HttpPartConfigView)(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
+
+@metaProps = @{Seq("serviceId", "userId", "sessionId", "requestUrl", "userAgent")}
+
+@views.html.adminlayout(Messages("tryIt.title", part.partId)) {
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/jquery.validationEngine.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/languages/jquery.validationEngine-@{lang.language}.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/validationEngine.jquery.min.css"/>
+    <script type="text/javascript">
+        $(function(){
+            var form = $("#tryItForm");
+            $("#goButton").click(function(e) {
+                var ts = Date.now();
+                var aggjson = {
+                    "requestMeta": {
+                        "id": "tryIt-" + ts
+                    },
+                    "requests": [{
+                        "partId": '@part.partIdJs',
+                        "params": []
+                    }]
+                };
+                @for(metaProp <- metaProps) {
+                    aggjson.requestMeta['@metaProp'] = form.find('input[name="meta.@metaProp"]').val();
+                }
+                var params = aggjson.requests[0].params;
+                @for(param <- part.editableParamsView) {
+                    var paramName = '@param.inputNameJs';
+                    if (!form.find('input[name="dis_' + paramName + '"]').is(':checked')) {
+                        params.push({
+                            "key" : paramName,
+                            "value" : form.find ( 'input[name="in_' + paramName + '"]' ).val ( )
+                        });
+                    }
+                }
+                var postBody = JSON.stringify(aggjson);
+                $.ajax({
+                    type: "POST",
+                    url: "@controllers.routes.PartsController.retrieveParts",
+                    contentType : 'application/json',
+                    dataType: 'json',
+                    cache: true,
+                    async: false,
+                    data: postBody,
+                    success: function (data, textStatus, jqXHR) {
+                    $("#response").val(JSON.stringify(data, null, "\t"))
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        alert("Octoparts " + textStatus + ": " + errorThrown)
+                    }
+                });
+            });
+        });
+    </script>
+} {
+
+    <h1>@Messages("tryIt.title", part.partId)</h1>
+    <form id="tryItForm">
+        @if(part.editableParamsView.nonEmpty) {
+            <fieldset>
+                <legend>@Messages("parts.parameter")</legend>
+                @for(param <- part.editableParamsView) {
+                    <div class="form-group">
+                        <label for="id" class="col-sm-2 control-label @param.requiredCls">@param.name</label>
+                        <div class="row">
+                            <div class="col-sm-5">
+                                <input type="text" name="in_@param.param.inputName" id="in_@param.param.inputName" class="form-control@if(param.required) { validate[required] }" />
+                                @Messages("tryIt.disable") <input type="checkbox" name="dis_@param.param.inputName" />
+                            </div>
+                        </div>
+                    </div>
+                }
+            </fieldset>
+        }
+
+        <fieldset>
+            <legend>@Messages("tryIt.meta")</legend>
+            @for(metaProp <- metaProps) {
+                <div class="form-group">
+                    <label for="meta.@metaProp" class="col-sm-2 control-label">@metaProp</label>
+                    <div class="row">
+                        <div class="col-sm-5">
+                            <input name="meta.@metaProp" id="meta.@metaProp" type="text" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            }
+        </fieldset>
+    </form>
+
+    <hr/>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">&nbsp;</label>
+        <div class="row">
+            <div class="col-sm-5">
+                <button id="goButton" class="btn btn-primary btn-lg col-sm-3">@Messages("tryIt.send")</button>
+            </div>
+        </div>
+    </div>
+
+    <h2>@Messages("tryIt.response")</h2>
+    <textarea id="response" style="width:100%; overflow: auto" rows="20"></textarea>
+    <br />
+    <button id="clear" onclick="$('#response').val('')" class="btn btn-default">@Messages("tryIt.clear")</button>
+
+}

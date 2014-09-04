@@ -1,0 +1,3 @@
+---
+host_war_path: ../../../../hystrix_dashboard/hystrix-dashboard-1.3.9.war
+context: dashboard

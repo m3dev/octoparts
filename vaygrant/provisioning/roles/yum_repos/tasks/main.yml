@@ -1,0 +1,54 @@
+- name: Add JPackage yum repo
+  copy: >
+    src=jpackage_repo dest=/etc/yum.repos.d/jpackage.repo
+    owner=root group=root mode=644
+
+- name: Add Postgres 9.3 repo
+  command: >
+    /bin/rpm -U http://yum.postgresql.org/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-1.noarch.rpm
+    creates=/etc/yum.repos.d/pgdg-93-centos.repo
+
+- name: Add Treasure Data GPG key
+  command: rpm --import http://packages.treasure-data.com/redhat/RPM-GPG-KEY-td-agent
+  changed_when: False
+
+- name: Add Treasure Data yum repo
+  copy: >
+    src=treasuredata_repo dest=/etc/yum.repos.d/treasuredata.repo
+    owner=root group=root mode=644
+
+- name: Add Elasticsearch GPG key
+  command: rpm --import http://packages.elasticsearch.org/GPG-KEY-elasticsearch
+  changed_when: False
+
+- name: Add Elasticsearch yum repo
+  copy: >
+    src=elasticsearch_repo dest=/etc/yum.repos.d/elasticsearch.repo
+    owner=root group=root mode=644
+
+- name: Add EPEL GPG key
+  command: rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-6
+  changed_when: False
+
+- name: Add EPEL yum repo
+  command: >
+    /bin/rpm -U http://ftp.iij.ad.jp/pub/linux/fedora/epel/6/x86_64/epel-release-6-8.noarch.rpm
+    creates=/etc/yum.repos.d/epel.repo
+
+- name: check fastestmirror.conf
+  command: test -f dest=/etc/yum/pluginconf.d/fastestmirror.conf
+  register: fastestmirror_conf_exist
+  failed_when: fastestmirror_conf_exist.rc not in [0, 1]
+  changed_when: False
+
+- name: set fastestmirror filter
+  lineinfile: >
+    dest=/etc/yum/pluginconf.d/fastestmirror.conf
+    state=present
+    regexp='^include_only'
+    line='include_only=.jp'
+    insertafter='#include_only'
+  when: ansible_distribution == 'CentOS' and ansible_distribution_version|int == 6
+
+- name: increase yum timeout
+  lineinfile: dest=/etc/yum.conf line="timeout=90"

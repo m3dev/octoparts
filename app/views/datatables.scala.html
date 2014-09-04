@@ -1,0 +1,16 @@
+@()(implicit lang: Lang)
+
+<link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.min.css" />
+<link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/datatables/1.9.4/css/jquery.dataTables_themeroller.min.css" />
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/datatables/1.9.4/jquery.dataTables.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+	$('table.dataTable').dataTable({
+        "oLanguage": {"sUrl": '//cdn.datatables.net/plug-ins/725b2a2115b/i18n/@{lang.toLocale.getDisplayLanguage(java.util.Locale.ENGLISH)}.json'},
+        "bJQueryUI": true,
+        "sPaginationType": "full_numbers",
+        "iDisplayLength": 50
+	});
+});
+</script>

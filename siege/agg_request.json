@@ -1,0 +1,21 @@
+{
+  "requestMeta": {
+    "id": "siege",
+    "serviceId": "siege",
+    "userId": "123",
+    "userAgent": "siege",
+    "sessionId": "",
+    "requestUrl": "",
+    "timeoutMs": 2000
+  },
+  "requests": [
+    {
+      "partId": "slow",
+      "params": [ ]
+    },
+    {
+      "partId": "flaky",
+      "params": [ ]
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+http://localhost:9000/octoparts/1/ POST < agg_request.json

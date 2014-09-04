@@ -1,0 +1,19 @@
+{
+    "template": "octoparts_hystrix*",
+    "settings": {
+        "number_of_replicas": 0
+    },
+    "mappings": {
+        "metrics": {
+            "properties": {
+                "circuitOpen": { "type": "boolean" },
+                "errorCount": { "type": "integer" },
+                "execTimeMsMean": { "type": "integer" },
+                "execTimeMsMedian": { "type": "integer" },
+                "execTimeMs95": { "type": "integer" },
+                "execTimeMs99": { "type": "integer" },
+                "execTimeMs998": { "type": "integer" }
+            }
+        }
+    }
+}

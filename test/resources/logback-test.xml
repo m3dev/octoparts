@@ -1,0 +1,25 @@
+<configuration>
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+          <pattern>%date %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
+        </encoder>
+
+        <!-- Filter out noisy Flyway WARN logs -->
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator class="ch.qos.logback.classic.boolex.GEventEvaluator">
+                <expression>
+                    e.level.toInt() == WARN.toInt() &amp;&amp;  <!-- Stands for && in XML -->
+                    e.message.find(/does not exist, skipping|will create implicit (index|sequence)/) != null
+                </expression>
+            </evaluator>
+            <OnMatch>DENY</OnMatch>
+            <OnMismatch>NEUTRAL</OnMismatch>
+        </filter>
+    </appender>
+
+    <logger name="com.m3.octoparts" level="debug"/>
+
+    <root level="warn">
+        <appender-ref ref="console"/>
+    </root>
+</configuration>

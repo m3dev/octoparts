@@ -1,0 +1,234 @@
+@(form: Form[controllers.AdminForms.PartData],
+  threadPoolConfigs: Seq[com.m3.octoparts.model.config.ThreadPoolConfig],
+  cacheGroups: Seq[com.m3.octoparts.model.config.CacheGroup],
+  maybePart: Option[com.m3.octoparts.model.config.HttpPartConfig])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
+
+@* Override the default field constructor and use our simple one instead *@
+@implicitField = @{ helper.FieldConstructor(simplefield.apply) }
+
+@title = @{
+    maybePart match {
+        case Some(part) => Messages("parts.edit", part.partId)
+        case None => Messages("parts.create")
+    }
+}
+@postUrl = @{
+    maybePart match {
+        case Some(part) => controllers.routes.AdminController.updatePart(part.partId)
+        case None => controllers.routes.AdminController.createPart
+    }
+}
+
+@views.html.adminlayout(title) {
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/jquery.validationEngine.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/languages/jquery.validationEngine-@{lang.language}.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/validationEngine.jquery.min.css"/>
+    <script type="text/javascript">
+    $(document).ready(function(){
+        $("#editPart").validationEngine({
+            prettySelect : true
+        });
+    });
+    </script>
+} {
+
+    <h2>@title</h2>
+
+    <form id="editPart" action="@postUrl" method="post" class="form-horizontal" role="form">
+        <fieldset>
+            <legend>@Messages("parts.section.basic")</legend>
+
+            <div class="form-group">
+                <label for="id" class="col-sm-2 control-label">@Messages("parts.partId")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @helper.inputText(form("partId"), 'class -> "form-control validate[required]")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description" class="col-sm-2 control-label">@Messages("parts.description")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @helper.textarea(form("description"), 'class -> "form-control validate[required]")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="deprecatedTo" class="col-sm-2 control-label">@Messages("parts.deprecation.label")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @helper.inputText(form("deprecatedTo"), 'class -> "form-control")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="url" class="col-sm-2 control-label">@Messages("parts.url")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @Messages("parts.interpolation")<br />
+						@helper.inputText(form("uri"), 'class -> "form-control validate[required]", 'type -> "url")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="method" class="col-sm-2 control-label">@Messages("parts.httpMethod")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @helper.select(
+                            field = form("method"),
+                            options = com.m3.octoparts.http.HttpMethod.values.toSeq.map(method => (method.toString, method.toString)),
+                            args = 'class -> "form-control"
+                        )
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="additionalValidStatuses" class="col-sm-2 control-label">@Messages("parts.additionalValidStatuses")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @Messages("parts.additionalValidStatuses.label")
+                        @helper.inputText(form("additionalValidStatuses"), 'class -> "form-control")
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>@Messages("parts.section.hystrix")</legend>
+
+            <div class="form-group">
+                <label for="commandKey" class="col-sm-2 control-label">@Messages("parts.hystrix.commandKey")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @helper.inputText(form("commandKey"), 'class -> "form-control validate[required]")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="commandGroupKey" class="col-sm-2 control-label">@Messages("parts.hystrix.commandGroupKey")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @helper.inputText(form("commandGroupKey"), 'class -> "form-control validate[required]")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="timeoutInMs" class="col-sm-2 control-label">@Messages("parts.hystrix.timeoutInMs.label")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @helper.inputText(form("timeoutInMs"), 'class -> "form-control validate[required]")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="threadPoolConfigId" class="col-sm-2 control-label">@Messages("threadPools.this")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @helper.select(
+                            field = form("threadPoolConfigId"),
+                            options = threadPoolConfigs.map(tpc => (tpc.id.get.toString, s"${tpc.threadPoolKey} (core size: ${tpc.coreSize})")),
+                            args = 'class -> "form-control")
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>@Messages("parts.section.cache")</legend>
+
+            <div class="form-group">
+                <label for="ttl" class="col-sm-2 control-label">@Messages("parts.cache.ttl.label")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+						@helper.inputText(form("ttl"), 'class -> "form-control")
+                        <p class="help-block">@Messages("parts.cache.ttl.help")</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="cacheGroupNames" class="col-sm-2 control-label">@Messages("cacheGroups.this")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                    @if(cacheGroups.isEmpty) {
+                        @Messages("parts.cacheGroup.none")
+                    } else {
+                        @helper.select(
+                            field = form("cacheGroupNames"),
+                            options = cacheGroups.map(cg => (cg.name, cg.name)),
+                            args = 'multiple -> "")
+                    }
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>@Messages("parts.section.alertMail")</legend>
+
+            <div class="form-group">
+                <label for="alertMailsEnabled" class="col-sm-2 control-label">@Messages("parts.alertMail.enabled")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @helper.checkbox(form("alertMailsEnabled"))
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="alertInterval" class="col-sm-2 control-label">@Messages("parts.alertMail.interval.label")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @helper.inputText(form("alertInterval"), 'class -> "form-control", 'min -> "1")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="alertAbsoluteThreshold" class="col-sm-2 control-label">@Messages("parts.alertMail.condition.label")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+						@helper.inputText(form("alertAbsoluteThreshold"), 'min -> "0")
+                        @Messages("parts.alertMail.condition.absolute", "")
+                        @Messages("parts.alertMail.condition.or")
+						@helper.inputText(form("alertPercentThreshold"), 'min -> "0", 'max -> "100", 'step -> "any")
+                        @Messages("parts.alertMail.condition.relative", "")
+                        @Messages("parts.alertMail.condition.what")
+                        <p class="help-block">@Messages("parts.alertMail.selectOne")</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="alertMailRecipients" class="col-sm-2 control-label">@Messages("parts.alertMail.recipients.label")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @helper.inputText(form("alertMailRecipients"), 'class -> "form-control")
+                        <p class="help-block">@Messages("parts.alertMail.recipients.help")</p>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <br/>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">&nbsp;</label>
+            <div class="row">
+                <div class="col-sm-5">
+                    <input type="submit" class="btn btn-primary" />
+                </div>
+            </div>
+        </div>
+    </form>
+
+}

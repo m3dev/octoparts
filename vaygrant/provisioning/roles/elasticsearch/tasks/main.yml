@@ -1,0 +1,5 @@
+- name: Install Elasticsearch
+  yum: name=elasticsearch state=installed
+
+- name: Start Elasticsearch
+  service: name=elasticsearch state=started enabled=yes

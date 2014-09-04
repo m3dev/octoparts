@@ -1,0 +1,17 @@
+- hosts: all
+  sudo: yes
+  vars_prompt:
+    - name: "accept_oracle_licence"
+      prompt: "Do you accept the Oracle JDK licence? (JDK8 will not be provisioned for you if you input anything other than 'yes') http://www.oracle.com/technetwork/java/javase/terms/license/index.html"
+      private: yes
+  roles:
+    - disable_iptables # makes sense for dev vms only
+    - yum_repos
+    - { role: java, when: accept_oracle_licence == "yes" }
+    - { role: postgres, db_user: octoparts_app, db_name: octoparts, db_password: passw0rd }
+    - { role: global_env, app_user: vagrant, app_group: vagrant, play_env: dev }
+    - tomcat # Default variables for this role deploy the Hystrix dashboard ..
+    - memcached
+    - td_agent
+    - elasticsearch
+    - kibana

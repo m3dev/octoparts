@@ -1,0 +1,19 @@
+- name: Install nginx
+  yum: name=nginx enablerepo=epel state=installed
+
+- name: Download Kibana
+  command: >
+    wget https://download.elasticsearch.org/kibana/kibana/kibana-3.0.1.zip -P /tmp
+    creates=/tmp/kibana-3.0.1.zip
+
+- name: Make sure unzip is installed
+  yum: name=unzip state=installed
+
+- name: Extract Kibana
+  command:
+    unzip /tmp/kibana-3.0.1.zip -d /usr/share/nginx/html
+    creates=/usr/share/nginx/html/kibana-3.0.1
+
+- name: Start nginx
+  service: name=nginx state=started enabled=yes
+

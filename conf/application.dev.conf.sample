@@ -1,0 +1,25 @@
+# Example config file for running Octoparts on your local machine.
+# Rename this file to application.dev.conf. (It will be ignored by git.)
+#
+# Any settings defined here will override those in application.conf.
+# ~~~~~
+
+db {
+  default {
+    url="jdbc:postgresql://localhost:5432/octoparts"
+    user="octoparts_app"
+    password="passw0rd"
+  }
+}
+
+urls {
+  # The URL of your Hystrix dashboard
+  hystrixDashboard = "http://localhost:8080/dashboard/monitor/monitor.html?stream=http%3A%2F%2Flocalhost%3A9000%2Fhystrix.stream"
+}
+
+caching {
+  # Disable memcached
+  inmemory = true
+}
+
+swagger.api.basepath="http://localhost:9000"

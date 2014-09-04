@@ -1,0 +1,38 @@
+- name: create /usr/java directory
+  file: path=/usr/java state=directory owner=root group=root mode=0755
+  tags: java8
+
+- name: check jdk8 package downloaded
+  command: test -f {{ src_base_dir }}/jdk-{{ jdk8_pkg_version }}-linux-x64.tar.gz
+  register: jdk8_downloaded
+  failed_when: jdk8_downloaded.rc not in [0, 1]
+  changed_when: False
+  tags: java8
+
+- name: download jdk8 package
+  command: >
+    wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u20-b26/jdk-8u20-linux-x64.tar.gz" -O {{ src_base_dir }}/jdk-{{ jdk8_pkg_version }}-linux-x64.tar.gz
+  tags: java8
+  when: jdk8_downloaded.rc == 1
+
+- name: extract jdk8
+  command: >
+    tar -xf {{ src_base_dir }}/jdk-{{ jdk8_pkg_version }}-linux-x64.tar.gz
+    chdir=/usr/java
+    creates=/usr/java/jdk{{ jdk8_version }}
+  tags: java8
+
+- name: symlink to /usr/local
+  file: >
+    state=link
+    src=/usr/java/jdk{{ jdk8_version }}
+    dest=/usr/local/{{  symlink_to  }}
+    owner=root group=root
+  tags: java8
+
+- name: /etc/profile.d/java8.sh
+  template: >
+    src=profile.java8.sh.j2
+    dest=/etc/profile.d/{{  symlink_to  }}.sh
+    owner=root group=root mode=0644
+  tags: java8

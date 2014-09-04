@@ -1,0 +1,9 @@
+- name: Setup env vars using profile.d
+  template: >
+    src=octoparts dest=/etc/profile.d/octoparts.sh
+    owner=root group=root mode=755
+
+- name: Make sure log dir exists
+  file: >
+    dest={{ octoparts_log_dir }} state=directory
+    owner={{ app_user }} group={{ app_group }} mode=755

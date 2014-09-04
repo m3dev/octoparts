@@ -1,0 +1,4 @@
+---
+db_name: app
+db_user: appdbuser
+db_password: passw0rd

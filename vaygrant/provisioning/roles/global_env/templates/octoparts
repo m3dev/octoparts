@@ -1,0 +1,2 @@
+export PLAY_ENV={{ play_env }}
+export OCTOPARTS_LOG_DIR={{ octoparts_log_dir }}

@@ -1,0 +1,25 @@
+- name: Install td-agent
+  yum: name=td-agent state=installed
+
+- name: Check for fluent-plugin-elasticsearch gem
+  shell: /usr/lib64/fluent/ruby/bin/fluent-gem list fluent-plugin-elasticsearch -i
+  register: fluent_plugin_elasticsearch_check
+  ignore_errors: true
+
+- name: Install libcurl-devel
+  yum: name=libcurl-devel state=installed
+  
+- name: Install fluent-plugin-elasticsearch gem
+  shell: /usr/lib64/fluent/ruby/bin/fluent-gem install fluent-plugin-elasticsearch
+  when: fluent_plugin_elasticsearch_check.stdout == "false"
+
+- name: Copy td-agent config file
+  template: >
+    src=td-agent.conf dest=/etc/td-agent/td-agent.conf
+    owner=root group=root mode=744
+
+- name: Create td-agent tmp dir
+  file: dest=/etc/td-agent/tmp mode=777 state=directory
+
+- name: Start td-agent
+  service: name=td-agent state=started enabled=yes

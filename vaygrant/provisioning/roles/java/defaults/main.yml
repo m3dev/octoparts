@@ -1,0 +1,4 @@
+jdk8_version: '1.8.0_20'
+jdk8_pkg_version: '8'
+symlink_to: 'java8'
+src_base_dir: "/tmp"

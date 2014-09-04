@@ -1,0 +1,25 @@
+- name: Install Tomcat7
+  yum: name=tomcat7 state=installed disable_gpg_check=yes
+  notify: Start Tomcat
+
+- name: Check for existing app directory in webapps directory
+  stat: path=/usr/share/tomcat7/webapps/{{context}}
+  register: webapps_dir
+
+- name: Delete existing webapps directory
+  file: path=/usr/share/tomcat7/webapps/{{context}} state=absent
+  when: webapps_dir.stat.exists
+
+- name: Check for existing webapp war
+  stat: path=/usr/share/tomcat7/webapps/{{context}}.war
+  register: webapp_war
+
+- name: Delete existing webapp war
+  file: path=/usr/share/tomcat7/webapps/{{context}}.war state=absent
+  when: webapp_war.stat.exists
+
+- name: Deploy webapp war
+  copy: >
+    src={{host_war_path}} dest=/usr/share/tomcat7/webapps/{{context}}.war
+    owner=root group=root mode=755
+  notify: Restart Tomcat

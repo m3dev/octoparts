@@ -1,0 +1,7 @@
+- name: Restart Tomcat
+  service: name=tomcat7 state=restarted enabled=yes
+  sudo: yes
+
+- name: Start Tomcat
+  service: name=tomcat7 state=started enabled=yes
+  sudo: yes

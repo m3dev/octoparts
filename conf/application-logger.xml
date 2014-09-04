@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+    <appender name="ApplicationFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${OCTOPARTS_LOG_DIR:-logs}/application.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>${OCTOPARTS_LOG_DIR:-logs}/application.log.%d{yyyy-MM-dd}.gz</fileNamePattern>
+
+            <!-- keep 30 days' worth of history -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>%date %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Log Hystrix metrics to a separate file for tailing by fluentd -->
+    <appender name="HystrixMetricsFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${OCTOPARTS_LOG_DIR:-logs}/hystrix-metrics.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>${OCTOPARTS_LOG_DIR:-logs}/hystrix-metrics.log.%d{yyyy-MM-dd}.gz</fileNamePattern>
+
+            <!-- keep 30 days' worth of history -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+
+        <encoder>
+            <!-- Date format is: 2006-10-20 14:06:49,812 -->
+            <pattern>time:%date\t%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Log part request results to a separate file for tailing by fluentd -->
+    <appender name="PartRequestsFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${OCTOPARTS_LOG_DIR:-logs}/part-requests.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>${OCTOPARTS_LOG_DIR:-logs}/part-requests.log.%d{yyyy-MM-dd}.gz</fileNamePattern>
+
+            <!-- keep 30 days' worth of history -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+
+        <encoder>
+            <!-- Date format is: 2006-10-20 14:06:49,812 -->
+            <pattern>time:%date\t%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Only create a Sentry appender if the appropriate environment variable is defined -->
+    <if condition='isDefined("OCTOPARTS_SENTRY_URL")'>
+        <then>
+            <!-- Send warnings and errors to Sentry -->
+            <appender name="Sentry" class="net.kencochrane.raven.logback.SentryAppender">
+                <!-- You can find this URL on your Sentry settings page. -->
+                <!-- It should look like http://biglongkey:anotherkey@sentryhost/123 -->
+                <dsn>${OCTOPARTS_SENTRY_URL}</dsn>
+
+                <!-- All logs are sent to this appender, so we need to filter out anything below WARN -->
+                <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                    <level>WARN</level>
+                </filter>
+            </appender>
+        </then>
+    </if>
+
+    <!-- Make this info in production -->
+    <logger name="com.m3.octoparts" level="${LOG_LEVEL:-DEBUG}"/>
+
+    <!-- Hystrix metrics -->
+    <logger name="HystrixMetrics" level="info" additivity="false">
+        <appender-ref ref="HystrixMetricsFile"/>
+    </logger>
+
+    <!-- Part requests results -->
+    <logger name="PartRequests" level="info" additivity="false">
+        <appender-ref ref="PartRequestsFile"/>
+    </logger>
+
+    <root level="warn">
+        <appender-ref ref="ApplicationFile"/>
+
+        <if condition='isDefined("OCTOPARTS_SENTRY_URL")'>
+            <then>
+                <appender-ref ref="Sentry"/>
+            </then>
+        </if>
+
+    </root>
+</configuration>

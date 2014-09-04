@@ -1,0 +1,6 @@
+# If you have implemented an auth plugin, add it like this
+#5000:com.m3.openid.M3OpenIDAuthPlugin
+
+8000:com.kenshoo.play.metrics.MetricsPlugin
+9000:com.github.tototoshi.play2.flyway.Plugin
+10000:scalikejdbc.PlayPlugin

@@ -1,0 +1,3 @@
+---
+play_env: dev
+octoparts_log_dir: /parts/logs

@@ -1,0 +1,153 @@
+@(part: presentation.HttpPartConfigView)(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
+
+@views.html.adminlayout(Messages("parts.detail")) {
+    <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.css" />
+    <style type="text/css">
+    <!--
+    th {
+        font-weight:bold;
+    }
+    form {
+        display:inline;
+    }
+    -->
+    </style>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    @views.html.datatables()
+} {
+
+    <h1>@Messages("parts.detail")</h1>
+
+    <h4><a href="@part.tryItLink" class="btn btn-default">@Messages("parts.tryIt")</a>
+        <a href="@part.editLink" class="btn btn-primary">@Messages("edit")</a>
+		<form action="@controllers.routes.AdminController.copyPart(part.partId)" method="post">
+            <input type="submit" value="@Messages("duplicate")" class="btn btn-info" />
+        </form>
+        <form action="@controllers.routes.AdminController.deletePart(part.partId)" method="post">
+            <input type="submit" value="@Messages("delete")" class="btn btn-danger" />
+        </form></h4>
+
+    <h2>@Messages("parts.section.basic")</h2>
+    <dl>
+        <dt>@Messages("parts.partId")</dt>
+        <dd>@part.partId</dd>
+        <dt>@Messages("parts.owner")</dt>
+        <dd>@part.config.owner</dd>
+        <dt>@Messages("parts.description")</dt>
+        <dd>@part.description</dd>
+        <dt>@Messages("parts.deprecation")</dt>
+        <dd>@part.deprecation</dd>
+        <dt>@Messages("parts.created")</dt>
+        <dd>@part.created</dd>
+        <dt>@Messages("parts.updated")</dt>
+        <dd>@part.lastUpdate</dd>
+    </dl>
+
+    <hr/>
+    <h2>@Messages("parts.section.http")</h2>
+
+    <dl>
+        <dt>URL
+            @if(part.uriToInterpolate.contains('$')) {
+                @Messages("parts.interpolation")
+            }
+        </dt>
+        <dd>@part.uriToInterpolate</dd>
+        <dt>@Messages("parts.httpMethod")</dt>
+        <dd>@part.httpMethod</dd>
+        @if(part.config.additionalValidStatuses.nonEmpty) {
+            <dt>@Messages("parts.additionalValidStatuses")</dt>
+            <dd>@Messages("parts.additionalValidStatuses.wrap", part.config.additionalValidStatuses.mkString(", "))</dd>
+        }
+        <dt>@Messages("parts.parameter")</dt>
+        <dd>
+            <a href="@part.addParamLink" class="btn btn-primary" style="margin: 5px 0;">@Messages("parts.parameter.create")</a>
+            <table class="dataTable">
+                <thead>
+                    <tr>
+                        <th>@Messages("parts.parameter.outputName")</th>
+                        <th>@Messages("parts.parameter.inputName")</th>
+                        <th>@Messages("parts.parameter.type")</th>
+                        <th>@Messages("parts.parameter.required")</th>
+                        <th>@Messages("parts.parameter.versioned")</th>
+                        <th>@Messages("action")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for(paramView <- part.registeredParamsView) {
+                    <tr>
+                        <td>@paramView.name</td>
+                        <td>@paramView.param.inputName</td>
+                        <td>@paramView.paramType</td>
+                        <td>@paramView.required</td>
+                        <td>@paramView.versioned</td>
+                        <td><a href="@controllers.routes.AdminController.editParam(part.partId, paramView.param.id.get)" class="btn btn-primary">@Messages("edit")</a>
+                            <form action="@controllers.routes.AdminController.copyParam(part.partId, paramView.param.id.get)" method="post">
+                                <input type="submit" value="@Messages("duplicate")" class="btn btn-info" />
+                            </form>
+                            <form action="@controllers.routes.AdminController.deleteParam(part.partId, paramView.param.id.get)" method="post">
+                                <input type="submit" value="@Messages("delete")" class="btn btn-danger" />
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </dd>
+    </dl>
+
+    <hr/>
+    <h2>@Messages("parts.section.hystrix")</h2>
+    <dl>
+        @part.config.hystrixConfig match {
+            case Some(hystrixConfigItem) => {
+                <dt>@Messages("parts.hystrix.commandKey")</dt>
+                <dd>@hystrixConfigItem.commandKey</dd>
+                <dt>@Messages("parts.hystrix.commandGroupKey")</dt>
+                <dd>@hystrixConfigItem.commandGroupKey</dd>
+                <dt>@Messages("parts.hystrix.timeoutInMs")</dt>
+                <dd>@hystrixConfigItem.timeoutInMs</dd>
+                <dt>@Messages("threadPools.key")</dt>
+                <dd>@hystrixConfigItem.threadPoolConfigItem.threadPoolKey</dd>
+            }
+            case None => {
+                <dt>@Messages("parts.hystrix.none.title")</dt>
+                <dd>@Messages("parts.hystrix.none.body")</dd>
+            }
+        }
+    </dl>
+
+    <hr/>
+    <h2>@Messages("parts.section.cache")</h2>
+
+    <dl>
+        <dt>@Messages("parts.cache.ttl")</dt>
+        <dd>@part.cacheTtlStr</dd>
+    </dl>
+
+    <hr/>
+    <h2>@Messages("parts.section.cacheGroup")</h2>
+    <ul>
+        @if(part.config.cacheGroups.isEmpty) {
+            @Messages("parts.cacheGroup.none")
+        } else {
+            @for(group <- part.config.cacheGroups) {
+                <li>@group.name</li>
+            }
+        }
+    </ul>
+
+    <hr/>
+    <h2>@Messages("parts.section.alertMail")</h2>
+    @if(part.config.alertMailsEnabled) {
+        <dl>
+            <dt>@Messages("parts.alertMail.condition")</dt>
+            <dd>@part.alertMailCondition</dd>
+            <dt>@Messages("parts.alertMail.recipients")</dt>
+            <dd>@part.alertMailRecipients</dd>
+        </dl>
+    } else {
+        <p>@Messages("parts.alertMail.none")</p>
+    }
+
+}
