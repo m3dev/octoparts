@@ -97,7 +97,7 @@ class HttpResponseHandlerSpec extends FunSpec with Matchers with BeforeAndAfter 
       val response = buildApacheResponse(HttpResponse(HttpStatus.SC_OK, "OK", headers = headers, body = Some("hello world")))
 
       val result = handler.handleResponse(response)
-      result.cacheControl.noCache should be(false)
+      result.cacheControl.noStore should be(false)
       result.cacheControl.expiresAt should be(Some(now + 3600 * 1000L))
     }
 
@@ -111,7 +111,7 @@ class HttpResponseHandlerSpec extends FunSpec with Matchers with BeforeAndAfter 
       val response = buildApacheResponse(HttpResponse(HttpStatus.SC_OK, "OK", headers = headers, body = Some("hello world")))
 
       val result = handler.handleResponse(response)
-      result.cacheControl.noCache should be(true)
+      result.cacheControl.noStore should be(true)
       result.cacheControl.expiresAt should be(None)
     }
 

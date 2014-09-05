@@ -212,7 +212,7 @@ class MemcachedClient(
         resp
     }
 
-  private def mayCache(partResponse: PartResponse): Boolean = !partResponse.cacheControl.noCache
+  private def mayCache(partResponse: PartResponse): Boolean = !partResponse.cacheControl.noStore
 
   override def saveLater(partResponse: PartResponse, directive: CacheDirective): Future[Unit] = {
     if (mayCache(partResponse)) {
