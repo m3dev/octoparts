@@ -1,5 +1,6 @@
 package com.m3.octoparts.support.mocks
 
+import com.m3.octoparts.repository.config.ConfigMapper
 import com.m3.octoparts.repository.{ MutableConfigsRepository, ConfigsRepository }
 import com.m3.octoparts.model.config._
 import scala.concurrent.Future
@@ -39,6 +40,6 @@ trait MockMutableRepository extends MockConfigRespository with MutableConfigsRep
 
   def deleteAllConfigs() = Future.successful(1)
 
-  def save[A <: ConfigModel[A]](obj: A): Future[Long] = Future.successful(123)
+  def save[A <: ConfigModel[A]: ConfigMapper](obj: A): Future[Long] = Future.successful(123)
 
 }

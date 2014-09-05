@@ -1,6 +1,7 @@
 package com.m3.octoparts.repository
 
 import com.m3.octoparts.model.config.ConfigModel
+import com.m3.octoparts.repository.config.ConfigMapper
 
 import scala.concurrent.Future
 
@@ -43,6 +44,6 @@ trait MutableConfigsRepository extends ConfigsRepository {
    *
    * @return Long, the id of the model that was saved
    */
-  def save[A <: ConfigModel[A]](obj: A): Future[Long]
+  def save[A <: ConfigModel[A]: ConfigMapper](obj: A): Future[Long]
 
 }

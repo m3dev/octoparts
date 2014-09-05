@@ -22,8 +22,6 @@ case class HystrixConfig(
     createdAt: DateTime,
     updatedAt: DateTime) extends ConfigModel[HystrixConfig] {
 
-  override def mapper = HystrixConfigRepository
-
   /**
    * Method to use when we are sure we have a ThreadPoolConfig inside the
    * threadPoolConfig field. Throws an error if it's empty

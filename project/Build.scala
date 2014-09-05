@@ -15,7 +15,7 @@ import scalariform.formatter.preferences._
 
 object OctopartsBuild extends Build {
 
-  val octopartsVersion = "2.0-SNAPSHOT"
+  val octopartsVersion = "2.0"
 
   val httpPort = 9000
   val theScalaVersion = "2.11.2"
@@ -187,20 +187,12 @@ object OctopartsBuild extends Build {
   // -------------------------------------------------------
   // Interface for authentication plugins
   // -------------------------------------------------------
-  lazy val authPluginApi = Project(id = "auth-plugin-api", base = file("plugins/auth-plugin-api"), settings = commonSettings).settings(
+  lazy val authPluginApi = Project(id = "auth-plugin-api", base = file("plugins/auth-plugin-api"), settings = nonPlayAppSettings).settings(
+    name := "octoparts-auth-plugin-api",
     libraryDependencies ++= Seq(
       "com.typesafe.play" %% "play" % thePlayVersion % "provided"
     )
   )
-
-  // -------------------------------------------------------
-  // M3 OpenID implementation of the authentication plugin
-  // -------------------------------------------------------
-  lazy val m3openidPlugin = Project(id = "m3-openid-plugin", base = file("plugins/m3-openid"), settings = commonSettings).settings(
-    libraryDependencies ++= Seq(
-      ws
-    )
-  ).dependsOn(authPluginApi)
 
   // -------------------------------------------------------
   // Model classes
@@ -260,7 +252,7 @@ object OctopartsBuild extends Build {
   lazy val app = Project(id = "octoparts", base = file("."), settings = playAppSettings)
     .enablePlugins(PlayScala)
     .dependsOn(models, authPluginApi)
-    .aggregate(scalaWsClient, javaClient, models)
+    .aggregate(scalaWsClient, javaClient, models, authPluginApi)
 
   // Settings for publishing to Maven Central
   lazy val publishSettings = Seq(

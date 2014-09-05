@@ -14,8 +14,6 @@ case class ThreadPoolConfig(
     createdAt: DateTime,
     updatedAt: DateTime) extends ConfigModel[ThreadPoolConfig] {
 
-  override def mapper = ThreadPoolConfigRepository
-
   // this setting is not yet available for users
   def queueSize: Int = ThreadPoolConfig.defaultQueueSize
 
