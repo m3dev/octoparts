@@ -33,8 +33,6 @@ case class HttpPartConfig(id: Option[Long] = None, // None means that the record
                           createdAt: DateTime,
                           updatedAt: DateTime) extends ConfigModel[HttpPartConfig] {
 
-  override def mapper = HttpPartConfigRepository
-
   /**
    * Method to use when we are sure we have a HystrixConfig inside the
    * hystrixConfig field.

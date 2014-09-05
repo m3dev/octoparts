@@ -1,6 +1,6 @@
 package com.m3.octoparts.repository.config
 
-import com.m3.octoparts.model.config.ConfigModel
+import com.m3.octoparts.model.config._
 import scalikejdbc.DBSession
 import skinny.logging.Logging
 import skinny.orm.SkinnyCRUDMapper
@@ -63,4 +63,16 @@ trait ConfigMapper[A <: ConfigModel[A]] extends SkinnyCRUDMapper[A] with Logging
     }
   }
 
+}
+
+/**
+ * This companion object exists to hold the type class instances of the [[ConfigMapper]]
+ * type class.
+ */
+object ConfigMapper {
+  implicit val CacheGroupMapper: ConfigMapper[CacheGroup] = CacheGroupRepository
+  implicit val HttpPartConfigMapper: ConfigMapper[HttpPartConfig] = HttpPartConfigRepository
+  implicit val HystrixConfigMapper: ConfigMapper[HystrixConfig] = HystrixConfigRepository
+  implicit val PartParamMapper: ConfigMapper[PartParam] = PartParamRepository
+  implicit val ThreadPoolConfigMapper: ConfigMapper[ThreadPoolConfig] = ThreadPoolConfigRepository
 }

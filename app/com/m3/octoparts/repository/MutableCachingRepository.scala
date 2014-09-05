@@ -4,8 +4,10 @@ import com.m3.octoparts.cache.CacheCodecs
 import com.m3.octoparts.cache.client.CacheAccessor
 import com.m3.octoparts.cache.key.HttpPartConfigCacheKey
 import com.m3.octoparts.http.HttpClientPool
-import com.m3.octoparts.model.config.{ HttpPartConfig, ConfigModel }
+import com.m3.octoparts.model.config._
 import CacheCodecs._
+import com.m3.octoparts.repository.config.ConfigMapper
+
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -20,7 +22,7 @@ class MutableCachingRepository(
     extends CachingRepository
     with MutableConfigsRepository {
 
-  def save[A <: ConfigModel[A]](obj: A): Future[Long] = reloadCacheAfter(delegate.save(obj))
+  def save[A <: ConfigModel[A]: ConfigMapper](obj: A): Future[Long] = reloadCacheAfter(delegate.save(obj))
 
   def deleteAllConfigs(): Future[Int] = reloadCacheAfter {
     for {

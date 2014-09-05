@@ -40,9 +40,9 @@ object DBConfigsRepository extends MutableConfigsRepository with Logging {
   // A separate ExecutionContext to avoid starving the global one with blocking DB operations
   implicit val dbFetchExecutionContext = Akka.system.dispatchers.lookup("contexts.db")
 
-  def save[A <: ConfigModel[A]](obj: A): Future[Long] = {
+  def save[A <: ConfigModel[A]: ConfigMapper](obj: A): Future[Long] = {
     DB futureLocalTx { implicit session =>
-      saveWithSession(obj.mapper, obj)
+      saveWithSession(implicitly[ConfigMapper[A]], obj)
     }
   }
 
