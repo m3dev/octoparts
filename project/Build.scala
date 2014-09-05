@@ -5,6 +5,8 @@ import sbt._
 import sbt.Keys._
 import sbtbuildinfo.Plugin._
 import scoverage.ScoverageSbtPlugin
+import xerial.sbt.Sonatype._
+import SonatypeKeys._
 
 import play.PlayImport.PlayKeys._
 import play.Play.autoImport._
@@ -62,6 +64,7 @@ object OctopartsBuild extends Build {
       playSettings ++
       buildInfoSettings ++
       buildInfoStuff ++
+      sonatypeSettings ++
       Seq(
         publishArtifact := false,
         libraryDependencies ++= Seq(
