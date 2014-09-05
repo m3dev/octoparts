@@ -8,7 +8,6 @@ import com.m3.octoparts.model.config._
 import CacheCodecs._
 import com.m3.octoparts.repository.config.ConfigMapper
 
-
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
