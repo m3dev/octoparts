@@ -15,7 +15,7 @@ import scalariform.formatter.preferences._
 
 object OctopartsBuild extends Build {
 
-  val octopartsVersion = "2.0"
+  val octopartsVersion = "2.1-SNAPSHOT"
 
   val httpPort = 9000
   val theScalaVersion = "2.11.2"
