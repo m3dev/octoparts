@@ -1,10 +1,11 @@
 package com.m3.octoparts.repository
 
+import com.m3.octoparts.cache.CacheCodecs
 import com.m3.octoparts.cache.client.CacheAccessor
 import com.m3.octoparts.cache.key.HttpPartConfigCacheKey
 import com.m3.octoparts.http.HttpClientPool
 import com.m3.octoparts.model.config.{ HttpPartConfig, ConfigModel }
-import com.m3.octoparts.model.config.CacheCodecs._
+import CacheCodecs._
 
 import scala.concurrent.{ ExecutionContext, Future }
 

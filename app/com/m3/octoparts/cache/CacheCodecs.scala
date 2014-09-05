@@ -1,20 +1,21 @@
-package com.m3.octoparts.model.config
+package com.m3.octoparts.cache
 
-import java.nio.charset.StandardCharsets
-
+import com.m3.octoparts.model.config._
 import shade.memcached.Codec
 import shade.memcached.MemcachedCodecs.AnyRefBinaryCodec
+import java.util.Arrays
 
 object CacheCodecs {
 
-  private val NoneStringBytes: Array[Byte] = None.toString.getBytes(StandardCharsets.UTF_8)
+  private val NoneBytes: Array[Byte] = Array(0.toByte)
+  private val SomeBytePrefix: Byte = 1
 
   implicit def optionCodecFor[A: Codec]: Codec[Option[A]] = new Codec[Option[A]] {
     def serialize(value: Option[A]): Array[Byte] =
-      value.fold(NoneStringBytes)(implicitly[Codec[A]].serialize)
+      value.fold(NoneBytes)(SomeBytePrefix +: implicitly[Codec[A]].serialize(_))
 
     def deserialize(data: Array[Byte]): Option[A] =
-      if (data == NoneStringBytes) None else Some(implicitly[Codec[A]].deserialize(data))
+      if (Arrays.equals(data, NoneBytes)) None else Some(implicitly[Codec[A]].deserialize(data.tail))
   }
 
   implicit val cacheGroupCodec = AnyRefBinaryCodec[CacheGroup]

@@ -1,5 +1,6 @@
 package com.m3.octoparts.repository
 
+import com.m3.octoparts.cache.CacheCodecs
 import com.m3.octoparts.cache.client.CacheAccessor
 import com.m3.octoparts.cache.key.{ CacheGroupCacheKey, CacheKey, HttpPartConfigCacheKey }
 import com.m3.octoparts.http.HttpClientPool
@@ -11,7 +12,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.postfixOps
 import scala.util.control.NonFatal
-import com.m3.octoparts.model.config.CacheCodecs._
+import CacheCodecs._
 
 trait CachingRepository extends ConfigsRepository {
   implicit def executionContext: ExecutionContext
