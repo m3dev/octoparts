@@ -28,8 +28,6 @@ case class PartParam(
     createdAt: DateTime,
     updatedAt: DateTime) extends ConfigModel[PartParam] {
 
-  override def mapper = PartParamRepository
-
   /**
    * This is the key used to look for a value inside the PartRequest
    */
