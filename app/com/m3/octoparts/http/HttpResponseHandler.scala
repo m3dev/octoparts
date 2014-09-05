@@ -92,7 +92,7 @@ class HttpResponseHandler(defaultEncoding: Charset) extends ResponseHandler[Http
 
   def parseCacheHeaders(headers: Array[Header]): (Boolean, Option[Long]) = {
     val elts = headers.flatMap(_.getElements)
-    val noCache = elts.exists(_.getName == HeaderConstants.CACHE_CONTROL_NO_CACHE)
+    val noCache = elts.exists(_.getName == HeaderConstants.CACHE_CONTROL_NO_STORE)
     val expiresAt = elts.collect {
       case elt if elt.getName == HeaderConstants.CACHE_CONTROL_MAX_AGE =>
         Try {

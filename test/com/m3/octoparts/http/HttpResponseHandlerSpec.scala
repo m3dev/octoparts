@@ -101,12 +101,12 @@ class HttpResponseHandlerSpec extends FunSpec with Matchers with BeforeAndAfter 
       result.cacheControl.expiresAt should be(Some(now + 3600 * 1000L))
     }
 
-    it("should parse a Cache-Control: no-cache header") {
+    it("should parse a Cache-Control: no-store header") {
       val now = 1401100000000L
       DateTimeUtils.setCurrentMillisFixed(now)
       val headers = Seq(
         "Server" -> "Apache",
-        "Cache-Control" -> "no-cache"
+        "Cache-Control" -> "no-store"
       )
       val response = buildApacheResponse(HttpResponse(HttpStatus.SC_OK, "OK", headers = headers, body = Some("hello world")))
 
