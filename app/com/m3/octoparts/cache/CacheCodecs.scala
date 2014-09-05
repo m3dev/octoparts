@@ -15,7 +15,7 @@ object CacheCodecs {
       value.fold(NoneBytes)(SomeBytePrefix +: implicitly[Codec[A]].serialize(_))
 
     def deserialize(data: Array[Byte]): Option[A] =
-      if (Arrays.equals(data, NoneBytes)) None else Some(implicitly[Codec[A]].deserialize(data.tail))
+      if (Arrays.equals(data, NoneBytes)) None else Some(implicitly[Codec[A]].deserialize(Arrays.copyOfRange(data, 1, data.length)))
   }
 
   implicit val cacheGroupCodec = AnyRefBinaryCodec[CacheGroup]
