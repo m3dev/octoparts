@@ -1,8 +1,9 @@
 package com.m3.octoparts.ws
 
 import com.google.common.net.UrlEscapers
+import com.m3.octoparts.JsonFormats
 import com.m3.octoparts.model._
-import com.m3.octoparts.model.JsonFormats._
+import JsonFormats._
 
 import java.util.UUID
 import play.api.http.{ ContentTypeOf, Writeable }

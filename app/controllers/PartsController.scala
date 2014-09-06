@@ -1,5 +1,6 @@
 package controllers
 
+import com.m3.octoparts.JsonFormats
 import com.m3.octoparts.aggregator.service.PartsService
 import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.HttpPartConfig
@@ -15,6 +16,7 @@ import skinny.util.LTSV
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import JsonFormats._
 
 @Api(
   value = "/octoparts/1",
@@ -28,7 +30,6 @@ class PartsController(
     requestTimeout: Duration,
     readClientCacheHeaders: Boolean) extends Controller with LoggingSupport {
 
-  import com.m3.octoparts.model.JsonFormats._
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
   @ApiOperation(

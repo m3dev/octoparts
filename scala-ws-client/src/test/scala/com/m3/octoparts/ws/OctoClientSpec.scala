@@ -1,7 +1,8 @@
 package com.m3.octoparts.ws
 
+import com.m3.octoparts.JsonFormats
 import com.m3.octoparts.model._
-import com.m3.octoparts.model.JsonFormats._
+import JsonFormats._
 import play.api.libs.json._
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures

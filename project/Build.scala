@@ -51,7 +51,7 @@ object OctopartsBuild extends Build {
   /*
    * Settings that are common for every project _except_ the Play app
    * (because we don't want to publish the Play app to Maven Central)
-   */ 
+   */
   lazy val nonPlayAppSettings =
     commonSettings ++
     publishSettings
@@ -117,13 +117,13 @@ object OctopartsBuild extends Build {
           "org.scalikejdbc" %% "scalikejdbc-test"   % scalikejdbcVersion % "test"
         ).map(_.excludeAll(
           ExclusionRule(organization = "spy", name = "spymemcached"), // spymemcached's org changed from spy to net.spy
-          ExclusionRule(organization = "org.slf4j", name = "slf4j-log4j12"), 
-          ExclusionRule(organization = "org.slf4j", name = "slf4j-jdk14"), 
+          ExclusionRule(organization = "org.slf4j", name = "slf4j-log4j12"),
+          ExclusionRule(organization = "org.slf4j", name = "slf4j-jdk14"),
           ExclusionRule(organization = "org.slf4j", name = "slf4j-jcl"),
           ExclusionRule(organization = "org.slf4j", name = "slf4j-nop"),
           ExclusionRule(organization = "org.slf4j", name = "slf4j-simple")))
       )
-        
+
   lazy val playSettings = Seq(
     playVersion := thePlayVersion,
     playDefaultPort := httpPort
@@ -131,9 +131,9 @@ object OctopartsBuild extends Build {
 
   lazy val resolverSettings = {
     // Use in-house Maven repo instead of Maven central if env var is set
-    sys.env.get("INHOUSE_MAVEN_REPO").fold[Seq[sbt.Def.Setting[_]]] { 
+    sys.env.get("INHOUSE_MAVEN_REPO").fold[Seq[sbt.Def.Setting[_]]] {
       Seq(
-        resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"  
+        resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"
       )
     } { inhouse =>
       Seq(
@@ -215,7 +215,7 @@ object OctopartsBuild extends Build {
     val jacksonVersion = "2.4.2"
 
     Project(id = "java-client", base = file("java-client"), settings = nonPlayAppSettings)
-      .settings( 
+      .settings(
         name := "octoparts-java-client",
         crossScalaVersions := Seq("2.10.4", "2.11.2"),
         javacOptions in compile ++= Seq("-source", "1.6", "-target", "1.6", "-Xlint"),
@@ -254,7 +254,7 @@ object OctopartsBuild extends Build {
   // -------------------------------------------------------
   lazy val app = Project(id = "octoparts", base = file("."), settings = playAppSettings)
     .enablePlugins(PlayScala)
-    .dependsOn(models, authPluginApi)
+    .dependsOn(models, authPluginApi, scalaWsClient)
     .aggregate(scalaWsClient, javaClient, models, authPluginApi)
 
   // Settings for publishing to Maven Central
