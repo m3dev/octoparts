@@ -53,7 +53,6 @@ trait ConfigDataMocks extends RequiresDB {
     commandKey = "command",
     commandGroupKey = "GroupKey",
     timeoutInMs = 50L,
-
     threadPoolConfig = Some(mockThreadConfig),
     createdAt = now,
     updatedAt = now

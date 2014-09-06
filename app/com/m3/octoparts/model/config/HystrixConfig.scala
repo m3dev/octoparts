@@ -13,9 +13,8 @@ object HystrixConfig {
    * Returns a [[JsonHystrixConfig]] for a given [[HystrixConfig]]
    */
   def toJsonModel(config: HystrixConfig): JsonHystrixConfig = {
-    require(config.threadPoolConfig.isDefined && config.httpPartConfigId.isDefined)
+    require(config.threadPoolConfig.isDefined)
     JsonHystrixConfig(
-      httpPartConfigId = config.httpPartConfigId.get,
       threadPoolConfig = ThreadPoolConfig.toJsonModel(config.threadPoolConfig.get),
       commandKey = config.commandKey,
       commandGroupKey = config.commandGroupKey,

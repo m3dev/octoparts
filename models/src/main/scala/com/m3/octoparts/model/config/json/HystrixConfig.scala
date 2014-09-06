@@ -1,7 +1,6 @@
 package com.m3.octoparts.model.config.json
 
-case class HystrixConfig(httpPartConfigId: Long,
-                         timeoutInMs: Long,
+case class HystrixConfig(timeoutInMs: Long,
                          threadPoolConfig: ThreadPoolConfig,
                          commandKey: String,
                          commandGroupKey: String)

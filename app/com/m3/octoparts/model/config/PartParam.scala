@@ -42,9 +42,7 @@ object PartParam {
    * Returns a [[JsonPartParam]] for a [[PartParam]]
    */
   def toJsonModel(param: PartParam): JsonPartParam = {
-    require(param.id.isDefined && param.httpPartConfigId.isDefined)
     JsonPartParam(
-      httpPartConfigId = param.httpPartConfigId.get,
       required = param.required,
       versioned = param.versioned,
       paramType = param.paramType,

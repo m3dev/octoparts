@@ -24,7 +24,8 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
 
   def createConfig(partId: String): HttpPartConfig = mockHttpPartConfig.copy(
     partId = partId,
-    uriToInterpolate = "http://www.example.com/" + partId
+    uriToInterpolate = "http://www.example.com/" + partId,
+    hystrixConfig = Some(mockHystrixConfig)
   )
 
   val configsRepository = new MockConfigRespository {

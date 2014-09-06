@@ -5,8 +5,7 @@ import com.m3.octoparts.model.config.ParamType
 /**
  * Created by Lloyd on 9/6/14.
  */
-case class PartParam(httpPartConfigId: Long,
-                     required: Boolean,
+case class PartParam(required: Boolean,
                      versioned: Boolean,
                      paramType: ParamType.Value,
                      outputName: String,
