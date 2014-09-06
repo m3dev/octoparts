@@ -5,9 +5,6 @@ import org.scalatest.{ FunSpec, Matchers }
 
 import scala.concurrent.duration._
 
-/**
- * Created by Lloyd on 9/6/14.
- */
 class JsonFormatsSpec extends FunSpec with Matchers {
 
   describe("durationFormat") {

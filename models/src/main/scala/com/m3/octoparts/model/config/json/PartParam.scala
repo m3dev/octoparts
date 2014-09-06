@@ -2,9 +2,6 @@ package com.m3.octoparts.model.config.json
 
 import com.m3.octoparts.model.config.ParamType
 
-/**
- * Created by Lloyd on 9/6/14.
- */
 case class PartParam(required: Boolean,
                      versioned: Boolean,
                      paramType: ParamType.Value,

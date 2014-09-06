@@ -5,9 +5,6 @@ import scala.concurrent.duration._
 import com.m3.octoparts.support.mocks.ConfigDataMocks
 import org.scalatest._
 
-/**
- * Created by Lloyd on 9/6/14.
- */
 class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
 
   describe(".toJsonModel") {
