@@ -1,7 +1,6 @@
 package com.m3.octoparts.model.config
 
 import com.m3.octoparts.model.HttpMethod
-import com.m3.octoparts.model.config.json
 import scala.concurrent.duration._
 import com.m3.octoparts.support.mocks.ConfigDataMocks
 import org.scalatest._
