@@ -62,7 +62,7 @@ object HttpPartConfig {
    * Returns a [[JsonHttpPartConfig]] for a [[HttpPartConfig]]
    */
   def toJsonModel(config: HttpPartConfig): JsonHttpPartConfig = {
-    require(config.hystrixConfig.isDefined)
+    require(config.hystrixConfig.isDefined, s"HystrixConfig not defined on $config")
     JsonHttpPartConfig(
       partId = config.partId,
       owner = config.owner,
