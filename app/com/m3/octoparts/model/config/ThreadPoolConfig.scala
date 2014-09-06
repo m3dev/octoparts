@@ -1,6 +1,7 @@
 package com.m3.octoparts.model.config
 
 import org.joda.time.DateTime
+import com.m3.octoparts.model.config.json.{ ThreadPoolConfig => JsonThreadPoolConfig }
 
 /**
  * Holds ThreadPool Configuration data. Mostly used for Hystrix
@@ -22,5 +23,15 @@ object ThreadPoolConfig {
 
   val defaultCoreSize = 2
   val defaultQueueSize = 256
+
+  /**
+   * Returns a [[JsonThreadPoolConfig]] for a [[ThreadPoolConfig]]
+   */
+  def toJsonModel(config: ThreadPoolConfig): JsonThreadPoolConfig = {
+    JsonThreadPoolConfig(
+      threadPoolKey = config.threadPoolKey,
+      coreSize = config.coreSize,
+      queueSize = config.queueSize)
+  }
 
 }

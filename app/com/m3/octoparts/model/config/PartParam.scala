@@ -1,6 +1,7 @@
 package com.m3.octoparts.model.config
 
 import org.joda.time.DateTime
+import com.m3.octoparts.model.config.json.{ PartParam => JsonPartParam }
 
 /**
  * Model for holding Parameter configuration data for a Http dependency that
@@ -33,4 +34,23 @@ case class PartParam(
 
   def shorter = ShortPartParam(outputName, paramType)
 
+}
+
+object PartParam {
+
+  /**
+   * Returns a [[JsonPartParam]] for a [[PartParam]]
+   */
+  def toJsonModel(param: PartParam): JsonPartParam = {
+    require(param.id.isDefined && param.httpPartConfigId.isDefined)
+    JsonPartParam(
+      httpPartConfigId = param.httpPartConfigId.get,
+      required = param.required,
+      versioned = param.versioned,
+      paramType = param.paramType,
+      outputName = param.outputName,
+      inputNameOverride = param.inputNameOverride,
+      cacheGroups = param.cacheGroups.map(CacheGroup.toJsonModel)
+    )
+  }
 }

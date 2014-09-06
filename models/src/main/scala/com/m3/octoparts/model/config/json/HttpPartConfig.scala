@@ -6,8 +6,7 @@ import scala.concurrent.duration.Duration
 /**
  * Created by Lloyd on 9/6/14.
  */
-case class HttpPartConfig(id: Option[Long] = None, // None means that the record is new
-                          partId: String,
+case class HttpPartConfig(partId: String,
                           owner: String,
                           uriToInterpolate: String,
                           description: String,

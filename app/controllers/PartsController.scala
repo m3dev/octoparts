@@ -71,7 +71,7 @@ class PartsController(
   )
   def list = Action.async { implicit request =>
     debugRc
-    configsRepository.findAllConfigs().map(configs => Ok(Json.toJson(configs)))
+    configsRepository.findAllConfigs().map(configs => Ok(Json.toJson(configs.map(HttpPartConfig.toJsonModel))))
   }
 
   private def logAggregateRequest(aggregateRequest: AggregateRequest, noCache: Boolean)(implicit request: RequestHeader): Unit = {

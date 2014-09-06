@@ -2,6 +2,7 @@ package com.m3.octoparts.model.config
 
 import com.m3.octoparts.cache.config.CacheConfig
 import com.m3.octoparts.model.HttpMethod
+import com.m3.octoparts.model.config.json.{ HttpPartConfig => JsonHttpPartConfig }
 import org.joda.time.DateTime
 
 import scala.concurrent.duration._
@@ -55,6 +56,31 @@ object HttpPartConfig {
         tok.trim.toInt
       }.toOption
     }.toSet
+  }
+
+  /**
+   * Returns a [[JsonHttpPartConfig]] for a [[HttpPartConfig]]
+   */
+  def toJsonModel(config: HttpPartConfig): JsonHttpPartConfig = {
+    JsonHttpPartConfig(
+      partId = config.partId,
+      owner = config.owner,
+      uriToInterpolate = config.uriToInterpolate,
+      description = config.description,
+      method = config.method,
+      hystrixConfig = HystrixConfig.toJsonModel(config.hystrixConfig.get),
+      additionalValidStatuses = config.additionalValidStatuses,
+      parameters = config.parameters.map(PartParam.toJsonModel),
+      deprecatedInFavourOf = config.deprecatedInFavourOf,
+      cacheGroups = config.cacheGroups.map(CacheGroup.toJsonModel),
+      cacheTtl = config.cacheTtl,
+      alertMailsEnabled = config.alertMailsEnabled,
+      alertAbsoluteThreshold = config.alertAbsoluteThreshold,
+      alertPercentThreshold = config.alertPercentThreshold,
+      alertInterval = config.alertInterval,
+      alertMailRecipients = config.alertMailRecipients
+    )
+
   }
 
 }
