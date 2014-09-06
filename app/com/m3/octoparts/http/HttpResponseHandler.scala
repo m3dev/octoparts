@@ -41,7 +41,7 @@ class HttpResponseHandler(defaultEncoding: Charset) extends ResponseHandler[Http
     val etag = apacheResp.getHeaders(HeaderConstants.ETAG).headOption.map(_.getValue)
     // no need to attempt to parse the last-modified date.
     val lastModified = apacheResp.getHeaders(HeaderConstants.LAST_MODIFIED).headOption.map(_.getValue)
-    val (noCache, expiresAt) = parseCacheHeaders(apacheResp.getHeaders(HeaderConstants.CACHE_CONTROL))
+    val (noStore, expiresAt) = parseCacheHeaders(apacheResp.getHeaders(HeaderConstants.CACHE_CONTROL))
 
     HttpResponse(
       status = statusLine.getStatusCode,
@@ -50,7 +50,7 @@ class HttpResponseHandler(defaultEncoding: Charset) extends ResponseHandler[Http
       cookies = cookies,
       mimeType = mimeType,
       charset = charset,
-      cacheControl = CacheControl(noCache, expiresAt, etag, lastModified),
+      cacheControl = CacheControl(noStore, expiresAt, etag, lastModified),
       body = content
     )
   }
@@ -92,7 +92,7 @@ class HttpResponseHandler(defaultEncoding: Charset) extends ResponseHandler[Http
 
   def parseCacheHeaders(headers: Array[Header]): (Boolean, Option[Long]) = {
     val elts = headers.flatMap(_.getElements)
-    val noCache = elts.exists(_.getName == HeaderConstants.CACHE_CONTROL_NO_CACHE)
+    val noStore = elts.exists(_.getName == HeaderConstants.CACHE_CONTROL_NO_STORE)
     val expiresAt = elts.collect {
       case elt if elt.getName == HeaderConstants.CACHE_CONTROL_MAX_AGE =>
         Try {
@@ -101,7 +101,7 @@ class HttpResponseHandler(defaultEncoding: Charset) extends ResponseHandler[Http
         }.toOption
     }.flatten.headOption
 
-    (noCache, expiresAt)
+    (noStore, expiresAt)
   }
 }
 

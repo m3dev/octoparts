@@ -231,7 +231,7 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
     }
   }
 
-  it("should not cache a PartResponse that has the noCache flag set") {
+  it("should not cache a PartResponse that has the noStore flag set") {
     val cacheStuff = createCacheStuff
     val testee = cacheStuff.client
     val cacheDirective = CacheDirective("some part id 9", Seq.empty, Map.empty, Some(5 hours))
@@ -241,7 +241,7 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
       _ =>
         cacheStuff.latestVersionCache.updatePartVersion(cacheDirective.partId, version)
         val cacheKey = testee.PartCacheKeyFactory.tryApply(cacheDirective, testee.CombinedVersionLookup.knownVersions(cacheDirective)).get
-        val partResponse = PartResponse(cacheDirective.partId, cacheDirective.partId, cacheControl = CacheControl(noCache = true))
+        val partResponse = PartResponse(cacheDirective.partId, cacheDirective.partId, cacheControl = CacheControl(noStore = true))
         val cacheMissResp = testee.putIfAbsent(cacheDirective) {
           Future.successful(partResponse)
         }

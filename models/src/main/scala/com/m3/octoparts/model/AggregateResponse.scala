@@ -81,7 +81,7 @@ object CacheControl {
 }
 
 // Avoiding joda's DateTime to reduce models dependencies
-case class CacheControl(@BooleanBeanProperty noCache: Boolean = false,
+case class CacheControl(@BooleanBeanProperty noStore: Boolean = false,
                         @BeanProperty expiresAt: Option[Long] = None,
                         @BeanProperty etag: Option[String] = None,
                         @BeanProperty lastModified: Option[String] = None) {
