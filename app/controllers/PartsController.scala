@@ -65,7 +65,7 @@ class PartsController(
     value = "Return a list of all registered endpoints in the system",
     nickname = "Endpoints listing",
     notes = "Returns a list of registered endpoints in the system.",
-    response = classOf[HttpPartConfig],
+    response = classOf[com.m3.octoparts.model.config.json.HttpPartConfig],
     responseContainer = "List",
     httpMethod = "GET"
   )
