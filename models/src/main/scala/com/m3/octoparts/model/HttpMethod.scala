@@ -1,4 +1,4 @@
-package com.m3.octoparts.http
+package com.m3.octoparts.model
 
 object HttpMethod extends Enumeration {
   type HttpMethod = Value

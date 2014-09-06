@@ -1,9 +1,13 @@
 package com.m3.octoparts.model.config
 
-import com.m3.octoparts.repository.config.HystrixConfigRepository
+import scala.concurrent.duration._
 import org.joda.time.DateTime
 
 import scala.language.postfixOps
+
+object HystrixConfig {
+  val defaultTimeout = (5 seconds).toMillis
+}
 
 /**
  * Holds the Hystrix Configuration data for a given dependency
@@ -18,7 +22,7 @@ case class HystrixConfig(
     threadPoolConfig: Option[ThreadPoolConfig] = None,
     commandKey: String,
     commandGroupKey: String,
-    timeoutInMs: Long = HystrixConfigRepository.defaultTimeout,
+    timeoutInMs: Long = HystrixConfig.defaultTimeout,
     createdAt: DateTime,
     updatedAt: DateTime) extends ConfigModel[HystrixConfig] {
 

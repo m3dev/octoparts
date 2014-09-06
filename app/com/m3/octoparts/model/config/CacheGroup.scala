@@ -1,6 +1,5 @@
 package com.m3.octoparts.model.config
 
-import com.m3.octoparts.repository.config.CacheGroupRepository
 import org.joda.time.DateTime
 
 /**

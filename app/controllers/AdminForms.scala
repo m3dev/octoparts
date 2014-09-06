@@ -1,6 +1,6 @@
 package controllers
 
-import com.m3.octoparts.http.HttpMethod
+import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config._
 import org.joda.time.DateTime
 import play.api.data.Forms._

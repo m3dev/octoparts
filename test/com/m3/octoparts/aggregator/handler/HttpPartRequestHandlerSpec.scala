@@ -7,7 +7,7 @@ import scala.language.postfixOps
 import com.m3.octoparts.model.PartRequestParam
 import scala.language.implicitConversions
 import com.m3.octoparts.hystrix.{ MockHttpClientComponent, HystrixExecutor }
-import com.m3.octoparts.http.HttpMethod.Get
+import com.m3.octoparts.model.HttpMethod.Get
 import com.m3.octoparts.model.config.{ ShortPartParam, HystrixConfig }
 import com.m3.octoparts.model.config.ParamType._
 import com.m3.octoparts.support.mocks.ConfigDataMocks

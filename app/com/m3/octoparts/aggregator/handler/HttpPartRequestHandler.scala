@@ -4,7 +4,7 @@ import java.net.{ URI, URLEncoder }
 
 import com.m3.octoparts.http.{ HttpResponse, _ }
 import com.m3.octoparts.hystrix._
-import com.m3.octoparts.model.PartResponse
+import com.m3.octoparts.model.{ HttpMethod, PartResponse }
 import com.m3.octoparts.model.config._
 import com.netaporter.uri.Uri
 import com.netaporter.uri.dsl._

@@ -1,8 +1,7 @@
 package com.m3.octoparts.model.config
 
 import com.m3.octoparts.cache.config.CacheConfig
-import com.m3.octoparts.http.HttpMethod
-import com.m3.octoparts.repository.config.HttpPartConfigRepository
+import com.m3.octoparts.model.HttpMethod
 import org.joda.time.DateTime
 
 import scala.concurrent.duration._

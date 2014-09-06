@@ -2,7 +2,8 @@ package com.m3.octoparts.http
 
 import java.net.URI
 
-import com.m3.octoparts.http.HttpMethod._
+import com.m3.octoparts.model.HttpMethod
+import com.m3.octoparts.model.HttpMethod._
 import org.apache.http.HttpEntityEnclosingRequest
 import org.apache.http.client.methods._
 import org.apache.http.entity.StringEntity

@@ -1,8 +1,6 @@
 package com.m3.octoparts.model.config
 
-import com.m3.octoparts.repository.config.PartParamRepository
 import org.joda.time.DateTime
-import skinny.{ ParamType => SkinnyParamType }
 
 /**
  * Model for holding Parameter configuration data for a Http dependency that

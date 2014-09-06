@@ -1,6 +1,6 @@
 package com.m3.octoparts.support.mocks
 
-import com.m3.octoparts.http.HttpMethod._
+import com.m3.octoparts.model.HttpMethod._
 import com.m3.octoparts.model.config.ParamType._
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.support.db.RequiresDB
