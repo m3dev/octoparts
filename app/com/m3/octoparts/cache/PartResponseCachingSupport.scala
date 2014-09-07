@@ -39,7 +39,7 @@ trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
       futureMaybeFromCache.flatMap {
         partResponse =>
           // at this point, the response may come from cache and be stale.
-          if (partResponse.retrievedFromCache && partResponse.cacheControl.shouldRevalidate) {
+          if (partResponse.retrievedFromCache && partResponse.cacheControl.hasExpired) {
             revalidate(partResponse, directive, ci, partRequestInfo, params)
           } else {
             Future.successful(partResponse)
