@@ -9,17 +9,35 @@ import com.m3.octoparts.model.config._
 import org.apache.http.HttpStatus
 import skinny.logging.Logging
 import skinny.util.LTSV
+import com.m3.octoparts.cache.RichCacheControl._
 
 import scala.concurrent.Future
 
-trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
+private[cache] object PartResponseCachingSupport {
 
-  import com.m3.octoparts.cache.RichCacheControl._
+  /**
+   * @return The response to use (between the cached one and the new one). Will use new one <=> the new one is not a 304.
+   */
+  private[cache] def selectLatest(newPartResponse: PartResponse, existingPartResponse: PartResponse): PartResponse = {
+    val is304 = newPartResponse.statusCode.fold(false) {
+      _.intValue == HttpStatus.SC_NOT_MODIFIED
+    }
+    if (is304) existingPartResponse else newPartResponse
+  }
+
+  private[cache] def shouldRevalidate(partResponse: PartResponse): Boolean = {
+    partResponse.retrievedFromCache && partResponse.cacheControl.hasExpired
+  }
+}
+
+trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
+  import PartResponseCachingSupport._
 
   def cacheClient: CacheClient
 
-  override def processWithConfig(
-    ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, String]): Future[PartResponse] = {
+  override def processWithConfig(ci: HttpPartConfig,
+                                 partRequestInfo: PartRequestInfo,
+                                 params: Map[ShortPartParam, String]): Future[PartResponse] = {
 
     if (partRequestInfo.noCache || !ci.cacheConfig.cachingEnabled) {
       // noCache or TTL defined but 0 => skip caching
@@ -39,7 +57,7 @@ trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
       futureMaybeFromCache.flatMap {
         partResponse =>
           // at this point, the response may come from cache and be stale.
-          if (partResponse.retrievedFromCache && partResponse.cacheControl.hasExpired) {
+          if (shouldRevalidate(partResponse)) {
             revalidate(partResponse, directive, ci, partRequestInfo, params)
           } else {
             Future.successful(partResponse)
@@ -51,8 +69,11 @@ trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
     }
   }
 
-  private[cache] def revalidate(
-    partResponse: PartResponse, directive: CacheDirective, ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, String]): Future[PartResponse] = {
+  private[cache] def revalidate(partResponse: PartResponse,
+                                directive: CacheDirective,
+                                ci: HttpPartConfig,
+                                partRequestInfo: PartRequestInfo,
+                                params: Map[ShortPartParam, String]): Future[PartResponse] = {
 
     val revalidationParams = partResponse.cacheControl.revalidationHeaders.map {
       case (k, v) => ShortPartParam(outputName = k, paramType = ParamType.Header) -> v
@@ -67,15 +88,4 @@ trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
     }
     revalidatedFResp
   }
-
-  /**
-   * @return The response to use (between the cached one and the new one). Will use new one <=> the new one is not a 304.
-   */
-  private[cache] def selectLatest(newPartResponse: PartResponse, existingPartResponse: PartResponse): PartResponse = {
-    val is304 = newPartResponse.statusCode.fold(false) {
-      _.intValue == HttpStatus.SC_NOT_MODIFIED
-    }
-    if (is304) existingPartResponse else newPartResponse
-  }
-
 }

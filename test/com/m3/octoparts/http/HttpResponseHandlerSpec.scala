@@ -98,12 +98,11 @@ class HttpResponseHandlerSpec extends FunSpec with Matchers with BeforeAndAfter 
 
       val result = handler.handleResponse(response)
       result.cacheControl.noStore should be(false)
+      result.cacheControl.noCache should be(false)
       result.cacheControl.expiresAt should be(Some(now + 3600 * 1000L))
     }
 
     it("should parse a Cache-Control: no-store header") {
-      val now = 1401100000000L
-      DateTimeUtils.setCurrentMillisFixed(now)
       val headers = Seq(
         "Server" -> "Apache",
         "Cache-Control" -> "no-store"
@@ -112,9 +111,22 @@ class HttpResponseHandlerSpec extends FunSpec with Matchers with BeforeAndAfter 
 
       val result = handler.handleResponse(response)
       result.cacheControl.noStore should be(true)
+      result.cacheControl.noCache should be(false)
       result.cacheControl.expiresAt should be(None)
     }
 
+    it("should parse a Cache-Control: no-cache header") {
+      val headers = Seq(
+        "Server" -> "Apache",
+        "Cache-Control" -> "no-cache"
+      )
+      val response = buildApacheResponse(HttpResponse(HttpStatus.SC_OK, "OK", headers = headers, body = Some("hello world")))
+
+      val result = handler.handleResponse(response)
+      result.cacheControl.noStore should be(false)
+      result.cacheControl.noCache should be(true)
+      result.cacheControl.expiresAt should be(None)
+    }
   }
 
   describe("cookies parsing") {
