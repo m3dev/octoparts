@@ -161,7 +161,7 @@ object OctopartsBuild extends Build {
     Seq(
       // Output test results in JUnit XML format for Jenkins
       testOptions in t += Tests.Argument("-u", "target/test-reports"),
-      // Needed because some tests run DDL agains the CI DB.
+      // Needed because some tests run DDL against the CI DB.
       parallelExecution in t := false)
   }
 
