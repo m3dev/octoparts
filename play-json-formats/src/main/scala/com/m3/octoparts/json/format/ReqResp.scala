@@ -1,7 +1,6 @@
 package com.m3.octoparts.json.format
 
 import com.m3.octoparts.model._
-import com.m3.octoparts.model.config.json.{ CacheGroup, ThreadPoolConfig }
 import play.api.libs.json.Json
 
 /**
