@@ -1,6 +1,6 @@
 package controllers
 
-import com.m3.octoparts.JsonFormats
+import com.m3.octoparts.json.format.ReqResp._
 import com.m3.octoparts.aggregator.handler._
 import com.m3.octoparts.aggregator.service._
 import com.m3.octoparts.config._
@@ -19,7 +19,6 @@ import scala.language.postfixOps
 
 class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with ConfigDataMocks {
 
-  import JsonFormats._
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def createConfig(partId: String): HttpPartConfig = mockHttpPartConfig.copy(

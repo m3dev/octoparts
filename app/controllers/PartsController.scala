@@ -1,6 +1,7 @@
 package controllers
 
-import com.m3.octoparts.JsonFormats
+import com.m3.octoparts.json.format.ConfigModel._
+import com.m3.octoparts.json.format.ReqResp._
 import com.m3.octoparts.aggregator.service.PartsService
 import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.HttpPartConfig
@@ -16,7 +17,6 @@ import skinny.util.LTSV
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import JsonFormats._
 
 @Api(
   value = "/octoparts/1",

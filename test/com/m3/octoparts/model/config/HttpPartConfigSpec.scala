@@ -3,6 +3,7 @@ package com.m3.octoparts.model.config
 import com.m3.octoparts.model.HttpMethod
 import scala.concurrent.duration._
 import com.m3.octoparts.support.mocks.ConfigDataMocks
+import scala.language.postfixOps
 import org.scalatest._
 
 class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {

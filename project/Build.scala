@@ -21,7 +21,7 @@ object OctopartsBuild extends Build {
 
   val httpPort = 9000
   val theScalaVersion = "2.11.2"
-  val thePlayVersion = "2.3.4"
+  val thePlayVersion = "2.3.4" // make play-json-formats subproject depend on play-json when bumping to 2.4
   val slf4jVersion = "1.7.7"
   val hystrixVersion = "1.3.17"
   val httpClientVersion = "4.3.5"
@@ -234,6 +234,22 @@ object OctopartsBuild extends Build {
   }
 
   // -------------------------------------------------------
+  // Play-JSON-formats
+  // -------------------------------------------------------
+  lazy val playJsonFormats = Project(id = "play-json-formats", base = file("play-json-formats"), settings = nonPlayAppSettings)
+    .settings(
+      libraryDependencies ++= Seq(
+        ws, //TODO when upgrading to Play 2.4; change this to use just play-json
+        "org.scalatest" %% "scalatest" % "2.2.1" % "test",
+        "org.scalatestplus" %% "play" % "1.2.0" % "test"
+      ),
+      name := "octoparts-play-json-formats",
+      crossScalaVersions := Seq("2.10.4", "2.11.2"),
+      crossVersion := CrossVersion.binary
+    )
+    .dependsOn(models)
+
+  // -------------------------------------------------------
   // Scala-WS-client
   // -------------------------------------------------------
   lazy val scalaWsClient = Project(id = "scala-ws-client", base = file("scala-ws-client"), settings = nonPlayAppSettings)
@@ -247,15 +263,15 @@ object OctopartsBuild extends Build {
       crossScalaVersions := Seq("2.10.4", "2.11.2"),
       crossVersion := CrossVersion.binary
     )
-    .dependsOn(models)
+    .dependsOn(models, playJsonFormats)
 
   // -------------------------------------------------------
   // Play app
   // -------------------------------------------------------
   lazy val app = Project(id = "octoparts", base = file("."), settings = playAppSettings)
     .enablePlugins(PlayScala)
-    .dependsOn(models, authPluginApi, scalaWsClient)
-    .aggregate(scalaWsClient, javaClient, models, authPluginApi)
+    .dependsOn(models, authPluginApi, playJsonFormats)
+    .aggregate(scalaWsClient, javaClient, models, authPluginApi, playJsonFormats)
 
   // Settings for publishing to Maven Central
   lazy val publishSettings = Seq(
