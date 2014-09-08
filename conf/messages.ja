@@ -106,7 +106,7 @@ cacheGroups.none=まだ作られていません。
 menu.links=リンク
 menu.monitoring=モニタリング
 menu.info=情報
-menu.logout=グアウト
+menu.logout=ログアウト
 
 admin.partParameterMismatch=ID「{0}」を持つパラメータはパーツ「{1}」のパラメータではありません
 admin.parameterNotFound=パラメータID「{0}」不明
