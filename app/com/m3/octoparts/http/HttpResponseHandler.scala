@@ -38,10 +38,7 @@ class HttpResponseHandler(defaultEncoding: Charset) extends ResponseHandler[Http
     val mimeType = contentType.map(_.getMimeType)
     val charset = contentType.flatMap(cType => Option(cType.getCharset)).map(_.displayName)
     val content = entity.map(EntityUtils.toString(_, defaultEncoding))
-    val etag = apacheResp.getHeaders(HeaderConstants.ETAG).headOption.map(_.getValue)
-    // no need to attempt to parse the last-modified date.
-    val lastModified = apacheResp.getHeaders(HeaderConstants.LAST_MODIFIED).headOption.map(_.getValue)
-    val (noStore, expiresAt) = parseCacheHeaders(apacheResp.getHeaders(HeaderConstants.CACHE_CONTROL))
+    val cacheControl = readCacheControl(apacheResp)
 
     HttpResponse(
       status = statusLine.getStatusCode,
@@ -50,12 +47,12 @@ class HttpResponseHandler(defaultEncoding: Charset) extends ResponseHandler[Http
       cookies = cookies,
       mimeType = mimeType,
       charset = charset,
-      cacheControl = CacheControl(noStore, expiresAt, etag, lastModified),
+      cacheControl = cacheControl,
       body = content
     )
   }
 
-  private def tryParseCookie(value: String): Seq[HttpCookie] = {
+  private[http] def tryParseCookie(value: String): Seq[HttpCookie] = {
     Try {
       // HttpCookie.parse may throw an IllegalArgumentException
       JListWrapper(HttpCookie.parse(value))
@@ -72,7 +69,7 @@ class HttpResponseHandler(defaultEncoding: Charset) extends ResponseHandler[Http
    * @param headers Seq Headers
    * @return Seq[Cookie]
    */
-  def parseCookieHeaders(headers: Seq[Header]): Seq[Cookie] = {
+  private[http] def parseCookieHeaders(headers: Seq[Header]): Seq[Cookie] = {
     for {
       header <- headers
       cookie <- tryParseCookie(header.getValue)
@@ -90,18 +87,24 @@ class HttpResponseHandler(defaultEncoding: Charset) extends ResponseHandler[Http
     }
   }
 
-  def parseCacheHeaders(headers: Array[Header]): (Boolean, Option[Long]) = {
-    val elts = headers.flatMap(_.getElements)
-    val noStore = elts.exists(_.getName == HeaderConstants.CACHE_CONTROL_NO_STORE)
-    val expiresAt = elts.collect {
-      case elt if elt.getName == HeaderConstants.CACHE_CONTROL_MAX_AGE =>
+  /**
+   * Parses cache-related headers
+   */
+  private[http] def readCacheControl(apacheResp: ApacheHttpResponse): CacheControl = {
+    val etag = apacheResp.getHeaders(HeaderConstants.ETAG).headOption.map(_.getValue)
+    // no need to attempt to parse the last-modified date.
+    val lastModified = apacheResp.getHeaders(HeaderConstants.LAST_MODIFIED).headOption.map(_.getValue)
+    val cacheControlElements = apacheResp.getHeaders(HeaderConstants.CACHE_CONTROL).flatMap(_.getElements)
+    val noStore = cacheControlElements.exists(_.getName == HeaderConstants.CACHE_CONTROL_NO_STORE)
+    val noCache = cacheControlElements.exists(_.getName == HeaderConstants.CACHE_CONTROL_NO_CACHE)
+    val expiresAt = cacheControlElements.filter(_.getName == HeaderConstants.CACHE_CONTROL_MAX_AGE).flatMap {
+      elt =>
         Try {
           val maxAgeSeconds = elt.getValue.toLong
           DateTimeUtils.currentTimeMillis() + maxAgeSeconds * 1000L
         }.toOption
-    }.flatten.headOption
-
-    (noStore, expiresAt)
+    }.headOption
+    CacheControl(noStore, noCache, expiresAt, etag, lastModified)
   }
 }
 

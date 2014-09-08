@@ -19,11 +19,9 @@ class RichCacheControl(val cacheControl: CacheControl) extends AnyVal {
    *
    * @return true if there is no max-age header
    */
-  def hasExpired = cacheControl.expiresAt.fold(true) {
+  def hasExpired = cacheControl.noCache || cacheControl.expiresAt.fold(true) {
     _ <= DateTimeUtils.currentTimeMillis()
   }
-
-  def shouldRevalidate = cacheControl.canRevalidate && hasExpired
 
   def revalidationHeaders = Seq(
     cacheControl.etag.map(HeaderConstants.IF_NONE_MATCH -> _),

@@ -81,7 +81,15 @@ object CacheControl {
 }
 
 // Avoiding joda's DateTime to reduce models dependencies
+/**
+ * @param noStore Indicates that the response was explicitly forbidden from being stored
+ * @param noCache Indicates that the response must be validated
+ * @param expiresAt java timestamp, indicates until when the response can be used without validation
+ * @param etag backend-defined String to be used for validation
+ * @param lastModified a date. we do not parse it and use it as-is
+ */
 case class CacheControl(@BooleanBeanProperty noStore: Boolean = false,
+                        @BooleanBeanProperty noCache: Boolean = false,
                         @BeanProperty expiresAt: Option[Long] = None,
                         @BeanProperty etag: Option[String] = None,
                         @BeanProperty lastModified: Option[String] = None) {
