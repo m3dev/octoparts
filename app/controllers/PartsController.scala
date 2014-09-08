@@ -19,7 +19,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 @Api(
-  value = "/octoparts/1",
+  value = "/octoparts/2",
   description = "Octoparts' backend endpoints API",
   produces = "application/json",
   consumes = "application/json"
