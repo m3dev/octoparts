@@ -1,8 +1,9 @@
 package com.m3.octoparts.aggregator.handler
 
-import com.m3.octoparts.http.HttpMethod.Get
+import com.m3.octoparts.model.HttpMethod.Get
 import com.m3.octoparts.http._
 import com.m3.octoparts.hystrix._
+import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config._
 
 import scala.concurrent.ExecutionContext

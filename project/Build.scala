@@ -21,7 +21,7 @@ object OctopartsBuild extends Build {
 
   val httpPort = 9000
   val theScalaVersion = "2.11.2"
-  val thePlayVersion = "2.3.4"
+  val thePlayVersion = "2.3.4" // make play-json-formats subproject depend on play-json when bumping to 2.4
   val slf4jVersion = "1.7.7"
   val hystrixVersion = "1.3.17"
   val httpClientVersion = "4.3.5"
@@ -51,7 +51,7 @@ object OctopartsBuild extends Build {
   /*
    * Settings that are common for every project _except_ the Play app
    * (because we don't want to publish the Play app to Maven Central)
-   */ 
+   */
   lazy val nonPlayAppSettings =
     commonSettings ++
     publishSettings
@@ -117,13 +117,13 @@ object OctopartsBuild extends Build {
           "org.scalikejdbc" %% "scalikejdbc-test"   % scalikejdbcVersion % "test"
         ).map(_.excludeAll(
           ExclusionRule(organization = "spy", name = "spymemcached"), // spymemcached's org changed from spy to net.spy
-          ExclusionRule(organization = "org.slf4j", name = "slf4j-log4j12"), 
-          ExclusionRule(organization = "org.slf4j", name = "slf4j-jdk14"), 
+          ExclusionRule(organization = "org.slf4j", name = "slf4j-log4j12"),
+          ExclusionRule(organization = "org.slf4j", name = "slf4j-jdk14"),
           ExclusionRule(organization = "org.slf4j", name = "slf4j-jcl"),
           ExclusionRule(organization = "org.slf4j", name = "slf4j-nop"),
           ExclusionRule(organization = "org.slf4j", name = "slf4j-simple")))
       )
-        
+
   lazy val playSettings = Seq(
     playVersion := thePlayVersion,
     playDefaultPort := httpPort
@@ -131,9 +131,9 @@ object OctopartsBuild extends Build {
 
   lazy val resolverSettings = {
     // Use in-house Maven repo instead of Maven central if env var is set
-    sys.env.get("INHOUSE_MAVEN_REPO").fold[Seq[sbt.Def.Setting[_]]] { 
+    sys.env.get("INHOUSE_MAVEN_REPO").fold[Seq[sbt.Def.Setting[_]]] {
       Seq(
-        resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"  
+        resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"
       )
     } { inhouse =>
       Seq(
@@ -161,7 +161,7 @@ object OctopartsBuild extends Build {
     Seq(
       // Output test results in JUnit XML format for Jenkins
       testOptions in t += Tests.Argument("-u", "target/test-reports"),
-      // Needed because some tests run DDL agains the CI DB.
+      // Needed because some tests run DDL against the CI DB.
       parallelExecution in t := false)
   }
 
@@ -215,7 +215,7 @@ object OctopartsBuild extends Build {
     val jacksonVersion = "2.4.2"
 
     Project(id = "java-client", base = file("java-client"), settings = nonPlayAppSettings)
-      .settings( 
+      .settings(
         name := "octoparts-java-client",
         crossScalaVersions := Seq("2.10.4", "2.11.2"),
         javacOptions in compile ++= Seq("-source", "1.6", "-target", "1.6", "-Xlint"),
@@ -234,6 +234,22 @@ object OctopartsBuild extends Build {
   }
 
   // -------------------------------------------------------
+  // Play-JSON-formats
+  // -------------------------------------------------------
+  lazy val playJsonFormats = Project(id = "play-json-formats", base = file("play-json-formats"), settings = nonPlayAppSettings)
+    .settings(
+      libraryDependencies ++= Seq(
+        ws, //TODO when upgrading to Play 2.4; change this to use just play-json
+        "org.scalatest" %% "scalatest" % "2.2.1" % "test",
+        "org.scalatestplus" %% "play" % "1.2.0" % "test"
+      ),
+      name := "octoparts-play-json-formats",
+      crossScalaVersions := Seq("2.10.4", "2.11.2"),
+      crossVersion := CrossVersion.binary
+    )
+    .dependsOn(models)
+
+  // -------------------------------------------------------
   // Scala-WS-client
   // -------------------------------------------------------
   lazy val scalaWsClient = Project(id = "scala-ws-client", base = file("scala-ws-client"), settings = nonPlayAppSettings)
@@ -247,15 +263,15 @@ object OctopartsBuild extends Build {
       crossScalaVersions := Seq("2.10.4", "2.11.2"),
       crossVersion := CrossVersion.binary
     )
-    .dependsOn(models)
+    .dependsOn(models, playJsonFormats)
 
   // -------------------------------------------------------
   // Play app
   // -------------------------------------------------------
   lazy val app = Project(id = "octoparts", base = file("."), settings = playAppSettings)
     .enablePlugins(PlayScala)
-    .dependsOn(models, authPluginApi)
-    .aggregate(scalaWsClient, javaClient, models, authPluginApi)
+    .dependsOn(models, authPluginApi, playJsonFormats)
+    .aggregate(scalaWsClient, javaClient, models, authPluginApi, playJsonFormats)
 
   // Settings for publishing to Maven Central
   lazy val publishSettings = Seq(

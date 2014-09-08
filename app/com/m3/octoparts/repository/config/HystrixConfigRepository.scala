@@ -14,8 +14,6 @@ object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with Timestam
 
   override lazy val tableName = "hystrix_config"
 
-  val defaultTimeout = (5 seconds).toMillis
-
   protected val permittedFields = Seq(
     "httpPartConfigId" -> SkinnyParamType.Long,
     "threadPoolConfigId" -> SkinnyParamType.Long,

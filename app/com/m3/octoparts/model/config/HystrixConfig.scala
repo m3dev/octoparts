@@ -1,9 +1,27 @@
 package com.m3.octoparts.model.config
 
-import com.m3.octoparts.repository.config.HystrixConfigRepository
+import scala.concurrent.duration._
 import org.joda.time.DateTime
+import com.m3.octoparts.model.config.json.{ HystrixConfig => JsonHystrixConfig }
 
 import scala.language.postfixOps
+
+object HystrixConfig {
+  val defaultTimeout = (5 seconds).toMillis
+
+  /**
+   * Returns a [[JsonHystrixConfig]] for a given [[HystrixConfig]]
+   */
+  def toJsonModel(config: HystrixConfig): JsonHystrixConfig = {
+    require(config.threadPoolConfig.isDefined)
+    JsonHystrixConfig(
+      threadPoolConfig = ThreadPoolConfig.toJsonModel(config.threadPoolConfig.get),
+      commandKey = config.commandKey,
+      commandGroupKey = config.commandGroupKey,
+      timeoutInMs = config.timeoutInMs
+    )
+  }
+}
 
 /**
  * Holds the Hystrix Configuration data for a given dependency
@@ -18,7 +36,7 @@ case class HystrixConfig(
     threadPoolConfig: Option[ThreadPoolConfig] = None,
     commandKey: String,
     commandGroupKey: String,
-    timeoutInMs: Long = HystrixConfigRepository.defaultTimeout,
+    timeoutInMs: Long = HystrixConfig.defaultTimeout,
     createdAt: DateTime,
     updatedAt: DateTime) extends ConfigModel[HystrixConfig] {
 

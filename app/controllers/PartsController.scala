@@ -1,5 +1,7 @@
 package controllers
 
+import com.m3.octoparts.json.format.ConfigModel._
+import com.m3.octoparts.json.format.ReqResp._
 import com.m3.octoparts.aggregator.service.PartsService
 import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.HttpPartConfig
@@ -28,7 +30,6 @@ class PartsController(
     requestTimeout: Duration,
     readClientCacheHeaders: Boolean) extends Controller with LoggingSupport {
 
-  import com.m3.octoparts.model.JsonFormats._
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
   @ApiOperation(
@@ -64,13 +65,13 @@ class PartsController(
     value = "Return a list of all registered endpoints in the system",
     nickname = "Endpoints listing",
     notes = "Returns a list of registered endpoints in the system.",
-    response = classOf[HttpPartConfig],
+    response = classOf[com.m3.octoparts.model.config.json.HttpPartConfig],
     responseContainer = "List",
     httpMethod = "GET"
   )
   def list = Action.async { implicit request =>
     debugRc
-    configsRepository.findAllConfigs().map(configs => Ok(Json.toJson(configs)))
+    configsRepository.findAllConfigs().map(configs => Ok(Json.toJson(configs.map(HttpPartConfig.toJsonModel))))
   }
 
   private def logAggregateRequest(aggregateRequest: AggregateRequest, noCache: Boolean)(implicit request: RequestHeader): Unit = {

@@ -1,6 +1,6 @@
 package com.m3.octoparts.repository.config
 
-import com.m3.octoparts.http.HttpMethod
+import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config._
 import scalikejdbc._
 import skinny.orm._

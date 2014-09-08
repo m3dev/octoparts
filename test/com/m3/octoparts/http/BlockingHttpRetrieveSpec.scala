@@ -3,7 +3,7 @@ package com.m3.octoparts.http
 import java.net.URI
 import org.scalatest.{ Matchers, FunSpec }
 import org.scalatest.concurrent.ScalaFutures
-import HttpMethod._
+import com.m3.octoparts.model.HttpMethod._
 import org.apache.http.client.methods._
 import com.m3.octoparts.hystrix.MockHttpClientComponent
 
