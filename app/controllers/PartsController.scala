@@ -42,8 +42,9 @@ class PartsController(
   @ApiImplicitParams(Array(new ApiImplicitParam(
     value = "An AggregateRequest consisting of PartRequests that individually invoke a registered backend service once.",
     required = true,
-    dataType = "com.m3.octoparts.models.AggregateRequest",
-    paramType = "body"
+    dataType = "com.m3.octoparts.model.AggregateRequest",
+    paramType = "body",
+    name = "body"
   )))
   def retrieveParts = Action.async(BodyParsers.parse.json) { implicit request =>
     request.body.validate[AggregateRequest].fold[Future[Result]](
@@ -78,7 +79,7 @@ class PartsController(
     val logData = Seq(
       "requestId" -> aggregateRequest.requestMeta.id,
       "noCache" -> noCache.toString,
-      "timeoutMs" -> aggregateRequest.requestMeta.timeoutMs.fold("default")(_.toString),
+      "timeoutMs" -> aggregateRequest.requestMeta.timeout.fold("default")(_.toMillis.toString),
       "requestUrl" -> aggregateRequest.requestMeta.requestUrl.getOrElse("unknown"),
       "numParts" -> aggregateRequest.requests.size.toString)
     if (Logger.isDebugEnabled) {

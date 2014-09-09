@@ -26,6 +26,7 @@ object OctopartsBuild extends Build {
   val hystrixVersion = "1.3.17"
   val httpClientVersion = "4.3.5"
   val scalikejdbcVersion = "2.1.1"
+  val swaggerVersion = "1.3.8"
 
   val testEnv = sys.env.get("PLAY_ENV") match {
     case Some("ci") => "ci"
@@ -106,7 +107,7 @@ object OctopartsBuild extends Build {
           "com.github.tototoshi" %% "play-flyway" % "1.1.2",
           "org.scaldi" %% "scaldi-play" % "0.4.1",
           "com.kenshoo" %% "metrics-play" % "2.3.0_0.1.6",
-          "com.wordnik" %% "swagger-play2" % "1.3.8",
+          "com.wordnik" %% "swagger-play2" % swaggerVersion,
 
           // Test
           "com.typesafe.play" %% "play-test" % thePlayVersion % "test",
@@ -133,7 +134,8 @@ object OctopartsBuild extends Build {
     // Use in-house Maven repo instead of Maven central if env var is set
     sys.env.get("INHOUSE_MAVEN_REPO").fold[Seq[sbt.Def.Setting[_]]] {
       Seq(
-        resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"
+        resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/",
+        resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
       )
     } { inhouse =>
       Seq(
@@ -203,6 +205,7 @@ object OctopartsBuild extends Build {
   lazy val models = Project(id = "models", base = file("models"), settings = nonPlayAppSettings)
     .settings(
       name := "octoparts-models",
+      libraryDependencies += "com.wordnik" % "swagger-annotations" % swaggerVersion intransitive(),
       crossScalaVersions := Seq("2.10.4", "2.11.2"),
       crossVersion := CrossVersion.binary
     )

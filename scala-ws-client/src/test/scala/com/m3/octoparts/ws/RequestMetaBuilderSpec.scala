@@ -2,6 +2,7 @@ package com.m3.octoparts.ws
 
 import com.m3.octoparts.model.RequestMeta
 import org.scalatest.{ Matchers, FunSpec }
+import scala.concurrent.duration._
 
 class RequestMetaBuilderSpec extends FunSpec with Matchers {
 
@@ -14,7 +15,7 @@ class RequestMetaBuilderSpec extends FunSpec with Matchers {
           sessionId = Some(i.toString),
           requestUrl = Some("http://someUrl.com"),
           userAgent = Some("secret-agent-man"),
-          timeoutMs = Some(i * 3001)
+          timeout = Some(i * 3001.millis)
         )
       }
       val reqMeta = builder(3)
@@ -23,7 +24,7 @@ class RequestMetaBuilderSpec extends FunSpec with Matchers {
       reqMeta.sessionId should be(Some("3"))
       reqMeta.requestUrl should be(Some("http://someUrl.com"))
       reqMeta.userAgent should be(Some("secret-agent-man"))
-      reqMeta.timeoutMs should be(Some(9003L))
+      reqMeta.timeout should be(Some(9003.millis))
     }
   }
 

@@ -13,7 +13,6 @@ import org.scalatest.concurrent.ScalaFutures
 
 class PartResponseCachingSupportSpec extends FunSpec with Matchers with ScalaFutures with ConfigDataMocks {
 
-
   describe("PartResponseCachingSupport#selectLatest") {
     val stalePartResponse = PartResponse(partId = "XXX", id = "YYY", contents = Some("A"), cacheControl = CacheControl(etag = Some("123")))
 

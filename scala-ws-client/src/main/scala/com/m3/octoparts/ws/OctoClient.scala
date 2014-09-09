@@ -106,7 +106,7 @@ trait OctoClientLike {
       Future.successful(emptyReqResponse)
     else {
       val jsonBody = Json.toJson(aggReq)
-      logger.debug(s"OctopartsId: ${aggReq.requestMeta.id}, RequestBody: ${jsonBody.toString}")
+      logger.debug(s"OctopartsId: ${aggReq.requestMeta.id}, RequestBody: $jsonBody")
       wsPost(urlFor(Invoke), jsonBody)
         .map(resp => resp.json.as[AggregateResponse])
         .recover(rescuer(rescueAggregateResponse))
@@ -199,7 +199,7 @@ trait OctoClientLike {
   /**
    * Generates a default dumb/empty [[com.m3.octoparts.model.AggregateResponse]].
    */
-  protected def emptyReqResponse = AggregateResponse(ResponseMeta(id = UUID.randomUUID().toString, processTime = 0L), responses = Nil)
+  protected def emptyReqResponse = AggregateResponse(ResponseMeta(id = UUID.randomUUID().toString, processTime = Duration.Zero), responses = Nil)
 
   /**
    * Drops the final forward slash from a string if it exists.

@@ -18,7 +18,7 @@ object HystrixConfig {
       threadPoolConfig = ThreadPoolConfig.toJsonModel(config.threadPoolConfig.get),
       commandKey = config.commandKey,
       commandGroupKey = config.commandGroupKey,
-      timeoutInMs = config.timeoutInMs
+      timeout = config.timeoutInMs.millis
     )
   }
 }

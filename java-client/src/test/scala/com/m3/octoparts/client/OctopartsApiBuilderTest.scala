@@ -1,5 +1,7 @@
 package com.m3.octoparts.client
 
+import java.nio.charset.StandardCharsets
+
 import com.m3.octoparts.model.AggregateRequest
 import org.scalatest.{ BeforeAndAfterAll, FunSpec, Matchers }
 
@@ -12,7 +14,7 @@ class OctopartsApiBuilderTest extends FunSpec with BeforeAndAfterAll with Matche
     request.newPart("part1", null).addParam("q", "lookForThis").build()
     val agr = request.build
     val ningrequest = apiBuilder.toHttp(agr)
-    ningrequest.getBodyEncoding should be("UTF-8")
+    ningrequest.getBodyEncoding should be(StandardCharsets.UTF_8.name())
     OctopartsApiBuilder.Mapper.readValue(ningrequest.getByteData, classOf[AggregateRequest]) should be(agr)
     ningrequest.getMethod should be("POST")
     ningrequest.getRawUrl should startWith("http://octoparts/")
