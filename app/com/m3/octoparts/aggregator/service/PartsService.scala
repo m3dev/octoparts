@@ -37,7 +37,7 @@ class PartsService(partRequestService: PartRequestServiceBase,
    */
   def processParts(aggregateRequest: AggregateRequest, noCache: Boolean = false): Future[AggregateResponse] = {
     val requestMeta = aggregateRequest.requestMeta
-    val aReqTimeout = requestMeta.timeoutMs.fold(maximumAggReqTimeout)(_.toInt millis) min maximumAggReqTimeout
+    val aReqTimeout = requestMeta.timeout.getOrElse(maximumAggReqTimeout) min maximumAggReqTimeout
     val partsResponsesFutures = aggregateRequest.requests.map {
       pReq =>
         val partRequestInfo = PartRequestInfo(requestMeta, pReq, noCache)
@@ -57,7 +57,7 @@ class PartsService(partRequestService: PartRequestServiceBase,
     }
     Future.sequence(partsResponsesFutures).timeAndTransform {
       (partsResponses, duration) =>
-        val responseMeta = ResponseMeta(requestMeta.id, duration.toMillis)
+        val responseMeta = ResponseMeta(requestMeta.id, duration)
         val aggregateResponse = AggregateResponse(responseMeta, partsResponses)
 
         if (Logger.isDebugEnabled) {

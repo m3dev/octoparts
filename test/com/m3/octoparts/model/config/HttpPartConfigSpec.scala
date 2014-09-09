@@ -29,7 +29,7 @@ class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
         description = "",
         method = HttpMethod.Get,
         hystrixConfig = json.HystrixConfig(
-          timeoutInMs = 50,
+          timeout = 50 millis,
           threadPoolConfig = json.ThreadPoolConfig(
             threadPoolKey = "testThreadPool",
             coreSize = 2,
@@ -44,7 +44,7 @@ class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
             paramType = ParamType.Header,
             outputName = "userId",
             inputNameOverride = None,
-            cacheGroups = Set()
+            cacheGroups = Set.empty
           )),
         deprecatedInFavourOf = None,
         cacheGroups = Set(mockCacheGroup).map(CacheGroup.toJsonModel),

@@ -81,15 +81,15 @@ trait OctoClientLike {
     } else opUrl.url
 
   /**
-   * Returns a Future[[com.m3.octoparts.models.AggregateResponse]] received from asynchronously invoking Octoparts using
-   * the provided [[com.m3.octoparts.models.AggregateRequest]]
+   * Returns a Future[[com.m3.octoparts.model.AggregateResponse]] received from asynchronously invoking Octoparts using
+   * the provided [[com.m3.octoparts.model.AggregateRequest]]
    */
   def invoke(aggReq: AggregateRequest)(implicit ec: ExecutionContext): Future[AggregateResponse] = {
     if (aggReq.requests.isEmpty)
       Future.successful(emptyReqResponse)
     else {
       val jsonBody = Json.toJson(aggReq)
-      logger.debug(s"OctopartsId: ${aggReq.requestMeta.id}, RequestBody: ${jsonBody.toString}")
+      logger.debug(s"OctopartsId: ${aggReq.requestMeta.id}, RequestBody: $jsonBody")
       wsPost(urlFor(Invoke), jsonBody)
         .map(resp => resp.json.as[AggregateResponse])
         .recover(rescuer)
@@ -97,8 +97,8 @@ trait OctoClientLike {
   }
 
   /**
-   *  Returns a Future[[com.m3.octoparts.models.AggregateResponse]] received from asynchronously invoking Octoparts using the
-   *  provided argument object, and [[com.m3.octoparts.models.PartRequest]] list.
+   *  Returns a Future[[com.m3.octoparts.model.AggregateResponse]] received from asynchronously invoking Octoparts using the
+   *  provided argument object, and [[com.m3.octoparts.model.PartRequest]] list.
    *
    *  A [[RequestMetaBuilder]] type class instance for the first argument must be in scope at the call-site.
    */
@@ -155,10 +155,10 @@ trait OctoClientLike {
     }
 
   /**
-   * Builds an [[com.m3.octoparts.models.AggregateRequest]] using [[com.m3.octoparts.models.RequestMeta]] and a list of [[com.m3.octoparts.models.PartRequest]]
+   * Builds an [[com.m3.octoparts.model.AggregateRequest]] using [[com.m3.octoparts.model.RequestMeta]] and a list of [[com.m3.octoparts.model.PartRequest]]
    *
    * You may wish to (abstract) override this if you have you have your own requirements for
-   * pulling shared data from [[com.m3.octoparts.models.RequestMeta]] into your [[com.m3.octoparts.models.PartRequest]]s
+   * pulling shared data from [[com.m3.octoparts.model.RequestMeta]] into your [[com.m3.octoparts.model.PartRequest]]s
    */
   protected def buildAggReq(reqMeta: RequestMeta, partReqs: Seq[PartRequest]): AggregateRequest = AggregateRequest(reqMeta, partReqs)
 
@@ -170,9 +170,9 @@ trait OctoClientLike {
   protected def wsPost[A](url: String, body: A)(implicit wrt: Writeable[A], ct: ContentTypeOf[A]): Future[WSResponse] = wsHolderFor(url).post(body)
 
   /**
-   * Generates a default dumb/empty [[com.m3.octoparts.models.AggregateResponse]].
+   * Generates a default dumb/empty [[com.m3.octoparts.model.AggregateResponse]].
    */
-  protected def emptyReqResponse = AggregateResponse(ResponseMeta(id = UUID.randomUUID().toString, processTime = 0L), responses = Nil)
+  protected def emptyReqResponse = AggregateResponse(ResponseMeta(id = UUID.randomUUID().toString, processTime = Duration.Zero), responses = Nil)
 
   /**
    * Drops the final forward slash from a string if it exists.

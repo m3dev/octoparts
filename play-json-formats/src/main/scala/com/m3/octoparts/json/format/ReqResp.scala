@@ -8,6 +8,8 @@ import play.api.libs.json.Json
  */
 object ReqResp {
 
+  import Duration.format
+
   implicit val requestMetaFormat = Json.format[RequestMeta]
   implicit val partReqParamFormat = Json.format[PartRequestParam]
   implicit val partReqFormat = Json.format[PartRequest]

@@ -13,6 +13,7 @@ import org.mockito.Matchers._
 import play.api.mvc.RequestHeader
 import play.api.mvc.Results.EmptyContent
 import play.api.test.FakeRequest
+import scala.concurrent.duration._
 
 import scala.concurrent.Future
 
@@ -53,7 +54,7 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
     )
 
     val mockAggResp = AggregateResponse(
-      ResponseMeta("mock", 1L),
+      ResponseMeta("mock", 1.millisecond),
       Nil
     )
 
@@ -105,7 +106,7 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
 
       it("should skip sending when AggregateRequests are empty") {
         whenReady(testee.invoke(mockAggReqEmpty)) { r =>
-          r.responseMeta.processTime should be(0L)
+          r.responseMeta.processTime should be(Duration.Zero)
         }
       }
 

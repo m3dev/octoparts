@@ -79,7 +79,7 @@ class PartsController(
     val logData = Seq(
       "requestId" -> aggregateRequest.requestMeta.id,
       "noCache" -> noCache.toString,
-      "timeoutMs" -> aggregateRequest.requestMeta.timeoutMs.fold("default")(_.toString),
+      "timeoutMs" -> aggregateRequest.requestMeta.timeout.fold("default")(_.toMillis.toString),
       "requestUrl" -> aggregateRequest.requestMeta.requestUrl.getOrElse("unknown"),
       "numParts" -> aggregateRequest.requests.size.toString)
     if (Logger.isDebugEnabled) {
