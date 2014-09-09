@@ -6,14 +6,14 @@ import com.m3.octoparts.model._
 import play.api.libs.json.Json
 
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
-import play.api.Play.current
 import scala.concurrent.duration._
 
 /**
  * Sample showing how to use the client.
  */
 object Sample {
+  import scala.concurrent.ExecutionContext.Implicits.global
+  import play.api.Play.current
 
   // Define some dummy model classes
   case class UserProfile(id: Int, name: String)
@@ -36,7 +36,7 @@ object Sample {
       serviceId = Some("frontend"),
       userId = Some("123"),
       requestUrl = Some("http://www.m3.com/foo"),
-      timeoutMs = Some(500L)
+      timeout = Some(500.millis)
     ),
     requests = Seq(
       // A list of the endpoints you want to call, with parameters to send

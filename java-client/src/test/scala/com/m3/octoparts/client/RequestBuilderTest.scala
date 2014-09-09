@@ -2,6 +2,7 @@ package com.m3.octoparts.client
 
 import com.m3.octoparts.model.PartRequestParam
 import org.scalatest.{ BeforeAndAfterAll, FunSpec, Matchers }
+import scala.concurrent.duration._
 
 class RequestBuilderTest extends FunSpec with BeforeAndAfterAll with Matchers {
 
@@ -17,7 +18,7 @@ class RequestBuilderTest extends FunSpec with BeforeAndAfterAll with Matchers {
     ag.requestMeta.userAgent should be(None)
     ag.requestMeta.userId should be(Some("123"))
     ag.requestMeta.sessionId should be(Some("cafebabe"))
-    ag.requestMeta.timeoutMs should be(Some(456L))
+    ag.requestMeta.timeout should be(Some(456.millis))
     ag.requestMeta.requestUrl should be(Some("/index.jsp"))
     ag.getRequests should have size 1
 

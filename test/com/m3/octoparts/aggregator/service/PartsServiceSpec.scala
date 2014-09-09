@@ -8,7 +8,7 @@ import org.mockito.Mockito._
 import org.mockito.{ Matchers => MockMatchers }
 import scala.concurrent.{ TimeoutException, Future }
 import com.m3.octoparts.aggregator.PartRequestInfo
-import scala.Some
+import scala.concurrent.duration._
 import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import org.scalatest.time.{ Second, Span }
 import java.io.IOException
@@ -62,7 +62,7 @@ class PartsServiceSpec extends FlatSpec with Matchers with MockitoSugar with Sca
     val logger = mock[PartRequestLogger]
     val partsService = new PartsService(partReqService, logger)
 
-    val aggReq = AggregateRequest(RequestMeta(id = "foo", serviceId = serviceId, timeoutMs = Some(123)), Seq(PartRequest(partId)))
+    val aggReq = AggregateRequest(RequestMeta(id = "foo", serviceId = serviceId, timeout = Some(123.millis)), Seq(PartRequest(partId)))
     when(partReqService.responseFor(MockMatchers.any[PartRequestInfo]))
       .thenReturn(Future.failed(new TimeoutException))
 
@@ -76,7 +76,7 @@ class PartsServiceSpec extends FlatSpec with Matchers with MockitoSugar with Sca
     val logger = mock[PartRequestLogger]
     val partsService = new PartsService(partReqService, logger)
 
-    val aggReq = AggregateRequest(RequestMeta(id = "foo", serviceId = serviceId, timeoutMs = Some(123)), Seq(PartRequest(partId)))
+    val aggReq = AggregateRequest(RequestMeta(id = "foo", serviceId = serviceId, timeout = Some(123.millis)), Seq(PartRequest(partId)))
     when(partReqService.responseFor(MockMatchers.any[PartRequestInfo]))
       .thenReturn(Future.failed(new IOException("Oh no!")))
 
