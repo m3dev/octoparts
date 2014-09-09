@@ -26,7 +26,7 @@ object OctopartsBuild extends Build {
   val hystrixVersion = "1.3.17"
   val httpClientVersion = "4.3.5"
   val scalikejdbcVersion = "2.1.1"
-  val swaggerVersion = "1.3.9-SNAPSHOT"
+  val swaggerVersion = "1.3.8"
 
   val testEnv = sys.env.get("PLAY_ENV") match {
     case Some("ci") => "ci"
