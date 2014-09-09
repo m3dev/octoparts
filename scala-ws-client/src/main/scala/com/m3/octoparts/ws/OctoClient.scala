@@ -14,6 +14,8 @@ import play.api.libs.ws._
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.control.NonFatal
+import com.m3.octoparts.model.config.json.HttpPartConfig
+import com.m3.octoparts.json.format.ConfigModel._
 
 /**
  * Default Octoparts [[OctoClientLike]] implementation
@@ -24,16 +26,20 @@ class OctoClient(val baseUrl: String, protected val httpRequestTimeout: Duration
 
   protected def wsHolderFor(url: String) = WS.url(url).withRequestTimeout(httpRequestTimeout.toMillis.toInt)
 
-  protected val rescuer: PartialFunction[Throwable, AggregateResponse] = {
+  protected def rescuer[A](defaultReturn: => A): PartialFunction[Throwable, A] = {
     case JsResultException(e) => {
       logger.error(s"Octoparts service replied with invalid Json. Errors: $e")
-      emptyReqResponse
+      defaultReturn
     }
     case NonFatal(e) => {
       logger.error("Failed to get a valid response from Octoparts", e)
-      emptyReqResponse
+      defaultReturn
     }
   }
+
+  protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
+
+  protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Seq.empty
 }
 
 /**
@@ -56,7 +62,17 @@ trait OctoClientLike {
   /**
    * PartialFunction for `recover`ing from errors when hitting Octoparts
    */
-  protected def rescuer: PartialFunction[Throwable, AggregateResponse]
+  protected def rescuer[A](defaultReturn: => A): PartialFunction[Throwable, A]
+
+  /**
+   * Defines the [[AggregateResponse]] rescue return value
+   */
+  protected def rescueAggregateResponse: AggregateResponse
+
+  /**
+   * Defines the Seq[[HttpPartConfig]] rescue return value
+   */
+  protected def rescueHttpPartConfigs: Seq[HttpPartConfig]
 
   /**
    * Simple named logger
@@ -65,6 +81,7 @@ trait OctoClientLike {
 
   // Url objects that map an Operation name to a Url
   protected[ws] case object Invoke extends NoPlaceholdersUrl { val url = endpointsApiBaseUrl(baseUrl) }
+  protected[ws] case object ListEndpoints extends NoPlaceholdersUrl { val url = s"${endpointsApiBaseUrl(baseUrl)}/list" }
   protected[ws] case object InvalidateCache extends PlaceHoldersUrl { val url = s"${cacheApiBaseUrl(baseUrl)}/invalidate/part/%s" }
   protected[ws] case object InvalidateCacheFor extends PlaceHoldersUrl { val url = s"${cacheApiBaseUrl(baseUrl)}/invalidate/part/%s/%s/%s" }
   protected[ws] case object InvalidateCacheGroup extends PlaceHoldersUrl { val url = s"${cacheApiBaseUrl(baseUrl)}/invalidate/cache-group/%s" }
@@ -92,7 +109,7 @@ trait OctoClientLike {
       logger.debug(s"OctopartsId: ${aggReq.requestMeta.id}, RequestBody: $jsonBody")
       wsPost(urlFor(Invoke), jsonBody)
         .map(resp => resp.json.as[AggregateResponse])
-        .recover(rescuer)
+        .recover(rescuer(rescueAggregateResponse))
     }
   }
 
@@ -106,6 +123,16 @@ trait OctoClientLike {
     val reqMeta = reqMetaBuilder(obj)
     val aggReq = buildAggReq(reqMeta, partReqs)
     invoke(aggReq)
+  }
+
+  /**
+   * Returns a Future Seq[[com.m3.octoparts.model.config.json.HttpPartConfig]], which
+   * describes all the endpoints registered to the Octoparts service.
+   */
+  def listEndpoints()(implicit ec: ExecutionContext): Future[Seq[HttpPartConfig]] = {
+    wsHolderFor(urlFor(ListEndpoints)).get()
+      .map(resp => resp.json.as[Seq[HttpPartConfig]])
+      .recover(rescuer(rescueHttpPartConfigs))
   }
 
   /**

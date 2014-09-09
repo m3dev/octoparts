@@ -2,7 +2,7 @@ package com.m3.octoparts.client
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.{ FunSpec, Matchers }
 
 import scala.concurrent.duration._
 
