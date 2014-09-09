@@ -112,7 +112,7 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
 
       def verifyUrls(subject: OctoClientLike, slashlessBaseUrl: String): Unit = {
         val invokeUrl = subject.urlFor(subject.Invoke)
-        val listUrl = subject.urlFor(subject.List)
+        val listUrl = subject.urlFor(subject.ListEndpoints)
         val invalidateCacheUrl = subject.urlFor(subject.InvalidateCache, "hello")
         val invalidateCacheForUrl = subject.urlFor(subject.InvalidateCacheFor, "hello", "userId", "3")
         val invalidateCacheGroupUrl = subject.urlFor(subject.InvalidateCacheGroup, "helloGroup")
@@ -201,7 +201,7 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
       }
 
       it("should be correct for #list") {
-        verifyUrlWasPassed(_.list())("http://bobby.com/octoparts/2/list")
+        verifyUrlWasPassed(_.listEndpoints())("http://bobby.com/octoparts/2/list")
       }
 
       it("should be correct for #invoke and #invoke[A]") {

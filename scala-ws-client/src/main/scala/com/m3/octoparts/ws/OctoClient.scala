@@ -81,7 +81,7 @@ trait OctoClientLike {
 
   // Url objects that map an Operation name to a Url
   protected[ws] case object Invoke extends NoPlaceholdersUrl { val url = endpointsApiBaseUrl(baseUrl) }
-  protected[ws] case object List extends NoPlaceholdersUrl { val url = s"${endpointsApiBaseUrl(baseUrl)}/list" }
+  protected[ws] case object ListEndpoints extends NoPlaceholdersUrl { val url = s"${endpointsApiBaseUrl(baseUrl)}/list" }
   protected[ws] case object InvalidateCache extends PlaceHoldersUrl { val url = s"${cacheApiBaseUrl(baseUrl)}/invalidate/part/%s" }
   protected[ws] case object InvalidateCacheFor extends PlaceHoldersUrl { val url = s"${cacheApiBaseUrl(baseUrl)}/invalidate/part/%s/%s/%s" }
   protected[ws] case object InvalidateCacheGroup extends PlaceHoldersUrl { val url = s"${cacheApiBaseUrl(baseUrl)}/invalidate/cache-group/%s" }
@@ -126,10 +126,11 @@ trait OctoClientLike {
   }
 
   /**
-   * Returns a Future Seq[[com.m3.octoparts.model.config.json.HttpPartConfig]]
+   * Returns a Future Seq[[com.m3.octoparts.model.config.json.HttpPartConfig]], which
+   * describes all the endpoints registered to the Octoparts service.
    */
-  def list()(implicit ec: ExecutionContext): Future[Seq[HttpPartConfig]] = {
-    wsHolderFor(urlFor(List)).get()
+  def listEndpoints()(implicit ec: ExecutionContext): Future[Seq[HttpPartConfig]] = {
+    wsHolderFor(urlFor(ListEndpoints)).get()
       .map(resp => resp.json.as[Seq[HttpPartConfig]])
       .recover(rescuer(rescueHttpPartConfigs))
   }
