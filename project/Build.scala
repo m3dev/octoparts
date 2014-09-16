@@ -166,11 +166,12 @@ object OctopartsBuild extends Build {
   }
 
   lazy val scoverageSettings =
+    instrumentSettings ++
     Seq(
       ScoverageKeys.highlighting := true,
       ScoverageKeys.excludedPackages in ScoverageCompile := """com\.kenshoo.*;.*controllers\.javascript\..*;.*controllers\.ref\..*;.*controllers\.Reverse.*;.*BuildInfo.*;.*views\.html\..*;Routes""",
       testOptions in ScoverageTest += Tests.Argument("-u", "target/test-reports")
-    ) ++ instrumentSettings
+    )
 
   lazy val formatterPrefs = Seq(
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
