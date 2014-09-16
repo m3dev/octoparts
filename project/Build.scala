@@ -5,6 +5,7 @@ import sbt._
 import sbt.Keys._
 import sbtbuildinfo.Plugin._
 import scoverage.ScoverageSbtPlugin
+import scoverage.ScoverageSbtPlugin._
 import xerial.sbt.Sonatype._
 import SonatypeKeys._
 
@@ -47,7 +48,8 @@ object OctopartsBuild extends Build {
     compilerSettings ++
     resolverSettings ++
     ideSettings ++
-    testSettings
+    testSettings ++
+    scoverageSettings
 
   /*
    * Settings that are common for every project _except_ the Play app
@@ -160,12 +162,16 @@ object OctopartsBuild extends Build {
   )
 
   lazy val testSettings = Seq(Test, ScoverageSbtPlugin.ScoverageTest).flatMap { t =>
-    Seq(
-      // Output test results in JUnit XML format for Jenkins
-      testOptions in t += Tests.Argument("-u", "target/test-reports"),
-      // Needed because some tests run DDL against the CI DB.
-      parallelExecution in t := false)
+    Seq(parallelExecution in t := false) // Avoid DB-related tests stomping on each other
   }
+
+  lazy val scoverageSettings =
+    instrumentSettings ++
+    Seq(
+      ScoverageKeys.highlighting := true,
+      ScoverageKeys.excludedPackages in ScoverageCompile := """com\.kenshoo.*;.*controllers\.javascript\..*;.*controllers\.ref\..*;.*controllers\.Reverse.*;.*BuildInfo.*;.*views\.html\..*;Routes""",
+      testOptions in ScoverageTest += Tests.Argument("-u", "target/test-reports")
+    )
 
   lazy val formatterPrefs = Seq(
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
