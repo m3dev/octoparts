@@ -5,6 +5,7 @@ import sbt._
 import sbt.Keys._
 import sbtbuildinfo.Plugin._
 import scoverage.ScoverageSbtPlugin
+import scoverage.ScoverageSbtPlugin._
 import xerial.sbt.Sonatype._
 import SonatypeKeys._
 
@@ -164,9 +165,14 @@ object OctopartsBuild extends Build {
     Seq(parallelExecution in t := false) // Avoid DB-related tests stomping on each other
   }
 
-  lazy val scoverageSettings = Seq(ScoverageSbtPlugin.ScoverageTest).flatMap { t =>
-    testOptions in t += Tests.Argument("-u", "target/test-reports")
-  }
+  lazy val scoverageSettings =
+    Seq(
+      ScoverageKeys.highlighting := true,
+      ScoverageKeys.excludedPackages in ScoverageCompile := """com\.kenshoo.*;.*controllers\.javascript\..*;.*controllers\.ref\..*;.*controllers\.Reverse.*;.*BuildInfo.*;.*views\.html\..*;Routes"""
+    ) ++
+      Seq(ScoverageSbtPlugin.ScoverageTest).flatMap { t =>
+        testOptions in t += Tests.Argument("-u", "target/test-reports")
+      } ++ instrumentSettings
 
   lazy val formatterPrefs = Seq(
     ScalariformKeys.preferences := ScalariformKeys.preferences.value

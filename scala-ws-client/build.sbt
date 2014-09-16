@@ -1,3 +1,0 @@
-instrumentSettings
-
-ScoverageKeys.highlighting := true
