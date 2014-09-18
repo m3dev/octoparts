@@ -37,13 +37,13 @@ trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
 
   override def processWithConfig(ci: HttpPartConfig,
                                  partRequestInfo: PartRequestInfo,
-                                 params: Map[ShortPartParam, String]): Future[PartResponse] = {
+                                 params: Seq[ShortPartParamValue]): Future[PartResponse] = {
 
     if (partRequestInfo.noCache || !ci.cacheConfig.cachingEnabled) {
       // noCache or TTL defined but 0 => skip caching
       super.processWithConfig(ci, partRequestInfo, params)
     } else {
-      val directive = CacheDirectiveGenerator.generateDirective(ci.partId, params, ci.cacheConfig)
+      val directive = CacheDirectiveGenerator.generateDirective(ci.partId, params.toSet, ci.cacheConfig)
       val futureMaybeFromCache = cacheClient.putIfAbsent(directive)(super.processWithConfig(ci, partRequestInfo, params)).recoverWith {
         case ce: CacheException =>
           ce.getCause match {
@@ -73,10 +73,12 @@ trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
                                 directive: CacheDirective,
                                 ci: HttpPartConfig,
                                 partRequestInfo: PartRequestInfo,
-                                params: Map[ShortPartParam, String]): Future[PartResponse] = {
+                                params: Seq[ShortPartParamValue]): Future[PartResponse] = {
 
-    val revalidationParams = partResponse.cacheControl.revalidationHeaders.map {
-      case (k, v) => ShortPartParam(outputName = k, paramType = ParamType.Header) -> v
+    val revalidationParams = for {
+      (name, value) <- partResponse.cacheControl.revalidationHeaders
+    } yield {
+      new ShortPartParamValue(name, ParamType.Header, value)
     }
     val revalidationResult = super.processWithConfig(ci, partRequestInfo, params ++ revalidationParams)
     val revalidatedFResp = revalidationResult.map {

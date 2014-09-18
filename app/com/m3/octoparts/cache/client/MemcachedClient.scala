@@ -2,7 +2,7 @@ package com.m3.octoparts.cache.client
 
 import com.m3.octoparts.cache.directive.CacheDirective
 import com.m3.octoparts.cache.key.{ PartCacheKey, VersionCacheKey }
-import com.m3.octoparts.cache.versioning.{ LatestVersionCache, VersionCache, VersionLookup, VersionedParamKey }
+import com.m3.octoparts.cache.versioning._
 import com.m3.octoparts.model.PartResponse
 import shade.memcached.Codec
 import skinny.logging.Logging
@@ -30,7 +30,7 @@ class MemcachedClient(
       if (aVersionIsUnknown) {
         None
       } else {
-        Some(PartCacheKey(directive.partId, internalVersions.flatten, directive.paramMap))
+        Some(PartCacheKey(directive.partId, internalVersions.flatten, directive.paramValues))
       }
     }
   }

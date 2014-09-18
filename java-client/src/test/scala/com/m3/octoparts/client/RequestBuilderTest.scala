@@ -11,7 +11,6 @@ class RequestBuilderTest extends FunSpec with BeforeAndAfterAll with Matchers {
 
     val request = apiBuilder.newRequest("123", "cafebabe", null, "/index.jsp", 456L)
     request.newPart("part1", null).addParam("q", "lookForThis").build()
-    request.countParts should be(1)
 
     val ag = request.build
     ag.requestMeta.serviceId should be(Some("m3.com"))

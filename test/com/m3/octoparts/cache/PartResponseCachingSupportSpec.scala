@@ -5,7 +5,7 @@ import org.scalatest.{ Matchers, FunSpec }
 import com.m3.octoparts.cache.dummy.NoCacheClient
 import com.m3.octoparts.model.{ PartRequest, RequestMeta, CacheControl, PartResponse }
 import com.m3.octoparts.aggregator.service.PartRequestServiceBase
-import com.m3.octoparts.model.config.{ ShortPartParam, HttpPartConfig }
+import com.m3.octoparts.model.config._
 import com.m3.octoparts.aggregator.PartRequestInfo
 import scala.concurrent.Future
 import com.m3.octoparts.support.mocks.ConfigDataMocks
@@ -46,7 +46,7 @@ class PartResponseCachingSupportSpec extends FunSpec with Matchers with ScalaFut
 
   describe("Custom part ID support") {
     trait MockPartRequestServiceBase extends PartRequestServiceBase {
-      override protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, String]) =
+      override protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Seq[ShortPartParamValue]) =
         Future.successful(PartResponse(partId = "partId", id = "old custom ID", contents = Some("response body")))
     }
     val cachingSupport = new MockPartRequestServiceBase with PartResponseCachingSupport {
@@ -58,7 +58,7 @@ class PartResponseCachingSupportSpec extends FunSpec with Matchers with ScalaFut
 
     it("should replace the cached response's ID with the one specified by the client") {
       val partRequestInfo = PartRequestInfo(RequestMeta("foo"), PartRequest(partId = "partId", id = Some("new custom ID")))
-      val fResponse = cachingSupport.processWithConfig(mockHttpPartConfig, partRequestInfo, Map.empty)
+      val fResponse = cachingSupport.processWithConfig(mockHttpPartConfig, partRequestInfo, Nil)
       whenReady(fResponse) { resp =>
         resp.id should be("new custom ID")
       }

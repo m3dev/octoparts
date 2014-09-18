@@ -3,7 +3,7 @@ package com.m3.octoparts.aggregator.service
 import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.aggregator.handler.HttpHandlerFactory
 import com.m3.octoparts.model.PartResponse
-import com.m3.octoparts.model.config.{ HttpPartConfig, ShortPartParam }
+import com.m3.octoparts.model.config.{ HttpPartConfig, ShortPartParamValue }
 import com.m3.octoparts.repository.ConfigsRepository
 import skinny.logging.Logging
 import skinny.util.LTSV
@@ -87,7 +87,7 @@ trait PartRequestServiceBase extends RequestParamSupport with Logging {
    *           trait, but may be used for decorator purposes in Stackable traits.
    * @return Future[PartResponse], which includes adding deprecation notices
    */
-  protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, String]): Future[PartResponse] = {
+  protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Seq[ShortPartParamValue]): Future[PartResponse] = {
     val handler = handlerFactory.makeHandler(ci)
     val fResp = handler.process(params)
     fResp.map {

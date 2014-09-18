@@ -51,7 +51,7 @@ class OctopartsApiBuilder(@Nonnull apiRootUrl: String, @Nullable serviceId: Stri
   def newRequest(@Nullable userId: String, @Nullable sessionId: String, @Nullable userAgent: String, @Nullable requestUrl: String, @Nullable timeoutMs: java.lang.Long): RequestBuilder = {
     val timeoutOpt = if (timeoutMs == null) None else Some(timeoutMs.longValue().millis)
     val requestMeta = RequestMeta(UUID.randomUUID.toString, Option(serviceId), Option(userId), Option(sessionId), Option(requestUrl), Option(userAgent), timeoutOpt)
-    RequestBuilder(requestMeta)
+    new RequestBuilder(requestMeta)
   }
 
   private[client] def toHttp(aggregateRequest: AggregateRequest) = {

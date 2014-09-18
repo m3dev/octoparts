@@ -40,7 +40,7 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
   it("should miss but insert new part version when cache is empty") {
     val cacheStuff = createCacheStuff
     val testee = cacheStuff.client
-    val cacheDirective = CacheDirective("some part id", Seq.empty, Map.empty, Some(5 hours))
+    val cacheDirective = CacheDirective("some part id", Nil, Set.empty, Some(5 hours))
     val fresp = testee.putIfAbsent(cacheDirective) {
       Future.failed(new IOException)
     }
@@ -61,7 +61,7 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
   it("should update the LVC with the latest part version from the external cache") {
     val cacheStuff = createCacheStuff
     val testee = cacheStuff.client
-    val cacheDirective = CacheDirective("some part id 2", Seq.empty, Map.empty, Some(5 hours))
+    val cacheDirective = CacheDirective("some part id 2", Nil, Set.empty, Some(5 hours))
     val version = 13L
     val iext = testee.PartVersionCache(cacheDirective.partId).doInsertExternal(version)
     whenReady(iext) {
@@ -80,7 +80,7 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
   it("should store the response on success, then reuse it") {
     val cacheStuff = createCacheStuff
     val testee = cacheStuff.client
-    val cacheDirective = CacheDirective("some part id 3", Seq.empty, Map.empty, Some(5 hours))
+    val cacheDirective = CacheDirective("some part id 3", Nil, Set.empty, Some(5 hours))
     val version = 13L
     val iext = testee.PartVersionCache(cacheDirective.partId).doInsertExternal(version)
     whenReady(iext) {
@@ -115,7 +115,7 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
     val testee = cacheStuff.client
 
     // 1. Generate a versioned cache key for a cache directive
-    val cacheDirective = CacheDirective("some part id 4", Seq.empty, Map.empty, Some(5 hours))
+    val cacheDirective = CacheDirective("some part id 4", Nil, Set.empty, Some(5 hours))
     val version = 13L
     cacheStuff.latestVersionCache.updatePartVersion(cacheDirective.partId, version)
     val cacheKey = testee.PartCacheKeyFactory.tryApply(cacheDirective).get
@@ -150,7 +150,7 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
     val memcachedAccessor = new MemcachedAccessor(memcached, MemcachedKeyGenerator)
     val testee = new MemcachedClient(memcachedAccessor, cacheStuff.latestVersionCache)
     val version = 13L
-    val cacheDirective = CacheDirective("some part id 5", Seq.empty, Map.empty, Some(5 hours))
+    val cacheDirective = CacheDirective("some part id 5", Nil, Set.empty, Some(5 hours))
     cacheStuff.latestVersionCache.updatePartVersion(cacheDirective.partId, version)
     val cacheKey = testee.PartCacheKeyFactory.tryApply(cacheDirective)
     val partResponse = PartResponse(cacheDirective.partId, cacheDirective.partId)
@@ -168,7 +168,7 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
       val cacheStuff = createCacheStuff
       val testee = cacheStuff.client
 
-      val cacheDirective = CacheDirective("some part id 6", Seq.empty, Map.empty, Some(5 hours))
+      val cacheDirective = CacheDirective("some part id 6", Nil, Set.empty, Some(5 hours))
       val stalePartResponse = PartResponse(cacheDirective.partId, cacheDirective.partId, contents = Some("I'm from the cache but I'm old!"), retrievedFromCache = true)
       val freshPartResponse = PartResponse(cacheDirective.partId, cacheDirective.partId, contents = Some("I'm from the cache and I'm fresh!"), retrievedFromCache = true)
       val retrievedByHttp = PartResponse(cacheDirective.partId, cacheDirective.partId, contents = Some("I was retrieved via HTTP!"))
@@ -180,8 +180,8 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
       testee.PartVersionCache(cacheDirective.partId).doInsertExternal(externalVersion)
 
       // Insert both the stale (version 10) and fresh (version 20) PartResponses into memcached
-      val partKeyVer10 = PartCacheKey(cacheDirective.partId, List(internalVersion), Map.empty)
-      val partKeyVer20 = PartCacheKey(cacheDirective.partId, List(externalVersion), Map.empty)
+      val partKeyVer10 = PartCacheKey(cacheDirective.partId, List(internalVersion), Set.empty)
+      val partKeyVer20 = PartCacheKey(cacheDirective.partId, List(externalVersion), Set.empty)
       testee.PartResponseCache.insertPartResponse(partKeyVer10, stalePartResponse, Some(5 hours))
       testee.PartResponseCache.insertPartResponse(partKeyVer20, freshPartResponse, Some(5 hours))
 
@@ -198,7 +198,7 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
     it("should NOT set the retrievedFromCache flag on the response") {
       val cacheStuff = createCacheStuff
       val testee = cacheStuff.client
-      val cacheDirective = CacheDirective("some part id 7", Seq.empty, Map.empty, Some(5 hours))
+      val cacheDirective = CacheDirective("some part id 7", Nil, Set.empty, Some(5 hours))
       val cacheMissResp = testee.putIfAbsent(cacheDirective) {
         Future.successful(PartResponse(cacheDirective.partId, cacheDirective.partId))
       }
@@ -212,7 +212,7 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
     it("should set the retrievedFromCache flag on the response") {
       val cacheStuff = createCacheStuff
       val testee = cacheStuff.client
-      val cacheDirective = CacheDirective("some part id 8", Seq.empty, Map.empty, Some(5 hours))
+      val cacheDirective = CacheDirective("some part id 8", Nil, Set.empty, Some(5 hours))
       val cacheMissResp = testee.putIfAbsent(cacheDirective) {
         Future.successful(PartResponse(cacheDirective.partId, cacheDirective.partId))
       }
@@ -234,7 +234,7 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
   it("should not cache a PartResponse that has the noStore flag set") {
     val cacheStuff = createCacheStuff
     val testee = cacheStuff.client
-    val cacheDirective = CacheDirective("some part id 9", Seq.empty, Map.empty, Some(5 hours))
+    val cacheDirective = CacheDirective("some part id 9", Nil, Set.empty, Some(5 hours))
     val version = 13L
     val iext = testee.PartVersionCache(cacheDirective.partId).doInsertExternal(version)
     whenReady(iext) {
@@ -262,7 +262,7 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
 
     val cacheStuff = createCacheStuff
     val testee = cacheStuff.client
-    val cacheDirective = CacheDirective("some part id 10", Seq.empty, Map.empty, Some(5 hours))
+    val cacheDirective = CacheDirective("some part id 10", Nil, Set.empty, Some(5 hours))
     val version = 13L
     val iext = testee.PartVersionCache(cacheDirective.partId).doInsertExternal(version)
     whenReady(iext) {
@@ -290,7 +290,7 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
 
     val cacheStuff = createCacheStuff
     val testee = cacheStuff.client
-    val cacheDirective = CacheDirective("some part id 11", Seq.empty, Map.empty, Some(5 hours))
+    val cacheDirective = CacheDirective("some part id 11", Nil, Set.empty, Some(5 hours))
     val version = 13L
     val iext = testee.PartVersionCache(cacheDirective.partId).doInsertExternal(version)
     whenReady(iext) {
@@ -318,7 +318,7 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
 
     val cacheStuff = createCacheStuff
     val testee = cacheStuff.client
-    val cacheDirective = CacheDirective("some part id 12", Seq.empty, Map.empty, Some(5 hours))
+    val cacheDirective = CacheDirective("some part id 12", Nil, Set.empty, Some(5 hours))
     val version = 13L
     val iext = testee.PartVersionCache(cacheDirective.partId).doInsertExternal(version)
     whenReady(iext) {

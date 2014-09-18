@@ -1,7 +1,7 @@
 package com.m3.octoparts.cache.directive
 
 import com.m3.octoparts.cache.versioning.VersionedParamKey
-import com.m3.octoparts.model.config.ShortPartParam
+import com.m3.octoparts.model.config.ShortPartParamValue
 
 import scala.concurrent.duration.Duration
 
@@ -12,6 +12,6 @@ import scala.concurrent.duration.Duration
  * @param ttl Time To Live
  */
 case class CacheDirective(partId: String,
-                          versionedParamKeys: Seq[VersionedParamKey] = Seq.empty,
-                          paramMap: Map[ShortPartParam, String] = Map.empty,
+                          versionedParamKeys: Seq[VersionedParamKey] = Nil,
+                          paramValues: Set[ShortPartParamValue] = Set.empty,
                           ttl: Option[Duration] = None)
