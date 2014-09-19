@@ -1,7 +1,9 @@
 package com.m3.octoparts.cache.client
 
 import com.m3.octoparts.cache.key._
+import play.api.Logger
 import shade.memcached.{ Codec, Memcached }
+import skinny.util.LTSV
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
@@ -32,8 +34,19 @@ class MemcachedAccessor(memcached: Memcached, keyGen: MemcachedKeyGenerator)(imp
 
   def doPut[T](key: CacheKey, v: T, ttl: Option[Duration])(implicit codec: Codec[T]): Future[Unit] = {
     try {
-      memcached.set[T](serializeKey(key), v, ttl.getOrElse(VERY_LONG_TTL)).recoverWith {
-        case NonFatal(err) => throw new CacheException(key, err)
+      ttl match {
+        case Some(duration) if duration < 1.second =>
+          /*
+           * If the TTL is less than one second, we should not perform a cache insert, because:
+           *  - there is no point, as the element has already expired, or will do very soon
+           *  - The TTL will get rounded down to 0, which Memcached treats as meaning "infinite". This is the exact opposite to what we want.
+           */
+          Logger.debug(LTSV.dump("message" -> "Skipping cache PUT because ttl is less than 1 second", "key" -> key.toString, "ttl" -> duration.toString))
+          Future.successful(())
+        case _ =>
+          memcached.set[T](serializeKey(key), v, ttl.getOrElse(VERY_LONG_TTL)).recoverWith {
+            case NonFatal(err) => throw new CacheException(key, err)
+          }
       }
     } catch {
       case NonFatal(e) => Future.failed(e)
