@@ -4,8 +4,7 @@ import java.io.Closeable
 import java.util.UUID
 import javax.annotation.{ Nonnull, Nullable }
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.scala.DefaultScalaModule
+import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
 import com.google.common.net.UrlEscapers
 import com.m3.octoparts.model.{ AggregateRequest, RequestMeta }
 import com.ning.http.client.{ AsyncHttpClient, AsyncHttpClientConfig, ListenableFuture }
@@ -24,6 +23,8 @@ private[client] object OctopartsApiBuilder {
   private val Log = LoggerFactory.getLogger(classOf[OctopartsApiBuilder])
   private[client] val Mapper = new ObjectMapper
   Mapper.registerModule(ExtendedScalaModule)
+  // future-proofing
+  Mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 }
 
 class OctopartsApiBuilder(@Nonnull apiRootUrl: String, @Nullable serviceId: String, @Nonnull asyncHttpClientConfig: AsyncHttpClientConfig) extends Closeable {
