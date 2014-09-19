@@ -3,6 +3,7 @@ package com.m3.octoparts.cache.client
 import com.m3.octoparts.cache.key.CacheKey
 import play.api.Logger
 import shade.memcached.Codec
+import skinny.util.LTSV
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -17,7 +18,7 @@ trait SkippingZeroTTL extends CacheAccessor {
 
   abstract override def doPut[T](key: CacheKey, v: T, ttl: Option[Duration])(implicit codec: Codec[T]): Future[Unit] = ttl match {
     case Some(duration) if duration < 1.second =>
-      Logger.debug(s"Skipping cache PUT of $key because ttl ($duration) is less than 1 second")
+      Logger.debug(LTSV.dump("message" -> "Skipping cache PUT because ttl is less than 1 second", "key" -> key.toString, "ttl" -> duration.toString))
       Future.successful(())
     case _ => super.doPut(key, v, ttl)
   }
