@@ -11,6 +11,11 @@ import scala.util.control.NonFatal
 class MemcachedAccessor(memcached: Memcached, keyGen: MemcachedKeyGenerator)(implicit executionContext: ExecutionContext)
     extends CacheAccessor {
 
+  /**
+   * This value is arbitrarily chosen.
+   * We could also use Duration.Inf, which Shade would convert to 365 days,
+   * or Duration.Zero, which Memcached would treat as infinite.
+   */
   private val VERY_LONG_TTL = 30 days
 
   private def serializeKey(key: CacheKey) = keyGen.toMemcachedKey(key)
