@@ -16,6 +16,8 @@ import scala.concurrent.duration._
 
 class CacheModule extends Module {
 
+  private lazy val playThreadPool = play.api.libs.concurrent.Execution.defaultContext
+
   private lazy val cacheExecutor = {
     val config = inject[Configuration].underlying
 
@@ -60,7 +62,7 @@ class CacheModule extends Module {
       bind[Memcached] to buildMemcached() destroyWith (_.close())
     }
     bind[MemcachedKeyGenerator] to MemcachedKeyGenerator
-    bind[CacheAccessor] to injected[MemcachedAccessor]
+    bind[CacheAccessor] to new MemcachedAccessor(inject[Memcached], inject[MemcachedKeyGenerator])(playThreadPool) with SkippingZeroTTL
     bind[CacheClient] to injected[MemcachedClient]
   }
 

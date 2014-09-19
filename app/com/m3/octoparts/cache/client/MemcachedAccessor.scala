@@ -8,11 +8,9 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.postfixOps
 import scala.util.control.NonFatal
 
-class MemcachedAccessor(memcached: Memcached, keyGen: MemcachedKeyGenerator)(
-  implicit executionContext: ExecutionContext)
+class MemcachedAccessor(memcached: Memcached, keyGen: MemcachedKeyGenerator)(implicit executionContext: ExecutionContext)
     extends CacheAccessor {
 
-  // or Duration.Inf ?
   private val VERY_LONG_TTL = 30 days
 
   private def serializeKey(key: CacheKey) = keyGen.toMemcachedKey(key)
