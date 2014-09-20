@@ -6,6 +6,7 @@ import sbt.Keys._
 import sbtbuildinfo.Plugin._
 import scoverage.ScoverageSbtPlugin
 import scoverage.ScoverageSbtPlugin._
+import org.scoverage.coveralls.CoverallsPlugin.coverallsSettings
 import xerial.sbt.Sonatype._
 import SonatypeKeys._
 
@@ -68,6 +69,7 @@ object OctopartsBuild extends Build {
       buildInfoSettings ++
       buildInfoStuff ++
       sonatypeSettings ++
+      coverallsSettings ++
       Seq(
         publishArtifact := false,
         libraryDependencies ++= Seq(
