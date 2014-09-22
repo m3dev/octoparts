@@ -39,8 +39,57 @@ class PartResponseCachingSupportSpec extends FunSpec with Matchers with ScalaFut
     it("should revalidate items that have the no-cache header") {
       PartResponseCachingSupport.shouldRevalidate(PartResponse("partId", "id", retrievedFromCache = true, cacheControl = CacheControl(noCache = true))) should be(true)
     }
-    it("should revalidate items that have are expired") {
-      PartResponseCachingSupport.shouldRevalidate(PartResponse("partId", "id", retrievedFromCache = true, cacheControl = CacheControl(expiresAt = Some(DateTime.now().minusMonths(2).getMillis)))) should be(true)
+    describe("when ETag is NOT present") {
+      describe("when max-age is NOT present") {
+        it("should NOT revalidate the cached response") {
+          val partResponse = PartResponse("partId", "id", retrievedFromCache = true,
+            cacheControl = CacheControl(expiresAt = None, etag = None))
+          PartResponseCachingSupport.shouldRevalidate(partResponse) should be(false)
+        }
+      }
+      describe("when max-age is present and has NOT expired") {
+        it("should NOT revalidate the cached response") {
+          val partResponse = PartResponse("partId", "id", retrievedFromCache = true,
+            cacheControl = CacheControl(expiresAt = Some(DateTime.now().plusDays(1).getMillis), etag = None))
+          PartResponseCachingSupport.shouldRevalidate(partResponse) should be(false)
+        }
+      }
+      describe("when max-age is present and has expired") {
+        it("should NOT revalidate the cached response") {
+          /*
+          Note: actually this case should never happen. Memcached TTL will be <= max-age,
+          so the response will be evicted from Memcached before it expires.
+           */
+          val partResponse = PartResponse("partId", "id", retrievedFromCache = true,
+            cacheControl = CacheControl(expiresAt = Some(DateTime.now().minusDays(1).getMillis), etag = None))
+          PartResponseCachingSupport.shouldRevalidate(partResponse) should be(false)
+        }
+      }
+    }
+
+    describe("when ETag is present") {
+      describe("when max-age is NOT present") {
+        it("should revalidate the cached response") {
+          val partResponse = PartResponse("partId", "id", retrievedFromCache = true,
+            cacheControl = CacheControl(expiresAt = None, etag = Some("abc")))
+          PartResponseCachingSupport.shouldRevalidate(partResponse) should be(true)
+        }
+      }
+      describe("when max-age is present and has NOT expired") {
+        it("should NOT revalidate the cached response") {
+          val partResponse = PartResponse("partId", "id", retrievedFromCache = true,
+            cacheControl = CacheControl(expiresAt = Some(DateTime.now().plusDays(1).getMillis), etag = Some("abc")))
+          PartResponseCachingSupport.shouldRevalidate(partResponse) should be(false)
+        }
+      }
+      describe("when max-age is present and has expired") {
+        it("should NOT revalidate the cached response") {
+          val partResponse = PartResponse("partId", "id", retrievedFromCache = true,
+            cacheControl = CacheControl(expiresAt = Some(DateTime.now().plusDays(1).getMillis), etag = Some("abc")))
+          PartResponseCachingSupport.shouldRevalidate(partResponse) should be(false)
+        }
+
+      }
     }
   }
 
