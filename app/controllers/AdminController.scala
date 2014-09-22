@@ -504,7 +504,7 @@ class AdminController(repository: MutableConfigsRepository)(implicit val navbarL
       tps <- fTps
       cgs <- fCgs
     } yield {
-      val flash = errorMsg.fold(req.flash)(error => req.flash + ("Error" -> error))
+      val flash = errorMsg.fold(req.flash)(error => req.flash + (BootstrapFlashStyles.danger.toString -> error))
       Ok(views.html.part.edit(form, tps, cgs, maybePart)(flash, navbarLinks, implicitly[Lang]))
     }
   }
@@ -550,7 +550,7 @@ class AdminController(repository: MutableConfigsRepository)(implicit val navbarL
   }
 
   private def flashError(redirectTo: Call, errorMsg: String): Result = {
-    Found(redirectTo.url).flashing("Error" -> errorMsg)
+    Found(redirectTo.url).flashing(BootstrapFlashStyles.danger.toString -> errorMsg)
   }
 
 }
