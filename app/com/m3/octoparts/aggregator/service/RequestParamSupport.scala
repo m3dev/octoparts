@@ -4,8 +4,6 @@ import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.model.{ PartRequestParam, RequestMeta }
 
-import scala.collection.mutable
-
 /**
  * Trait to support generic operations on PartRequestInfo components like
  * RequestMeta and PartRequest
@@ -33,14 +31,14 @@ trait RequestParamSupport {
       registeredParam <- registeredParams.toSeq
       values <- combinedParams.get(registeredParam.inputName)
     } yield {
-      ParamMapping(registeredParam, values)
+      (registeredParam, values)
     }
 
     // will throw an IllegalArgumentException if a required parameter is missing.
-    validateParams(registeredParams, mappedParams.map(_.partParam).toSet)
+    validateParams(registeredParams, mappedParams.map(_._1).toSet)
 
     (for {
-      ParamMapping(partParam, values) <- mappedParams
+      (partParam, values) <- mappedParams
     } yield {
       ShortPartParam(partParam) -> values
     }).toMap
@@ -78,5 +76,3 @@ trait RequestParamSupport {
     PartRequestParam(meta, value)
   }
 }
-
-private case class ParamMapping(partParam: PartParam, values: Seq[String])
