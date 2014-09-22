@@ -17,11 +17,11 @@ class RequestParamSupportSpec extends FunSpec with Matchers with RequiresDB with
       val reqMeta = RequestMeta("leId", userAgent = Some("leAgent"), requestUrl = Some("http://localhost"))
       val partReq = PartRequest("partId", params = Seq(PartRequestParam("requestUrl", "uzer")))
       val registeredParams = Set(pathParam1, pathParam2)
-      val expected = Seq(
-        new ShortPartParamValue(ShortPartParam(pathParam1), "http://localhost"),
-        new ShortPartParamValue(ShortPartParam(pathParam2), "uzer")
+      val expected = Map(
+        ShortPartParam(pathParam1) -> Seq("http://localhost"),
+        ShortPartParam(pathParam2) -> Seq("uzer")
       )
-      combineParams(registeredParams, PartRequestInfo(reqMeta, partReq)).diff(expected) should have size 0
+      combineParams(registeredParams, PartRequestInfo(reqMeta, partReq)) should equal(expected)
     }
   }
 

@@ -1,7 +1,7 @@
 package com.m3.octoparts.aggregator.handler
 
 import com.m3.octoparts.model.PartResponse
-import com.m3.octoparts.model.config.ShortPartParamValue
+import com.m3.octoparts.model.config.ShortPartParam
 
 import scala.concurrent.Future
 
@@ -16,7 +16,7 @@ import scala.concurrent.Future
  */
 trait Handler {
 
-  type HandlerArguments = Seq[ShortPartParamValue]
+  type HandlerArguments = Map[ShortPartParam, Seq[String]]
 
   // Used primarily for creating a PartResponse, but also for logging purposes
   def partId: String

@@ -70,7 +70,7 @@ trait HttpPartRequestHandler extends Handler {
       def method = httpMethod
       val uri = new URI(buildUri(hArgs))
       val maybeBody = hArgs.collectFirst {
-        case ShortPartParamValue(p, values) if p.paramType == ParamType.Body && values.nonEmpty => values.head
+        case (p, values) if p.paramType == ParamType.Body && values.nonEmpty => values.head
       }
       val headers = collectHeaders(hArgs)
     }
@@ -108,7 +108,7 @@ trait HttpPartRequestHandler extends Handler {
   def collectHeaders(hArgs: HandlerArguments): Seq[(String, String)] = {
     // group Cookies. According to RFC 6265, at most one Cookie header may be sent.
     val cookieHeadersElements = for {
-      ShortPartParamValue(p, values) <- hArgs if p.paramType == ParamType.Cookie
+      (p, values) <- hArgs if p.paramType == ParamType.Cookie
       cookieName = escapeCookie(p.outputName)
       v <- values
     } yield {
@@ -116,14 +116,13 @@ trait HttpPartRequestHandler extends Handler {
     }
     val cookieHeaderValue = if (cookieHeadersElements.isEmpty) None else Some(cookieHeadersElements.mkString("; "))
 
-    // for other headers, no grouping is done
-    val otherHeaders = for {
-      ShortPartParamValue(p, values) <- hArgs if p.paramType == ParamType.Header
+    // for other headers, no grouping is done. Note: duplicate headers are allowed!
+    cookieHeaderValue.map("Cookie" -> _).toSeq ++ (for {
+      (p, values) <- hArgs if p.paramType == ParamType.Header if p.outputName != "Cookie"
       v <- values
     } yield {
       p.outputName -> v
-    }
-    otherHeaders ++ cookieHeaderValue.map("Cookie" -> _)
+    })
   }
 
   /**
@@ -137,15 +136,15 @@ trait HttpPartRequestHandler extends Handler {
     val baseUri = interpolate(uriToInterpolate) { key =>
       val ThePathParam = ShortPartParam(key, ParamType.Path)
       val maybeParamsVal: Option[String] = hArgs.collectFirst {
-        case ShortPartParamValue(ThePathParam, v) if v.nonEmpty => v.head
+        case (ThePathParam, v) if v.nonEmpty => v.head
       }
       maybeParamsVal.getOrElse("")
     }
     val kvs = for {
-      ShortPartParamValue(p, values) <- hArgs if p.paramType == ParamType.Query
+      (p, values) <- hArgs if p.paramType == ParamType.Query
       v <- values
     } yield p.outputName -> v
-    baseUri.addParams(kvs)
+    baseUri.addParams(kvs.toSeq)
   }
 
   /**

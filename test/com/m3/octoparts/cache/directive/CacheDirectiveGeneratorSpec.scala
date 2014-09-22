@@ -13,7 +13,7 @@ class CacheDirectiveGeneratorSpec extends FunSpec with Matchers with ConfigDataM
 
   it("should make the most simple cache directive") {
     val cacheConfig = CacheConfig(None, Nil)
-    val cacheDirective = cacheDirectiveGenerator.generateDirective("", Set.empty, cacheConfig)
+    val cacheDirective = cacheDirectiveGenerator.generateDirective("", Map.empty, cacheConfig)
     cacheDirective.versionedParamKeys should be('empty)
     cacheDirective.ttl should be(None)
   }
@@ -22,7 +22,7 @@ class CacheDirectiveGeneratorSpec extends FunSpec with Matchers with ConfigDataM
     val partId = "some part id"
     val ttl = FiniteDuration(5, TimeUnit.MINUTES)
     val cacheConfig = CacheConfig(Some(ttl), Nil)
-    val partRequestArgs = Set(new ShortPartParamValue("some key", ParamType.Query, "some value"))
+    val partRequestArgs = Map(ShortPartParam("some key", ParamType.Query) -> Seq("some value"))
     val cacheDirective = cacheDirectiveGenerator.generateDirective(partId, partRequestArgs, cacheConfig)
     cacheDirective.versionedParamKeys should be('empty)
     cacheDirective.ttl should be(Some(ttl))
@@ -32,9 +32,9 @@ class CacheDirectiveGeneratorSpec extends FunSpec with Matchers with ConfigDataM
 
   it("should have version params") {
     val versionParamKeys = Seq("some key")
-    val partRequestArgs = Set(
-      new ShortPartParamValue("some key", ParamType.Query, "some value"),
-      new ShortPartParamValue("some other key", ParamType.Query, "some other value")
+    val partRequestArgs = Map(
+      ShortPartParam("some key", ParamType.Query) -> Seq("some value"),
+      ShortPartParam("some other key", ParamType.Query) -> Seq("some other value")
     )
     val cacheConfig = CacheConfig(None, versionParamKeys)
     val cacheDirective = cacheDirectiveGenerator.generateDirective("some part id", partRequestArgs, cacheConfig)

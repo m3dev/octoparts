@@ -4,6 +4,8 @@ import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.model.{ PartRequestParam, RequestMeta }
 
+import scala.collection.mutable
+
 /**
  * Trait to support generic operations on PartRequestInfo components like
  * RequestMeta and PartRequest
@@ -20,28 +22,29 @@ trait RequestParamSupport {
    * params that are required are missing, then an exception is thrown.
    *
    * @param partRequestInfo Part request info
-   * @return Map[Param, String]
    */
-  @throws[IllegalArgumentException]
-  def combineParams(registeredParams: Set[PartParam], partRequestInfo: PartRequestInfo): Seq[ShortPartParamValue] = {
-    val combinedParams = processMeta(partRequestInfo.requestMeta) ++ partRequestInfo.partRequest.params
+  def combineParams(registeredParams: Set[PartParam], partRequestInfo: PartRequestInfo): Map[ShortPartParam, Seq[String]] = {
+    val combinedParams = {
+      val allParams = processMeta(partRequestInfo.requestMeta) ++ partRequestInfo.partRequest.params
+      allParams.groupBy(_.key).mapValues(_.map(_.value))
+    }
     val mappedParams = for {
-      partRequestParam <- combinedParams
-      registeredParam <- registeredParams.find(_.inputName == partRequestParam.key)
+      registeredParam <- registeredParams.toSeq
+      values <- combinedParams.get(registeredParam.inputName)
     } yield {
-      ParamMapping(registeredParam, partRequestParam.value)
+      ParamMapping(registeredParam, values)
     }
 
+    // will throw an IllegalArgumentException if a required parameter is missing.
     validateParams(registeredParams, mappedParams.map(_.partParam).toSet)
 
-    for {
-      (partParam, mappedParamsFor) <- mappedParams.groupBy(_.partParam).toSeq
+    (for {
+      ParamMapping(partParam, values) <- mappedParams
     } yield {
-      ShortPartParamValue(ShortPartParam(partParam), mappedParamsFor.map(_.value))
-    }
+      ShortPartParam(partParam) -> values
+    }).toMap
   }
 
-  @throws[IllegalArgumentException]
   private[service] def validateParams(registeredParams: Set[PartParam], mappedParams: Set[PartParam]): Unit = {
     val missingRequiredParams = (registeredParams -- mappedParams).filter(_.required)
     if (missingRequiredParams.nonEmpty) {
@@ -75,4 +78,4 @@ trait RequestParamSupport {
   }
 }
 
-private case class ParamMapping(partParam: PartParam, value: String)
+private case class ParamMapping(partParam: PartParam, values: Seq[String])

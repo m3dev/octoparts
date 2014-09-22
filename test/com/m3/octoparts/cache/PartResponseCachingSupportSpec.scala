@@ -46,7 +46,7 @@ class PartResponseCachingSupportSpec extends FunSpec with Matchers with ScalaFut
 
   describe("Custom part ID support") {
     trait MockPartRequestServiceBase extends PartRequestServiceBase {
-      override protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Seq[ShortPartParamValue]) =
+      override protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, Seq[String]]) =
         Future.successful(PartResponse(partId = "partId", id = "old custom ID", contents = Some("response body")))
     }
     val cachingSupport = new MockPartRequestServiceBase with PartResponseCachingSupport {
@@ -58,7 +58,7 @@ class PartResponseCachingSupportSpec extends FunSpec with Matchers with ScalaFut
 
     it("should replace the cached response's ID with the one specified by the client") {
       val partRequestInfo = PartRequestInfo(RequestMeta("foo"), PartRequest(partId = "partId", id = Some("new custom ID")))
-      val fResponse = cachingSupport.processWithConfig(mockHttpPartConfig, partRequestInfo, Nil)
+      val fResponse = cachingSupport.processWithConfig(mockHttpPartConfig, partRequestInfo, Map.empty)
       whenReady(fResponse) { resp =>
         resp.id should be("new custom ID")
       }

@@ -3,7 +3,7 @@ package com.m3.octoparts.aggregator.service
 import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.aggregator.handler.HttpHandlerFactory
 import com.m3.octoparts.model.PartResponse
-import com.m3.octoparts.model.config.{ HttpPartConfig, ShortPartParamValue }
+import com.m3.octoparts.model.config.{ HttpPartConfig, ShortPartParam }
 import com.m3.octoparts.repository.ConfigsRepository
 import skinny.logging.Logging
 import skinny.util.LTSV
@@ -35,20 +35,13 @@ trait PartRequestServiceBase extends RequestParamSupport with Logging {
    * @return Future[PartResponse]
    */
   def responseFor(pReq: PartRequestInfo): Future[PartResponse] = {
-    Option(pReq.partRequest.partId).map { partId =>
-      val fMaybeCi = repository.findConfigByPartId(partId)
-      fMaybeCi.flatMap {
-        _.fold {
-          unsupported(pReq)
-        } {
-          ci =>
-            val params = combineParams(ci.parameters, pReq)
-            processWithConfig(ci, pReq, params)
-        }
+    val fMaybeCi = repository.findConfigByPartId(pReq.partRequest.partId)
+    fMaybeCi.flatMap {
+      case Some(ci) => {
+        val params = combineParams(ci.parameters, pReq)
+        processWithConfig(ci, pReq, params)
       }
-    }.getOrElse {
-      // sanity validation
-      Future.failed(new IllegalArgumentException("partId is missing"))
+      case None => unsupported(pReq)
     }
   }
 
@@ -87,7 +80,7 @@ trait PartRequestServiceBase extends RequestParamSupport with Logging {
    *           trait, but may be used for decorator purposes in Stackable traits.
    * @return Future[PartResponse], which includes adding deprecation notices
    */
-  protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Seq[ShortPartParamValue]): Future[PartResponse] = {
+  protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, Seq[String]]): Future[PartResponse] = {
     val handler = handlerFactory.makeHandler(ci)
     val fResp = handler.process(params)
     fResp.map {

@@ -4,7 +4,7 @@ import java.io.Closeable
 import java.util.UUID
 import javax.annotation.{ Nonnull, Nullable }
 
-import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
+import com.fasterxml.jackson.databind.{ DeserializationFeature, ObjectMapper }
 import com.google.common.net.UrlEscapers
 import com.m3.octoparts.model.{ AggregateRequest, RequestMeta }
 import com.ning.http.client.{ AsyncHttpClient, AsyncHttpClientConfig, ListenableFuture }

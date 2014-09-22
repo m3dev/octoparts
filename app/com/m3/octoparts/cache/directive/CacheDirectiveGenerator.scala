@@ -2,7 +2,7 @@ package com.m3.octoparts.cache.directive
 
 import com.m3.octoparts.cache.config.CacheConfig
 import com.m3.octoparts.cache.versioning.VersionedParamKey
-import com.m3.octoparts.model.config.ShortPartParamValue
+import com.m3.octoparts.model.config.ShortPartParam
 
 trait CacheDirectiveGenerator {
 
@@ -10,23 +10,23 @@ trait CacheDirectiveGenerator {
    * Generate a cache directive, i.e. all the information the cache client needs to lookup/insert a PartResponse.
    */
   def generateDirective(partId: String,
-                        paramValues: Set[ShortPartParamValue],
+                        params: Map[ShortPartParam, Seq[String]],
                         cacheConfig: CacheConfig): CacheDirective
 }
 
 object CacheDirectiveGenerator extends CacheDirectiveGenerator {
-  override def generateDirective(partId: String, paramValues: Set[ShortPartParamValue], cacheConfig: CacheConfig): CacheDirective = {
+  def generateDirective(partId: String, params: Map[ShortPartParam, Seq[String]], cacheConfig: CacheConfig): CacheDirective = {
     // for version param keys, only single-value parameters are supported.
-    val strParams = paramValues.map {
-      sppv =>
-        sppv.shortPartParam.outputName -> sppv.values
-    }.toMap
+    val strParams = params.map {
+      case (shortPartParam, values) =>
+        shortPartParam.outputName -> values
+    }
     val versionedParamKeys = cacheConfig.versionedParams.map {
       versionedParam =>
         // FIXME document why null is acceptable here
         val vp = strParams.getOrElse(versionedParam, Nil).headOption.orNull
         VersionedParamKey(partId, versionedParam, vp)
     }
-    CacheDirective(partId, versionedParamKeys, paramValues, cacheConfig.ttl)
+    CacheDirective(partId, versionedParamKeys, params, cacheConfig.ttl)
   }
 }

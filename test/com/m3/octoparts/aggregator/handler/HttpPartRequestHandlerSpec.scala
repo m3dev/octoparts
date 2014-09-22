@@ -38,12 +38,12 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
 
   describe("#buildUri") {
 
-    val completeParamWithArgs = Seq(
-      new ShortPartParamValue(headerParam1, "1"),
-      new ShortPartParamValue(pathParam1, "hi"),
-      new ShortPartParamValue(pathParam2, "there"),
-      new ShortPartParamValue(queryParam1, "scala"),
-      new ShortPartParamValue(queryParam2, "lover")
+    val completeParamWithArgs = Map(
+      headerParam1 -> Seq("1"),
+      pathParam1 -> Seq("hi"),
+      pathParam2 -> Seq("there"),
+      queryParam1 -> Seq("scala"),
+      queryParam2 -> Seq("lover")
     )
 
     describe("when providing all params") {
@@ -56,7 +56,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
     }
     describe("when providing only some params") {
       it("should properly ignore missing optional params") {
-        val output = handler.buildUri(completeParamWithArgs.filterNot(_.shortPartParam == queryParam2)).toString()
+        val output = handler.buildUri(completeParamWithArgs - queryParam2).toString()
         output should be("http://mock.com/hi/there?query1=scala")
       }
     }
@@ -70,7 +70,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
             def retrieve(request: HttpUriRequest) = HttpResponse(status = HttpStatus.SC_OK, message = "OK", mimeType = Some("text/plain"), body = Some("hello"))
           }
           val handler = handlerWithHttpClient(client)
-          whenReady(handler.process(Nil)) {
+          whenReady(handler.process(Map.empty)) {
             partResp =>
               partResp should be(PartResponse(partId = mockPartId, id = mockPartId, statusCode = Some(HttpStatus.SC_OK), mimeType = Some("text/plain"), contents = Some("hello"), errors = Nil))
           }
@@ -82,7 +82,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
             def retrieve(request: HttpUriRequest) = HttpResponse(status = HttpStatus.SC_NOT_FOUND, message = "Not Found", mimeType = Some("text/plain"), body = Some("not found"))
           }
           val handler = handlerWithHttpClient(client)
-          whenReady(handler.process(Nil)) {
+          whenReady(handler.process(Map.empty)) {
             partResp =>
               partResp should be(PartResponse(partId = mockPartId, id = mockPartId, statusCode = Some(HttpStatus.SC_NOT_FOUND), mimeType = Some("text/plain"), contents = Some("not found"), errors = Seq("Not Found")))
           }
@@ -94,16 +94,16 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
   describe("#createBlockingHttpRetrieve") {
     describe("when there is no body param") {
       it("should not set a body for the HTTP retrieve") {
-        val hArgs = Seq(
-          new ShortPartParamValue("query1", Query, "query1Value")
+        val hArgs = Map(
+          ShortPartParam("query1", Query) -> Seq("query1Value")
         )
         handler.createBlockingHttpRetrieve(hArgs).maybeBody should be(None)
       }
     }
     describe("when there is a body param") {
       it("should use the body param to set a body for the HTTP retrieve") {
-        val hArgs = Seq(
-          new ShortPartParamValue("jsonPayload", Body, """{"some":"json"}""")
+        val hArgs = Map(
+          ShortPartParam("jsonPayload", Body) -> Seq("""{"some":"json"}""")
         )
         handler.createBlockingHttpRetrieve(hArgs).maybeBody should be(Some("""{"some":"json"}"""))
       }
@@ -112,13 +112,13 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
 
   describe("#collectHeaders") {
     it("should collect all headers and cookies into a list of HTTP headers, collapsing the cookies into a single header") {
-      val hArgs = Seq(
-        new ShortPartParamValue("query1", Query, "query1Value"),
-        new ShortPartParamValue("query2", Query, "query2Value"),
-        new ShortPartParamValue("header1", Header, "header1Value"),
-        new ShortPartParamValue("header2", Header, "header2Value"),
-        new ShortPartParamValue("cookie1", Cookie, "cookie1Value"),
-        new ShortPartParamValue("cookie2", Cookie, "cookie2Value")
+      val hArgs = Map(
+        ShortPartParam("query1", Query) -> Seq("query1Value"),
+        ShortPartParam("query2", Query) -> Seq("query2Value"),
+        ShortPartParam("header1", Header) -> Seq("header1Value"),
+        ShortPartParam("header2", Header) -> Seq("header2Value"),
+        ShortPartParam("cookie1", Cookie) -> Seq("cookie1Value"),
+        ShortPartParam("cookie2", Cookie) -> Seq("cookie2Value")
       )
       val headers = handler.collectHeaders(hArgs)
       headers should have length 3
@@ -127,8 +127,8 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
       headers should contain("Cookie" -> "cookie1=cookie1Value; cookie2=cookie2Value")
     }
     it("should URL-escape cookie names and values") {
-      val hArgs = Seq(
-        new ShortPartParamValue("クッキー１", Cookie, "クッキー１の値")
+      val hArgs = Map(
+        ShortPartParam("クッキー１", Cookie) -> Seq("クッキー１の値")
       )
       val headers = handler.collectHeaders(hArgs)
       val expectedCookieString = s"${URLEncoder.encode("クッキー１", "UTF-8")}=${URLEncoder.encode("クッキー１の値", "UTF-8")}"
