@@ -23,6 +23,23 @@ class RequestParamSupportSpec extends FunSpec with Matchers with RequiresDB with
       )
       combineParams(registeredParams, PartRequestInfo(reqMeta, partReq)) should equal(expected)
     }
+    it("should keep parameter order, and not care about duplicate values") {
+      val registeredParams = Set(
+        PartParam(required = false, versioned = false, paramType = Query, outputName = "p1", updatedAt = now, createdAt = now)
+      )
+      val reqMeta = RequestMeta("id")
+      val partReq = PartRequest("partId", params = Seq(
+        PartRequestParam("p1", "The first"),
+        PartRequestParam("p1", "Second"),
+        PartRequestParam("p1", "Second"),
+        PartRequestParam("p1", "Third")
+      ))
+
+      val expected = Map(
+        ShortPartParam(registeredParams.head) -> Seq("The first", "Second", "Second", "Third")
+      )
+      combineParams(registeredParams, PartRequestInfo(reqMeta, partReq)) should equal(expected)
+    }
   }
 
   describe("#processMeta") {

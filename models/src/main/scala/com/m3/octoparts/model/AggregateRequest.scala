@@ -39,7 +39,7 @@ case class RequestMeta(
  */
 case class PartRequest(@(ApiModelProperty @field)(required = true)@BeanProperty partId: String,
                        @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty id: Option[String] = None,
-// TODO use a Map[String, Seq[String]] here when Swagger finally supports maps.
+                       // TODO use a Map[String, Seq[String]] here when Swagger finally supports maps.
                        @BeanProperty params: Seq[PartRequestParam] = Nil)
 
 case class PartRequestParam(@(ApiModelProperty @field)(required = true)@BeanProperty key: String,
