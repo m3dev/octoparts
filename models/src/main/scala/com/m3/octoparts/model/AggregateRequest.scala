@@ -35,11 +35,11 @@ case class RequestMeta(
  * @param partId String that corresponds to a dependency part Id
  * @param id if set, will be passed to the corresponding response.
  *           Useful when an [[AggregateRequest]] contains several [[PartRequest]]s with the same partId
- * @param params params Seq[(String, String)] Unfortunately Swagger does
- *               not support Map types yet so we're using this for now.
+ * @param params list of parameters. Several parameters can have the same key; within those, order is kept as much a can be.
  */
 case class PartRequest(@(ApiModelProperty @field)(required = true)@BeanProperty partId: String,
                        @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty id: Option[String] = None,
+// TODO use a Map[String, Seq[String]] here when Swagger finally supports maps.
                        @BeanProperty params: Seq[PartRequestParam] = Nil)
 
 case class PartRequestParam(@(ApiModelProperty @field)(required = true)@BeanProperty key: String,
