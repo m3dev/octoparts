@@ -28,6 +28,7 @@ trait RequestParamSupport {
       val allParams = processMeta(partRequestInfo.requestMeta) ++ partRequestInfo.partRequest.params
       allParams.groupBy(_.key).mapValues(_.map(_.value))
     }
+    // combinedParams is unbounded, so we use a map to make sure complexity is under control.
     val mappedParams = for {
       registeredParam <- registeredParams.toSeq
       values <- combinedParams.get(registeredParam.inputName)
