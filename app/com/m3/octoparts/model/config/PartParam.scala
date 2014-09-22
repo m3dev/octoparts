@@ -51,4 +51,17 @@ object PartParam {
       cacheGroups = param.cacheGroups.map(CacheGroup.toJsonModel)
     )
   }
+
+  def fromJsonModel(param: JsonPartParam): PartParam = {
+    PartParam(
+      required = param.required,
+      versioned = param.versioned,
+      paramType = param.paramType,
+      outputName = param.outputName,
+      inputNameOverride = param.inputNameOverride,
+      cacheGroups = param.cacheGroups.map(CacheGroup.fromJsonModel),
+      createdAt = DateTime.now,
+      updatedAt = DateTime.now
+    )
+  }
 }

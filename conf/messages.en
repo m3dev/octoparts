@@ -113,3 +113,11 @@ admin.threadPoolNotFound=There was no thread pool with ID {0}
 admin.partNotFound=Part not found: {0}
 admin.cacheGroupNotFound=Cache group not found: {0}
 admin.validationErrors=Validation errors: {0}
+
+admin.export=Export
+admin.import=Import configuration
+admin.export.all=Export all
+admin.import.help=Choose a JSON file…
+admin.import.none=There was no configuration data in this file.
+admin.import.successful=The following parts were imported({0}/{1}): {2}
+admin.import.failed=The following parts were already registed therefore were skipped({0}/{1}): {2}

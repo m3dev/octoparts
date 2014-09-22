@@ -66,13 +66,25 @@ class PartsController(
     value = "Return a list of all registered endpoints in the system",
     nickname = "Endpoints listing",
     notes = "Returns a list of registered endpoints in the system.",
-    response = classOf[com.m3.octoparts.model.config.json.HttpPartConfig],
+    response = classOf[HttpPartConfig],
     responseContainer = "List",
-    httpMethod = "GET"
+    httpMethod = "GET")
+  @ApiParam(allowMultiple = true,
+    name = "partId",
+    value = "Optional filter for the partId"
   )
-  def list = Action.async { implicit request =>
+  def list(partIdParams: List[String] = Nil) = Action.async { implicit request =>
     debugRc
-    configsRepository.findAllConfigs().map(configs => Ok(Json.toJson(configs.map(HttpPartConfig.toJsonModel))))
+    val fConfigs = partIdParams match {
+      case Nil => configsRepository.findAllConfigs()
+      case partIds =>
+        val fParts = partIds.map(configsRepository.findConfigByPartId)
+        Future.sequence(fParts).map(_.flatten)
+    }
+
+    fConfigs.map {
+      configs => Ok(Json.toJson(configs.map(HttpPartConfig.toJsonModel)))
+    }
   }
 
   private def logAggregateRequest(aggregateRequest: AggregateRequest, noCache: Boolean)(implicit request: RequestHeader): Unit = {

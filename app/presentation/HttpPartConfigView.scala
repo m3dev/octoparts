@@ -21,6 +21,8 @@ case class HttpPartConfigView(config: HttpPartConfig) {
 
   def editLink: String = controllers.routes.AdminController.editPart(config.partId).url
 
+  def exportLink: String = controllers.routes.PartsController.list(List(partId)).url
+
   def commandGroup: String = config.hystrixConfig.fold("")(_.commandGroupKey)
 
   def timeoutInMs: Long = config.hystrixConfig.fold(5000L)(_.timeoutInMs)

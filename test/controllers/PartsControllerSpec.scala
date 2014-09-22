@@ -71,12 +71,21 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
   }
 
   it should "show a list of octoparts" in {
-    val result = controller.list.apply(FakeRequest())
+    val result = controller.list().apply(FakeRequest())
 
     status(result) should be(200)
     contentAsString(result) should include("void")
     contentAsString(result) should include("error")
     contentAsString(result) should include("slow")
+  }
+
+  it should "show a filtered list of octoparts" in {
+    val result = controller.list(List("void")).apply(FakeRequest())
+
+    status(result) should be(200)
+    contentAsString(result) should include("void")
+    contentAsString(result) shouldNot include("error")
+    contentAsString(result) shouldNot include("slow")
   }
 
 }
