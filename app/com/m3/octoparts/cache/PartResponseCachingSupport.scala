@@ -26,7 +26,7 @@ private[cache] object PartResponseCachingSupport {
   }
 
   private[cache] def shouldRevalidate(partResponse: PartResponse): Boolean = {
-    partResponse.retrievedFromCache && partResponse.cacheControl.hasExpired
+    partResponse.retrievedFromCache && partResponse.cacheControl.shouldRevalidate
   }
 }
 
