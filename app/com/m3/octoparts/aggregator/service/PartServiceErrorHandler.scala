@@ -5,7 +5,7 @@ import java.net.SocketTimeoutException
 import java.util.concurrent.RejectedExecutionException
 
 import com.m3.octoparts.aggregator.PartRequestInfo
-import com.m3.octoparts.logging.{ LogUtil, PartRequestLogger }
+import com.m3.octoparts.logging.{ LTSVLogWriter, LogUtil, PartRequestLogger }
 import com.m3.octoparts.model.PartResponse
 import com.netflix.hystrix.exception.HystrixRuntimeException
 import com.netflix.hystrix.exception.HystrixRuntimeException.FailureType
@@ -26,7 +26,7 @@ trait PartServiceErrorHandler extends LogUtil {
   private def logRejection(partRequestInfo: PartRequestInfo, aReqTimeout: Duration, message: String): PartResponse = {
     val partId = partRequestInfo.partRequest.partId
     val requestMeta = partRequestInfo.requestMeta
-    Logger.warn(LTSV.dump("Part" -> partId, "Execution rejected" -> message))
+    LTSVLogWriter.warn("Part" -> partId, "Execution rejected" -> message)
     partRequestLogger.logTimeout(partId, requestMeta.id, requestMeta.serviceId, aReqTimeout.toMillis)
     PartResponse(partId, partRequestInfo.partRequestId, errors = Seq(message))
   }
@@ -34,7 +34,7 @@ trait PartServiceErrorHandler extends LogUtil {
   private def logTimeout(partRequestInfo: PartRequestInfo, aReqTimeout: Duration, message: String): PartResponse = {
     val partId = partRequestInfo.partRequest.partId
     val requestMeta = partRequestInfo.requestMeta
-    Logger.warn(LTSV.dump("Part" -> partId, "Timed out" -> aReqTimeout.toString))
+    LTSVLogWriter.warn("Part" -> partId, "Timed out" -> aReqTimeout.toString)
     partRequestLogger.logTimeout(partId, requestMeta.id, requestMeta.serviceId, aReqTimeout.toMillis)
     PartResponse(partId, partRequestInfo.partRequestId, errors = Seq(message))
   }
@@ -42,7 +42,7 @@ trait PartServiceErrorHandler extends LogUtil {
   private def logInvalid(partRequestInfo: PartRequestInfo, duration: Duration, message: String): PartResponse = {
     val partId = partRequestInfo.partRequest.partId
     val requestMeta = partRequestInfo.requestMeta
-    Logger.warn(LTSV.dump("Part" -> partId, "Invalid" -> message))
+    LTSVLogWriter.warn("Part" -> partId, "Invalid" -> message)
     partRequestLogger.logFailure(partId, requestMeta.id, requestMeta.serviceId, statusCode = None)
     PartResponse(partId, partRequestInfo.partRequestId, errors = Seq(message))
   }
@@ -50,7 +50,7 @@ trait PartServiceErrorHandler extends LogUtil {
   private def logShortCircuit(partRequestInfo: PartRequestInfo, duration: Duration, message: String): PartResponse = {
     val partId = partRequestInfo.partRequest.partId
     val requestMeta = partRequestInfo.requestMeta
-    Logger.warn(LTSV.dump("Part" -> partId, "Hystrix" -> message))
+    LTSVLogWriter.warn("Part" -> partId, "Hystrix" -> message)
     partRequestLogger.logFailure(partId, requestMeta.id, requestMeta.serviceId, statusCode = None)
     PartResponse(partId, partRequestInfo.partRequestId, errors = Seq(message))
   }
@@ -58,7 +58,7 @@ trait PartServiceErrorHandler extends LogUtil {
   private def logIOException(partRequestInfo: PartRequestInfo, duration: Duration, io: Throwable) = {
     val partId = partRequestInfo.partRequest.partId
     val requestMeta = partRequestInfo.requestMeta
-    Logger.warn(LTSV.dump("Part" -> partId), io)
+    LTSVLogWriter.warn(io, "Part" -> partId)
     partRequestLogger.logFailure(partId, requestMeta.id, requestMeta.serviceId, statusCode = None)
     PartResponse(partId, partRequestInfo.partRequestId, errors = Seq(io.toString))
   }
@@ -66,7 +66,7 @@ trait PartServiceErrorHandler extends LogUtil {
   private def logOtherException(partRequestInfo: PartRequestInfo, duration: Duration, err: Throwable) = {
     val partId = partRequestInfo.partRequest.partId
     val requestMeta = partRequestInfo.requestMeta
-    Logger.error(LTSV.dump("Part" -> partId), err)
+    LTSVLogWriter.error(err, "Part" -> partId)
     partRequestLogger.logFailure(partId, requestMeta.id, requestMeta.serviceId, statusCode = None)
     PartResponse(partId, partRequestInfo.partRequestId, errors = Seq(err.toString))
   }

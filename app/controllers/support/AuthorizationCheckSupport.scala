@@ -1,6 +1,7 @@
 package controllers.support
 
 import com.m3.octoparts.auth.AuthenticatedRequest
+import com.m3.octoparts.logging.LTSVLogWriter
 import play.api.Logger
 import play.api.mvc.{ ActionFilter, Result }
 
@@ -24,7 +25,7 @@ trait AuthorizationCheckSupport {
     def filter[A](inputReq: AuthenticatedRequest[A]) = {
       isAuthorized(inputReq).flatMap { authorized =>
         if (authorized) {
-          Logger.debug(s"Accepting principal [${inputReq.principal.nickname}] as authorized")
+          LTSVLogWriter.debug("Accepting as authorized: principal" -> inputReq.principal.nickname)
           Future.successful(None)
         } else {
           onUnauthorized(inputReq).map(Some(_))

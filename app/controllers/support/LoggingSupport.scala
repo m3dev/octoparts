@@ -1,19 +1,12 @@
 package controllers.support
 
+import com.m3.octoparts.logging.LTSVLogWriter
 import play.api.Logger
 import play.api.mvc.RequestHeader
-import skinny.util.LTSV
 
-object LoggingSupport {
+trait LoggingSupport extends LTSVLogWriter {
 
-  def toLtsv(items: Seq[(String, String)]): String = {
-    val contextItems: Seq[(String, String)] = items.filterNot { case (k, v) => v == null || v.isEmpty }
-    LTSV.dump(contextItems: _*)
-  }
-}
-
-trait LoggingSupport {
-  import controllers.support.LoggingSupport._
+  val logger = Logger
 
   /**
    * @return remote address, uri, query
@@ -26,13 +19,13 @@ trait LoggingSupport {
   )
 
   // those shortcuts make sure to print the requestContext
-  @inline protected def warnRc(msg: (String, String)*)(implicit request: RequestHeader) = Logger.warn(toLtsv(buildRequestContext ++ msg))
-  @inline protected def warnRc(msg: (String, String), e: Throwable)(implicit request: RequestHeader) = Logger.warn(toLtsv(buildRequestContext ++ Seq(msg, "Error" -> e.toString)), e)
-  @inline protected def errorRc(e: Throwable)(implicit request: RequestHeader) = Logger.error(toLtsv(buildRequestContext), e)
-  @inline protected def errorRc(msg: (String, String), e: Throwable)(implicit request: RequestHeader) = Logger.error(toLtsv(buildRequestContext ++ Seq(msg, "Error" -> e.toString)), e)
-  @inline protected def debugRc(implicit request: RequestHeader) = Logger.debug(toLtsv(buildRequestContext))
-  @inline protected def debugRc(msg: (String, String)*)(implicit request: RequestHeader) = Logger.debug(toLtsv(buildRequestContext ++ msg))
-  @inline protected def infoRc(implicit request: RequestHeader) = Logger.info(toLtsv(buildRequestContext))
-  @inline protected def infoRc(msg: (String, String)*)(implicit request: RequestHeader) = Logger.info(toLtsv(buildRequestContext ++ msg))
+  @inline protected def warnRc(msg: (String, String)*)(implicit request: RequestHeader) = warn(buildRequestContext ++ msg: _*)
+  @inline protected def warnRc(msg: (String, String), e: Throwable)(implicit request: RequestHeader) = warn(e, (buildRequestContext :+ msg): _*)
+  @inline protected def errorRc(e: Throwable)(implicit request: RequestHeader) = error(e, buildRequestContext: _*)
+  @inline protected def errorRc(msg: (String, String), e: Throwable)(implicit request: RequestHeader) = error(e, (buildRequestContext :+ msg): _*)
+  @inline protected def debugRc(implicit request: RequestHeader) = debug(buildRequestContext: _*)
+  @inline protected def debugRc(msg: (String, String)*)(implicit request: RequestHeader) = debug(buildRequestContext ++ msg: _*)
+  @inline protected def infoRc(implicit request: RequestHeader) = info(buildRequestContext: _*)
+  @inline protected def infoRc(msg: (String, String)*)(implicit request: RequestHeader) = info(buildRequestContext ++ msg: _*)
 
 }

@@ -1,5 +1,6 @@
 package com.m3.octoparts.support.db
 
+import com.m3.octoparts.logging.LTSVLogWriter
 import com.m3.octoparts.model.config._
 import org.flywaydb.core.Flyway
 import org.scalatest.{ BeforeAndAfter, Suite }
@@ -47,7 +48,7 @@ trait RequiresDB extends Suite with OneAppPerSuite {
        */
       flyway.clean()
     } catch {
-      case NonFatal(e) => Logger.error(e.getMessage)
+      case NonFatal(e) => LTSVLogWriter.error(e)
     }
   }
 

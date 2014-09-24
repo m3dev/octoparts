@@ -1,7 +1,7 @@
 package com.m3.octoparts.hystrix
 
 import com.m3.octoparts.logging.LTSVLogWriter
-import skinny.logging.Logger
+import play.api.Logger
 
 /**
  * Helper for outputting Hystrix metrics logs in LTSV format.

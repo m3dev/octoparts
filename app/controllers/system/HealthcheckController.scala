@@ -1,6 +1,7 @@
 package controllers.system
 
 import com.m3.octoparts.hystrix.HystrixHealthReporter
+import com.m3.octoparts.logging.LTSVLogWriter
 import com.m3.octoparts.repository.ConfigsRepository
 import play.api.Logger
 import play.api.libs.json.{ Json, Writes }
@@ -92,7 +93,7 @@ object HealthcheckController {
 
   private def logIfUnhealthy(health: ServiceHealth): Unit = {
     if (!health.healthy) {
-      Logger.warn(LTSV.dump("health" -> "unhealthy", "colour" -> health.colour, "statuses" -> health.statuses.toString))
+      LTSVLogWriter.warn("health" -> "unhealthy", "colour" -> health.colour, "statuses" -> health.statuses.toString)
     }
   }
 

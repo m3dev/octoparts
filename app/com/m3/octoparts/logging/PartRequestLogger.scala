@@ -1,6 +1,6 @@
 package com.m3.octoparts.logging
 
-import skinny.logging.Logger
+import play.api.Logger
 
 /**
  * Helper for logging the results of part requests in LTSV format.
