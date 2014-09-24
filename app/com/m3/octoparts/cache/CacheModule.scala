@@ -4,7 +4,7 @@ import java.util.concurrent.{ TimeUnit, _ }
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.m3.octoparts.cache.client._
-import com.m3.octoparts.cache.dummy.{ NoCacheAccessor, NoCacheAdapter, NoCacheClient, NoLatestVersionCache }
+import com.m3.octoparts.cache.dummy.{ NoCacheAccessor, DummyRawCache, NoCacheClient, NoLatestVersionCache }
 import com.m3.octoparts.cache.key.MemcachedKeyGenerator
 import com.m3.octoparts.cache.versioning.{ InMemoryLatestVersionCache, LatestVersionCache }
 import play.api.Configuration
@@ -28,7 +28,7 @@ class CacheModule extends Module {
       new ThreadPoolExecutor(0, poolSize, 1L, TimeUnit.MINUTES, queue, namedThreadFactory))
   }
 
-  private def buildMemcached(): Memcached = {
+  private def buildMemcachedRawCache(): RawCache = {
     val playConfig = inject[Configuration]
     val tsConfig = playConfig.underlying
 
@@ -48,16 +48,16 @@ class CacheModule extends Module {
       authentication = auth
     ), cacheExecutor)
 
-    new LoggingMemcachedWrapper(shade)(cacheExecutor)
+    new LoggingRawCacheWrapper(new MemcachedRawCache(shade))(cacheExecutor)
   }
 
   when(cachingEnabled) {
     bind[LatestVersionCache] to new InMemoryLatestVersionCache
     when(useInMemoryCache) {
-      bind[Memcached] to new InMemoryCacheAdapter()(cacheExecutor) destroyWith (_.close())
+      bind[RawCache] to new InMemoryRawCache()(cacheExecutor) destroyWith (_.close())
     }
     when(useMemcached) {
-      bind[Memcached] to buildMemcached() destroyWith (_.close())
+      bind[RawCache] to buildMemcachedRawCache() destroyWith (_.close())
     }
     bind[MemcachedKeyGenerator] to MemcachedKeyGenerator
     bind[CacheAccessor] to injected[MemcachedAccessor]
@@ -66,7 +66,7 @@ class CacheModule extends Module {
 
   when(cachingDisabled) {
     bind[LatestVersionCache] to NoLatestVersionCache
-    bind[Memcached] to NoCacheAdapter
+    bind[RawCache] to DummyRawCache
     bind[CacheAccessor] to NoCacheAccessor
     bind[CacheClient] to NoCacheClient
   }

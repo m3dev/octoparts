@@ -8,7 +8,7 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 
 /**
- * Intercepts access to the memcached client so that we can e.g. hash the cache key
+ * Intercepts access to a [[RawCache]] so that we can e.g. hash the cache key
  */
 trait CacheAccessor {
 

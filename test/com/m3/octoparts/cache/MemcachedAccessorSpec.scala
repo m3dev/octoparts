@@ -3,12 +3,12 @@ package com.m3.octoparts.cache
 import java.util.concurrent.Executors
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.m3.octoparts.cache.client.MemcachedAccessor
+import com.m3.octoparts.cache.client.{ MemcachedAccessor, RawCache }
 import com.m3.octoparts.cache.key.{ CacheKey, MemcachedKeyGenerator, VersionCacheKey }
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ FunSpec, Matchers }
+import shade.memcached.Codec
 import shade.memcached.Codec.IntBinaryCodec
-import shade.memcached.{ Codec, Memcached }
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
@@ -22,15 +22,10 @@ class MemcachedAccessorSpec extends FunSpec with Matchers with ScalaFutures {
 
   describe("error handling") {
 
-    object MessedUpAdapter extends Memcached {
-      override def add[T](key: String, value: T, exp: Duration)(implicit codec: Codec[T]): Future[Boolean] = ???
+    object MessedUpAdapter extends RawCache {
       override def set[T](key: String, value: T, exp: Duration)(implicit codec: Codec[T]): Future[Unit] = ???
-      override def getAndTransform[T](key: String, exp: Duration)(cb: (Option[T]) => T)(implicit codec: Codec[T]): Future[Option[T]] = ???
       override def get[T](key: String)(implicit codec: Codec[T]): Future[Option[T]] = ???
-      override def delete(key: String): Future[Boolean] = ???
-      override def compareAndSet[T](key: String, expecting: Option[T], newValue: T, exp: Duration)(implicit codec: Codec[T]): Future[Boolean] = ???
       override def close(): Unit = ???
-      override def transformAndGet[T](key: String, exp: Duration)(cb: (Option[T]) => T)(implicit codec: Codec[T]): Future[T] = ???
     }
 
     val cacheAccessor = new MemcachedAccessor(MessedUpAdapter, MemcachedKeyGenerator)
@@ -56,14 +51,9 @@ class MemcachedAccessorSpec extends FunSpec with Matchers with ScalaFutures {
       def toMemcachedKey(rawKey: CacheKey) = "key"
     }
 
-    class MockMemcached extends Memcached {
-      override def add[T](key: String, value: T, exp: Duration)(implicit codec: Codec[T]): Future[Boolean] = ???
-      override def getAndTransform[T](key: String, exp: Duration)(cb: (Option[T]) => T)(implicit codec: Codec[T]): Future[Option[T]] = ???
+    class MockMemcached extends RawCache {
       override def get[T](key: String)(implicit codec: Codec[T]): Future[Option[T]] = ???
-      override def delete(key: String): Future[Boolean] = ???
-      override def compareAndSet[T](key: String, expecting: Option[T], newValue: T, exp: Duration)(implicit codec: Codec[T]): Future[Boolean] = ???
       override def close(): Unit = ???
-      override def transformAndGet[T](key: String, exp: Duration)(cb: (Option[T]) => T)(implicit codec: Codec[T]): Future[T] = ???
 
       var insertedWithTtl: Option[Duration] = None
       override def set[T](key: String, value: T, exp: Duration)(implicit codec: Codec[T]): Future[Unit] = {

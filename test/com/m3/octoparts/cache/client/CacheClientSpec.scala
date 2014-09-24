@@ -1,20 +1,21 @@
 package com.m3.octoparts.cache.client
 
+import java.io.IOException
 import java.util.concurrent.Executors
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.m3.octoparts.cache.versioning.{ LatestVersionCache, InMemoryLatestVersionCache }
-import org.scalatest._
-import com.m3.octoparts.cache.key.{ PartCacheKey, MemcachedKeyGenerator }
 import com.m3.octoparts.cache.directive.CacheDirective
+import com.m3.octoparts.cache.key.{ MemcachedKeyGenerator, PartCacheKey }
+import com.m3.octoparts.cache.versioning.{ InMemoryLatestVersionCache, LatestVersionCache }
+import com.m3.octoparts.model.{ CacheControl, PartResponse }
+import org.joda.time.DateTimeUtils
+import org.scalatest._
+import org.scalatest.concurrent.{ Eventually, ScalaFutures }
+import shade.memcached.Codec
+
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
-import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import scala.language.postfixOps
-import shade.memcached.{ Memcached, Codec }
-import java.io.IOException
-import org.joda.time.DateTimeUtils
-import com.m3.octoparts.model.{ CacheControl, PartResponse }
 
 class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Eventually with BeforeAndAfter {
 
@@ -27,10 +28,10 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
     ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor(namedThreadFactory))
   }
 
-  case class CacheStuff(cache: Memcached, latestVersionCache: LatestVersionCache, client: MemcachedClient)
+  case class CacheStuff(cache: RawCache, latestVersionCache: LatestVersionCache, client: MemcachedClient)
 
   def createCacheStuff: CacheStuff = {
-    val cache = new InMemoryCacheAdapter()
+    val cache = new InMemoryRawCache()
     val cacheAccessor = new MemcachedAccessor(cache, MemcachedKeyGenerator)
     val latestVersionCache = new InMemoryLatestVersionCache
     val client = new MemcachedClient(cacheAccessor, latestVersionCache)
@@ -144,7 +145,7 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
 
   it("should show a CacheException when the cache is down") {
     val cacheStuff = createCacheStuff
-    val memcached = new InMemoryCacheAdapter() {
+    val memcached = new InMemoryRawCache() {
       override def get[T](key: String)(implicit codec: Codec[T]): Future[Option[T]] = Future.failed(new IOException)
     }
     val memcachedAccessor = new MemcachedAccessor(memcached, MemcachedKeyGenerator)

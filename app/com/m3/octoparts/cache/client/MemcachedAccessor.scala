@@ -2,7 +2,7 @@ package com.m3.octoparts.cache.client
 
 import com.m3.octoparts.cache.key._
 import play.api.Logger
-import shade.memcached.{ Codec, Memcached }
+import shade.memcached.Codec
 import skinny.util.LTSV
 
 import scala.concurrent.duration._
@@ -10,7 +10,16 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.postfixOps
 import scala.util.control.NonFatal
 
-class MemcachedAccessor(memcached: Memcached, keyGen: MemcachedKeyGenerator)(implicit executionContext: ExecutionContext)
+/**
+ * A [[CacheAccessor]] implementation that performs the following Memcached-specific processing:
+ * - converts the cache key to a String that can be used as a Memcached key
+ * - skips cache PUTs with TTLs < 1 second
+ * - adds error handling for any exceptions thrown synchronously by Spymemcached/Shade
+ *
+ * @param memcached the raw cache
+ * @param keyGen the key generator
+ */
+class MemcachedAccessor(memcached: RawCache, keyGen: MemcachedKeyGenerator)(implicit executionContext: ExecutionContext)
     extends CacheAccessor {
 
   /**
