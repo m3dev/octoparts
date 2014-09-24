@@ -120,22 +120,22 @@ trait LTSVLogWriter { writer =>
   /* Trace */
 
   /**
-   * Write the given key-values as an LTSV error log entry, with the server's hostname added as 'octopartsHost' field.
+   * Write the given key-values as an LTSV trace log entry, with the server's hostname added as 'octopartsHost' field.
    */
   @inline final def trace(pairs: (String, Any)*): Unit = writer.trace(true, pairs: _*)
 
   /**
-   * Write the given key-values and error as an LTSV error log entry, with the server's hostname added as 'octopartsHost' field.
+   * Write the given key-values and error as an LTSV trace log entry, with the server's hostname added as 'octopartsHost' field.
    */
   @inline final def trace(error: Throwable, pairs: (String, Any)*): Unit = writer.trace(true, error, pairs: _*)
 
   /**
-   * Write the given key-values as an LTSV error log entry.
+   * Write the given key-values as an LTSV trace log entry.
    */
   @inline final def trace(addHostnameField: Boolean, pairs: (String, Any)*): Unit =
     logger.trace(toLtsv(pairs, addHostnameField))
   /**
-   * Write the given key-values and error as an LTSV error log entry.
+   * Write the given key-values and error as an LTSV trace log entry.
    */
   @inline final def trace(addHostnameField: Boolean, error: Throwable, pairs: (String, Any)*): Unit =
     logger.trace(toLtsv(pairs, addHostnameField), error)
