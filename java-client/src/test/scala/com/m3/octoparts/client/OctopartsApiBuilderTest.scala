@@ -2,7 +2,9 @@ package com.m3.octoparts.client
 
 import java.nio.charset.StandardCharsets
 
-import com.m3.octoparts.model.AggregateRequest
+import com.m3.octoparts.model.config.ParamType
+import com.m3.octoparts.model.{ HttpMethod, AggregateRequest }
+import com.m3.octoparts.model.config.json.HttpPartConfig
 import org.scalatest.{ BeforeAndAfterAll, FunSpec, Matchers }
 
 class OctopartsApiBuilderTest extends FunSpec with BeforeAndAfterAll with Matchers {
@@ -24,6 +26,43 @@ class OctopartsApiBuilderTest extends FunSpec with BeforeAndAfterAll with Matche
     OctopartsApiBuilder.formatWithUriEscape("%s", " ") should be("%20")
     OctopartsApiBuilder.formatWithUriEscape("%s%s", " ", " ") should be("%20%20")
     OctopartsApiBuilder.formatWithUriEscape("%s%s", null, " ") should be("null%20")
+  }
+  it("should decode enums with Jackson") {
+    val source = """{
+               |    "partId": "test",
+               |    "owner": "tiger",
+               |    "uriToInterpolate": "http://local.host/",
+               |    "description": "",
+               |    "method": "put",
+               |    "hystrixConfig": {
+               |      "timeout": 5000,
+               |      "threadPoolConfig": {
+               |        "threadPoolKey": "swimming",
+               |        "coreSize": 5,
+               |        "queueSize": 256
+               |      },
+               |      "commandKey": "test",
+               |      "commandGroupKey": "swimming"
+               |    },
+               |    "additionalValidStatuses": [],
+               |    "parameters": [
+               |      {
+               |        "required": false,
+               |        "versioned": false,
+               |        "paramType": "header",
+               |        "outputName": "limit",
+               |        "cacheGroups": []
+               |      }
+               |    ],
+               |    "cacheGroups": [],
+               |    "cacheTtl": 0,
+               |    "alertMailsEnabled": false,
+               |    "alertPercentThreshold": 5,
+               |    "alertInterval": 60000
+               |  }""".stripMargin
+    val partConfig = OctopartsApiBuilder.Mapper.reader(classOf[HttpPartConfig]).readValue[HttpPartConfig](source)
+    partConfig.method should be(HttpMethod.Put)
+    partConfig.parameters.head.paramType should be(ParamType.Header)
   }
 
   override def afterAll() {

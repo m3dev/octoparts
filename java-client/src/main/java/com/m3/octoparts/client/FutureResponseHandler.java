@@ -1,10 +1,13 @@
 package com.m3.octoparts.client;
 
+import com.m3.octoparts.model.config.json.HttpPartConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +39,12 @@ public enum FutureResponseHandler {
     @Nonnull
     public static ResponseWrapper awaitResponse(@Nonnull Future<ResponseWrapper> future, @Nonnegative long timeoutMs) {
         return awaitResult(future, timeoutMs, EmptyResponseWrapper$.MODULE$);
+    }
+
+
+    @Nonnull
+    public static List<HttpPartConfig> awaitListEndpoints(@Nonnull Future<List<HttpPartConfig>> future, @Nonnegative long timeoutMs) {
+        return awaitResult(future, timeoutMs, Collections.<HttpPartConfig>emptyList());
     }
 
     @Nonnull

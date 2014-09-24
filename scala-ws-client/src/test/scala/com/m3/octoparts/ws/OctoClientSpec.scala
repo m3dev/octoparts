@@ -86,7 +86,7 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
           paramType = ParamType.Header,
           outputName = "userId",
           inputNameOverride = None,
-          cacheGroups = Set()
+          cacheGroups = Set.empty
         )),
       deprecatedInFavourOf = None,
       cacheTtl = Some(60 seconds),
