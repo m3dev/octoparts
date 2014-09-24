@@ -83,7 +83,7 @@ class LTSVLogWriterSpec extends FunSpec with MockitoSugar with Matchers {
   }
 
   describe("#trace and not passing a Throwable") {
-    it("should call .error on the underlying LoggerLike") {
+    it("should call .trace on the underlying LoggerLike") {
       val (subject, underlying) = writerWithMock
       subject.trace("hi" -> "there")
       verify(underlying, times(1)).trace(anyString())
