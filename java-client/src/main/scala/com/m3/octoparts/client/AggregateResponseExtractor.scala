@@ -1,11 +1,22 @@
 package com.m3.octoparts.client
 
+import java.io.InputStream
+
 import com.m3.octoparts.model.{ AggregateRequest, AggregateResponse }
 import com.ning.http.client.{ AsyncCompletionHandler, Response }
 import org.slf4j.LoggerFactory
 
 private[client] object AggregateResponseExtractor {
   private val Log = LoggerFactory.getLogger(classOf[AggregateResponseExtractor])
+
+  def deserialize(inputStream: InputStream): ResponseWrapper = {
+    Option {
+      OctopartsApiBuilder.Mapper.readValue[AggregateResponse](inputStream, classOf[AggregateResponse])
+    } match {
+      case None => EmptyResponseWrapper
+      case Some(ag) => DefaultResponseWrapper(ag)
+    }
+  }
 }
 
 private[client] class AggregateResponseExtractor(aggregateRequest: AggregateRequest) extends AsyncCompletionHandler[ResponseWrapper] {
@@ -14,8 +25,7 @@ private[client] class AggregateResponseExtractor(aggregateRequest: AggregateRequ
 
   def onCompleted(response: Response): ResponseWrapper = {
     if (response.getStatusCode < 400) {
-      val ag = OctopartsApiBuilder.Mapper.readValue(response.getResponseBodyAsStream, classOf[AggregateResponse])
-      Option(ag).fold[ResponseWrapper](EmptyResponseWrapper)(DefaultResponseWrapper.apply)
+      deserialize(response.getResponseBodyAsStream)
     } else {
       Log.warn(s"Unexpected response status: '${response.getStatusText}' for request ${aggregateRequest.requestMeta.id}")
       EmptyResponseWrapper
