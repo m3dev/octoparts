@@ -1,5 +1,8 @@
 package controllers.system
 
+import java.io.IOException
+
+import com.m3.octoparts.cache.RawCache
 import org.mockito.Mockito._
 import org.scalatest.{ Matchers, FlatSpec, BeforeAndAfterEach }
 import org.scalatest.mock.MockitoSugar
@@ -11,6 +14,7 @@ import org.scalatestplus.play.OneAppPerSuite
 import play.api.libs.json.JsValue
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import shade.memcached.Codec
 import scala.concurrent.Future
 
 class HealthcheckControllerSpec
@@ -24,26 +28,30 @@ class HealthcheckControllerSpec
   val mockConfigs = Seq(mock[HttpPartConfig], mock[HttpPartConfig], mock[HttpPartConfig])
   val configsRepo = mock[ConfigsRepository]
   val hystrixHealthReporter = mock[HystrixHealthReporter]
+  val cache = mock[RawCache]
 
   override def beforeEach() {
-    reset(configsRepo, hystrixHealthReporter)
+    reset(configsRepo, hystrixHealthReporter, cache)
 
     // Return healthy-looking results by default
     when(configsRepo.findAllConfigs).thenReturn(Future.successful(mockConfigs))
     when(hystrixHealthReporter.getCommandKeysWithOpenCircuitBreakers).thenReturn(Seq())
+    when(cache.get[String](org.mockito.Matchers.any(classOf[String]))(org.mockito.Matchers.any(classOf[Codec[String]])))
+      .thenReturn(Future.successful(Some("pong")))
   }
 
-  val controller = new HealthcheckController(configsRepo, hystrixHealthReporter)
+  val controller = new HealthcheckController(configsRepo, hystrixHealthReporter, cache)
 
   it should "return a 200 OK response" in {
     status(controller.healthcheck.apply(FakeRequest())) should be(200)
   }
 
-  it should "be GREEN if DB is healthy and there are no open circuits" in {
+  it should "be GREEN if DB is healthy, there are no open circuits and Memcached is healthy" in {
     checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
       colour should be("GREEN")
       dbOk should be(true)
       hystrixOk should be(true)
+      cacheOk should be(true)
     }
   }
 
@@ -75,7 +83,18 @@ class HealthcheckControllerSpec
     }
   }
 
+  it should "be YELLOW and show Memcached as not OK if the Memcached GET returned a failure" in {
+    when(cache.get[String](org.mockito.Matchers.any(classOf[String]))(org.mockito.Matchers.any(classOf[Codec[String]])))
+      .thenReturn(Future.failed(new IOException("Memcached is down!")))
+
+    checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
+      colour should be("YELLOW")
+      cacheOk should be(false)
+    }
+  }
+
   def colour(implicit json: JsValue) = (json \ "colour").as[String]
   def dbOk(implicit json: JsValue) = (json \ "statuses" \ "db" \ "ok").as[Boolean]
   def hystrixOk(implicit json: JsValue) = (json \ "statuses" \ "hystrix" \ "ok").as[Boolean]
+  def cacheOk(implicit json: JsValue) = (json \ "statuses" \ "memcached" \ "ok").as[Boolean]
 }
