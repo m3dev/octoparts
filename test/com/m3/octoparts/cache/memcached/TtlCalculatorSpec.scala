@@ -1,4 +1,4 @@
-package com.m3.octoparts.cache.client
+package com.m3.octoparts.cache.memcached
 
 import org.scalatest.{ FunSpec, BeforeAndAfter, Matchers }
 import org.joda.time.DateTimeUtils

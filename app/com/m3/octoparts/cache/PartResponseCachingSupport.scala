@@ -2,7 +2,6 @@ package com.m3.octoparts.cache
 
 import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.aggregator.service.PartRequestServiceBase
-import com.m3.octoparts.cache.client.{ CacheClient, CacheException }
 import com.m3.octoparts.cache.directive.{ CacheDirective, CacheDirectiveGenerator }
 import com.m3.octoparts.model.PartResponse
 import com.m3.octoparts.model.config._
@@ -33,7 +32,7 @@ private[cache] object PartResponseCachingSupport {
 trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
   import PartResponseCachingSupport._
 
-  def cacheClient: CacheClient
+  def cacheOps: CacheOps
 
   override def processWithConfig(ci: HttpPartConfig,
                                  partRequestInfo: PartRequestInfo,
@@ -44,7 +43,7 @@ trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
       super.processWithConfig(ci, partRequestInfo, params)
     } else {
       val directive = CacheDirectiveGenerator.generateDirective(ci.partId, params, ci.cacheConfig)
-      val futureMaybeFromCache = cacheClient.putIfAbsent(directive)(super.processWithConfig(ci, partRequestInfo, params)).recoverWith {
+      val futureMaybeFromCache = cacheOps.putIfAbsent(directive)(super.processWithConfig(ci, partRequestInfo, params)).recoverWith {
         case ce: CacheException =>
           ce.getCause match {
             case te: shade.TimeoutException =>
@@ -84,7 +83,7 @@ trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
         selectLatest(revalidatedPartResponse, partResponse)
     }
     revalidatedFResp.onSuccess {
-      case latestResponse => cacheClient.saveLater(latestResponse, directive)
+      case latestResponse => cacheOps.saveLater(latestResponse, directive)
     }
     revalidatedFResp
   }

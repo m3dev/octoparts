@@ -1,8 +1,7 @@
 package com.m3.octoparts.aggregator.service
 
 import com.m3.octoparts.aggregator.handler.HttpHandlerFactory
-import com.m3.octoparts.cache.PartResponseCachingSupport
-import com.m3.octoparts.cache.client.CacheClient
+import com.m3.octoparts.cache.{ CacheOps, PartResponseCachingSupport }
 import com.m3.octoparts.logging.PartRequestLogger
 import com.m3.octoparts.repository.ConfigsRepository
 import scaldi.Module
@@ -17,7 +16,7 @@ class AggregatorServicesModule extends Module {
     inject[ConfigsRepository],
     inject[HttpHandlerFactory]
   ) with PartResponseCachingSupport {
-    val cacheClient = inject[CacheClient]
+    val cacheOps = inject[CacheOps]
   }
 
   bind[PartsService] to new PartsService(

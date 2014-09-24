@@ -3,7 +3,7 @@ package com.m3.octoparts.cache.dummy
 import com.m3.octoparts.cache.versioning.LatestVersionCache.{ PartId, Version }
 import com.m3.octoparts.cache.versioning.{ LatestVersionCache, VersionedParamKey }
 
-object NoLatestVersionCache extends LatestVersionCache {
+object DummyLatestVersionCache extends LatestVersionCache {
   override def getPartVersion(partId: PartId) = None
 
   /**
