@@ -8,7 +8,7 @@ import skinny.util.LTSV
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ ExecutionContext, Future }
 
-class LoggingRawCacheWrapper(delegate: RawCache)(implicit executionContext: ExecutionContext) extends RawCache with LogUtil {
+class LoggingRawCache(delegate: RawCache)(implicit executionContext: ExecutionContext) extends RawCache with LogUtil {
 
   def get[T](key: String)(implicit codec: Codec[T]): Future[Option[T]] = {
     val f = delegate.get(key)(codec)

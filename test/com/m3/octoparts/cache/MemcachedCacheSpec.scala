@@ -3,7 +3,7 @@ package com.m3.octoparts.cache
 import java.util.concurrent.Executors
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.m3.octoparts.cache.client.{ MemcachedAccessor, RawCache }
+import com.m3.octoparts.cache.client.{ MemcachedCache, RawCache }
 import com.m3.octoparts.cache.key.{ CacheKey, MemcachedKeyGenerator, VersionCacheKey }
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ FunSpec, Matchers }
@@ -13,7 +13,7 @@ import shade.memcached.Codec.IntBinaryCodec
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 
-class MemcachedAccessorSpec extends FunSpec with Matchers with ScalaFutures {
+class MemcachedCacheSpec extends FunSpec with Matchers with ScalaFutures {
 
   implicit lazy val cacheExecutor = {
     val namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("cache-%d").build()
@@ -28,11 +28,11 @@ class MemcachedAccessorSpec extends FunSpec with Matchers with ScalaFutures {
       override def close(): Unit = ???
     }
 
-    val cacheAccessor = new MemcachedAccessor(MessedUpAdapter, MemcachedKeyGenerator)
+    val cache = new MemcachedCache(MessedUpAdapter, MemcachedKeyGenerator)
 
     it("should always throw in a Future") {
-      val fPut = cacheAccessor.doPut(VersionCacheKey("hi"), "hello", None)
-      val fGet = cacheAccessor.doGet[String](VersionCacheKey("har"))
+      val fPut = cache.put(VersionCacheKey("hi"), "hello", None)
+      val fGet = cache.get[String](VersionCacheKey("har"))
       whenReady(fPut.failed) { e =>
         e.getCause.getMessage should include("an implementation is missing")
       }
@@ -64,32 +64,32 @@ class MemcachedAccessorSpec extends FunSpec with Matchers with ScalaFutures {
 
     it("should skip the cache put when the TTL is exactly zero") {
       val cache = new MockMemcached
-      val subject = new MemcachedAccessor(cache, MockKeyGen)
-      whenReady(subject.doPut(SimpleCacheKey("foo"), 123, Some(Duration.Zero))) { _ =>
+      val subject = new MemcachedCache(cache, MockKeyGen)
+      whenReady(subject.put(SimpleCacheKey("foo"), 123, Some(Duration.Zero))) { _ =>
         cache.insertedWithTtl should be(None)
       }
     }
 
     it("should skip the cache put when the TTL is less than one second") {
       val cache = new MockMemcached
-      val subject = new MemcachedAccessor(cache, MockKeyGen)
-      whenReady(subject.doPut(SimpleCacheKey("foo"), 123, Some(900.millis))) { _ =>
+      val subject = new MemcachedCache(cache, MockKeyGen)
+      whenReady(subject.put(SimpleCacheKey("foo"), 123, Some(900.millis))) { _ =>
         cache.insertedWithTtl should be(None)
       }
     }
 
     it("should perform the cache put when the TTL is exactly one second") {
       val cache = new MockMemcached
-      val subject = new MemcachedAccessor(cache, MockKeyGen)
-      whenReady(subject.doPut(SimpleCacheKey("foo"), 123, Some(1.second))) { _ =>
+      val subject = new MemcachedCache(cache, MockKeyGen)
+      whenReady(subject.put(SimpleCacheKey("foo"), 123, Some(1.second))) { _ =>
         cache.insertedWithTtl should be(Some(1.second))
       }
     }
 
     it("should perform the cache put when the TTL is None, i.e. infinite") {
       val cache = new MockMemcached
-      val subject = new MemcachedAccessor(cache, MockKeyGen)
-      whenReady(subject.doPut(SimpleCacheKey("foo"), 123, None)) { _ =>
+      val subject = new MemcachedCache(cache, MockKeyGen)
+      whenReady(subject.put(SimpleCacheKey("foo"), 123, None)) { _ =>
         cache.insertedWithTtl should be(Some(30.days))
       }
     }

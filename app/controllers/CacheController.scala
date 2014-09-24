@@ -2,7 +2,7 @@ package controllers
 
 import javax.ws.rs.PathParam
 
-import com.m3.octoparts.cache.client.CacheClient
+import com.m3.octoparts.cache.client.CacheOps
 import com.m3.octoparts.cache.versioning.VersionedParamKey
 import com.m3.octoparts.model.config.CacheGroup
 import com.m3.octoparts.repository.ConfigsRepository
@@ -19,7 +19,7 @@ import scala.util.control.NonFatal
   produces = "text/plain",
   consumes = "application/json"
 )
-class CacheController(cacheClient: CacheClient, repository: ConfigsRepository)
+class CacheController(cacheClient: CacheOps, repository: ConfigsRepository)
     extends Controller
     with LoggingSupport {
 

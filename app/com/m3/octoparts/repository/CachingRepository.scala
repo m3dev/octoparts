@@ -1,6 +1,6 @@
 package com.m3.octoparts.repository
 
-import com.m3.octoparts.cache.client.CacheAccessor
+import com.m3.octoparts.cache.client.Cache
 import com.m3.octoparts.cache.key.{ CacheGroupCacheKey, CacheKey, HttpPartConfigCacheKey }
 import com.m3.octoparts.http.HttpClientPool
 import play.api.Logger
@@ -17,7 +17,7 @@ trait CachingRepository extends ConfigsRepository {
 
   def delegate: ConfigsRepository
 
-  def cacheAccessor: CacheAccessor
+  def cache: Cache
 
   def httpClientPool: HttpClientPool
 
@@ -28,7 +28,7 @@ trait CachingRepository extends ConfigsRepository {
    * Generic method for putting something into cache using any kind of identifier
    */
   def put[A](cacheKey: CacheKey, maybeCacheable: Option[A]): Future[Unit] = {
-    cacheAccessor.doPut(cacheKey, maybeCacheable, Some(Duration.Inf)).recover {
+    cache.put(cacheKey, maybeCacheable, Some(Duration.Inf)).recover {
       // no need to propagate cache put errors
       case NonFatal(cacheFailure) =>
         Logger.error(LTSV.dump("Cache put" -> cacheKey.toString), cacheFailure)
@@ -84,7 +84,7 @@ trait CachingRepository extends ConfigsRepository {
    * the database but that is hard to side-step (and might not be such a bad thing)
    */
   private def fetchFromCacheOrElse[A, B](identifier: A)(notFromCacheFind: A => Future[Option[B]], cacheKey: A => CacheKey): Future[Option[B]] = {
-    cacheAccessor.doGet[Option[B]](cacheKey(identifier)).flatMap {
+    cache.get[Option[B]](cacheKey(identifier)).flatMap {
       _.fold {
         val fMaybeDBConfig = notFromCacheFind(identifier)
         fMaybeDBConfig.foreach(put(cacheKey(identifier), _))

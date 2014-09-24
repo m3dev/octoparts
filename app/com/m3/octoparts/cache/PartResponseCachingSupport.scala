@@ -2,7 +2,7 @@ package com.m3.octoparts.cache
 
 import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.aggregator.service.PartRequestServiceBase
-import com.m3.octoparts.cache.client.{ CacheClient, CacheException }
+import com.m3.octoparts.cache.client.{ CacheOps, CacheException }
 import com.m3.octoparts.cache.directive.{ CacheDirective, CacheDirectiveGenerator }
 import com.m3.octoparts.model.PartResponse
 import com.m3.octoparts.model.config._
@@ -33,7 +33,7 @@ private[cache] object PartResponseCachingSupport {
 trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
   import PartResponseCachingSupport._
 
-  def cacheClient: CacheClient
+  def cacheClient: CacheOps
 
   override def processWithConfig(ci: HttpPartConfig,
                                  partRequestInfo: PartRequestInfo,

@@ -11,16 +11,16 @@ import scala.language.postfixOps
 import scala.util.control.NonFatal
 
 /**
- * A [[CacheAccessor]] implementation that performs the following Memcached-specific processing:
+ * A [[Cache]] implementation that performs the following Memcached-specific processing:
  * - converts the cache key to a String that can be used as a Memcached key
  * - skips cache PUTs with TTLs < 1 second
  * - adds error handling for any exceptions thrown synchronously by Spymemcached/Shade
  *
- * @param memcached the raw cache
+ * @param underlying the underlying raw cache
  * @param keyGen the key generator
  */
-class MemcachedAccessor(memcached: RawCache, keyGen: MemcachedKeyGenerator)(implicit executionContext: ExecutionContext)
-    extends CacheAccessor {
+class MemcachedCache(underlying: RawCache, keyGen: MemcachedKeyGenerator)(implicit executionContext: ExecutionContext)
+    extends Cache {
 
   /**
    * This value is arbitrarily chosen.
@@ -31,9 +31,9 @@ class MemcachedAccessor(memcached: RawCache, keyGen: MemcachedKeyGenerator)(impl
 
   private def serializeKey(key: CacheKey) = keyGen.toMemcachedKey(key)
 
-  def doGet[T](key: CacheKey)(implicit codec: Codec[T]): Future[Option[T]] = {
+  def get[T](key: CacheKey)(implicit codec: Codec[T]): Future[Option[T]] = {
     try {
-      memcached.get[T](serializeKey(key)).recoverWith {
+      underlying.get[T](serializeKey(key)).recoverWith {
         case NonFatal(err) => throw new CacheException(key, err)
       }
     } catch {
@@ -41,7 +41,7 @@ class MemcachedAccessor(memcached: RawCache, keyGen: MemcachedKeyGenerator)(impl
     }
   }
 
-  def doPut[T](key: CacheKey, v: T, ttl: Option[Duration])(implicit codec: Codec[T]): Future[Unit] = {
+  def put[T](key: CacheKey, v: T, ttl: Option[Duration])(implicit codec: Codec[T]): Future[Unit] = {
     try {
       ttl match {
         case Some(duration) if duration < 1.second =>
@@ -53,7 +53,7 @@ class MemcachedAccessor(memcached: RawCache, keyGen: MemcachedKeyGenerator)(impl
           Logger.debug(LTSV.dump("message" -> "Skipping cache PUT because ttl is less than 1 second", "key" -> key.toString, "ttl" -> duration.toString))
           Future.successful(())
         case _ =>
-          memcached.set[T](serializeKey(key), v, ttl.getOrElse(VERY_LONG_TTL)).recoverWith {
+          underlying.set[T](serializeKey(key), v, ttl.getOrElse(VERY_LONG_TTL)).recoverWith {
             case NonFatal(err) => throw new CacheException(key, err)
           }
       }

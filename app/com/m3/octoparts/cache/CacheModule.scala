@@ -4,7 +4,7 @@ import java.util.concurrent.{ TimeUnit, _ }
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.m3.octoparts.cache.client._
-import com.m3.octoparts.cache.dummy.{ NoCacheAccessor, DummyRawCache, NoCacheClient, NoLatestVersionCache }
+import com.m3.octoparts.cache.dummy.{ DummyCache, DummyRawCache, DummyCacheOps, DummyLatestVersionCache }
 import com.m3.octoparts.cache.key.MemcachedKeyGenerator
 import com.m3.octoparts.cache.versioning.{ InMemoryLatestVersionCache, LatestVersionCache }
 import play.api.Configuration
@@ -48,7 +48,7 @@ class CacheModule extends Module {
       authentication = auth
     ), cacheExecutor)
 
-    new LoggingRawCacheWrapper(new MemcachedRawCache(shade))(cacheExecutor)
+    new LoggingRawCache(new MemcachedRawCache(shade))(cacheExecutor)
   }
 
   when(cachingEnabled) {
@@ -60,15 +60,15 @@ class CacheModule extends Module {
       bind[RawCache] to buildMemcachedRawCache() destroyWith (_.close())
     }
     bind[MemcachedKeyGenerator] to MemcachedKeyGenerator
-    bind[CacheAccessor] to injected[MemcachedAccessor]
-    bind[CacheClient] to injected[MemcachedClient]
+    bind[Cache] to injected[MemcachedCache]
+    bind[CacheOps] to injected[MemcachedCacheOps]
   }
 
   when(cachingDisabled) {
-    bind[LatestVersionCache] to NoLatestVersionCache
+    bind[LatestVersionCache] to DummyLatestVersionCache
     bind[RawCache] to DummyRawCache
-    bind[CacheAccessor] to NoCacheAccessor
-    bind[CacheClient] to NoCacheClient
+    bind[Cache] to DummyCache
+    bind[CacheOps] to DummyCacheOps
   }
 
   def cachingDisabled = {

@@ -17,7 +17,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.postfixOps
 
-class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Eventually with BeforeAndAfter {
+class CacheOpsSpec extends FunSpec with Matchers with ScalaFutures with Eventually with BeforeAndAfter {
 
   after {
     DateTimeUtils.setCurrentMillisSystem() // put the system clock back to normal
@@ -28,14 +28,14 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
     ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor(namedThreadFactory))
   }
 
-  case class CacheStuff(cache: RawCache, latestVersionCache: LatestVersionCache, client: MemcachedClient)
+  case class CacheStuff(cache: RawCache, latestVersionCache: LatestVersionCache, client: MemcachedCacheOps)
 
   def createCacheStuff: CacheStuff = {
-    val cache = new InMemoryRawCache()
-    val cacheAccessor = new MemcachedAccessor(cache, MemcachedKeyGenerator)
+    val rawCache = new InMemoryRawCache()
+    val cache = new MemcachedCache(rawCache, MemcachedKeyGenerator)
     val latestVersionCache = new InMemoryLatestVersionCache
-    val client = new MemcachedClient(cacheAccessor, latestVersionCache)
-    CacheStuff(cache, latestVersionCache, client)
+    val client = new MemcachedCacheOps(cache, latestVersionCache)
+    CacheStuff(rawCache, latestVersionCache, client)
   }
 
   it("should miss but insert new part version when cache is empty") {
@@ -145,11 +145,11 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
 
   it("should show a CacheException when the cache is down") {
     val cacheStuff = createCacheStuff
-    val memcached = new InMemoryRawCache() {
+    val rawCache = new InMemoryRawCache() {
       override def get[T](key: String)(implicit codec: Codec[T]): Future[Option[T]] = Future.failed(new IOException)
     }
-    val memcachedAccessor = new MemcachedAccessor(memcached, MemcachedKeyGenerator)
-    val testee = new MemcachedClient(memcachedAccessor, cacheStuff.latestVersionCache)
+    val cache = new MemcachedCache(rawCache, MemcachedKeyGenerator)
+    val testee = new MemcachedCacheOps(cache, cacheStuff.latestVersionCache)
     val version = 13L
     val cacheDirective = CacheDirective("some part id 5", Seq.empty, Map.empty, Some(5 hours))
     cacheStuff.latestVersionCache.updatePartVersion(cacheDirective.partId, version)

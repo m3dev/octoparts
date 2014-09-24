@@ -11,7 +11,7 @@ import scala.language.postfixOps
 
 import com.m3.octoparts.support.mocks.{ MockConfigRespository, ConfigDataMocks }
 import com.m3.octoparts.model.config.{ PartParam, CacheGroup, HttpPartConfig }
-import com.m3.octoparts.cache.client.CacheClient
+import com.m3.octoparts.cache.client.CacheOps
 import org.scalatest.mock.MockitoSugar
 import org.mockito.Mockito._
 import org.mockito.Matchers._
@@ -45,7 +45,7 @@ class CacheControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
       mockHttpPartConfig.copy(id = Some(3), partId = key)
     })
   }
-  val mockCacheClient = mock[CacheClient]
+  val mockCacheClient = mock[CacheOps]
   val controller = new CacheController(mockCacheClient, mockRepository)
 
   it should "return 200 and call increasePartVersion with the partId when /invalidate/:partId is called" in {
