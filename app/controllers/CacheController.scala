@@ -1,8 +1,7 @@
 package controllers
 
 import javax.ws.rs.PathParam
-
-import com.m3.octoparts.cache.client.CacheOps
+import com.m3.octoparts.cache.CacheOps
 import com.m3.octoparts.cache.versioning.VersionedParamKey
 import com.m3.octoparts.model.config.CacheGroup
 import com.m3.octoparts.repository.ConfigsRepository
@@ -19,7 +18,7 @@ import scala.util.control.NonFatal
   produces = "text/plain",
   consumes = "application/json"
 )
-class CacheController(cacheClient: CacheOps, repository: ConfigsRepository)
+class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
     extends Controller
     with LoggingSupport {
 
@@ -36,7 +35,7 @@ class CacheController(cacheClient: CacheOps, repository: ConfigsRepository)
     @ApiParam(value = "The id of the endpoint that you you wish to invalidate", required = true)@PathParam("partId") partId: String) = Action.async { implicit request =>
     // TODO could check if part exists and return a 404 if not
     debugRc("action" -> "invalidateAll", "partId" -> partId)
-    checkResult(cacheClient.increasePartVersion(partId))
+    checkResult(cacheOps.increasePartVersion(partId))
   }
 
   @ApiOperation(
@@ -52,7 +51,7 @@ class CacheController(cacheClient: CacheOps, repository: ConfigsRepository)
     @ApiParam(value = "The specific parameter value that you wish to invalidate by", required = true)@PathParam("paramValue") paramValue: String) = Action.async { implicit request =>
     // TODO could check if part exists and return a 404 if not
     debugRc("action" -> "invalidateAll", "partId" -> partId, "pname" -> paramName, "pvalue" -> paramValue)
-    checkResult(cacheClient.increaseParamVersion(VersionedParamKey(partId, paramName, paramValue)))
+    checkResult(cacheOps.increaseParamVersion(VersionedParamKey(partId, paramName, paramValue)))
   }
 
   @ApiOperation(
@@ -128,7 +127,7 @@ class CacheController(cacheClient: CacheOps, repository: ConfigsRepository)
         param <- maybeParam
         partConfig <- param.httpPartConfig // Safe to assume at this point that they exist
       } yield {
-        cacheClient.increaseParamVersion(VersionedParamKey(partConfig.partId, param.outputName, paramValue)).map { done =>
+        cacheOps.increaseParamVersion(VersionedParamKey(partConfig.partId, param.outputName, paramValue)).map { done =>
           param.outputName
         }
       }
@@ -143,7 +142,7 @@ class CacheController(cacheClient: CacheOps, repository: ConfigsRepository)
   private def invalidateGroupParts(group: CacheGroup): Future[Seq[String]] = Future.sequence(for {
     part <- group.httpPartConfigs
   } yield {
-    cacheClient.increasePartVersion(part.partId).map(done => part.partId)
+    cacheOps.increasePartVersion(part.partId).map(done => part.partId)
   })
 
 }

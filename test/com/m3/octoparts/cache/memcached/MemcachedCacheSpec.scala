@@ -1,9 +1,9 @@
-package com.m3.octoparts.cache
+package com.m3.octoparts.cache.memcached
 
 import java.util.concurrent.Executors
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.m3.octoparts.cache.client.{ MemcachedCache, RawCache }
+import com.m3.octoparts.cache.RawCache
 import com.m3.octoparts.cache.key.{ CacheKey, MemcachedKeyGenerator, VersionCacheKey }
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ FunSpec, Matchers }

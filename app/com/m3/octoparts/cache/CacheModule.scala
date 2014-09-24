@@ -3,7 +3,7 @@ package com.m3.octoparts.cache
 import java.util.concurrent.{ TimeUnit, _ }
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.m3.octoparts.cache.client._
+import com.m3.octoparts.cache.memcached._
 import com.m3.octoparts.cache.dummy.{ DummyCache, DummyRawCache, DummyCacheOps, DummyLatestVersionCache }
 import com.m3.octoparts.cache.key.MemcachedKeyGenerator
 import com.m3.octoparts.cache.versioning.{ InMemoryLatestVersionCache, LatestVersionCache }

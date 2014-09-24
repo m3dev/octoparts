@@ -1,6 +1,6 @@
 package com.m3.octoparts.cache.dummy
 
-import com.m3.octoparts.cache.client.CacheOps
+import com.m3.octoparts.cache.CacheOps
 import com.m3.octoparts.cache.directive.CacheDirective
 import com.m3.octoparts.cache.versioning.VersionedParamKey
 import com.m3.octoparts.model.PartResponse

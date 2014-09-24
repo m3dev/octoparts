@@ -1,5 +1,6 @@
-package com.m3.octoparts.cache.client
+package com.m3.octoparts.cache.memcached
 
+import com.m3.octoparts.cache.{ Cache, CacheOps }
 import com.m3.octoparts.cache.directive.CacheDirective
 import com.m3.octoparts.cache.key.{ PartCacheKey, VersionCacheKey }
 import com.m3.octoparts.cache.versioning.{ LatestVersionCache, VersionCache, VersionLookup, VersionedParamKey }

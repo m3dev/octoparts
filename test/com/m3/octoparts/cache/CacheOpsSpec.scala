@@ -1,4 +1,4 @@
-package com.m3.octoparts.cache.client
+package com.m3.octoparts.cache
 
 import java.io.IOException
 import java.util.concurrent.Executors
@@ -6,6 +6,7 @@ import java.util.concurrent.Executors
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.m3.octoparts.cache.directive.CacheDirective
 import com.m3.octoparts.cache.key.{ MemcachedKeyGenerator, PartCacheKey }
+import com.m3.octoparts.cache.memcached.{ InMemoryRawCache, MemcachedCache, MemcachedCacheOps }
 import com.m3.octoparts.cache.versioning.{ InMemoryLatestVersionCache, LatestVersionCache }
 import com.m3.octoparts.model.{ CacheControl, PartResponse }
 import org.joda.time.DateTimeUtils

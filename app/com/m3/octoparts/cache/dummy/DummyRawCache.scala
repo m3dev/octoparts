@@ -1,6 +1,6 @@
 package com.m3.octoparts.cache.dummy
 
-import com.m3.octoparts.cache.client.RawCache
+import com.m3.octoparts.cache.RawCache
 import shade.memcached.Codec
 
 import scala.concurrent.Future

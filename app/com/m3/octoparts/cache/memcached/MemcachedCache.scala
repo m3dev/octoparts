@@ -1,5 +1,6 @@
-package com.m3.octoparts.cache.client
+package com.m3.octoparts.cache.memcached
 
+import com.m3.octoparts.cache.{ Cache, CacheException, RawCache }
 import com.m3.octoparts.cache.key._
 import play.api.Logger
 import shade.memcached.Codec

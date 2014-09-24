@@ -1,4 +1,4 @@
-package com.m3.octoparts.cache.client
+package com.m3.octoparts.cache
 
 import shade.memcached.Codec
 
@@ -6,9 +6,12 @@ import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 
 /**
- * A facade for [[shade.memcached.Memcached]]
+ * A facade for [[shade.memcached.Memcached]].
  *
- * Note: We have a dependency on [[shade.memcached.Codec]], which is not ideal,
+ * This is called a "raw" cache because it uses raw Strings for keys.
+ * Usually it will be wrapped by a [[Cache]] implementation for easier access.
+ *
+ * Note: We still have a dependency on [[shade.memcached.Codec]], which is not ideal,
  * but we can remove it if/when we decide to migrate away from Shade.
  */
 trait RawCache {
@@ -31,4 +34,5 @@ trait RawCache {
    * Shutdown and clean up any resources.
    */
   def close(): Unit
+
 }

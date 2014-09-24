@@ -1,6 +1,6 @@
 package com.m3.octoparts.cache.dummy
 
-import com.m3.octoparts.cache.client.Cache
+import com.m3.octoparts.cache.Cache
 import com.m3.octoparts.cache.key.CacheKey
 import shade.memcached.Codec
 

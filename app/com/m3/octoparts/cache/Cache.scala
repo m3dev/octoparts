@@ -1,4 +1,4 @@
-package com.m3.octoparts.cache.client
+package com.m3.octoparts.cache
 
 import com.m3.octoparts.cache.key._
 import shade.memcached.Codec

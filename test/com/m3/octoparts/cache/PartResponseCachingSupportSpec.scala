@@ -100,7 +100,7 @@ class PartResponseCachingSupportSpec extends FunSpec with Matchers with ScalaFut
     }
     val cachingSupport = new MockPartRequestServiceBase with PartResponseCachingSupport {
       def executionContext = scala.concurrent.ExecutionContext.global
-      def cacheClient = DummyCacheOps
+      def cacheOps = DummyCacheOps
       def handlerFactory = ???
       def repository = ???
     }

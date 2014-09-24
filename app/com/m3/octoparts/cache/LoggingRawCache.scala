@@ -1,4 +1,4 @@
-package com.m3.octoparts.cache.client
+package com.m3.octoparts.cache
 
 import com.m3.octoparts.logging.LogUtil
 import play.api.Logger
@@ -8,6 +8,9 @@ import skinny.util.LTSV
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ ExecutionContext, Future }
 
+/**
+ * A decorator to add debug logging to a [[RawCache]]
+ */
 class LoggingRawCache(delegate: RawCache)(implicit executionContext: ExecutionContext) extends RawCache with LogUtil {
 
   def get[T](key: String)(implicit codec: Codec[T]): Future[Option[T]] = {

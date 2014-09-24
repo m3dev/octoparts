@@ -1,5 +1,6 @@
-package com.m3.octoparts.cache.client
+package com.m3.octoparts.cache.memcached
 
+import com.m3.octoparts.cache.RawCache
 import shade.memcached.{ Memcached, Codec }
 
 import scala.concurrent.duration.Duration
