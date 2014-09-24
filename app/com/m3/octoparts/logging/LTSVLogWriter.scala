@@ -19,7 +19,7 @@ trait LTSVLogWriter { writer =>
   /**
    * The logger to write to.
    */
-  protected def logger: LoggerLike
+  def logger: LoggerLike
 
   /* Info */
 

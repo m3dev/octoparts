@@ -5,6 +5,8 @@ import sbt._
 import sbt.Keys._
 import sbtbuildinfo.Plugin._
 import scoverage.ScoverageSbtPlugin
+import scoverage.ScoverageSbtPlugin._
+import org.scoverage.coveralls.CoverallsPlugin.coverallsSettings
 import xerial.sbt.Sonatype._
 import SonatypeKeys._
 
@@ -27,6 +29,7 @@ object OctopartsBuild extends Build {
   val httpClientVersion = "4.3.5"
   val scalikejdbcVersion = "2.1.1"
   val swaggerVersion = "1.3.8"
+  val jacksonVersion = "2.4.2"
 
   val testEnv = sys.env.get("PLAY_ENV") match {
     case Some("ci") => "ci"
@@ -47,7 +50,8 @@ object OctopartsBuild extends Build {
     compilerSettings ++
     resolverSettings ++
     ideSettings ++
-    testSettings
+    testSettings ++
+    scoverageSettings
 
   /*
    * Settings that are common for every project _except_ the Play app
@@ -66,6 +70,7 @@ object OctopartsBuild extends Build {
       buildInfoSettings ++
       buildInfoStuff ++
       sonatypeSettings ++
+      coverallsSettings ++
       Seq(
         publishArtifact := false,
         libraryDependencies ++= Seq(
@@ -160,12 +165,16 @@ object OctopartsBuild extends Build {
   )
 
   lazy val testSettings = Seq(Test, ScoverageSbtPlugin.ScoverageTest).flatMap { t =>
-    Seq(
-      // Output test results in JUnit XML format for Jenkins
-      testOptions in t += Tests.Argument("-u", "target/test-reports"),
-      // Needed because some tests run DDL against the CI DB.
-      parallelExecution in t := false)
+    Seq(parallelExecution in t := false) // Avoid DB-related tests stomping on each other
   }
+
+  lazy val scoverageSettings =
+    instrumentSettings ++
+    Seq(
+      ScoverageKeys.highlighting := true,
+      ScoverageKeys.excludedPackages in ScoverageCompile := """com\.kenshoo.*;.*controllers\.javascript\..*;.*controllers\.ref\..*;.*controllers\.Reverse.*;.*BuildInfo.*;.*views\.html\..*;Routes""",
+      testOptions in ScoverageTest += Tests.Argument("-u", "target/test-reports")
+    )
 
   lazy val formatterPrefs = Seq(
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
@@ -205,7 +214,11 @@ object OctopartsBuild extends Build {
   lazy val models = Project(id = "models", base = file("models"), settings = nonPlayAppSettings)
     .settings(
       name := "octoparts-models",
-      libraryDependencies += "com.wordnik" % "swagger-annotations" % swaggerVersion intransitive(),
+      libraryDependencies ++= Seq(
+        "com.wordnik" % "swagger-annotations" % swaggerVersion intransitive(),
+        "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion intransitive(),
+        "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion intransitive()
+      ),
       crossScalaVersions := Seq("2.10.4", "2.11.2"),
       crossVersion := CrossVersion.binary
     )
@@ -215,8 +228,6 @@ object OctopartsBuild extends Build {
   // Java client
   // -------------------------------------------------------
   lazy val javaClient = {
-    val jacksonVersion = "2.4.2"
-
     Project(id = "java-client", base = file("java-client"), settings = nonPlayAppSettings)
       .settings(
         name := "octoparts-java-client",
@@ -226,11 +237,16 @@ object OctopartsBuild extends Build {
 
         libraryDependencies ++= Seq(
           "com.google.code.findbugs" % "jsr305" % "3.0.0" intransitive(),
+          "org.slf4j" % "slf4j-api" % slf4jVersion,
           "com.ning" % "async-http-client" % "1.8.13",
           "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
           "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
           "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
-          "org.scalatest" %% "scalatest" % "2.2.2" % "test"
+          "org.scalatest" %% "scalatest" % "2.2.2" % "test",
+          "ch.qos.logback" % "logback-classic" % "1.1.2" % "test",
+          "org.slf4j" % "jcl-over-slf4j" % slf4jVersion % "test" intransitive(),
+          "org.slf4j" % "log4j-over-slf4j" % slf4jVersion % "test" intransitive(),
+          "org.slf4j" % "jul-to-slf4j" % slf4jVersion % "test" intransitive()
         )
       )
       .dependsOn(models)

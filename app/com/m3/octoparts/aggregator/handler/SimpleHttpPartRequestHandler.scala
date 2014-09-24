@@ -1,6 +1,5 @@
 package com.m3.octoparts.aggregator.handler
 
-import com.m3.octoparts.model.HttpMethod.Get
 import com.m3.octoparts.http._
 import com.m3.octoparts.hystrix._
 import com.m3.octoparts.model.HttpMethod
@@ -20,7 +19,7 @@ class SimpleHttpPartRequestHandler(
   val partId: String,
   val httpClient: HttpClientLike,
   val uriToInterpolate: String,
-  val httpMethod: HttpMethod.Value = Get,
+  val httpMethod: HttpMethod.Value = HttpMethod.Get,
   val additionalValidStatuses: Set[Int] = Set.empty,
   val registeredParams: Set[PartParam] = Set.empty,
   val hystrixExecutor: HystrixExecutor)(implicit val executionContext: ExecutionContext)

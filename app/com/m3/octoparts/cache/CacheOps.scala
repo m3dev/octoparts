@@ -1,4 +1,4 @@
-package com.m3.octoparts.cache.client
+package com.m3.octoparts.cache
 
 import com.m3.octoparts.cache.directive.CacheDirective
 import com.m3.octoparts.cache.versioning._
@@ -7,15 +7,24 @@ import com.m3.octoparts.model.PartResponse
 import scala.concurrent.Future
 
 /**
- * The client that performs actual caching operations
+ * Operations related to caching of [[com.m3.octoparts.model.PartResponse]]s.
  */
-trait CacheClient {
+trait CacheOps {
+
+  /**
+   * Increase the cache version of the given part ID,
+   * effectively invalidating all cached PartResponses for this part.
+   */
   def increasePartVersion(partId: String): Future[Unit]
 
+  /**
+   * Increase the cache version of the given (partId, parameter name, parameter value) combination,
+   * effectively invalidating all cached PartResponses for this combination.
+   */
   def increaseParamVersion(vpk: VersionedParamKey): Future[Unit]
 
   /**
-   * Lookup the item in the cache. If it is found, return it,
+   * Lookup the PartResponse in the cache. If it is found, return it,
    * otherwise run the provided block, store the result in the cache and return it.
    *
    * @param directive cache directive
@@ -25,11 +34,7 @@ trait CacheClient {
   def putIfAbsent(directive: CacheDirective)(f: => Future[PartResponse]): Future[PartResponse]
 
   /**
-   * Inconditional put
-   *
-   * @param directive
-   * @param partResponse
-   * @return
+   * Unconditional PUT of a PartResponse
    */
   def saveLater(partResponse: PartResponse, directive: CacheDirective): Future[Unit]
 }
