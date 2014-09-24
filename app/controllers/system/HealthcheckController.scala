@@ -58,7 +58,7 @@ class HealthcheckController(configsRepo: ConfigsRepository,
       else DbStatus(ok = false, message = "parts_config table is empty!")
     }.recover {
       case NonFatal(e) =>
-        Logger.warn("DB health check failed", e)
+        LTSVLogWriter.warn(e, "Health check failed" -> "DB")
         DbStatus(ok = false, message = e.toString)
     }
   }
@@ -73,7 +73,7 @@ class HealthcheckController(configsRepo: ConfigsRepository,
       MemcachedStatus(ok = true)
     }.recover {
       case NonFatal(e) =>
-        Logger.warn("Memcached health check failed", e)
+        LTSVLogWriter.warn(e, "Health check failed" -> "Memcached")
         MemcachedStatus(ok = false)
     }
   }
