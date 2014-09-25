@@ -1,11 +1,11 @@
 package com.m3.octoparts.aggregator.service
 
 import com.m3.octoparts.aggregator.PartRequestInfo
-import com.m3.octoparts.config._
 import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.ParamType._
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.support.db.RequiresDB
+import org.joda.time.DateTime.now
 import org.scalatest.{ FunSpec, Matchers }
 
 class RequestParamSupportSpec extends FunSpec with Matchers with RequiresDB with RequestParamSupport {

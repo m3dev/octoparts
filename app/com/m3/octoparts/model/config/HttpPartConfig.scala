@@ -81,7 +81,29 @@ object HttpPartConfig {
       alertInterval = config.alertInterval,
       alertMailRecipients = config.alertMailRecipients
     )
+  }
 
+  def fromJsonModel(config: JsonHttpPartConfig): HttpPartConfig = {
+    HttpPartConfig(
+      partId = config.partId,
+      owner = config.owner,
+      uriToInterpolate = config.uriToInterpolate,
+      description = config.description,
+      method = config.method,
+      hystrixConfig = Some(HystrixConfig.fromJsonModel(config.hystrixConfig)),
+      additionalValidStatuses = config.additionalValidStatuses,
+      parameters = config.parameters.map(PartParam.fromJsonModel),
+      deprecatedInFavourOf = config.deprecatedInFavourOf,
+      cacheGroups = config.cacheGroups.map(CacheGroup.fromJsonModel),
+      cacheTtl = config.cacheTtl,
+      alertMailsEnabled = config.alertMailsEnabled,
+      alertAbsoluteThreshold = config.alertAbsoluteThreshold,
+      alertPercentThreshold = config.alertPercentThreshold,
+      alertInterval = config.alertInterval,
+      alertMailRecipients = config.alertMailRecipients,
+      createdAt = DateTime.now,
+      updatedAt = DateTime.now
+    )
   }
 
 }

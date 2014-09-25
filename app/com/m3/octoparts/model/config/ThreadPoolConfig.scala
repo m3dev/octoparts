@@ -34,4 +34,13 @@ object ThreadPoolConfig {
       queueSize = config.queueSize)
   }
 
+  def fromJsonModel(config: JsonThreadPoolConfig): ThreadPoolConfig = {
+    ThreadPoolConfig(
+      threadPoolKey = config.threadPoolKey,
+      coreSize = config.coreSize,
+      createdAt = DateTime.now,
+      updatedAt = DateTime.now
+    )
+  }
+
 }

@@ -21,6 +21,17 @@ object HystrixConfig {
       timeout = config.timeoutInMs.millis
     )
   }
+
+  def fromJsonModel(config: JsonHystrixConfig): HystrixConfig = {
+    HystrixConfig(
+      threadPoolConfig = Some(ThreadPoolConfig.fromJsonModel(config.threadPoolConfig)),
+      commandKey = config.commandKey,
+      commandGroupKey = config.commandGroupKey,
+      timeoutInMs = config.timeout.toMillis,
+      createdAt = DateTime.now,
+      updatedAt = DateTime.now
+    )
+  }
 }
 
 /**

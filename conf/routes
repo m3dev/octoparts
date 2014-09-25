@@ -6,7 +6,7 @@
 GET         /assets/*file                                                          controllers.Assets.at(path="/public", file)
 
 # Dependencies-related API
-GET         /octoparts/2/list                                                      @controllers.PartsController.list
+GET         /octoparts/2/list                                                      @controllers.PartsController.list(partIdParams: List[String] ?= Nil)
 POST        /octoparts/2                                                           @controllers.PartsController.retrieveParts
 
 # Cache invalidation API
@@ -23,6 +23,8 @@ GET         /admin/auth-test                                                    
 GET         /admin/parts                                                           @controllers.AdminController.listParts
 GET         /admin/parts/new                                                       @controllers.AdminController.newPart
 POST        /admin/parts/create                                                    @controllers.AdminController.createPart
+GET         /admin/parts/import                                                    @controllers.AdminController.showImportParts
+POST        /admin/parts/import                                                    @controllers.AdminController.doImportParts
 GET         /admin/parts/:partId/show                                              @controllers.AdminController.showPart(partId)
 GET         /admin/parts/:partId/edit                                              @controllers.AdminController.editPart(partId)
 POST        /admin/parts/:partId/update                                            @controllers.AdminController.updatePart(partId)

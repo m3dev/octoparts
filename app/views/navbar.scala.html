@@ -20,6 +20,8 @@
             <li><a href="@controllers.routes.AdminController.listThreadPools">@Messages("threadPools.list")</a></li>
             <li><a href="@controllers.routes.AdminController.listCacheGroups">@Messages("cacheGroups.list")</a></li>
             <li><a href="@controllers.routes.AdminController.newPart">@Messages("parts.create")</a></li>
+            <li><a href="@controllers.routes.AdminController.showImportParts">@Messages("admin.import")</a></li>
+            <li><a href="@controllers.routes.PartsController.list()" download="octoparts-export.json">@Messages("admin.export.all")</a></li>
         </ul>
 
         <ul class="nav navbar-nav navbar-right">

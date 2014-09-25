@@ -3,7 +3,7 @@ package com.m3.octoparts.repository
 import com.m3.octoparts.cache.Cache
 import com.m3.octoparts.cache.key.HttpPartConfigCacheKey
 import com.m3.octoparts.http.HttpClientPool
-import com.m3.octoparts.model.config.ConfigModel
+import com.m3.octoparts.model.config.{ json, ConfigModel }
 import com.m3.octoparts.repository.config.ConfigMapper
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -43,6 +43,8 @@ class MutableCachingRepository(
   def deletePartParamById(id: Long): Future[Int] = reloadCacheAfter(delegate.deletePartParamById(id))
 
   def deleteCacheGroupByName(name: String): Future[Int] = reloadCacheAfter(delegate.deleteCacheGroupByName(name))
+
+  def importConfigs(configs: Seq[json.HttpPartConfig]): Future[Seq[String]] = reloadCacheAfter(delegate.importConfigs(configs))
 
   private def reloadCacheAfter[A](f: => Future[A]) = {
     for {

@@ -1,9 +1,10 @@
 package controllers
 
+import java.util.UUID
+
 import com.m3.octoparts.json.format.ReqResp._
 import com.m3.octoparts.aggregator.handler._
 import com.m3.octoparts.aggregator.service._
-import com.m3.octoparts.config._
 import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.HttpPartConfig
 import com.m3.octoparts.support.mocks.{ ConfigDataMocks, MockConfigRespository }
@@ -59,7 +60,7 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
   }
 
   it should "return a valid response to a valid request" in {
-    val rm = new RequestMeta(newId)
+    val rm = new RequestMeta(UUID.randomUUID.toString)
     val voidName = "void"
     val voidPart = new PartRequest(voidName)
     val ar = new AggregateRequest(rm, List(voidPart))
@@ -71,12 +72,21 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
   }
 
   it should "show a list of octoparts" in {
-    val result = controller.list.apply(FakeRequest())
+    val result = controller.list().apply(FakeRequest())
 
     status(result) should be(200)
     contentAsString(result) should include("void")
     contentAsString(result) should include("error")
     contentAsString(result) should include("slow")
+  }
+
+  it should "show a filtered list of octoparts" in {
+    val result = controller.list(List("void")).apply(FakeRequest())
+
+    status(result) should be(200)
+    contentAsString(result) should include("void")
+    contentAsString(result) shouldNot include("error")
+    contentAsString(result) shouldNot include("slow")
   }
 
 }

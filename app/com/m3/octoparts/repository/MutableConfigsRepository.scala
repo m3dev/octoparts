@@ -2,6 +2,7 @@ package com.m3.octoparts.repository
 
 import com.m3.octoparts.model.config.ConfigModel
 import com.m3.octoparts.repository.config.ConfigMapper
+import com.m3.octoparts.model.config.json
 
 import scala.concurrent.Future
 
@@ -46,4 +47,5 @@ trait MutableConfigsRepository extends ConfigsRepository {
    */
   def save[A <: ConfigModel[A]: ConfigMapper](obj: A): Future[Long]
 
+  def importConfigs(configs: Seq[json.HttpPartConfig]): Future[Seq[String]]
 }
