@@ -546,7 +546,7 @@ class AdminController(repository: MutableConfigsRepository)(implicit val navbarL
 
   private def handleException(e: Throwable, redirectTo: Call)(implicit req: RequestHeader): Result = {
     errorRc(e)
-    flashError(redirectTo, e.getMessage)
+    flashError(redirectTo, Option(e.getMessage).getOrElse(e.getClass.getName))
   }
 
   private def flashError(redirectTo: Call, errorMsg: String): Result = {
