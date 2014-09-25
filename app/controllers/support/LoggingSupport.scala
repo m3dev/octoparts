@@ -6,7 +6,7 @@ import play.api.mvc.RequestHeader
 
 trait LoggingSupport extends LTSVLogWriter {
 
-  val logger = Logger
+  val logger = Logger.underlyingLogger
 
   /**
    * @return remote address, uri, query

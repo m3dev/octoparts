@@ -9,7 +9,7 @@ import play.api.Logger
  */
 object HystrixMetricsLogger extends HystrixCommandMetricsRepository with LTSVLogWriter {
 
-  val logger = Logger("HystrixMetrics")
+  val logger = Logger("HystrixMetrics").underlyingLogger
 
   /**
    * Collect metrics on all registered Hystrix commands and write them to a log file.
