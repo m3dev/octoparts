@@ -233,7 +233,7 @@ class LTSVLogWriterSpec extends FunSpec with MockitoSugar with Matchers {
 
       override def isTraceEnabled(marker: Marker): Boolean = true
 
-      override def error(msg: String): Unit = true
+      override def error(msg: String): Unit = ???
 
       override def error(format: String, arg: scala.Any): Unit = ???
 
