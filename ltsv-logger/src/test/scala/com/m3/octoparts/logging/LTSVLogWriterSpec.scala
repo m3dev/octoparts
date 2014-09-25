@@ -11,18 +11,18 @@ class LTSVLogWriterSpec extends FunSpec with MockitoSugar with Matchers {
   val exception = new IllegalArgumentException
 
   describe("logging with hostnames") {
-    it("should send a message with 'octopartsHost' to the underlying logger") {
+    it("should send a message with 'host' to the underlying logger") {
       val (writer, captureDebugMsg) = writerWithDebugCapture
       writer.debug(true, "hi" -> "there")
-      captureDebugMsg() contains ("octopartsHost") should be(true)
+      captureDebugMsg() contains ("host") should be(true)
     }
   }
 
   describe("logging without hostnames") {
-    it("should send a message without 'octopartsHost' to the underlying logger") {
+    it("should send a message without 'host' to the underlying logger") {
       val (writer, captureDebugMsg) = writerWithDebugCapture
       writer.debug(false, "hi" -> "there")
-      captureDebugMsg() contains ("octopartsHost") should be(false)
+      captureDebugMsg() contains ("host") should be(false)
     }
   }
 

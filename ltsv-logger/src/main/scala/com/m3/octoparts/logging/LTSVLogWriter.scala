@@ -145,17 +145,9 @@ trait LTSVLogWriter { writer =>
   @inline final def trace(addHostnameField: Boolean, error: Throwable, pairs: (String, Any)*): Unit = macro LTSVLogWriterMacros.traceErrHostNameImpl
 
   @inline def toLtsv(pairs: Seq[(String, Any)], addHostnameField: Boolean): String = {
-    val logMsg = withHostnameFieldIfNeeded(pairs, addHostnameField).map {
-      case (k, v) => (k, String.valueOf(v))
-    }
+    val pairsWithHost = if (addHostnameField) ("host" -> hostname) +: pairs else pairs
+    val logMsg = pairsWithHost.map { case (k, v) => (k, String.valueOf(v)) }
     LTSV.dump(logMsg: _*)
-  }
-
-  @inline def withHostnameFieldIfNeeded(pairs: Seq[(String, Any)], addHostnameField: Boolean) = {
-    if (addHostnameField)
-      pairs :+ ("octopartsHost" -> hostname)
-    else
-      pairs
   }
 
 }
