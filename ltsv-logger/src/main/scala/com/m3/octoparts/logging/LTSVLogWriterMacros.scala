@@ -31,7 +31,6 @@ private[logging] object LTSVLogWriterMacros {
 
   def debugErrImpl(c: LoggerContext)(error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
-    val writer = c.prefix.tree
     debugErrHostNameImpl(c)(c.Expr[Boolean](q"true"), error, pairs: _*)
   }
 
@@ -49,7 +48,6 @@ private[logging] object LTSVLogWriterMacros {
 
   def warnErrImpl(c: LoggerContext)(error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
-    val writer = c.prefix.tree
     warnErrHostNameImpl(c)(c.Expr[Boolean](q"true"), error, pairs: _*)
   }
 
@@ -84,7 +82,6 @@ private[logging] object LTSVLogWriterMacros {
 
   def traceErrImpl(c: LoggerContext)(error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
-    val writer = c.prefix.tree
     traceErrHostNameImpl(c)(c.Expr[Boolean](q"true"), error, pairs: _*)
   }
 
@@ -97,7 +94,7 @@ private[logging] object LTSVLogWriterMacros {
   private def ltsvLogAtLevelIfEnabled(c: LoggerContext)(level: String, addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
     val isLevelEnabled = newTermName(s"is${level.toLowerCase.capitalize}Enabled")
-    val logLevel = newTermName(s"${level.toLowerCase}")
+    val logLevel = newTermName(level.toLowerCase)
     val writer = c.prefix.tree
     c.Expr[Unit](q"if (${writer}.logger.$isLevelEnabled) $writer.logger.$logLevel($writer.toLtsv(Seq(..$pairs), $addHostnameField))")
   }
@@ -105,7 +102,7 @@ private[logging] object LTSVLogWriterMacros {
   private def ltsvErrLogAtLevelIfEnabled(c: LoggerContext)(level: String, addHostnameField: c.Expr[Boolean], error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
     val isLevelEnabled = newTermName(s"is${level.toLowerCase.capitalize}Enabled")
-    val logLevel = newTermName(s"${level.toLowerCase}")
+    val logLevel = newTermName(level.toLowerCase)
     val writer = c.prefix.tree
     c.Expr[Unit](q"if (${writer}.logger.$isLevelEnabled) $writer.logger.$logLevel($writer.toLtsv(Seq(..$pairs), $addHostnameField), $error)")
   }
