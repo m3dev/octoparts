@@ -9,6 +9,19 @@ import scala.util.Try
 
 /**
  * Helper trait for writing log messages to a dedicated logger in LTSV format.
+ *
+ * The logging methods in this trait are performant because the check-enabled-idiom
+ * is applied using macros. For example,
+ *
+ * {{{
+ * logger.info("message" -> s"$expensiveMessage"*)
+ * }}}
+ *
+ * gets expanded at compile-time to
+ *
+ * {{{
+ * if (logger.isDebugEnabled) logger.info(toLtsv("message" -> s"$expensiveMessage"*))
+ * }}}
  */
 trait LTSVLogWriter { writer =>
 
