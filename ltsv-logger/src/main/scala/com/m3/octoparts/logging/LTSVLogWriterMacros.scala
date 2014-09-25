@@ -17,17 +17,11 @@ private[logging] object LTSVLogWriterMacros {
     infoErrHostNameImpl(c)(c.Expr[Boolean](q"true"), error, pairs: _*)
   }
 
-  def infoHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
-    import c.universe._
-    val writer = c.prefix.tree
-    c.Expr[Unit](q"if (${writer}.logger.isInfoEnabled) $writer.logger.info($writer.toLtsv(Seq(..$pairs), $addHostnameField))")
-  }
+  def infoHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] =
+    ltsvLogAtLevelIfEnabled(c)("info", addHostnameField, pairs: _*)
 
-  def infoErrHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
-    import c.universe._
-    val writer = c.prefix.tree
-    c.Expr[Unit](q"""if (${writer}.logger.isInfoEnabled) $writer.logger.info($writer.toLtsv(Seq(..$pairs), $addHostnameField), $error)""")
-  }
+  def infoErrHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] =
+    ltsvErrLogAtLevelIfEnabled(c)("info", addHostnameField, error, pairs: _*)
 
   /* Debug */
   def debugImpl(c: LoggerContext)(pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
@@ -41,17 +35,11 @@ private[logging] object LTSVLogWriterMacros {
     debugErrHostNameImpl(c)(c.Expr[Boolean](q"true"), error, pairs: _*)
   }
 
-  def debugHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
-    import c.universe._
-    val writer = c.prefix.tree
-    c.Expr[Unit](q"if (${writer}.logger.isDebugEnabled) $writer.logger.debug($writer.toLtsv(Seq(..$pairs), $addHostnameField))")
-  }
+  def debugHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] =
+    ltsvLogAtLevelIfEnabled(c)("debug", addHostnameField, pairs: _*)
 
-  def debugErrHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
-    import c.universe._
-    val writer = c.prefix.tree
-    c.Expr[Unit](q"if (${writer}.logger.isDebugEnabled) $writer.logger.debug($writer.toLtsv(Seq(..$pairs), $addHostnameField), $error)")
-  }
+  def debugErrHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] =
+    ltsvErrLogAtLevelIfEnabled(c)("debug", addHostnameField, error, pairs: _*)
 
   /* Warn */
   def warnImpl(c: LoggerContext)(pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
@@ -65,17 +53,11 @@ private[logging] object LTSVLogWriterMacros {
     warnErrHostNameImpl(c)(c.Expr[Boolean](q"true"), error, pairs: _*)
   }
 
-  def warnHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
-    import c.universe._
-    val writer = c.prefix.tree
-    c.Expr[Unit](q"if (${writer}.logger.isWarnEnabled) $writer.logger.warn($writer.toLtsv(Seq(..$pairs), $addHostnameField))")
-  }
+  def warnHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] =
+    ltsvLogAtLevelIfEnabled(c)("warn", addHostnameField, pairs: _*)
 
-  def warnErrHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
-    import c.universe._
-    val writer = c.prefix.tree
-    c.Expr[Unit](q"if (${writer}.logger.isWarnEnabled) $writer.logger.warn($writer.toLtsv(Seq(..$pairs), $addHostnameField), $error)")
-  }
+  def warnErrHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] =
+    ltsvErrLogAtLevelIfEnabled(c)("warn", addHostnameField, error, pairs: _*)
 
   /* Error */
   def errorImpl(c: LoggerContext)(pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
@@ -88,17 +70,11 @@ private[logging] object LTSVLogWriterMacros {
     errorErrHostNameImpl(c)(c.Expr[Boolean](q"true"), error, pairs: _*)
   }
 
-  def errorHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
-    import c.universe._
-    val writer = c.prefix.tree
-    c.Expr[Unit](q"if (${writer}.logger.isErrorEnabled) $writer.logger.error($writer.toLtsv(Seq(..$pairs), $addHostnameField))")
-  }
+  def errorHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] =
+    ltsvLogAtLevelIfEnabled(c)("error", addHostnameField, pairs: _*)
 
-  def errorErrHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
-    import c.universe._
-    val writer = c.prefix.tree
-    c.Expr[Unit](q"if (${writer}.logger.isErrorEnabled) $writer.logger.error($writer.toLtsv(Seq(..$pairs), $addHostnameField), $error)")
-  }
+  def errorErrHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] =
+    ltsvErrLogAtLevelIfEnabled(c)("error", addHostnameField, error, pairs: _*)
 
   /* Trace */
   def traceImpl(c: LoggerContext)(pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
@@ -112,16 +88,26 @@ private[logging] object LTSVLogWriterMacros {
     traceErrHostNameImpl(c)(c.Expr[Boolean](q"true"), error, pairs: _*)
   }
 
-  def traceHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
+  def traceHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] =
+    ltsvLogAtLevelIfEnabled(c)("trace", addHostnameField, pairs: _*)
+
+  def traceErrHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] =
+    ltsvErrLogAtLevelIfEnabled(c)("trace", addHostnameField, error, pairs: _*)
+
+  private def ltsvLogAtLevelIfEnabled(c: LoggerContext)(level: String, addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
+    val isLevelEnabled = TermName.apply(s"is${level.toLowerCase.capitalize}Enabled")
+    val logLevel = TermName.apply(s"${level.toLowerCase}")
     val writer = c.prefix.tree
-    c.Expr[Unit](q"if (${writer}.logger.isTraceEnabled) $writer.logger.trace($writer.toLtsv(Seq(..$pairs), $addHostnameField))")
+    c.Expr[Unit](q"if (${writer}.logger.$isLevelEnabled) $writer.logger.$logLevel($writer.toLtsv(Seq(..$pairs), $addHostnameField))")
   }
 
-  def traceErrHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
+  private def ltsvErrLogAtLevelIfEnabled(c: LoggerContext)(level: String, addHostnameField: c.Expr[Boolean], error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
+    val isLevelEnabled = TermName.apply(s"is${level.toLowerCase.capitalize}Enabled")
+    val logLevel = TermName.apply(s"${level.toLowerCase}")
     val writer = c.prefix.tree
-    c.Expr[Unit](q"if (${writer}.logger.isTraceEnabled) $writer.logger.trace($writer.toLtsv(Seq(..$pairs), $addHostnameField), $error)")
+    c.Expr[Unit](q"if (${writer}.logger.$isLevelEnabled) $writer.logger.$logLevel($writer.toLtsv(Seq(..$pairs), $addHostnameField), $error)")
   }
 
 }
