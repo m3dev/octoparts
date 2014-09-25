@@ -1,8 +1,9 @@
-package com.m3.octoparts.cache.client
+package com.m3.octoparts.cache.memcached
 
+import com.m3.octoparts.cache.{ Cache, CacheException, RawCache }
 import com.m3.octoparts.cache.key._
 import play.api.Logger
-import shade.memcached.{ Codec, Memcached }
+import shade.memcached.Codec
 import skinny.util.LTSV
 
 import scala.concurrent.duration._
@@ -10,8 +11,17 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.postfixOps
 import scala.util.control.NonFatal
 
-class MemcachedAccessor(memcached: Memcached, keyGen: MemcachedKeyGenerator)(implicit executionContext: ExecutionContext)
-    extends CacheAccessor {
+/**
+ * A [[Cache]] implementation that performs the following Memcached-specific processing:
+ * - converts the cache key to a String that can be used as a Memcached key
+ * - skips cache PUTs with TTLs < 1 second
+ * - adds error handling for any exceptions thrown synchronously by Spymemcached/Shade
+ *
+ * @param underlying the underlying raw cache
+ * @param keyGen the key generator
+ */
+class MemcachedCache(underlying: RawCache, keyGen: MemcachedKeyGenerator)(implicit executionContext: ExecutionContext)
+    extends Cache {
 
   /**
    * This value is arbitrarily chosen.
@@ -22,9 +32,9 @@ class MemcachedAccessor(memcached: Memcached, keyGen: MemcachedKeyGenerator)(imp
 
   private def serializeKey(key: CacheKey) = keyGen.toMemcachedKey(key)
 
-  def doGet[T](key: CacheKey)(implicit codec: Codec[T]): Future[Option[T]] = {
+  def get[T](key: CacheKey)(implicit codec: Codec[T]): Future[Option[T]] = {
     try {
-      memcached.get[T](serializeKey(key)).recoverWith {
+      underlying.get[T](serializeKey(key)).recoverWith {
         case NonFatal(err) => throw new CacheException(key, err)
       }
     } catch {
@@ -32,7 +42,7 @@ class MemcachedAccessor(memcached: Memcached, keyGen: MemcachedKeyGenerator)(imp
     }
   }
 
-  def doPut[T](key: CacheKey, v: T, ttl: Option[Duration])(implicit codec: Codec[T]): Future[Unit] = {
+  def put[T](key: CacheKey, v: T, ttl: Option[Duration])(implicit codec: Codec[T]): Future[Unit] = {
     try {
       ttl match {
         case Some(duration) if duration < 1.second =>
@@ -44,7 +54,7 @@ class MemcachedAccessor(memcached: Memcached, keyGen: MemcachedKeyGenerator)(imp
           Logger.debug(LTSV.dump("message" -> "Skipping cache PUT because ttl is less than 1 second", "key" -> key.toString, "ttl" -> duration.toString))
           Future.successful(())
         case _ =>
-          memcached.set[T](serializeKey(key), v, ttl.getOrElse(VERY_LONG_TTL)).recoverWith {
+          underlying.set[T](serializeKey(key), v, ttl.getOrElse(VERY_LONG_TTL)).recoverWith {
             case NonFatal(err) => throw new CacheException(key, err)
           }
       }

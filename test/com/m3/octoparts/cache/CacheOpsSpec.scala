@@ -1,22 +1,24 @@
-package com.m3.octoparts.cache.client
+package com.m3.octoparts.cache
 
+import java.io.IOException
 import java.util.concurrent.Executors
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.m3.octoparts.cache.versioning.{ LatestVersionCache, InMemoryLatestVersionCache }
-import org.scalatest._
-import com.m3.octoparts.cache.key.{ PartCacheKey, MemcachedKeyGenerator }
 import com.m3.octoparts.cache.directive.CacheDirective
+import com.m3.octoparts.cache.key.{ MemcachedKeyGenerator, PartCacheKey }
+import com.m3.octoparts.cache.memcached.{ InMemoryRawCache, MemcachedCache, MemcachedCacheOps }
+import com.m3.octoparts.cache.versioning.{ InMemoryLatestVersionCache, LatestVersionCache }
+import com.m3.octoparts.model.{ CacheControl, PartResponse }
+import org.joda.time.DateTimeUtils
+import org.scalatest._
+import org.scalatest.concurrent.{ Eventually, ScalaFutures }
+import shade.memcached.Codec
+
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
-import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import scala.language.postfixOps
-import shade.memcached.{ Memcached, Codec }
-import java.io.IOException
-import org.joda.time.DateTimeUtils
-import com.m3.octoparts.model.{ CacheControl, PartResponse }
 
-class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Eventually with BeforeAndAfter {
+class CacheOpsSpec extends FunSpec with Matchers with ScalaFutures with Eventually with BeforeAndAfter {
 
   after {
     DateTimeUtils.setCurrentMillisSystem() // put the system clock back to normal
@@ -27,14 +29,14 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
     ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor(namedThreadFactory))
   }
 
-  case class CacheStuff(cache: Memcached, latestVersionCache: LatestVersionCache, client: MemcachedClient)
+  case class CacheStuff(cache: RawCache, latestVersionCache: LatestVersionCache, client: MemcachedCacheOps)
 
   def createCacheStuff: CacheStuff = {
-    val cache = new InMemoryCacheAdapter()
-    val cacheAccessor = new MemcachedAccessor(cache, MemcachedKeyGenerator)
+    val rawCache = new InMemoryRawCache()
+    val cache = new MemcachedCache(rawCache, MemcachedKeyGenerator)
     val latestVersionCache = new InMemoryLatestVersionCache
-    val client = new MemcachedClient(cacheAccessor, latestVersionCache)
-    CacheStuff(cache, latestVersionCache, client)
+    val client = new MemcachedCacheOps(cache, latestVersionCache)
+    CacheStuff(rawCache, latestVersionCache, client)
   }
 
   it("should miss but insert new part version when cache is empty") {
@@ -144,11 +146,11 @@ class CacheClientSpec extends FunSpec with Matchers with ScalaFutures with Event
 
   it("should show a CacheException when the cache is down") {
     val cacheStuff = createCacheStuff
-    val memcached = new InMemoryCacheAdapter() {
+    val rawCache = new InMemoryRawCache() {
       override def get[T](key: String)(implicit codec: Codec[T]): Future[Option[T]] = Future.failed(new IOException)
     }
-    val memcachedAccessor = new MemcachedAccessor(memcached, MemcachedKeyGenerator)
-    val testee = new MemcachedClient(memcachedAccessor, cacheStuff.latestVersionCache)
+    val cache = new MemcachedCache(rawCache, MemcachedKeyGenerator)
+    val testee = new MemcachedCacheOps(cache, cacheStuff.latestVersionCache)
     val version = 13L
     val cacheDirective = CacheDirective("some part id 5", Nil, Map.empty, Some(5 hours))
     cacheStuff.latestVersionCache.updatePartVersion(cacheDirective.partId, version)

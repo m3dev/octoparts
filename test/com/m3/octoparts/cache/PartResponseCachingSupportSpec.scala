@@ -2,7 +2,7 @@ package com.m3.octoparts.cache
 
 import org.joda.time.DateTime
 import org.scalatest.{ Matchers, FunSpec }
-import com.m3.octoparts.cache.dummy.NoCacheClient
+import com.m3.octoparts.cache.dummy.DummyCacheOps
 import com.m3.octoparts.model.{ PartRequest, RequestMeta, CacheControl, PartResponse }
 import com.m3.octoparts.aggregator.service.PartRequestServiceBase
 import com.m3.octoparts.model.config._
@@ -100,7 +100,7 @@ class PartResponseCachingSupportSpec extends FunSpec with Matchers with ScalaFut
     }
     val cachingSupport = new MockPartRequestServiceBase with PartResponseCachingSupport {
       def executionContext = scala.concurrent.ExecutionContext.global
-      def cacheClient = NoCacheClient
+      def cacheOps = DummyCacheOps
       def handlerFactory = ???
       def repository = ???
     }

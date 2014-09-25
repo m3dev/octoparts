@@ -29,6 +29,7 @@ object OctopartsBuild extends Build {
   val httpClientVersion = "4.3.5"
   val scalikejdbcVersion = "2.1.1"
   val swaggerVersion = "1.3.8"
+  val jacksonVersion = "2.4.2"
 
   val testEnv = sys.env.get("PLAY_ENV") match {
     case Some("ci") => "ci"
@@ -213,7 +214,11 @@ object OctopartsBuild extends Build {
   lazy val models = Project(id = "models", base = file("models"), settings = nonPlayAppSettings)
     .settings(
       name := "octoparts-models",
-      libraryDependencies += "com.wordnik" % "swagger-annotations" % swaggerVersion intransitive(),
+      libraryDependencies ++= Seq(
+        "com.wordnik" % "swagger-annotations" % swaggerVersion intransitive(),
+        "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion intransitive(),
+        "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion intransitive()
+      ),
       crossScalaVersions := Seq("2.10.4", "2.11.2"),
       crossVersion := CrossVersion.binary
     )
@@ -223,8 +228,6 @@ object OctopartsBuild extends Build {
   // Java client
   // -------------------------------------------------------
   lazy val javaClient = {
-    val jacksonVersion = "2.4.2"
-
     Project(id = "java-client", base = file("java-client"), settings = nonPlayAppSettings)
       .settings(
         name := "octoparts-java-client",
@@ -234,11 +237,16 @@ object OctopartsBuild extends Build {
 
         libraryDependencies ++= Seq(
           "com.google.code.findbugs" % "jsr305" % "3.0.0" intransitive(),
+          "org.slf4j" % "slf4j-api" % slf4jVersion,
           "com.ning" % "async-http-client" % "1.8.13",
           "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
           "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
           "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
-          "org.scalatest" %% "scalatest" % "2.2.2" % "test"
+          "org.scalatest" %% "scalatest" % "2.2.2" % "test",
+          "ch.qos.logback" % "logback-classic" % "1.1.2" % "test",
+          "org.slf4j" % "jcl-over-slf4j" % slf4jVersion % "test" intransitive(),
+          "org.slf4j" % "log4j-over-slf4j" % slf4jVersion % "test" intransitive(),
+          "org.slf4j" % "jul-to-slf4j" % slf4jVersion % "test" intransitive()
         )
       )
       .dependsOn(models)

@@ -1,5 +1,6 @@
-package com.m3.octoparts.cache.client
+package com.m3.octoparts.cache.memcached
 
+import com.m3.octoparts.cache.{ Cache, CacheOps }
 import com.m3.octoparts.cache.directive.CacheDirective
 import com.m3.octoparts.cache.key.{ PartCacheKey, VersionCacheKey }
 import com.m3.octoparts.cache.versioning._
@@ -10,10 +11,10 @@ import skinny.logging.Logging
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ ExecutionContext, Future }
 
-class MemcachedClient(
-  memcachedAccessor: CacheAccessor,
+class MemcachedCacheOps(
+  cache: Cache,
   latestVersionCache: LatestVersionCache)(implicit executionContext: ExecutionContext)
-    extends CacheClient
+    extends CacheOps
     with TtlCalculator
     with Logging {
 
@@ -39,10 +40,10 @@ class MemcachedClient(
 
     import shade.memcached.MemcachedCodecs._
 
-    def pollPartResponse(cacheKey: PartCacheKey) = memcachedAccessor.doGet[PartResponse](cacheKey)
+    def pollPartResponse(cacheKey: PartCacheKey) = cache.get[PartResponse](cacheKey)
 
     def insertPartResponse(cacheKey: PartCacheKey, partResponse: PartResponse, ttl: Option[Duration]): Future[Unit] =
-      memcachedAccessor.doPut(cacheKey, partResponse, calculateTtl(partResponse.cacheControl, ttl))
+      cache.put(cacheKey, partResponse, calculateTtl(partResponse.cacheControl, ttl))
   }
 
   object CombinedVersionLookup {
@@ -105,9 +106,9 @@ class MemcachedClient(
   sealed abstract class AbstractVersionCache[T <: java.io.Serializable](id: T) extends VersionCache[T](id) {
     private val versionCodec: Codec[Version] = Codec.LongBinaryCodec
 
-    override def pollVersion: Future[Option[Version]] = memcachedAccessor.doGet[Version](VersionCacheKey(id))(versionCodec)
+    override def pollVersion: Future[Option[Version]] = cache.get[Version](VersionCacheKey(id))(versionCodec)
 
-    override def doInsertExternal(version: Version) = memcachedAccessor.doPut[Version](VersionCacheKey(id), version, Some(Duration.Inf))(versionCodec)
+    override def doInsertExternal(version: Version) = cache.put[Version](VersionCacheKey(id), version, Some(Duration.Inf))(versionCodec)
   }
 
   case class PartVersionCache(id: String) extends AbstractVersionCache(id) {

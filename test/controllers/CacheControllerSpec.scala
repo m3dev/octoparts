@@ -1,5 +1,6 @@
 package controllers
 
+import com.m3.octoparts.cache.CacheOps
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ FlatSpec, Matchers }
 import org.scalatestplus.play.OneAppPerSuite
@@ -11,7 +12,6 @@ import scala.language.postfixOps
 
 import com.m3.octoparts.support.mocks.{ MockConfigRespository, ConfigDataMocks }
 import com.m3.octoparts.model.config.{ PartParam, CacheGroup, HttpPartConfig }
-import com.m3.octoparts.cache.client.CacheClient
 import org.scalatest.mock.MockitoSugar
 import org.mockito.Mockito._
 import org.mockito.Matchers._
@@ -45,13 +45,13 @@ class CacheControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
       mockHttpPartConfig.copy(id = Some(3), partId = key)
     })
   }
-  val mockCacheClient = mock[CacheClient]
-  val controller = new CacheController(mockCacheClient, mockRepository)
+  val mockCacheOps = mock[CacheOps]
+  val controller = new CacheController(mockCacheOps, mockRepository)
 
   it should "return 200 and call increasePartVersion with the partId when /invalidate/:partId is called" in {
-    doReturn(futureUnit).when(mockCacheClient).increasePartVersion(anyString())
+    doReturn(futureUnit).when(mockCacheOps).increasePartVersion(anyString())
     whenReady(controller.invalidatePart("part1").apply(FakeRequest())) { result =>
-      verify(mockCacheClient).increasePartVersion("part1")
+      verify(mockCacheOps).increasePartVersion("part1")
       result.header.status should be(200)
     }
   }
@@ -60,9 +60,9 @@ class CacheControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
     """
       |return 200 and call increaseParamVersion with the partId, param name, and param value when
       |/invalidate/:partId/:paramName/:paramValue is called""".stripMargin in {
-      doReturn(futureUnit).when(mockCacheClient).increaseParamVersion(anyObject[VersionedParamKey]())
+      doReturn(futureUnit).when(mockCacheOps).increaseParamVersion(anyObject[VersionedParamKey]())
       whenReady(controller.invalidatePartParam("part1", "paramName", "paramValue").apply(FakeRequest())) { result =>
-        verify(mockCacheClient).increaseParamVersion(VersionedParamKey("part1", "paramName", "paramValue"))
+        verify(mockCacheOps).increaseParamVersion(VersionedParamKey("part1", "paramName", "paramValue"))
         result.header.status should be(200)
       }
     }
@@ -72,21 +72,21 @@ class CacheControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
   }
 
   it should "return 200 when /invalidate/cacheGroup/:cacheGroupName is called with an existing cacheGroupName" in {
-    doReturn(futureUnit).when(mockCacheClient).increasePartVersion(anyString())
+    doReturn(futureUnit).when(mockCacheOps).increasePartVersion(anyString())
     whenReady(controller.invalidateCacheGroupParts("group1").apply(FakeRequest())) { result =>
-      verify(mockCacheClient).increasePartVersion(mockHttpPartConfig.partId)
-      verify(mockCacheClient).increasePartVersion("another")
+      verify(mockCacheOps).increasePartVersion(mockHttpPartConfig.partId)
+      verify(mockCacheOps).increasePartVersion("another")
       result.header.status should be(200)
     }
   }
 
   it should "return 404 when /invalidate/cacheGroup/:cacheGroupName/params/:pvalue is called with a non existent cacheGroupName" in {
-    doReturn(futureUnit).when(mockCacheClient).increasePartVersion(anyString())
+    doReturn(futureUnit).when(mockCacheOps).increasePartVersion(anyString())
     status(controller.invalidateCacheGroupParam("wutthewut", "irrelevant").apply(FakeRequest())) should be(404)
   }
 
   it should "return 500 along with a proper string describing the error when a cache invalidation fails" in {
-    doReturn(Future.failed(new IllegalArgumentException)).when(mockCacheClient).increasePartVersion(anyString())
+    doReturn(Future.failed(new IllegalArgumentException)).when(mockCacheOps).increasePartVersion(anyString())
     (1 until 50).foreach { _ =>
       val result = controller.invalidateCacheGroupParts("group1").apply(FakeRequest())
       status(result) should be(500)
@@ -95,7 +95,7 @@ class CacheControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
   }
 
   it should "return 200 and when /invalidate/cacheGroup/:cacheGroupName/params/:pvalue is called with an existing cacheGroupName" in {
-    doReturn(futureUnit).when(mockCacheClient).increaseParamVersion(anyObject[VersionedParamKey]())
+    doReturn(futureUnit).when(mockCacheOps).increaseParamVersion(anyObject[VersionedParamKey]())
     whenReady(controller.invalidateCacheGroupParam("group1", "12345").apply(FakeRequest())) { result =>
       /*
        * Even though the CacheGroup is mocked to have 2 different PartParams, the mock repository's
@@ -103,7 +103,7 @@ class CacheControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
        * HttpPartConfig) returns the same PartParam all the time, which causes the same arguments to
        * be passed to increaseParamVersion
       */
-      verify(mockCacheClient, times(2)).increaseParamVersion(VersionedParamKey(mockHttpPartConfig.partId, mockPartParam.outputName, "12345"))
+      verify(mockCacheOps, times(2)).increaseParamVersion(VersionedParamKey(mockHttpPartConfig.partId, mockPartParam.outputName, "12345"))
       result.header.status should be(200)
     }
   }
