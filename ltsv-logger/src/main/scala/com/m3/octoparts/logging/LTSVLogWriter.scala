@@ -23,7 +23,7 @@ import scala.util.Try
  * if (logger.isDebugEnabled) logger.info(toLtsv("message" -> s"$expensiveMessage"*))
  * }}}
  */
-trait LTSVLogWriter { writer =>
+trait LTSVLogWriter {
 
   import scala.language.experimental.macros
 
