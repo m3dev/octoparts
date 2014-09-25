@@ -116,8 +116,9 @@ admin.validationErrors=Validation errors: {0}
 
 admin.export=Export
 admin.import=Import configuration
+admin.import.title=Import configuration from a JSON file
 admin.export.all=Export all
-admin.import.help=Choose a JSON file…
+admin.import.help=Choose a JSON file
 admin.import.none=There was no configuration data in this file.
 admin.import.successful=The following parts were imported({0}/{1}): {2}
 admin.import.failed=The following parts were already registed therefore were skipped({0}/{1}): {2}

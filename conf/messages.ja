@@ -119,6 +119,7 @@ admin.export=エクスポート
 admin.export.all=全てのパーツをエクスポート
 admin.import=パーツインポート
 admin.import.help=JSONデータファイルを選ぶ…
+admin.import.title=JSONデータファイルからパーツをインポート
 admin.import.none=このファイルにパーツデータ見つかりませんでした。
 admin.import.successful=右記のパーツが登録されました({0}/{1}): {2}
 admin.import.failed=右記のパーツは既に登録されていますのでスキップしました({0}/{1}): {2}
