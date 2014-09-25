@@ -113,4 +113,13 @@ admin.parameterNotFound=パラメータID「{0}」不明
 admin.threadPoolNotFound=スレッドプールID「{0}」不明
 admin.partNotFound=パーツ「{0}」不明
 admin.cacheGroupNotFound=キャッシュグループ「{0}」不明
-admin.validationErrors=Validation errors: {0}
+admin.validationErrors=検証エラー：{0}
+
+admin.export=エクスポート
+admin.export.all=全てのパーツをエクスポート
+admin.import=パーツインポート
+admin.import.help=JSONデータファイルを選ぶ…
+admin.import.title=JSONデータファイルからパーツをインポート
+admin.import.none=このファイルにパーツデータ見つかりませんでした。
+admin.import.successful=右記のパーツが登録されました({0}/{1}): {2}
+admin.import.failed=右記のパーツは既に登録されていますのでスキップしました({0}/{1}): {2}

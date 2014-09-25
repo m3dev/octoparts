@@ -20,12 +20,14 @@
 
     <h4><a href="@part.tryItLink" class="btn btn-default">@Messages("parts.tryIt")</a>
         <a href="@part.editLink" class="btn btn-primary">@Messages("edit")</a>
-		<form action="@controllers.routes.AdminController.copyPart(part.partId)" method="post">
+        <a href="@part.exportLink" class="btn btn-default" download="octoparts-export-@{part.partId}.json">@Messages("admin.export")</a>
+        @helper.form(action = controllers.routes.AdminController.copyPart(part.partId), 'method -> "post") {
             <input type="submit" value="@Messages("duplicate")" class="btn btn-info" />
-        </form>
-        <form action="@controllers.routes.AdminController.deletePart(part.partId)" method="post">
+        }
+        @helper.form(action = controllers.routes.AdminController.deletePart(part.partId), 'method -> "post") {
             <input type="submit" value="@Messages("delete")" class="btn btn-danger" />
-        </form></h4>
+        }
+    </h4>
 
     <h2>@Messages("parts.section.basic")</h2>
     <dl>

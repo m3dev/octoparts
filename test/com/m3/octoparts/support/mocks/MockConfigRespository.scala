@@ -42,4 +42,6 @@ trait MockMutableRepository extends MockConfigRespository with MutableConfigsRep
 
   def save[A <: ConfigModel[A]: ConfigMapper](obj: A): Future[Long] = Future.successful(123)
 
+  def importConfigs(configs: Seq[json.HttpPartConfig]) = Future.successful(Seq.empty)
+
 }

@@ -25,4 +25,13 @@ object CacheGroup {
     )
   }
 
+  def fromJsonModel(cacheGroup: JsonCacheGroup): CacheGroup = {
+    CacheGroup(
+      name = cacheGroup.name,
+      owner = cacheGroup.owner,
+      description = cacheGroup.description,
+      createdAt = DateTime.now,
+      updatedAt = DateTime.now
+    )
+  }
 }
