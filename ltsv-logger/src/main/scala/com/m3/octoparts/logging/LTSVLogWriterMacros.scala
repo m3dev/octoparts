@@ -96,16 +96,16 @@ private[logging] object LTSVLogWriterMacros {
 
   private def ltsvLogAtLevelIfEnabled(c: LoggerContext)(level: String, addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
-    val isLevelEnabled = TermName.apply(s"is${level.toLowerCase.capitalize}Enabled")
-    val logLevel = TermName.apply(s"${level.toLowerCase}")
+    val isLevelEnabled = newTermName(s"is${level.toLowerCase.capitalize}Enabled")
+    val logLevel = newTermName(s"${level.toLowerCase}")
     val writer = c.prefix.tree
     c.Expr[Unit](q"if (${writer}.logger.$isLevelEnabled) $writer.logger.$logLevel($writer.toLtsv(Seq(..$pairs), $addHostnameField))")
   }
 
   private def ltsvErrLogAtLevelIfEnabled(c: LoggerContext)(level: String, addHostnameField: c.Expr[Boolean], error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
-    val isLevelEnabled = TermName.apply(s"is${level.toLowerCase.capitalize}Enabled")
-    val logLevel = TermName.apply(s"${level.toLowerCase}")
+    val isLevelEnabled = newTermName(s"is${level.toLowerCase.capitalize}Enabled")
+    val logLevel = newTermName(s"${level.toLowerCase}")
     val writer = c.prefix.tree
     c.Expr[Unit](q"if (${writer}.logger.$isLevelEnabled) $writer.logger.$logLevel($writer.toLtsv(Seq(..$pairs), $addHostnameField), $error)")
   }
