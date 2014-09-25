@@ -206,7 +206,7 @@ object OctopartsBuild extends Build {
     libraryDependencies ++= Seq(
       "com.typesafe.play" %% "play" % thePlayVersion % "provided"
     )
-  )
+  ).dependsOn(ltsvLogger)
 
   // -------------------------------------------------------
   // Model classes
