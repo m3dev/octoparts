@@ -9,14 +9,12 @@ private[logging] object LTSVLogWriterMacros {
   /* Info */
   def infoImpl(c: LoggerContext)(pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
-    val writer = c.prefix.tree
-    c.Expr[Unit](q"$writer.info(true, ..$pairs)")
+    infoHostNameImpl(c)(c.Expr[Boolean](q"true"), pairs: _*)
   }
 
   def infoErrImpl(c: LoggerContext)(error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
-    val writer = c.prefix.tree
-    c.Expr[Unit](q"$writer.info(true, $error, ..$pairs)")
+    infoErrHostNameImpl(c)(c.Expr[Boolean](q"true"), error, pairs: _*)
   }
 
   def infoHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
@@ -34,14 +32,13 @@ private[logging] object LTSVLogWriterMacros {
   /* Debug */
   def debugImpl(c: LoggerContext)(pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
-    val writer = c.prefix.tree
-    c.Expr[Unit](q"$writer.debug(true, ..$pairs)")
+    debugHostNameImpl(c)(c.Expr[Boolean](q"true"), pairs: _*)
   }
 
   def debugErrImpl(c: LoggerContext)(error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
     val writer = c.prefix.tree
-    c.Expr[Unit](q"$writer.debug(true, $error, ..$pairs)")
+    debugErrHostNameImpl(c)(c.Expr[Boolean](q"true"), error, pairs: _*)
   }
 
   def debugHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
@@ -59,14 +56,13 @@ private[logging] object LTSVLogWriterMacros {
   /* Warn */
   def warnImpl(c: LoggerContext)(pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
-    val writer = c.prefix.tree
-    c.Expr[Unit](q"$writer.warn(true, ..$pairs)")
+    warnHostNameImpl(c)(c.Expr[Boolean](q"true"), pairs: _*)
   }
 
   def warnErrImpl(c: LoggerContext)(error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
     val writer = c.prefix.tree
-    c.Expr[Unit](q"$writer.warn(true, $error, ..$pairs)")
+    warnErrHostNameImpl(c)(c.Expr[Boolean](q"true"), error, pairs: _*)
   }
 
   def warnHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
@@ -84,14 +80,12 @@ private[logging] object LTSVLogWriterMacros {
   /* Error */
   def errorImpl(c: LoggerContext)(pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
-    val writer = c.prefix.tree
-    c.Expr[Unit](q"$writer.error(true, ..$pairs)")
+    errorHostNameImpl(c)(c.Expr[Boolean](q"true"), pairs: _*)
   }
 
   def errorErrImpl(c: LoggerContext)(error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
-    val writer = c.prefix.tree
-    c.Expr[Unit](q"$writer.error(true, $error, ..$pairs)")
+    errorErrHostNameImpl(c)(c.Expr[Boolean](q"true"), error, pairs: _*)
   }
 
   def errorHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
@@ -109,14 +103,13 @@ private[logging] object LTSVLogWriterMacros {
   /* Trace */
   def traceImpl(c: LoggerContext)(pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
-    val writer = c.prefix.tree
-    c.Expr[Unit](q"$writer.trace(true, ..$pairs)")
+    traceHostNameImpl(c)(c.Expr[Boolean](q"true"), pairs: _*)
   }
 
   def traceErrImpl(c: LoggerContext)(error: c.Expr[Throwable], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
     import c.universe._
     val writer = c.prefix.tree
-    c.Expr[Unit](q"$writer.trace(true, $error, ..$pairs)")
+    traceErrHostNameImpl(c)(c.Expr[Boolean](q"true"), error, pairs: _*)
   }
 
   def traceHostNameImpl(c: LoggerContext)(addHostnameField: c.Expr[Boolean], pairs: c.Expr[(String, Any)]*): c.Expr[Unit] = {
