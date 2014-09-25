@@ -1,4 +1,4 @@
-package com.m3.octoparts.cache.client
+package com.m3.octoparts.cache.memcached
 
 import java.util.concurrent.TimeUnit
 

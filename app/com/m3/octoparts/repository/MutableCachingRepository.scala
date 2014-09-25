@@ -1,6 +1,6 @@
 package com.m3.octoparts.repository
 
-import com.m3.octoparts.cache.client.CacheAccessor
+import com.m3.octoparts.cache.Cache
 import com.m3.octoparts.cache.key.HttpPartConfigCacheKey
 import com.m3.octoparts.http.HttpClientPool
 import com.m3.octoparts.model.config.{ json, ConfigModel }
@@ -13,7 +13,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  */
 class MutableCachingRepository(
   val delegate: MutableConfigsRepository,
-  val cacheAccessor: CacheAccessor,
+  val cache: Cache,
   val httpClientPool: HttpClientPool)(
     implicit val executionContext: ExecutionContext)
     extends CachingRepository

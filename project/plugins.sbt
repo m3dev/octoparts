@@ -33,6 +33,3 @@ addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "0.2.1")
 
 // For publishing coverage data to coveralls.io
 addSbtPlugin("org.scoverage" %% "sbt-coveralls" % "0.99.0")
-
-scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xlint")
-
