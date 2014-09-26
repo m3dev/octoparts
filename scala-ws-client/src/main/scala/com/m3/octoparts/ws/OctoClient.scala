@@ -1,8 +1,8 @@
 package com.m3.octoparts.ws
 
 import com.google.common.net.UrlEscapers
+import com.m3.octoparts.json.format.ReqResp._
 import com.m3.octoparts.model._
-import com.m3.octoparts.model.JsonFormats._
 
 import java.util.UUID
 import play.api.http.{ ContentTypeOf, Writeable }
@@ -14,6 +14,8 @@ import play.api.libs.ws._
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.control.NonFatal
+import com.m3.octoparts.model.config.json.HttpPartConfig
+import com.m3.octoparts.json.format.ConfigModel._
 
 /**
  * Default Octoparts [[OctoClientLike]] implementation
@@ -24,16 +26,20 @@ class OctoClient(val baseUrl: String, protected val httpRequestTimeout: Duration
 
   protected def wsHolderFor(url: String) = WS.url(url).withRequestTimeout(httpRequestTimeout.toMillis.toInt)
 
-  protected val rescuer: PartialFunction[Throwable, AggregateResponse] = {
+  protected def rescuer[A](defaultReturn: => A): PartialFunction[Throwable, A] = {
     case JsResultException(e) => {
       logger.error(s"Octoparts service replied with invalid Json. Errors: $e")
-      emptyReqResponse
+      defaultReturn
     }
     case NonFatal(e) => {
       logger.error("Failed to get a valid response from Octoparts", e)
-      emptyReqResponse
+      defaultReturn
     }
   }
+
+  protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
+
+  protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Seq.empty
 }
 
 /**
@@ -56,7 +62,17 @@ trait OctoClientLike {
   /**
    * PartialFunction for `recover`ing from errors when hitting Octoparts
    */
-  protected def rescuer: PartialFunction[Throwable, AggregateResponse]
+  protected def rescuer[A](defaultReturn: => A): PartialFunction[Throwable, A]
+
+  /**
+   * Defines the [[AggregateResponse]] rescue return value
+   */
+  protected def rescueAggregateResponse: AggregateResponse
+
+  /**
+   * Defines the Seq[[HttpPartConfig]] rescue return value
+   */
+  protected def rescueHttpPartConfigs: Seq[HttpPartConfig]
 
   /**
    * Simple named logger
@@ -65,6 +81,7 @@ trait OctoClientLike {
 
   // Url objects that map an Operation name to a Url
   protected[ws] case object Invoke extends NoPlaceholdersUrl { val url = endpointsApiBaseUrl(baseUrl) }
+  protected[ws] case object ListEndpoints extends NoPlaceholdersUrl { val url = s"${endpointsApiBaseUrl(baseUrl)}/list" }
   protected[ws] case object InvalidateCache extends PlaceHoldersUrl { val url = s"${cacheApiBaseUrl(baseUrl)}/invalidate/part/%s" }
   protected[ws] case object InvalidateCacheFor extends PlaceHoldersUrl { val url = s"${cacheApiBaseUrl(baseUrl)}/invalidate/part/%s/%s/%s" }
   protected[ws] case object InvalidateCacheGroup extends PlaceHoldersUrl { val url = s"${cacheApiBaseUrl(baseUrl)}/invalidate/cache-group/%s" }
@@ -81,24 +98,24 @@ trait OctoClientLike {
     } else opUrl.url
 
   /**
-   * Returns a Future[[com.m3.octoparts.models.AggregateResponse]] received from asynchronously invoking Octoparts using
-   * the provided [[com.m3.octoparts.models.AggregateRequest]]
+   * Returns a Future[[com.m3.octoparts.model.AggregateResponse]] received from asynchronously invoking Octoparts using
+   * the provided [[com.m3.octoparts.model.AggregateRequest]]
    */
   def invoke(aggReq: AggregateRequest)(implicit ec: ExecutionContext): Future[AggregateResponse] = {
     if (aggReq.requests.isEmpty)
       Future.successful(emptyReqResponse)
     else {
       val jsonBody = Json.toJson(aggReq)
-      logger.debug(s"OctopartsId: ${aggReq.requestMeta.id}, RequestBody: ${jsonBody.toString}")
+      logger.debug(s"OctopartsId: ${aggReq.requestMeta.id}, RequestBody: $jsonBody")
       wsPost(urlFor(Invoke), jsonBody)
         .map(resp => resp.json.as[AggregateResponse])
-        .recover(rescuer)
+        .recover(rescuer(rescueAggregateResponse))
     }
   }
 
   /**
-   *  Returns a Future[[com.m3.octoparts.models.AggregateResponse]] received from asynchronously invoking Octoparts using the
-   *  provided argument object, and [[com.m3.octoparts.models.PartRequest]] list.
+   *  Returns a Future[[com.m3.octoparts.model.AggregateResponse]] received from asynchronously invoking Octoparts using the
+   *  provided argument object, and [[com.m3.octoparts.model.PartRequest]] list.
    *
    *  A [[RequestMetaBuilder]] type class instance for the first argument must be in scope at the call-site.
    */
@@ -106,6 +123,16 @@ trait OctoClientLike {
     val reqMeta = reqMetaBuilder(obj)
     val aggReq = buildAggReq(reqMeta, partReqs)
     invoke(aggReq)
+  }
+
+  /**
+   * Returns a Future Seq[[com.m3.octoparts.model.config.json.HttpPartConfig]], which
+   * describes all the endpoints registered to the Octoparts service.
+   */
+  def listEndpoints()(implicit ec: ExecutionContext): Future[Seq[HttpPartConfig]] = {
+    wsHolderFor(urlFor(ListEndpoints)).get()
+      .map(resp => resp.json.as[Seq[HttpPartConfig]])
+      .recover(rescuer(rescueHttpPartConfigs))
   }
 
   /**
@@ -155,10 +182,10 @@ trait OctoClientLike {
     }
 
   /**
-   * Builds an [[com.m3.octoparts.models.AggregateRequest]] using [[com.m3.octoparts.models.RequestMeta]] and a list of [[com.m3.octoparts.models.PartRequest]]
+   * Builds an [[com.m3.octoparts.model.AggregateRequest]] using [[com.m3.octoparts.model.RequestMeta]] and a list of [[com.m3.octoparts.model.PartRequest]]
    *
    * You may wish to (abstract) override this if you have you have your own requirements for
-   * pulling shared data from [[com.m3.octoparts.models.RequestMeta]] into your [[com.m3.octoparts.models.PartRequest]]s
+   * pulling shared data from [[com.m3.octoparts.model.RequestMeta]] into your [[com.m3.octoparts.model.PartRequest]]s
    */
   protected def buildAggReq(reqMeta: RequestMeta, partReqs: Seq[PartRequest]): AggregateRequest = AggregateRequest(reqMeta, partReqs)
 
@@ -170,9 +197,9 @@ trait OctoClientLike {
   protected def wsPost[A](url: String, body: A)(implicit wrt: Writeable[A], ct: ContentTypeOf[A]): Future[WSResponse] = wsHolderFor(url).post(body)
 
   /**
-   * Generates a default dumb/empty [[com.m3.octoparts.models.AggregateResponse]].
+   * Generates a default dumb/empty [[com.m3.octoparts.model.AggregateResponse]].
    */
-  protected def emptyReqResponse = AggregateResponse(ResponseMeta(id = UUID.randomUUID().toString, processTime = 0L), responses = Nil)
+  protected def emptyReqResponse = AggregateResponse(ResponseMeta(id = UUID.randomUUID().toString, processTime = Duration.Zero), responses = Nil)
 
   /**
    * Drops the final forward slash from a string if it exists.

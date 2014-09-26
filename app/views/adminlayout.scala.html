@@ -32,8 +32,7 @@
                 <div class="row">
                     <div class="col-md-12">
                         @for((k, v) <- flash.data) {
-                            <!-- Assumes all flashes are error messages -->
-                            <div class="alert alert-danger">@k : @v</div>
+                            <div class="alert alert-@k">@v</div>
                         }
                     </div>
                 </div>

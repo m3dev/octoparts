@@ -1,7 +1,10 @@
 package com.m3.octoparts.ws
 
+import com.m3.octoparts.json.format.ReqResp._
+import com.m3.octoparts.json.format.ConfigModel._
 import com.m3.octoparts.model._
-import com.m3.octoparts.model.JsonFormats._
+import com.m3.octoparts.model.config.ParamType
+import com.m3.octoparts.model.config.json.{ PartParam, ThreadPoolConfig, HystrixConfig, HttpPartConfig }
 import play.api.libs.json._
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
@@ -13,8 +16,11 @@ import org.mockito.Matchers._
 import play.api.mvc.RequestHeader
 import play.api.mvc.Results.EmptyContent
 import play.api.test.FakeRequest
+import scala.concurrent.duration._
 
+import scala.language.postfixOps
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with MockitoSugar {
 
@@ -35,10 +41,11 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
       mockWSResp
     }
 
-    def mockWSHolder(fWSResp: Future[WSResponse]): WSRequestHolder = {
+    def mockWSHolder(fWSRespPost: Future[WSResponse], fWSRespGet: Future[WSResponse]): WSRequestHolder = {
       val mockWS = mock[WSRequestHolder]
-      when(mockWS.post(anyObject[JsValue])(anyObject(), anyObject())).thenReturn(fWSResp)
-      when(mockWS.post(anyObject[EmptyContent])(anyObject(), anyObject())).thenReturn(fWSResp)
+      when(mockWS.get()).thenReturn(fWSRespGet)
+      when(mockWS.post(anyObject[JsValue])(anyObject(), anyObject())).thenReturn(fWSRespPost)
+      when(mockWS.post(anyObject[EmptyContent])(anyObject(), anyObject())).thenReturn(fWSRespPost)
       mockWS
     }
 
@@ -53,27 +60,66 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
     )
 
     val mockAggResp = AggregateResponse(
-      ResponseMeta("mock", 1L),
+      ResponseMeta("mock", 1.millisecond),
       Nil
     )
 
-    def mockSubject(resp: Future[WSResponse], baseURL: String = "http://bobby.com/") = new OctoClientLike {
+    val mockListing = HttpPartConfig(
+      partId = "something",
+      owner = "somebody",
+      uriToInterpolate = "http://random.com",
+      description = "",
+      method = HttpMethod.Get,
+      hystrixConfig = HystrixConfig(
+        timeout = 50.millis,
+        threadPoolConfig = ThreadPoolConfig(
+          threadPoolKey = "testThreadPool",
+          coreSize = 2,
+          queueSize = 256),
+        commandKey = "command",
+        commandGroupKey = "GroupKey"),
+      additionalValidStatuses = Set(302),
+      parameters = Set(
+        PartParam(
+          required = true,
+          versioned = false,
+          paramType = ParamType.Header,
+          outputName = "userId",
+          inputNameOverride = None,
+          cacheGroups = Set.empty
+        )),
+      deprecatedInFavourOf = None,
+      cacheTtl = Some(60 seconds),
+      alertMailsEnabled = true,
+      alertAbsoluteThreshold = Some(1000),
+      alertPercentThreshold = Some(33.0),
+      alertInterval = 10 minutes,
+      alertMailRecipients = Some("l-chan@m3.com"))
+
+    val mockWSRespPost = jsonAsWSResponse(Json.toJson(mockAggResp))
+    val mockWSRespGet = jsonAsWSResponse(Json.toJson(Seq(mockListing)))
+    val respPost = Future.successful(mockWSRespPost)
+    val respGet = Future.successful(mockWSRespGet)
+
+    def mockSubject(respPost: Future[WSResponse], respGet: Future[WSResponse], baseURL: String = "http://bobby.com/") = new OctoClientLike {
       val baseUrl = baseURL
-      def wsHolderFor(url: String): WSRequestHolder = mockWSHolder(resp)
-      val rescuer = PartialFunction.empty
+      def wsHolderFor(url: String): WSRequestHolder = mockWSHolder(respPost, respGet)
+      def rescuer[A](obj: => A) = PartialFunction.empty
+      protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
+      protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Seq.empty
     }
 
     describe("#urlFor") {
-      val mockWS = jsonAsWSResponse(Json.toJson(mockAggResp))
-      val resp = Future.successful(mockWS)
 
       def verifyUrls(subject: OctoClientLike, slashlessBaseUrl: String): Unit = {
         val invokeUrl = subject.urlFor(subject.Invoke)
+        val listUrl = subject.urlFor(subject.ListEndpoints)
         val invalidateCacheUrl = subject.urlFor(subject.InvalidateCache, "hello")
         val invalidateCacheForUrl = subject.urlFor(subject.InvalidateCacheFor, "hello", "userId", "3")
         val invalidateCacheGroupUrl = subject.urlFor(subject.InvalidateCacheGroup, "helloGroup")
         val invalidateCacheGroupForUrl = subject.urlFor(subject.InvalidateCacheGroupFor, "helloGroup", "3")
         invokeUrl should be(s"$slashlessBaseUrl/octoparts/2")
+        listUrl should be(s"$slashlessBaseUrl/octoparts/2/list")
         invalidateCacheUrl should be(s"$slashlessBaseUrl/octoparts/2/cache/invalidate/part/hello")
         invalidateCacheForUrl should be(s"$slashlessBaseUrl/octoparts/2/cache/invalidate/part/hello/userId/3")
         invalidateCacheGroupUrl should be(s"$slashlessBaseUrl/octoparts/2/cache/invalidate/cache-group/helloGroup")
@@ -81,31 +127,29 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
       }
 
       it("should return correct URLs for trailing-slashed baseUrls") {
-        val subject = mockSubject(resp, "http://bobby.com/")
+        val subject = mockSubject(respPost, respGet, "http://bobby.com/")
         verifyUrls(subject, "http://bobby.com")
       }
 
       it("should return correct URLs for non-trailing-slashed baseUrls") {
-        val subject = mockSubject(resp, "http://bobby.com")
+        val subject = mockSubject(respPost, respGet, "http://bobby.com")
         verifyUrls(subject, "http://bobby.com")
       }
     }
 
     describe("#invoke(AggregateRequest)") {
 
-      val mockWS = jsonAsWSResponse(Json.toJson(mockAggResp))
-      val resp = Future.successful(mockWS)
-      val testee = mockSubject(resp)
+      val subject = mockSubject(respPost, respGet)
 
       it("should properly deserialise AggregateResponses") {
-        whenReady(testee.invoke(mockAggReq)) { r =>
+        whenReady(subject.invoke(mockAggReq)) { r =>
           r.responseMeta.id should be("mock")
         }
       }
 
       it("should skip sending when AggregateRequests are empty") {
-        whenReady(testee.invoke(mockAggReqEmpty)) { r =>
-          r.responseMeta.processTime should be(0L)
+        whenReady(subject.invoke(mockAggReqEmpty)) { r =>
+          r.responseMeta.processTime should be(Duration.Zero)
         }
       }
 
@@ -124,12 +168,10 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
         )
       }
 
-      val mockWS = jsonAsWSResponse(Json.toJson(mockAggResp))
-      val resp = Future.successful(mockWS)
-      val testee = mockSubject(resp)
+      val subject = mockSubject(respPost, respGet)
 
       it("should be callable by resolving an in-scope RequestMetaBuilder") {
-        val fResp = testee.invoke((User(Some("hello")), FakeRequest()), Seq(PartRequest("hi")))
+        val fResp = subject.invoke((User(Some("hello")), FakeRequest()), Seq(PartRequest("hi")))
         whenReady(fResp) { r =>
           r.responseMeta.id should be("mock")
         }
@@ -138,7 +180,7 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
 
     describe("URL passed to wsHolderFor") {
 
-      val mockWSH = mockWSHolder(Future.successful(jsonAsWSResponse(Json.toJson(mockAggResp))))
+      val mockWSH = mockWSHolder(respPost, respGet)
       def mockWSHolderCreator = {
         val creator = mock[Function[String, WSRequestHolder]]
         when(creator.apply(anyString())).thenReturn(mockWSH)
@@ -150,11 +192,17 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
         val subject = new OctoClientLike {
           val baseUrl = "http://bobby.com"
           def wsHolderFor(url: String): WSRequestHolder = wsHolderCreator.apply(url)
-          val rescuer = PartialFunction.empty
+          def rescuer[A](obj: => A): PartialFunction[Throwable, A] = PartialFunction.empty
+          protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
+          protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Seq.empty
         }
         whenReady(block(subject)) { _ =>
           verify(wsHolderCreator, times(howManyTimes)).apply(url)
         }
+      }
+
+      it("should be correct for #list") {
+        verifyUrlWasPassed(_.listEndpoints())("http://bobby.com/octoparts/2/list")
       }
 
       it("should be correct for #invoke and #invoke[A]") {
@@ -190,7 +238,7 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
         it("should return true") {
           (1 until 400) foreach { status =>
             val mockWS = statusWSResponse(status)
-            val subject = mockSubject(Future.successful(mockWS))
+            val subject = mockSubject(Future.successful(mockWS), respGet)
             whenReady(subject.emptyPostOk("whatever")) { _ should be(true) }
           }
         }
@@ -200,17 +248,13 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
         it("should return true") {
           (400 to 500) foreach { status =>
             val mockWS = statusWSResponse(status)
-            val subject = mockSubject(Future.successful(mockWS))
+            val subject = mockSubject(Future.successful(mockWS), respGet)
             whenReady(subject.emptyPostOk("whatever")) { _ should be(false) }
           }
         }
       }
 
     }
-
-  }
-
-  describe("ApiUrl") {
 
   }
 

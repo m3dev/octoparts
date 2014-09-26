@@ -1,0 +1,27 @@
+package com.m3.octoparts.model.config.json
+
+import com.fasterxml.jackson.module.scala.JsonScalaEnumeration
+import com.m3.octoparts.model.HttpMethod
+import com.m3.octoparts.model.jackson.HttpMethodType
+import com.wordnik.swagger.annotations.ApiModelProperty
+
+import scala.annotation.meta.field
+import scala.concurrent.duration.Duration
+
+case class HttpPartConfig(
+  @(ApiModelProperty @field)(required = true) partId: String,
+  @(ApiModelProperty @field)(required = true) owner: String,
+  @(ApiModelProperty @field)(required = true) uriToInterpolate: String,
+  @(ApiModelProperty @field)(required = true) description: String,
+  @(ApiModelProperty @field)(dataType = "string", allowableValues = "get, post, put, delete, head, patch, options")@JsonScalaEnumeration(classOf[HttpMethodType]) method: HttpMethod.Value,
+  @(ApiModelProperty @field)(required = true) hystrixConfig: HystrixConfig,
+  @(ApiModelProperty @field)(dataType = "array[integer]") additionalValidStatuses: Set[Int] = Set.empty,
+  parameters: Set[PartParam] = Set.empty,
+  @(ApiModelProperty @field)(dataType = "string", required = false) deprecatedInFavourOf: Option[String] = None,
+  cacheGroups: Set[CacheGroup] = Set.empty,
+  @(ApiModelProperty @field)(dataType = "integer", required = false, allowableValues = "range[0, Infinity]", value = "in ms") cacheTtl: Option[Duration] = Some(Duration.Zero),
+  @(ApiModelProperty @field)(required = true) alertMailsEnabled: Boolean = false,
+  @(ApiModelProperty @field)(dataType = "integer", required = false, allowableValues = "range[0, Infinity]") alertAbsoluteThreshold: Option[Int] = None,
+  @(ApiModelProperty @field)(dataType = "float", required = false, allowableValues = "range[0, 100]") alertPercentThreshold: Option[Double] = None,
+  @(ApiModelProperty @field)(dataType = "integer", required = true, allowableValues = "range[0, Infinity]", value = "in ms") alertInterval: Duration,
+  @(ApiModelProperty @field)(dataType = "string", required = false) alertMailRecipients: Option[String] = None)

@@ -1,17 +1,28 @@
 package controllers
 
+import java.io.{ File, ByteArrayOutputStream }
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.repository.MutableConfigsRepository
 import com.m3.octoparts.repository.config._
 import com.m3.octoparts.support.mocks.ConfigDataMocks
+import org.apache.http.entity.ContentType
+import org.apache.http.entity.mime.MultipartEntityBuilder
+import org.apache.http.entity.mime.content.FileBody
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest._
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
 import org.scalatest.mock.MockitoSugar.mock
+import play.api.http.Writeable
+import play.api.libs.json.Json
+import play.api.mvc.EssentialAction
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import play.api.mvc.Result
 
 import scala.concurrent.Future
 import scala.language.postfixOps
@@ -73,7 +84,7 @@ class AdminControllerSpec extends FunSpec
     doReturn(Future.successful(Seq.empty)).when(repository).findAllCacheGroups()
 
     val result = adminController.newPart.apply(FakeRequest())
-    status(result) should equal(200)
+    status(result) should equal(OK)
     contentAsString(result) should include("""input type="text" id="partId" name="partId" value="" """)
   }
 
@@ -87,7 +98,7 @@ class AdminControllerSpec extends FunSpec
     doReturn(Future.successful(Seq.empty)).when(repository).findAllCacheGroups()
 
     val result = adminController.editPart(part.partId).apply(FakeRequest())
-    status(result) should equal(200)
+    status(result) should equal(OK)
     contentAsString(result) should include(s"""input type="text" id="partId" name="partId" value="${part.partId}" """)
   }
 
@@ -101,7 +112,7 @@ class AdminControllerSpec extends FunSpec
 
     val result = adminController.createPart.apply(FakeRequest().withFormUrlEncodedBody(validPartEditFormParams: _*))
     whenReady(result) { r =>
-      status(result) should be(302)
+      status(result) should be(FOUND)
       redirectLocation(result).get should include(routes.AdminController.showPart("aNewName").url)
 
       val newCiCaptor = ArgumentCaptor.forClass(classOf[HttpPartConfig])
@@ -132,7 +143,7 @@ class AdminControllerSpec extends FunSpec
         val (controller, repository, part) = setupController
         doReturn(Future.successful(124L)).when(repository).save(anyObject[HttpPartConfig]())(anyObject[ConfigMapper[HttpPartConfig]])
         val result = controller.updatePart(part.partId).apply(FakeRequest().withFormUrlEncodedBody(validPartEditFormParams: _*))
-        status(result) should be(302)
+        status(result) should be(FOUND)
         redirectLocation(result).get should include(routes.AdminController.showPart("aNewName").url)
       }
     }
@@ -143,7 +154,7 @@ class AdminControllerSpec extends FunSpec
         doReturn(Future.successful(None)).when(repository).findConfigByPartId("this is not here")
 
         val result = controller.updatePart("this is not here").apply(FakeRequest().withFormUrlEncodedBody(validPartEditFormParams: _*))
-        status(result) should be(302)
+        status(result) should be(FOUND)
         redirectLocation(result).get should include(routes.AdminController.listParts.url)
       }
     }
@@ -154,11 +165,73 @@ class AdminControllerSpec extends FunSpec
         doReturn(Future.failed(new RuntimeException("oooh shiiieeet"))).when(repository).save(anyObject[HttpPartConfig]())(anyObject[ConfigMapper[HttpPartConfig]])
 
         val result = controller.updatePart(part.partId).apply(FakeRequest().withFormUrlEncodedBody(validPartEditFormParams: _*))
-        status(result) should be(200)
+        status(result) should be(OK)
         contentAsString(result) should include("""input type="text" id="partId" name="partId" value="aNewName" """)
       }
     }
 
+  }
+
+  describe("importing parts") {
+    it("should show the form") {
+      val repository = mock[MutableConfigsRepository]
+      val adminController = new AdminController(repository = repository)
+      val showImportParts = adminController.showImportParts()(FakeRequest())
+      status(showImportParts) should be(OK)
+      contentAsString(showImportParts) should include("jsonfile")
+      contentAsString(showImportParts) should include(routes.AdminController.doImportParts().url)
+      verifyNoMoreInteractions(repository)
+    }
+
+    def makeFileUpload(data: Array[Byte], action: EssentialAction, fileKey: String = "jsonfile", fileContentType: ContentType = ContentType.APPLICATION_JSON): Future[Result] = {
+
+      val jsonFile = {
+        val tmpFile = File.createTempFile("upload", "tmp")
+        tmpFile.deleteOnExit()
+        Files.write(tmpFile.toPath, data)
+        tmpFile
+      }
+      val entity = MultipartEntityBuilder
+        .create()
+        .addPart(fileKey, new FileBody(jsonFile, fileContentType, jsonFile.getName))
+        .build()
+
+      val postReq = FakeRequest("POST", "ignored").withBody {
+        val outputStream = new ByteArrayOutputStream()
+        entity.writeTo(outputStream)
+        outputStream.toByteArray
+      }.withHeaders(CONTENT_TYPE -> entity.getContentType.getValue)
+
+      // override Play's equivalent Writeable so that the content-type header from the FakeRequest is used instead of application/octet-stream
+      call(action, postReq)(Writeable(identity, None))
+    }
+
+    it("should import a valid JSON file") {
+      import com.m3.octoparts.json.format.ConfigModel._
+
+      val repository = mock[MutableConfigsRepository]
+      val adminController = new AdminController(repository = repository)
+      val jsonParts = Seq(HttpPartConfig.toJsonModel(part))
+      doReturn(Future.successful(Seq(part.partId))).when(repository).importConfigs(jsonParts)
+      val data = Json.toJson(jsonParts).toString()
+      val doImportParts = makeFileUpload(data.getBytes(StandardCharsets.UTF_8), adminController.doImportParts())
+      status(doImportParts) should be(FOUND)
+      redirectLocation(doImportParts).getOrElse(fail()) should include(routes.AdminController.listParts().url)
+      flash(doImportParts).get(BootstrapFlashStyles.danger.toString) should be(None)
+      flash(doImportParts).get(BootstrapFlashStyles.success.toString) shouldNot be(None)
+      verify(repository).importConfigs(jsonParts)
+      verifyNoMoreInteractions(repository)
+    }
+
+    it("could never import a broken JSON file") {
+      val repository = mock[MutableConfigsRepository]
+      val adminController = new AdminController(repository = repository)
+      val doImportParts = makeFileUpload("INVALID JSON".getBytes(StandardCharsets.UTF_8), adminController.doImportParts())
+      status(doImportParts) should be(FOUND)
+      redirectLocation(doImportParts).getOrElse(fail()) should include(routes.AdminController.listParts().url)
+      flash(doImportParts).get(BootstrapFlashStyles.danger.toString) shouldNot be(None)
+      verifyNoMoreInteractions(repository)
+    }
   }
 
   describe("deleting a part") {
@@ -170,8 +243,8 @@ class AdminControllerSpec extends FunSpec
         doReturn(Future.successful(1)).when(repository).deleteConfigByPartId(part.partId)
         val deletePart = adminController.deletePart(part.partId)(FakeRequest())
         whenReady(deletePart) { result =>
-          status(deletePart) should be(302)
-          redirectLocation(deletePart).fold(fail())(_ should include(routes.AdminController.listParts.url))
+          status(deletePart) should be(FOUND)
+          redirectLocation(deletePart).fold(fail())(_ should include(routes.AdminController.listParts().url))
 
           verify(repository).findConfigByPartId(part.partId)
           verify(repository).deleteConfigByPartId(part.partId)
@@ -187,9 +260,9 @@ class AdminControllerSpec extends FunSpec
 
         val deletePart = adminController.deletePart("someOther")(FakeRequest())
         whenReady(deletePart) { result =>
-          status(deletePart) should be(302)
+          status(deletePart) should be(FOUND)
           redirectLocation(deletePart).fold(fail())(_ should include(routes.AdminController.listParts.url))
-          flash(deletePart).get("Error") should be('defined)
+          flash(deletePart).get(BootstrapFlashStyles.danger.toString) should be('defined)
 
           verify(repository).findConfigByPartId("someOther")
         }
@@ -207,7 +280,7 @@ class AdminControllerSpec extends FunSpec
         doReturn(Future.successful(124L)).when(repository).save(anyObject[HttpPartConfig]())(anyObject[ConfigMapper[HttpPartConfig]])
 
         val result = adminController.copyPart(part.partId).apply(FakeRequest())
-        status(result) should be(302)
+        status(result) should be(FOUND)
         val expectedNewPartId = part.partId + "_"
         redirectLocation(result).get should include(routes.AdminController.editPart(expectedNewPartId).url)
       }
@@ -221,9 +294,9 @@ class AdminControllerSpec extends FunSpec
 
         val deletePart = adminController.copyPart("someOther")(FakeRequest())
         whenReady(deletePart) { result =>
-          status(deletePart) should be(302)
+          status(deletePart) should be(FOUND)
           redirectLocation(deletePart).fold(fail())(_ should include(routes.AdminController.listParts.url))
-          flash(deletePart).get("Error") should be('defined)
+          flash(deletePart).get(BootstrapFlashStyles.danger.toString) should be('defined)
 
           verify(repository).findConfigByPartId("someOther")
         }
@@ -244,7 +317,7 @@ class AdminControllerSpec extends FunSpec
         val existingParam = part.parameters.head
         val copyParam = adminController.copyParam(part.partId, mockPartParam.id.get)(FakeRequest())
         whenReady(copyParam) { result =>
-          status(copyParam) should equal(302)
+          status(copyParam) should equal(FOUND)
           redirectLocation(copyParam).fold(fail())(_ should include(routes.AdminController.showPart(part.partId).url))
 
           verify(repository).findConfigByPartId(part.partId)
@@ -269,7 +342,7 @@ class AdminControllerSpec extends FunSpec
 
         val copyParam = adminController.copyParam(part.partId, 12345L)(FakeRequest())
         whenReady(copyParam) { result =>
-          status(copyParam) should equal(302)
+          status(copyParam) should equal(FOUND)
           redirectLocation(copyParam).fold(fail())(_ should include(routes.AdminController.showPart(part.partId).url))
 
           verify(repository).findConfigByPartId(part.partId)
@@ -291,7 +364,7 @@ class AdminControllerSpec extends FunSpec
       FakeRequest().withFormUrlEncodedBody("outputName" -> "someName", "paramType" -> "cookie")
     )
     whenReady(createParam) { result =>
-      status(createParam) should equal(302)
+      status(createParam) should equal(FOUND)
       redirectLocation(createParam).fold(fail())(_ should include(routes.AdminController.showPart(part.partId).url))
 
       verify(repository).findConfigByPartId(part.partId)
@@ -317,7 +390,7 @@ class AdminControllerSpec extends FunSpec
       FakeRequest().withFormUrlEncodedBody("outputName" -> "newName", "paramType" -> "body")
     )
     whenReady(updateParam) { result =>
-      status(updateParam) should equal(302)
+      status(updateParam) should equal(FOUND)
       redirectLocation(updateParam).fold(fail())(_ should include(routes.AdminController.showPart(part.partId).url))
 
       verify(repository).findConfigByPartId(part.partId)
@@ -338,7 +411,7 @@ class AdminControllerSpec extends FunSpec
       FakeRequest().withFormUrlEncodedBody("threadPoolKey" -> "myNewThreadPool", "coreSize" -> "99")
     )
     whenReady(createThreadPool) { result =>
-      status(createThreadPool) should be(302)
+      status(createThreadPool) should be(FOUND)
       val newCiCaptor = ArgumentCaptor.forClass(classOf[ThreadPoolConfig])
       verify(repository).save(newCiCaptor.capture())(anyObject[ConfigMapper[ThreadPoolConfig]])
       newCiCaptor.getValue.threadPoolKey should be("myNewThreadPool")

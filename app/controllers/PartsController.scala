@@ -1,5 +1,7 @@
 package controllers
 
+import com.m3.octoparts.json.format.ConfigModel._
+import com.m3.octoparts.json.format.ReqResp._
 import com.m3.octoparts.aggregator.service.PartsService
 import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.HttpPartConfig
@@ -17,7 +19,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 @Api(
-  value = "/octoparts/1",
+  value = "/octoparts/2",
   description = "Octoparts' backend endpoints API",
   produces = "application/json",
   consumes = "application/json"
@@ -28,7 +30,6 @@ class PartsController(
     requestTimeout: Duration,
     readClientCacheHeaders: Boolean) extends Controller with LoggingSupport {
 
-  import com.m3.octoparts.model.JsonFormats._
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
   @ApiOperation(
@@ -41,8 +42,9 @@ class PartsController(
   @ApiImplicitParams(Array(new ApiImplicitParam(
     value = "An AggregateRequest consisting of PartRequests that individually invoke a registered backend service once.",
     required = true,
-    dataType = "com.m3.octoparts.models.AggregateRequest",
-    paramType = "body"
+    dataType = "com.m3.octoparts.model.AggregateRequest",
+    paramType = "body",
+    name = "body"
   )))
   def retrieveParts = Action.async(BodyParsers.parse.json) { implicit request =>
     request.body.validate[AggregateRequest].fold[Future[Result]](
@@ -66,18 +68,30 @@ class PartsController(
     notes = "Returns a list of registered endpoints in the system.",
     response = classOf[HttpPartConfig],
     responseContainer = "List",
-    httpMethod = "GET"
+    httpMethod = "GET")
+  @ApiParam(allowMultiple = true,
+    name = "partId",
+    value = "Optional filter for the partId"
   )
-  def list = Action.async { implicit request =>
+  def list(partIdParams: List[String] = Nil) = Action.async { implicit request =>
     debugRc
-    configsRepository.findAllConfigs().map(configs => Ok(Json.toJson(configs)))
+    val fConfigs = partIdParams match {
+      case Nil => configsRepository.findAllConfigs()
+      case partIds =>
+        val fParts = partIds.map(configsRepository.findConfigByPartId)
+        Future.sequence(fParts).map(_.flatten)
+    }
+
+    fConfigs.map {
+      configs => Ok(Json.toJson(configs.map(HttpPartConfig.toJsonModel)))
+    }
   }
 
   private def logAggregateRequest(aggregateRequest: AggregateRequest, noCache: Boolean)(implicit request: RequestHeader): Unit = {
     val logData = Seq(
       "requestId" -> aggregateRequest.requestMeta.id,
       "noCache" -> noCache.toString,
-      "timeoutMs" -> aggregateRequest.requestMeta.timeoutMs.fold("default")(_.toString),
+      "timeoutMs" -> aggregateRequest.requestMeta.timeout.fold("default")(_.toMillis.toString),
       "requestUrl" -> aggregateRequest.requestMeta.requestUrl.getOrElse("unknown"),
       "numParts" -> aggregateRequest.requests.size.toString)
     if (Logger.isDebugEnabled) {

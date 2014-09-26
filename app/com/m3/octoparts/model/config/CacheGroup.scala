@@ -1,8 +1,7 @@
 package com.m3.octoparts.model.config
 
-import com.m3.octoparts.repository.config.CacheGroupRepository
 import org.joda.time.DateTime
-
+import com.m3.octoparts.model.config.json.{ CacheGroup => JsonCacheGroup }
 /**
  * Defines a group of objects that need to have their cache invalidated as a group
  */
@@ -15,3 +14,24 @@ case class CacheGroup(
   partParams: Seq[PartParam] = Seq.empty,
   createdAt: DateTime,
   updatedAt: DateTime) extends ConfigModel[CacheGroup]
+
+object CacheGroup {
+
+  def toJsonModel(cacheGroup: CacheGroup): JsonCacheGroup = {
+    JsonCacheGroup(
+      name = cacheGroup.name,
+      owner = cacheGroup.owner,
+      description = cacheGroup.description
+    )
+  }
+
+  def fromJsonModel(cacheGroup: JsonCacheGroup): CacheGroup = {
+    CacheGroup(
+      name = cacheGroup.name,
+      owner = cacheGroup.owner,
+      description = cacheGroup.description,
+      createdAt = DateTime.now,
+      updatedAt = DateTime.now
+    )
+  }
+}

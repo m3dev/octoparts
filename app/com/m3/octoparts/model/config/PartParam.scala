@@ -1,8 +1,7 @@
 package com.m3.octoparts.model.config
 
-import com.m3.octoparts.repository.config.PartParamRepository
 import org.joda.time.DateTime
-import skinny.{ ParamType => SkinnyParamType }
+import com.m3.octoparts.model.config.json.{ PartParam => JsonPartParam }
 
 /**
  * Model for holding Parameter configuration data for a Http dependency that
@@ -35,4 +34,34 @@ case class PartParam(
 
   def shorter = ShortPartParam(outputName, paramType)
 
+}
+
+object PartParam {
+
+  /**
+   * Returns a [[JsonPartParam]] for a [[PartParam]]
+   */
+  def toJsonModel(param: PartParam): JsonPartParam = {
+    JsonPartParam(
+      required = param.required,
+      versioned = param.versioned,
+      paramType = param.paramType,
+      outputName = param.outputName,
+      inputNameOverride = param.inputNameOverride,
+      cacheGroups = param.cacheGroups.map(CacheGroup.toJsonModel)
+    )
+  }
+
+  def fromJsonModel(param: JsonPartParam): PartParam = {
+    PartParam(
+      required = param.required,
+      versioned = param.versioned,
+      paramType = param.paramType,
+      outputName = param.outputName,
+      inputNameOverride = param.inputNameOverride,
+      cacheGroups = param.cacheGroups.map(CacheGroup.fromJsonModel),
+      createdAt = DateTime.now,
+      updatedAt = DateTime.now
+    )
+  }
 }

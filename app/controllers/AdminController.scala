@@ -1,22 +1,30 @@
 package controllers
 
 import com.m3.octoparts.model.config._
+import com.m3.octoparts.model.config.json.{ HttpPartConfig => JsonHttpPartConfig }
 import com.m3.octoparts.repository.MutableConfigsRepository
 import controllers.support.{ AuthSupport, LoggingSupport }
 import org.joda.time.DateTime
 import play.api.data._
+import play.api.data.validation.ValidationError
+import play.api.http.MediaType
 import play.api.i18n.{ Lang, Messages }
+import play.api.libs.Files
+import play.api.libs.json._
+import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc._
 import presentation.{ HttpPartConfigView, NavbarLinks, ParamView }
 
 import scala.annotation.tailrec
 import scala.concurrent.Future
+import scala.util.{ Success, Failure, Try }
 import scala.util.control.NonFatal
 
 class AdminController(repository: MutableConfigsRepository)(implicit val navbarLinks: NavbarLinks = NavbarLinks(None, None, None, None))
     extends Controller with AuthSupport with LoggingSupport {
 
   import controllers.AdminForms._
+  import AdminController._
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
   /**
@@ -122,6 +130,66 @@ class AdminController(repository: MutableConfigsRepository)(implicit val navbarL
       simpleSaveAndRedirect {
         repository.deleteConfigByPartId(partId)
       }(routes.AdminController.listParts)
+    }
+  }
+
+  def showImportParts() = AuthorizedAction { implicit req =>
+    Ok(views.html.part.importForm())
+  }
+
+  private def importFlashReport(extractedConfigs: Seq[JsonHttpPartConfig], insertedPartIds: Seq[String])(implicit lang: Lang): Flash = {
+    val flashInfo = if (insertedPartIds.nonEmpty) {
+      Map(BootstrapFlashStyles.success.toString -> Messages("admin.import.successful", insertedPartIds.size, extractedConfigs.size, insertedPartIds.mkString(", ")))
+    } else Map.empty[String, String]
+
+    val notInsertedPartIds = for (config <- extractedConfigs if !insertedPartIds.contains(config.partId)) yield config.partId
+    val flashWarn = if (notInsertedPartIds.nonEmpty) {
+      Map(BootstrapFlashStyles.warning.toString -> Messages("admin.import.failed", notInsertedPartIds.size, extractedConfigs.size, notInsertedPartIds.mkString(", ")))
+    } else Map.empty[String, String]
+
+    Flash(flashWarn ++ flashInfo)
+  }
+
+  private def extractDataFromImportFile(jsonFile: FilePart[Files.TemporaryFile])(implicit req: RequestHeader): Seq[JsonHttpPartConfig] = {
+    import com.m3.octoparts.json.format.ConfigModel._
+    val fileContentType = for {
+      contentType <- jsonFile.contentType
+      mediaType <- MediaType.parse(contentType)
+      mimeParameter <- mediaType.parameters.find(_._1 == "charset")
+      charset <- mimeParameter._2
+    } yield {
+      charset
+    }
+    val fileData = java.nio.file.Files.readAllBytes(jsonFile.ref.file.toPath)
+    val jsonData = new String(fileData, fileContentType.headOption.orElse(req.charset).getOrElse("UTF-8"))
+    val tryExtract = for {
+      json <- Try(Json.parse(jsonData))
+      a <- mapJson[Seq[JsonHttpPartConfig]](json)
+    } yield {
+      a
+    }
+    tryExtract.get // throws if it was a failure
+  }
+
+  def doImportParts() = AuthorizedAction.async(parse.multipartFormData) { implicit req =>
+    infoRc
+    try {
+      req.body.file("jsonfile").fold(Future.successful(BadRequest("Import file not provided"))) { jsonFile =>
+        val extractedConfigs = extractDataFromImportFile(jsonFile)
+        if (extractedConfigs.isEmpty) {
+          Future.successful(Found(routes.AdminController.showImportParts().url).flashing(BootstrapFlashStyles.warning.toString -> Messages("admin.import.none")))
+        } else {
+          repository.importConfigs(extractedConfigs).map {
+            insertedPartIds =>
+              val flash = importFlashReport(extractedConfigs, insertedPartIds)
+              Found(routes.AdminController.listParts().url).flashing(flash)
+          }.recover {
+            case NonFatal(e) => handleException(e, routes.AdminController.showImportParts())
+          }
+        }
+      }
+    } catch {
+      case NonFatal(e) => Future.successful(handleException(e, routes.AdminController.showImportParts()))
     }
   }
 
@@ -436,7 +504,7 @@ class AdminController(repository: MutableConfigsRepository)(implicit val navbarL
       tps <- fTps
       cgs <- fCgs
     } yield {
-      val flash = errorMsg.fold(req.flash)(error => req.flash + ("Error" -> error))
+      val flash = errorMsg.fold(req.flash)(error => req.flash + (BootstrapFlashStyles.danger.toString -> error))
       Ok(views.html.part.edit(form, tps, cgs, maybePart)(flash, navbarLinks, implicitly[Lang]))
     }
   }
@@ -478,11 +546,11 @@ class AdminController(repository: MutableConfigsRepository)(implicit val navbarL
 
   private def handleException(e: Throwable, redirectTo: Call)(implicit req: RequestHeader): Result = {
     errorRc(e)
-    flashError(redirectTo, e.getMessage)
+    flashError(redirectTo, Option(e.getMessage).getOrElse(e.getClass.getName))
   }
 
   private def flashError(redirectTo: Call, errorMsg: String): Result = {
-    Found(redirectTo.url).flashing("Error" -> errorMsg)
+    Found(redirectTo.url).flashing(BootstrapFlashStyles.danger.toString -> errorMsg)
   }
 
 }
@@ -501,4 +569,23 @@ object AdminController {
     }
   }
 
+  private def mapJson[A: Reads](json: JsValue): Try[A] = {
+    val jsResult = Json.fromJson[A](json)
+    jsResult.fold(
+      invalid => Failure(new IllegalArgumentException(s"Invalid JSON: ${jsonErrorMsg(invalid)}")),
+      Success.apply
+    )
+  }
+
+  private def jsonErrorMsg(errors: Seq[(JsPath, Seq[ValidationError])]): String = {
+    val messages = for {
+      (jsPath, validationErrors) <- errors
+    } yield {
+      val validationErrorMsg = validationErrors.map { validationError =>
+        Messages(validationError.message, validationError.args)
+      }.mkString(",")
+      s"error at: $jsPath reason: $validationErrorMsg"
+    }
+    messages.mkString("; ")
+  }
 }

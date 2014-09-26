@@ -5,7 +5,6 @@ jdk:
 
 scala:
   - 2.11.2
-  - 2.10.4
 
 addons:
   postgresql: "9.3"
@@ -14,3 +13,5 @@ before_script:
   - psql -c "CREATE DATABASE octoparts_test WITH ENCODING 'UTF8';" -U postgres
   - psql -c "CREATE USER octoparts_app WITH PASSWORD '';" -U postgres
   - psql -c "GRANT ALL PRIVILEGES ON DATABASE octoparts_test to octoparts_app;" -U postgres
+
+script: "sbt coveralls"

@@ -4,6 +4,7 @@ import com.m3.octoparts.ws.AggregateResponseEnrichment._
 import com.m3.octoparts.model.{ PartResponse, ResponseMeta, AggregateResponse }
 import org.scalatest.{ Matchers, FlatSpec }
 import play.api.libs.json.Json
+import scala.concurrent.duration._
 
 class RichAggregateResponseSpec extends FlatSpec with Matchers {
 
@@ -12,7 +13,7 @@ class RichAggregateResponseSpec extends FlatSpec with Matchers {
   case class Frisk(mints: Int, mintiness: String)
   implicit val reads = Json.reads[Frisk]
 
-  val aggResp = AggregateResponse(ResponseMeta("foo", 123L), Seq(
+  val aggResp = AggregateResponse(ResponseMeta("foo", 123.millis), Seq(
     PartResponse("myJsonPart", "myJsonPart", statusCode = Some(200), contents = Some("""{"mints": 50, "mintiness": "very minty"}""")),
     PartResponse("invalidJsonPart", "invalidJsonPart", statusCode = Some(200), contents = Some("""{"error": "something went wrong!"}""")),
     PartResponse("brokenJsonPart", "brokenJsonPart", statusCode = Some(200), contents = Some("""{"mints": }""")),

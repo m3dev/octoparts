@@ -5,6 +5,10 @@ import sbt._
 import sbt.Keys._
 import sbtbuildinfo.Plugin._
 import scoverage.ScoverageSbtPlugin
+import scoverage.ScoverageSbtPlugin._
+import org.scoverage.coveralls.CoverallsPlugin.coverallsSettings
+import xerial.sbt.Sonatype._
+import SonatypeKeys._
 
 import play.PlayImport.PlayKeys._
 import play.Play.autoImport._
@@ -15,15 +19,17 @@ import scalariform.formatter.preferences._
 
 object OctopartsBuild extends Build {
 
-  val octopartsVersion = "2.0"
+  val octopartsVersion = "2.1"
 
   val httpPort = 9000
   val theScalaVersion = "2.11.2"
-  val thePlayVersion = "2.3.4"
+  val thePlayVersion = "2.3.4" // make play-json-formats subproject depend on play-json when bumping to 2.4
   val slf4jVersion = "1.7.7"
   val hystrixVersion = "1.3.17"
   val httpClientVersion = "4.3.5"
   val scalikejdbcVersion = "2.1.1"
+  val swaggerVersion = "1.3.8"
+  val jacksonVersion = "2.4.2"
 
   val testEnv = sys.env.get("PLAY_ENV") match {
     case Some("ci") => "ci"
@@ -44,12 +50,13 @@ object OctopartsBuild extends Build {
     compilerSettings ++
     resolverSettings ++
     ideSettings ++
-    testSettings
+    testSettings ++
+    scoverageSettings
 
   /*
    * Settings that are common for every project _except_ the Play app
    * (because we don't want to publish the Play app to Maven Central)
-   */ 
+   */
   lazy val nonPlayAppSettings =
     commonSettings ++
     publishSettings
@@ -62,6 +69,8 @@ object OctopartsBuild extends Build {
       playSettings ++
       buildInfoSettings ++
       buildInfoStuff ++
+      sonatypeSettings ++
+      coverallsSettings ++
       Seq(
         publishArtifact := false,
         libraryDependencies ++= Seq(
@@ -103,7 +112,7 @@ object OctopartsBuild extends Build {
           "com.github.tototoshi" %% "play-flyway" % "1.1.2",
           "org.scaldi" %% "scaldi-play" % "0.4.1",
           "com.kenshoo" %% "metrics-play" % "2.3.0_0.1.6",
-          "com.wordnik" %% "swagger-play2" % "1.3.8",
+          "com.wordnik" %% "swagger-play2" % swaggerVersion,
 
           // Test
           "com.typesafe.play" %% "play-test" % thePlayVersion % "test",
@@ -114,13 +123,13 @@ object OctopartsBuild extends Build {
           "org.scalikejdbc" %% "scalikejdbc-test"   % scalikejdbcVersion % "test"
         ).map(_.excludeAll(
           ExclusionRule(organization = "spy", name = "spymemcached"), // spymemcached's org changed from spy to net.spy
-          ExclusionRule(organization = "org.slf4j", name = "slf4j-log4j12"), 
-          ExclusionRule(organization = "org.slf4j", name = "slf4j-jdk14"), 
+          ExclusionRule(organization = "org.slf4j", name = "slf4j-log4j12"),
+          ExclusionRule(organization = "org.slf4j", name = "slf4j-jdk14"),
           ExclusionRule(organization = "org.slf4j", name = "slf4j-jcl"),
           ExclusionRule(organization = "org.slf4j", name = "slf4j-nop"),
           ExclusionRule(organization = "org.slf4j", name = "slf4j-simple")))
       )
-        
+
   lazy val playSettings = Seq(
     playVersion := thePlayVersion,
     playDefaultPort := httpPort
@@ -128,9 +137,10 @@ object OctopartsBuild extends Build {
 
   lazy val resolverSettings = {
     // Use in-house Maven repo instead of Maven central if env var is set
-    sys.env.get("INHOUSE_MAVEN_REPO").fold[Seq[sbt.Def.Setting[_]]] { 
+    sys.env.get("INHOUSE_MAVEN_REPO").fold[Seq[sbt.Def.Setting[_]]] {
       Seq(
-        resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"  
+        resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/",
+        resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
       )
     } { inhouse =>
       Seq(
@@ -155,12 +165,16 @@ object OctopartsBuild extends Build {
   )
 
   lazy val testSettings = Seq(Test, ScoverageSbtPlugin.ScoverageTest).flatMap { t =>
-    Seq(
-      // Output test results in JUnit XML format for Jenkins
-      testOptions in t += Tests.Argument("-u", "target/test-reports"),
-      // Needed because some tests run DDL agains the CI DB.
-      parallelExecution in t := false)
+    Seq(parallelExecution in t := false) // Avoid DB-related tests stomping on each other
   }
+
+  lazy val scoverageSettings =
+    instrumentSettings ++
+    Seq(
+      ScoverageKeys.highlighting := true,
+      ScoverageKeys.excludedPackages in ScoverageCompile := """com\.kenshoo.*;.*controllers\.javascript\..*;.*controllers\.ref\..*;.*controllers\.Reverse.*;.*BuildInfo.*;.*views\.html\..*;Routes""",
+      testOptions in ScoverageTest += Tests.Argument("-u", "target/test-reports")
+    )
 
   lazy val formatterPrefs = Seq(
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
@@ -200,6 +214,11 @@ object OctopartsBuild extends Build {
   lazy val models = Project(id = "models", base = file("models"), settings = nonPlayAppSettings)
     .settings(
       name := "octoparts-models",
+      libraryDependencies ++= Seq(
+        "com.wordnik" % "swagger-annotations" % swaggerVersion intransitive(),
+        "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion intransitive(),
+        "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion intransitive()
+      ),
       crossScalaVersions := Seq("2.10.4", "2.11.2"),
       crossVersion := CrossVersion.binary
     )
@@ -209,10 +228,8 @@ object OctopartsBuild extends Build {
   // Java client
   // -------------------------------------------------------
   lazy val javaClient = {
-    val jacksonVersion = "2.4.2"
-
     Project(id = "java-client", base = file("java-client"), settings = nonPlayAppSettings)
-      .settings( 
+      .settings(
         name := "octoparts-java-client",
         crossScalaVersions := Seq("2.10.4", "2.11.2"),
         javacOptions in compile ++= Seq("-source", "1.6", "-target", "1.6", "-Xlint"),
@@ -220,15 +237,36 @@ object OctopartsBuild extends Build {
 
         libraryDependencies ++= Seq(
           "com.google.code.findbugs" % "jsr305" % "3.0.0" intransitive(),
+          "org.slf4j" % "slf4j-api" % slf4jVersion,
           "com.ning" % "async-http-client" % "1.8.13",
           "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
           "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
           "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
-          "org.scalatest" %% "scalatest" % "2.2.2" % "test"
+          "org.scalatest" %% "scalatest" % "2.2.2" % "test",
+          "ch.qos.logback" % "logback-classic" % "1.1.2" % "test",
+          "org.slf4j" % "jcl-over-slf4j" % slf4jVersion % "test" intransitive(),
+          "org.slf4j" % "log4j-over-slf4j" % slf4jVersion % "test" intransitive(),
+          "org.slf4j" % "jul-to-slf4j" % slf4jVersion % "test" intransitive()
         )
       )
       .dependsOn(models)
   }
+
+  // -------------------------------------------------------
+  // Play-JSON-formats
+  // -------------------------------------------------------
+  lazy val playJsonFormats = Project(id = "play-json-formats", base = file("play-json-formats"), settings = nonPlayAppSettings)
+    .settings(
+      libraryDependencies ++= Seq(
+        ws, //TODO when upgrading to Play 2.4; change this to use just play-json
+        "org.scalatest" %% "scalatest" % "2.2.1" % "test",
+        "org.scalatestplus" %% "play" % "1.2.0" % "test"
+      ),
+      name := "octoparts-play-json-formats",
+      crossScalaVersions := Seq("2.10.4", "2.11.2"),
+      crossVersion := CrossVersion.binary
+    )
+    .dependsOn(models)
 
   // -------------------------------------------------------
   // Scala-WS-client
@@ -244,15 +282,15 @@ object OctopartsBuild extends Build {
       crossScalaVersions := Seq("2.10.4", "2.11.2"),
       crossVersion := CrossVersion.binary
     )
-    .dependsOn(models)
+    .dependsOn(models, playJsonFormats)
 
   // -------------------------------------------------------
   // Play app
   // -------------------------------------------------------
   lazy val app = Project(id = "octoparts", base = file("."), settings = playAppSettings)
     .enablePlugins(PlayScala)
-    .dependsOn(models, authPluginApi)
-    .aggregate(scalaWsClient, javaClient, models, authPluginApi)
+    .dependsOn(models, authPluginApi, playJsonFormats)
+    .aggregate(scalaWsClient, javaClient, models, authPluginApi, playJsonFormats)
 
   // Settings for publishing to Maven Central
   lazy val publishSettings = Seq(
