@@ -1,7 +1,7 @@
 package controllers.support
 
 import com.m3.octoparts.auth.OctopartsAuthPlugin
-import com.m3.octoparts.logging.LTSVLogWriter
+import com.beachape.logging.LTSVLogger
 import controllers.routes
 import play.api.{ Logger, Play }
 import play.api.mvc._
@@ -19,13 +19,13 @@ trait AuthSupport
 
   lazy val authPlugin: Option[OctopartsAuthPlugin] = Play.current.plugin[OctopartsAuthPlugin] match {
     case Some(plugin) if plugin.enabled =>
-      LTSVLogWriter.info("Using auth plugin" -> plugin.getClass.getName)
+      LTSVLogger.info("Using auth plugin" -> plugin.getClass.getName)
       Some(plugin)
     case Some(disabledPlugin) =>
-      LTSVLogWriter.info(s"Skipping auth for admin UI because auth plugin disabled" -> disabledPlugin.getClass.getName)
+      LTSVLogger.info(s"Skipping auth for admin UI because auth plugin disabled" -> disabledPlugin.getClass.getName)
       None
     case None =>
-      LTSVLogWriter.info("Msg" -> "No auth plugin found. Authentication/authorization for admin UI will be skipped.")
+      LTSVLogger.info("Msg" -> "No auth plugin found. Authentication/authorization for admin UI will be skipped.")
       None
   }
 

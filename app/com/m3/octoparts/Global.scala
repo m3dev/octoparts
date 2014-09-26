@@ -8,7 +8,8 @@ import com.kenshoo.play.metrics.MetricsFilter
 import com.m3.octoparts.cache.CacheModule
 import com.m3.octoparts.http.HttpModule
 import com.m3.octoparts.hystrix.{ HystrixMetricsLogger, HystrixModule }
-import com.m3.octoparts.logging.{ LTSVLogWriter, PartRequestLogger }
+import com.m3.octoparts.logging.PartRequestLogger
+import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.repository.RepositoriesModule
 import com.typesafe.config.ConfigFactory
 import com.wordnik.swagger.config.{ ConfigFactory => SwaggerConfigFactory }
@@ -73,7 +74,7 @@ object Global extends WithFilters(MetricsFilter) with ScaldiSupport {
         case (_, env) => env
       }
     }
-    LTSVLogWriter.debug("Play environment" -> playEnv, "mode" -> mode, "application.env" -> config.getString("application.env"))
+    LTSVLogger.debug("Play environment" -> playEnv, "mode" -> mode, "application.env" -> config.getString("application.env"))
     val modeSpecificConfig = config ++ Configuration(ConfigFactory.load(s"application.$playEnv.conf"))
     super.onLoadConfig(modeSpecificConfig, path, classloader, mode)
   }

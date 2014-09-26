@@ -1,7 +1,7 @@
 package controllers
 
 import com.m3.octoparts.auth.{ PrincipalSessionPersistence, Principal }
-import com.m3.octoparts.logging.LTSVLogWriter
+import com.beachape.logging.LTSVLogger
 import controllers.support.AuthSupport
 import play.api.Logger
 import play.api.libs.json.Json
@@ -31,11 +31,11 @@ object AuthController extends Controller with AuthSupport {
       Future.successful(Redirect(origUrl))
     } { plugin =>
       plugin.onAuthenticationCallback(request).flatMap { principal =>
-        LTSVLogWriter.debug("Authentication completed for" -> principal.nickname, "Redirecting to" -> origUrl)
+        LTSVLogger.debug("Authentication completed for" -> principal.nickname, "Redirecting to" -> origUrl)
         plugin.savePrincipal(request, Redirect(origUrl), principal)
       }.recover {
         case NonFatal(e) =>
-          LTSVLogWriter.warn(e, "Authentication failed for request" -> request, "request id" -> request.id, "request headers" -> request.headers)
+          LTSVLogger.warn(e, "Authentication failed for request" -> request, "request id" -> request.id, "request headers" -> request.headers)
           InternalServerError(s"Authentication failed: ${e.getMessage}")
       }
     }

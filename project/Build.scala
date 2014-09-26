@@ -82,6 +82,7 @@ object OctopartsBuild extends Build {
           "org.slf4j" % "jul-to-slf4j" % slf4jVersion,
           "net.kencochrane.raven" % "raven-logback" % "5.0.1",
           "org.codehaus.janino" % "janino" % "2.7.5",
+          "com.beachape" %% "ltsv-logger" % "0.0.2",
 
           // Hystrix
           "com.netflix.hystrix" % "hystrix-core" % hystrixVersion,
@@ -204,9 +205,10 @@ object OctopartsBuild extends Build {
   lazy val authPluginApi = Project(id = "auth-plugin-api", base = file("plugins/auth-plugin-api"), settings = nonPlayAppSettings).settings(
     name := "octoparts-auth-plugin-api",
     libraryDependencies ++= Seq(
-      "com.typesafe.play" %% "play" % thePlayVersion % "provided"
+      "com.typesafe.play" %% "play" % thePlayVersion % "provided",
+      "com.beachape" %% "ltsv-logger" % "0.0.2"
     )
-  ).dependsOn(ltsvLogger)
+  )
 
   // -------------------------------------------------------
   // Model classes
@@ -285,40 +287,12 @@ object OctopartsBuild extends Build {
     .dependsOn(models, playJsonFormats)
 
   // -------------------------------------------------------
-  // LTSV-logger
-  // -------------------------------------------------------
-  lazy val ltsvLogger = Project(id = "ltsv-logger", base = file("ltsv-logger"), settings = nonPlayAppSettings)
-    .settings(
-      name := "octoparts-ltsv-logger",
-      crossScalaVersions := Seq("2.10.4", "2.11.2"),
-      crossVersion := CrossVersion.binary,
-      libraryDependencies ++= Seq(
-        "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-        "org.slf4j" % "slf4j-api" % slf4jVersion,
-        "com.github.seratch" %% "ltsv4s" % "1.0.2",
-        "org.mockito" % "mockito-all" % "1.9.5" % "test",
-        "org.scalatest" %% "scalatest" % "2.2.1" % "test"
-      ) ++ {
-        val additionalMacroDeps = CrossVersion.partialVersion(scalaVersion.value) match {
-          // if scala 2.11+ is used, quasiquotes are merged into scala-reflect
-          case Some((2, scalaMajor)) if scalaMajor >= 11 =>
-            Nil
-          // in Scala 2.10, quasiquotes are provided by macro paradise
-          case Some((2, 10)) =>
-            Seq(
-              compilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full),
-              "org.scalamacros" %% "quasiquotes" % "2.0.0" cross CrossVersion.binary)
-        }
-        additionalMacroDeps }
-    )
-
-  // -------------------------------------------------------
   // Play app
   // -------------------------------------------------------
   lazy val app = Project(id = "octoparts", base = file("."), settings = playAppSettings)
     .enablePlugins(PlayScala)
-    .dependsOn(models, authPluginApi, playJsonFormats, ltsvLogger)
-    .aggregate(scalaWsClient, javaClient, models, authPluginApi, playJsonFormats, ltsvLogger)
+    .dependsOn(models, authPluginApi, playJsonFormats)
+    .aggregate(scalaWsClient, javaClient, models, authPluginApi, playJsonFormats)
 
   // Settings for publishing to Maven Central
   lazy val publishSettings = Seq(

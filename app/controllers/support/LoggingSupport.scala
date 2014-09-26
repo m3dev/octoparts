@@ -1,12 +1,12 @@
 package controllers.support
 
-import com.m3.octoparts.logging.LTSVLogWriter
+import com.beachape.logging.{ LTSVLoggerLike, LTSVLogger }
 import play.api.Logger
 import play.api.mvc.RequestHeader
 
-trait LoggingSupport extends LTSVLogWriter {
+trait LoggingSupport extends LTSVLoggerLike {
 
-  val logger = Logger.underlyingLogger
+  val underlying = Logger.underlyingLogger
 
   /**
    * @return remote address, uri, query

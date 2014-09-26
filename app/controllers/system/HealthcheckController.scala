@@ -2,7 +2,7 @@ package controllers.system
 
 import com.m3.octoparts.cache.RawCache
 import com.m3.octoparts.hystrix.HystrixHealthReporter
-import com.m3.octoparts.logging.LTSVLogWriter
+import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.repository.ConfigsRepository
 import play.api.Logger
 import play.api.libs.json.{ Json, Writes }
@@ -58,7 +58,7 @@ class HealthcheckController(configsRepo: ConfigsRepository,
       else DbStatus(ok = false, message = "parts_config table is empty!")
     }.recover {
       case NonFatal(e) =>
-        LTSVLogWriter.warn(e, "Health check failed" -> "DB")
+        LTSVLogger.warn(e, "Health check failed" -> "DB")
         DbStatus(ok = false, message = e.toString)
     }
   }
@@ -73,7 +73,7 @@ class HealthcheckController(configsRepo: ConfigsRepository,
       MemcachedStatus(ok = true)
     }.recover {
       case NonFatal(e) =>
-        LTSVLogWriter.warn(e, "Health check failed" -> "Memcached")
+        LTSVLogger.warn(e, "Health check failed" -> "Memcached")
         MemcachedStatus(ok = false)
     }
   }
@@ -123,7 +123,7 @@ object HealthcheckController {
 
   private def logIfUnhealthy(health: ServiceHealth): Unit = {
     if (!health.healthy) {
-      LTSVLogWriter.warn("health" -> "unhealthy", "colour" -> health.colour, "statuses" -> health.statuses.toString)
+      LTSVLogger.warn("health" -> "unhealthy", "colour" -> health.colour, "statuses" -> health.statuses.toString)
     }
   }
 

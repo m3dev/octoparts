@@ -1,5 +1,6 @@
 package com.m3.octoparts.logging
 
+import com.beachape.logging.LTSVLoggerLike
 import play.api.Logger
 
 /**
@@ -16,9 +17,9 @@ trait PartRequestLogger {
 
 }
 
-object PartRequestLogger extends PartRequestLogger with LTSVLogWriter {
+object PartRequestLogger extends PartRequestLogger with LTSVLoggerLike {
 
-  val logger = Logger("PartRequests").underlyingLogger
+  val underlying = Logger("PartRequests").underlyingLogger
 
   def logSuccess(partId: String, parentRequestId: String, serviceId: Option[String], cacheHit: Boolean, responseMs: Long): Unit = {
     val hitOrMiss = if (cacheHit) "hit" else "miss"

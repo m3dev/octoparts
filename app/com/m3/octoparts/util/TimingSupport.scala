@@ -1,6 +1,6 @@
 package com.m3.octoparts.util
 
-import com.m3.octoparts.logging.LTSVLogWriter
+import com.beachape.logging.LTSVLogger
 import play.api.Logger
 
 import scala.concurrent.duration._
@@ -34,9 +34,9 @@ trait TimingSupport {
   }
 
   def timeTrace[A](f: => A)(opName: String): A = {
-    LTSVLogWriter.trace("Start opname" -> opName)
+    LTSVLogger.trace("Start opname" -> opName)
     time(f) {
-      (a, duration) => LTSVLogWriter.trace("End opname" -> opName, "duration" -> duration)
+      (a, duration) => LTSVLogger.trace("End opname" -> opName, "duration" -> duration)
     }
   }
 }

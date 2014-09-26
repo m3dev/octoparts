@@ -3,9 +3,9 @@ package com.m3.octoparts.aggregator.service
 import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.future.RichFutureWithTimeout._
 import com.m3.octoparts.future.RichFutureWithTiming._
-import com.m3.octoparts.logging.{ LTSVLogWriter, LogUtil, PartRequestLogger }
+import com.m3.octoparts.logging.{ LogUtil, PartRequestLogger }
+import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.model.{ AggregateResponse, PartResponse, ResponseMeta, _ }
-import play.api.Logger
 
 import scala.concurrent._
 import scala.concurrent.duration._
@@ -49,7 +49,7 @@ class PartsService(partRequestService: PartRequestServiceBase,
           .timeoutIn(aReqTimeout)
           .time {
             (partResponse, duration) =>
-              LTSVLogWriter.debug("Part" -> pReq.partId, "Response time" -> duration.toString, "From cache" -> partResponse.retrievedFromCache.toString)
+              LTSVLogger.debug("Part" -> pReq.partId, "Response time" -> duration.toString, "From cache" -> partResponse.retrievedFromCache.toString)
               logPartResponse(requestMeta, partResponse, duration.toMillis)
           })
     }
@@ -58,7 +58,7 @@ class PartsService(partRequestService: PartRequestServiceBase,
         val responseMeta = ResponseMeta(requestMeta.id, duration)
         val aggregateResponse = AggregateResponse(responseMeta, partsResponses)
 
-        LTSVLogWriter.debug(
+        LTSVLogger.debug(
           "Request Id" -> responseMeta.id,
           "Num parts" -> aggregateRequest.requests.size.toString,
           "aggregateRequest" -> truncateValue(aggregateRequest),

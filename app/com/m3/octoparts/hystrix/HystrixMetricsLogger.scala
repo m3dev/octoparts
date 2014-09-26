@@ -1,15 +1,15 @@
 package com.m3.octoparts.hystrix
 
-import com.m3.octoparts.logging.LTSVLogWriter
+import com.beachape.logging.LTSVLoggerLike
 import play.api.Logger
 
 /**
  * Helper for outputting Hystrix metrics logs in LTSV format.
  * These logs are written to a separate log file for tailing by fluentd.
  */
-object HystrixMetricsLogger extends HystrixCommandMetricsRepository with LTSVLogWriter {
+object HystrixMetricsLogger extends HystrixCommandMetricsRepository with LTSVLoggerLike {
 
-  val logger = Logger("HystrixMetrics").underlyingLogger
+  val underlying = Logger("HystrixMetrics").underlyingLogger
 
   /**
    * Collect metrics on all registered Hystrix commands and write them to a log file.
