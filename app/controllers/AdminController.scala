@@ -1,5 +1,6 @@
 package controllers
 
+import com.m3.octoparts.cache.CacheOps
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.model.config.json.{ HttpPartConfig => JsonHttpPartConfig }
 import com.m3.octoparts.repository.MutableConfigsRepository
@@ -20,7 +21,7 @@ import scala.concurrent.Future
 import scala.util.{ Success, Failure, Try }
 import scala.util.control.NonFatal
 
-class AdminController(repository: MutableConfigsRepository)(implicit val navbarLinks: NavbarLinks = NavbarLinks(None, None, None, None))
+class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(implicit val navbarLinks: NavbarLinks = NavbarLinks(None, None, None, None))
     extends Controller with AuthSupport with LoggingSupport {
 
   import controllers.AdminForms._
@@ -92,7 +93,10 @@ class AdminController(repository: MutableConfigsRepository)(implicit val navbarL
         repository.findAllCacheGroupsByName(data.cacheGroupNames: _*).flatMap { cacheGroups =>
           loadParams(part).flatMap { params =>
             val updatedPart = data.toUpdatedHttpPartConfig(part, params.flatten, cacheGroups = cacheGroups.toSet)
-            repository.save(updatedPart).map { id =>
+            val saveResult = repository.save(updatedPart)
+            saveResult.onComplete(_ => cacheOps.increasePartVersion(partId))
+            println("wtf")
+            saveResult.map { id =>
               Found(controllers.routes.AdminController.showPart(updatedPart.partId).url)
             }.recoverWith {
               case NonFatal(e) =>
@@ -128,7 +132,9 @@ class AdminController(repository: MutableConfigsRepository)(implicit val navbarL
     infoRc
     findAndUsePart(partId) { part =>
       simpleSaveAndRedirect {
-        repository.deleteConfigByPartId(partId)
+        val deleteResult = repository.deleteConfigByPartId(partId)
+        deleteResult.onComplete(_ => cacheOps.increasePartVersion(partId))
+        deleteResult
       }(routes.AdminController.listParts)
     }
   }
@@ -236,7 +242,7 @@ class AdminController(repository: MutableConfigsRepository)(implicit val navbarL
             createdAt = DateTime.now,
             updatedAt = DateTime.now)
           saveAndRedirect {
-            repository.save(param)
+            saveParamAndClearPartResponseCache(partId, param)
           }(routes.AdminController.newParam(partId), id => routes.AdminController.showPart(partId))
         }
       })
@@ -261,7 +267,7 @@ class AdminController(repository: MutableConfigsRepository)(implicit val navbarL
               cacheGroups = cacheGroups.toSet,
               updatedAt = DateTime.now)
             saveAndRedirect {
-              repository.save(newParam)
+              saveParamAndClearPartResponseCache(partId, newParam)
             }(routes.AdminController.editParam(partId, paramId), _ => routes.AdminController.showPart(partId))
           }
         }
@@ -278,7 +284,7 @@ class AdminController(repository: MutableConfigsRepository)(implicit val navbarL
           val otherParamNamesWithSameType = part.parameters.collect {
             case otherParam if otherParam.paramType == param.paramType => otherParam.outputName
           }
-          repository.save(param.copy(id = None, outputName = AdminController.makeNewName(param.outputName, otherParamNamesWithSameType)))
+          saveParamAndClearPartResponseCache(partId, param.copy(id = None, outputName = AdminController.makeNewName(param.outputName, otherParamNamesWithSameType)))
         }(routes.AdminController.showPart(partId))
       }
     }
@@ -288,7 +294,9 @@ class AdminController(repository: MutableConfigsRepository)(implicit val navbarL
     infoRc
     findAndUsePart(partId) { part =>
       simpleSaveAndRedirect {
-        repository.deletePartParamById(paramId)
+        val deleteResult = repository.deletePartParamById(paramId)
+        deleteResult.onComplete(_ => cacheOps.increasePartVersion(partId))
+        deleteResult
       }(routes.AdminController.showPart(partId))
     }
   }
@@ -553,6 +561,11 @@ class AdminController(repository: MutableConfigsRepository)(implicit val navbarL
     Found(redirectTo.url).flashing(BootstrapFlashStyles.danger.toString -> errorMsg)
   }
 
+  private def saveParamAndClearPartResponseCache(partId: String, param: PartParam): Future[Long] = {
+    val saveResult = repository.save(param)
+    saveResult.onComplete(_ => cacheOps.increasePartVersion(partId))
+    saveResult
+  }
 }
 
 object AdminController {
