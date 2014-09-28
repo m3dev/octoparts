@@ -95,7 +95,6 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
             val updatedPart = data.toUpdatedHttpPartConfig(part, params.flatten, cacheGroups = cacheGroups.toSet)
             val saveResult = repository.save(updatedPart)
             saveResult.onComplete(_ => cacheOps.increasePartVersion(partId))
-            println("wtf")
             saveResult.map { id =>
               Found(controllers.routes.AdminController.showPart(updatedPart.partId).url)
             }.recoverWith {
