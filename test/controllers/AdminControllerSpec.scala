@@ -6,6 +6,7 @@ import java.nio.file.Files
 
 import com.m3.octoparts.cache.CacheOps
 import com.m3.octoparts.cache.dummy.DummyCacheOps
+import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.repository.MutableConfigsRepository
 import com.m3.octoparts.repository.config._
@@ -27,14 +28,61 @@ import play.api.test.Helpers._
 import play.api.mvc.Result
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class AdminController$Spec extends FlatSpec with Matchers {
-  it should "append 3 underscores" in {
+class AdminControllerCompanionSpec extends FunSpec with Matchers with ConfigDataMocks {
+
+  it("should append 3 underscores") {
     AdminController.makeNewName("hello", Set("hello__", "hello", "hello_", "hi")) should equal("hello___")
   }
-  it should "not append any star" in {
+
+  it("should not append any star") {
     AdminController.makeNewName("hello", Set.empty, "*") should equal("hello")
+  }
+
+  describe(".shouldBustCache(endpoint, endpoint)") {
+    it("should return false if nothing changed at all") {
+      AdminController.shouldBustCache(mockHttpPartConfig, mockHttpPartConfig) should be(false)
+    }
+    it("should return false if nothing important was changed") {
+      AdminController.shouldBustCache(
+        mockHttpPartConfig,
+        mockHttpPartConfig.copy(alertMailsEnabled = !mockHttpPartConfig.alertMailsEnabled)) should be(false)
+    }
+    it("should return true if URI was changed ") {
+      AdminController.shouldBustCache(
+        mockHttpPartConfig,
+        mockHttpPartConfig.copy(uriToInterpolate = s"${mockHttpPartConfig.uriToInterpolate}/whoa")) should be(true)
+    }
+    it("should return true if CacheTTL was changed ") {
+      AdminController.shouldBustCache(
+        mockHttpPartConfig,
+        mockHttpPartConfig.copy(cacheTtl = Some(420 seconds))) should be(true)
+    }
+    it("should return true if additionalValidStatuses was changed ") {
+      AdminController.shouldBustCache(
+        mockHttpPartConfig,
+        mockHttpPartConfig.copy(additionalValidStatuses = mockHttpPartConfig.additionalValidStatuses + 911)) should be(true)
+    }
+    it("should return true if method was changed ") {
+      AdminController.shouldBustCache(
+        mockHttpPartConfig,
+        mockHttpPartConfig.copy(method = HttpMethod.values.filter(_ != mockHttpPartConfig.method).firstKey)) should be(true)
+    }
+  }
+
+  describe(".shouldBustCache(param)") {
+    val unremarkableParam = mockPartParam.copy(required = false, versioned = false)
+    it("should return false the param is neither required nor versioned") {
+      AdminController.shouldBustCache(unremarkableParam) should be(false)
+    }
+    it("should return true if the param is required") {
+      AdminController.shouldBustCache(unremarkableParam.copy(required = true)) should be(true)
+    }
+    it("should return true if the param is versioned") {
+      AdminController.shouldBustCache(unremarkableParam.copy(versioned = true)) should be(true)
+    }
   }
 }
 
@@ -371,7 +419,7 @@ class AdminControllerSpec extends FunSpec
     doReturn(Future.successful(Seq.empty)).when(repository).findAllCacheGroupsByName(anyVararg[String]())
 
     val createParam = adminController.createParam(part.partId)(
-      FakeRequest().withFormUrlEncodedBody("outputName" -> "someName", "paramType" -> "cookie")
+      FakeRequest().withFormUrlEncodedBody("outputName" -> "someName", "paramType" -> "cookie", "required" -> "true")
     )
     whenReady(createParam) { result =>
       status(createParam) should equal(FOUND)
@@ -400,7 +448,7 @@ class AdminControllerSpec extends FunSpec
     doReturn(Future.successful(Seq.empty)).when(repository).findAllCacheGroupsByName(anyVararg[String]())
 
     val updateParam = adminController.updateParam(part.partId, mockPartParam.id.get)(
-      FakeRequest().withFormUrlEncodedBody("outputName" -> "newName", "paramType" -> "body")
+      FakeRequest().withFormUrlEncodedBody("outputName" -> "newName", "paramType" -> "body", "versioned" -> "true")
     )
     whenReady(updateParam) { result =>
       status(updateParam) should equal(FOUND)

@@ -94,7 +94,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
           loadParams(part).flatMap { params =>
             val updatedPart = data.toUpdatedHttpPartConfig(part, params.flatten, cacheGroups = cacheGroups.toSet)
             val saveResult = repository.save(updatedPart)
-            saveResult.onComplete(_ => cacheOps.increasePartVersion(partId))
+            saveResult.onComplete(_ => if (shouldBustCache(part, updatedPart)) cacheOps.increasePartVersion(partId))
             saveResult.map { id =>
               Found(controllers.routes.AdminController.showPart(updatedPart.partId).url)
             }.recoverWith {
@@ -562,7 +562,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
 
   private def saveParamAndClearPartResponseCache(partId: String, param: PartParam): Future[Long] = {
     val saveResult = repository.save(param)
-    saveResult.onComplete(_ => cacheOps.increasePartVersion(partId))
+    saveResult.onComplete(_ => if (shouldBustCache(param)) cacheOps.increasePartVersion(partId))
     saveResult
   }
 }
@@ -600,4 +600,18 @@ object AdminController {
     }
     messages.mkString("; ")
   }
+
+  def shouldBustCache(beforeEndpoint: HttpPartConfig, afterEndpoint: HttpPartConfig): Boolean = {
+    def hasChangedOn[A](accessorGet: HttpPartConfig => A) = accessorGet(beforeEndpoint) != accessorGet(afterEndpoint)
+    val bustingRequired = hasChangedOn(_.uriToInterpolate) ||
+      hasChangedOn(_.method) ||
+      hasChangedOn(_.additionalValidStatuses) ||
+      hasChangedOn(_.cacheTtl)
+    bustingRequired
+  }
+
+  def shouldBustCache(param: PartParam): Boolean = {
+    param.required || param.versioned
+  }
+
 }
