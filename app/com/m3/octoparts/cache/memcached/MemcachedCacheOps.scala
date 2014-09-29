@@ -1,6 +1,6 @@
 package com.m3.octoparts.cache.memcached
 
-import com.m3.octoparts.cache.{ Cache, CacheOps }
+import com.m3.octoparts.cache._
 import com.m3.octoparts.cache.directive.CacheDirective
 import com.m3.octoparts.cache.key.{ PartCacheKey, VersionCacheKey }
 import com.m3.octoparts.cache.versioning.{ LatestVersionCache, VersionCache, VersionLookup, VersionedParamKey }
@@ -10,6 +10,7 @@ import skinny.logging.Logging
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.control.NonFatal
 
 class MemcachedCacheOps(
   cache: Cache,
