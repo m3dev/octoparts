@@ -37,13 +37,17 @@ class MemcachedCacheOps(
   }
 
   object PartResponseCache {
+    import play.api.libs.json.Json
+    import shade.memcached.MemcachedCodecs.StringBinaryCodec
+    import com.m3.octoparts.json.format.ReqResp._
 
-    import shade.memcached.MemcachedCodecs._
-
-    def pollPartResponse(cacheKey: PartCacheKey) = cache.get[PartResponse](cacheKey)
+    def pollPartResponse(cacheKey: PartCacheKey): Future[Option[PartResponse]] = {
+      val fMaybeString = cache.get[String](cacheKey)
+      fMaybeString.map(maybeString => maybeString.map(Json.parse(_).as[PartResponse]))
+    }
 
     def insertPartResponse(cacheKey: PartCacheKey, partResponse: PartResponse, ttl: Option[Duration]): Future[Unit] =
-      cache.put(cacheKey, partResponse, calculateTtl(partResponse.cacheControl, ttl))
+      cache.put[String](cacheKey, Json.toJson(partResponse).toString, calculateTtl(partResponse.cacheControl, ttl))
   }
 
   object CombinedVersionLookup {
