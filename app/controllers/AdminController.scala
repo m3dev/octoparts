@@ -603,11 +603,17 @@ object AdminController {
 
   def shouldBustCache(beforeEndpoint: HttpPartConfig, afterEndpoint: HttpPartConfig): Boolean = {
     def hasChangedOn[A](accessorGet: HttpPartConfig => A) = accessorGet(beforeEndpoint) != accessorGet(afterEndpoint)
-    val bustingRequired = hasChangedOn(_.uriToInterpolate) ||
+    def cacheTTLReduced: Boolean =
+      hasChangedOn(_.cacheTtl) &&
+        ((beforeEndpoint.cacheTtl, afterEndpoint.cacheTtl) match {
+          case (None, Some(_)) => true
+          case (Some(beforeTtl), Some(afterTtl)) if beforeTtl > afterTtl => true
+          case _ => false
+        })
+    (hasChangedOn(_.uriToInterpolate) ||
       hasChangedOn(_.method) ||
       hasChangedOn(_.additionalValidStatuses) ||
-      hasChangedOn(_.cacheTtl)
-    bustingRequired
+      cacheTTLReduced)
   }
 
   def shouldBustCache(param: PartParam): Boolean = {
