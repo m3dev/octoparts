@@ -74,7 +74,7 @@ object Global extends WithFilters(MetricsFilter) with ScaldiSupport {
         case (_, env) => env
       }
     }
-    LTSVLogger.debug("Play environment" -> playEnv, "mode" -> mode, "application.env" -> config.getString("application.env"))
+    LTSVLogger.debug("Play environment" -> playEnv, "mode" -> mode, "application.env" -> config.getString("application.env"), "message" -> "Loading extra config...")
     val modeSpecificConfig = config ++ Configuration(ConfigFactory.load(s"application.$playEnv.conf"))
     super.onLoadConfig(modeSpecificConfig, path, classloader, mode)
   }
