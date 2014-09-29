@@ -30,7 +30,7 @@
 
         <encoder>
             <!-- Date format is: 2006-10-20 14:06:49,812 -->
-            <pattern>time:%date\t%msg%n</pattern>
+            <pattern>time:%date\thostname:${HOSTNAME}\t%msg%n</pattern>
         </encoder>
     </appender>
 
@@ -48,7 +48,7 @@
 
         <encoder>
             <!-- Date format is: 2006-10-20 14:06:49,812 -->
-            <pattern>time:%date\t%msg%n</pattern>
+            <pattern>time:%date\thostname:${HOSTNAME}\t%msg%n</pattern>
         </encoder>
     </appender>
 
