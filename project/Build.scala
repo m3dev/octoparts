@@ -82,6 +82,7 @@ object OctopartsBuild extends Build {
           "org.slf4j" % "jul-to-slf4j" % slf4jVersion,
           "net.kencochrane.raven" % "raven-logback" % "5.0.1",
           "org.codehaus.janino" % "janino" % "2.7.5",
+          "com.beachape" %% "ltsv-logger" % "0.0.2",
 
           // Hystrix
           "com.netflix.hystrix" % "hystrix-core" % hystrixVersion,
@@ -204,7 +205,8 @@ object OctopartsBuild extends Build {
   lazy val authPluginApi = Project(id = "auth-plugin-api", base = file("plugins/auth-plugin-api"), settings = nonPlayAppSettings).settings(
     name := "octoparts-auth-plugin-api",
     libraryDependencies ++= Seq(
-      "com.typesafe.play" %% "play" % thePlayVersion % "provided"
+      "com.typesafe.play" %% "play" % thePlayVersion % "provided",
+      "com.beachape" %% "ltsv-logger" % "0.0.2"
     )
   )
 

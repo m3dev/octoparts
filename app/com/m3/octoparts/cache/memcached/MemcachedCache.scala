@@ -2,6 +2,7 @@ package com.m3.octoparts.cache.memcached
 
 import com.m3.octoparts.cache.{ Cache, CacheException, RawCache }
 import com.m3.octoparts.cache.key._
+import com.beachape.logging.LTSVLogger
 import play.api.Logger
 import shade.memcached.Codec
 import skinny.util.LTSV
@@ -51,7 +52,7 @@ class MemcachedCache(underlying: RawCache, keyGen: MemcachedKeyGenerator)(implic
            *  - there is no point, as the element has already expired, or will do very soon
            *  - The TTL will get rounded down to 0, which Memcached treats as meaning "infinite". This is the exact opposite to what we want.
            */
-          Logger.debug(LTSV.dump("message" -> "Skipping cache PUT because ttl is less than 1 second", "key" -> key.toString, "ttl" -> duration.toString))
+          LTSVLogger.debug("message" -> "Skipping cache PUT because ttl is less than 1 second", "key" -> key.toString, "ttl" -> duration.toString)
           Future.successful(())
         case _ =>
           underlying.set[T](serializeKey(key), v, ttl.getOrElse(VERY_LONG_TTL)).recoverWith {
