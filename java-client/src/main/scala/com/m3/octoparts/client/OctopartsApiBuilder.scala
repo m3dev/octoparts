@@ -4,7 +4,7 @@ import java.io.Closeable
 import java.util.UUID
 import javax.annotation.{ Nonnull, Nullable }
 
-import com.fasterxml.jackson.databind.{ DeserializationConfig, ObjectMapper }
+import com.fasterxml.jackson.databind.{ DeserializationFeature, ObjectMapper }
 import com.google.common.net.UrlEscapers
 import com.m3.octoparts.model.config.json.HttpPartConfig
 import com.m3.octoparts.model.{ AggregateRequest, RequestMeta }
@@ -24,6 +24,8 @@ private[client] object OctopartsApiBuilder {
   private val Log = LoggerFactory.getLogger(classOf[OctopartsApiBuilder])
   private[client] val Mapper = new ObjectMapper
   Mapper.registerModule(ExtendedScalaModule)
+  // future-proofing
+  Mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 }
 
 class OctopartsApiBuilder(@Nonnull apiRootUrl: String, @Nullable serviceId: String, @Nonnull asyncHttpClientConfig: AsyncHttpClientConfig) extends Closeable {
@@ -51,7 +53,7 @@ class OctopartsApiBuilder(@Nonnull apiRootUrl: String, @Nullable serviceId: Stri
   def newRequest(@Nullable userId: String, @Nullable sessionId: String, @Nullable userAgent: String, @Nullable requestUrl: String, @Nullable timeoutMs: java.lang.Long): RequestBuilder = {
     val timeoutOpt = if (timeoutMs == null) None else Some(timeoutMs.longValue().millis)
     val requestMeta = RequestMeta(UUID.randomUUID.toString, Option(serviceId), Option(userId), Option(sessionId), Option(requestUrl), Option(userAgent), timeoutOpt)
-    RequestBuilder(requestMeta)
+    new RequestBuilder(requestMeta)
   }
 
   private[client] def toHttp(aggregateRequest: AggregateRequest) = {

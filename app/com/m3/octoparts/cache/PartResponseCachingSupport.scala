@@ -36,7 +36,7 @@ trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
 
   override def processWithConfig(ci: HttpPartConfig,
                                  partRequestInfo: PartRequestInfo,
-                                 params: Map[ShortPartParam, String]): Future[PartResponse] = {
+                                 params: Map[ShortPartParam, Seq[String]]): Future[PartResponse] = {
 
     if (partRequestInfo.noCache || !ci.cacheConfig.cachingEnabled) {
       // noCache or TTL defined but 0 => skip caching
@@ -72,10 +72,12 @@ trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
                                 directive: CacheDirective,
                                 ci: HttpPartConfig,
                                 partRequestInfo: PartRequestInfo,
-                                params: Map[ShortPartParam, String]): Future[PartResponse] = {
+                                params: Map[ShortPartParam, Seq[String]]): Future[PartResponse] = {
 
-    val revalidationParams = partResponse.cacheControl.revalidationHeaders.map {
-      case (k, v) => ShortPartParam(outputName = k, paramType = ParamType.Header) -> v
+    val revalidationParams = for {
+      (name, value) <- partResponse.cacheControl.revalidationHeaders
+    } yield {
+      ShortPartParam(name, ParamType.Header) -> Seq(value)
     }
     val revalidationResult = super.processWithConfig(ci, partRequestInfo, params ++ revalidationParams)
     val revalidatedFResp = revalidationResult.map {

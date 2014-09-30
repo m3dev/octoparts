@@ -31,9 +31,6 @@ case class PartParam(
    * This is the key used to look for a value inside the PartRequest
    */
   def inputName: String = inputNameOverride.getOrElse(outputName)
-
-  def shorter = ShortPartParam(outputName, paramType)
-
 }
 
 object PartParam {

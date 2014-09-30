@@ -5,7 +5,7 @@ import org.scalatest.{ Matchers, FunSpec }
 import com.m3.octoparts.cache.dummy.DummyCacheOps
 import com.m3.octoparts.model.{ PartRequest, RequestMeta, CacheControl, PartResponse }
 import com.m3.octoparts.aggregator.service.PartRequestServiceBase
-import com.m3.octoparts.model.config.{ ShortPartParam, HttpPartConfig }
+import com.m3.octoparts.model.config._
 import com.m3.octoparts.aggregator.PartRequestInfo
 import scala.concurrent.Future
 import com.m3.octoparts.support.mocks.ConfigDataMocks
@@ -95,7 +95,7 @@ class PartResponseCachingSupportSpec extends FunSpec with Matchers with ScalaFut
 
   describe("Custom part ID support") {
     trait MockPartRequestServiceBase extends PartRequestServiceBase {
-      override protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, String]) =
+      override protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, Seq[String]]) =
         Future.successful(PartResponse(partId = "partId", id = "old custom ID", contents = Some("response body")))
     }
     val cachingSupport = new MockPartRequestServiceBase with PartResponseCachingSupport {
