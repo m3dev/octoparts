@@ -7,19 +7,23 @@ import org.scalatest.{ Matchers, FunSpec }
 
 class CachelessHystrixPropertiesStrategySpec extends FunSpec with Matchers {
 
+  val subject = new CachelessHystrixPropertiesStrategy
   val commandKey = HystrixCommandKey.Factory.asKey("hello")
   val commandProps = HystrixCommandProperties.Setter()
   describe("getCommandPropertiesCacheKey") {
     it("should return null") {
-      val r = CachelessHystrixPropertiesStrategy.getCommandPropertiesCacheKey(commandKey, commandProps)
+      val r = subject.getCommandPropertiesCacheKey(commandKey, commandProps)
       r should be(null)
     }
   }
 
+  // The following works if this test is run by itself, but
   describe("after registering with HystrixPlugins") {
 
     it("should allow HystrixPropertiesFactory.getCommandProperties to instantiate different HystrixCommandProperties for the same command key") {
-      HystrixPlugins.getInstance().registerPropertiesStrategy(CachelessHystrixPropertiesStrategy)
+      if (HystrixPlugins.getInstance().getPropertiesStrategy.getClass != subject.getClass) {
+        fail("HystrixPlugins.getPropertiesStrategy did not return CachelessHystrixPropertiesStrategy")
+      }
       val properties1 = HystrixPropertiesFactory.getCommandProperties(
         commandKey,
         HystrixCommandProperties.Setter().withExecutionIsolationThreadTimeoutInMilliseconds(300))

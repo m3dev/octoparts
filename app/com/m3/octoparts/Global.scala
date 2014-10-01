@@ -7,11 +7,10 @@ import _root_.controllers.ControllersModule
 import com.kenshoo.play.metrics.MetricsFilter
 import com.m3.octoparts.cache.CacheModule
 import com.m3.octoparts.http.HttpModule
-import com.m3.octoparts.hystrix.{ CachelessHystrixPropertiesStrategy, HystrixMetricsLogger, HystrixModule }
+import com.m3.octoparts.hystrix.{ HystrixMetricsLogger, HystrixModule }
 import com.m3.octoparts.logging.PartRequestLogger
 import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.repository.RepositoriesModule
-import com.netflix.hystrix.strategy.HystrixPlugins
 import com.typesafe.config.ConfigFactory
 import com.wordnik.swagger.config.{ ConfigFactory => SwaggerConfigFactory }
 import com.wordnik.swagger.model.ApiInfo
@@ -82,7 +81,6 @@ object Global extends WithFilters(MetricsFilter) with ScaldiSupport {
 
   override def onStart(app: Application) = {
     super.onStart(app)
-    HystrixPlugins.getInstance().registerPropertiesStrategy(CachelessHystrixPropertiesStrategy)
     startPeriodicTasks(app)
   }
 
