@@ -11,6 +11,7 @@ import skinny.util.LTSV
 import com.m3.octoparts.cache.RichCacheControl._
 
 import scala.concurrent.Future
+import scala.util.control.NonFatal
 
 private[cache] object PartResponseCachingSupport {
 
@@ -43,16 +44,8 @@ trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
       super.processWithConfig(ci, partRequestInfo, params)
     } else {
       val directive = CacheDirectiveGenerator.generateDirective(ci.partId, params, ci.cacheConfig)
-      val futureMaybeFromCache = cacheOps.putIfAbsent(directive)(super.processWithConfig(ci, partRequestInfo, params)).recoverWith {
-        case ce: CacheException =>
-          ce.getCause match {
-            case te: shade.TimeoutException =>
-              warn(LTSV.dump("Memcached error" -> "timed out", "cache key" -> ce.key.toString))
-            case other =>
-              error(LTSV.dump("Memcached error" -> other.getClass.getSimpleName, "cache key" -> ce.key.toString), other)
-          }
-          super.processWithConfig(ci, partRequestInfo, params)
-      }
+      val futureMaybeFromCache = cacheOps.putIfAbsent(directive)(super.processWithConfig(ci, partRequestInfo, params)).
+        recoverWith(onCacheFailure(ci, partRequestInfo, params))
       futureMaybeFromCache.flatMap {
         partResponse =>
           // at this point, the response may come from cache and be stale.
@@ -65,6 +58,24 @@ trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
         // Replace the ID with the one specified in the current request
         partResponse => partResponse.copy(id = partRequestInfo.partRequestId)
       }
+    }
+  }
+
+  private def onCacheFailure(ci: HttpPartConfig,
+                             partRequestInfo: PartRequestInfo,
+                             params: Map[ShortPartParam, String]): PartialFunction[Throwable, Future[PartResponse]] = {
+    case ce: CacheException => {
+      ce.getCause match {
+        case te: shade.TimeoutException =>
+          warn(LTSV.dump("Memcached error" -> "timed out", "cache key" -> ce.key.toString))
+        case other =>
+          error(LTSV.dump("Memcached error" -> other.getClass.getSimpleName, "cache key" -> ce.key.toString), other)
+      }
+      super.processWithConfig(ci, partRequestInfo, params)
+    }
+    case NonFatal(e) => {
+      error(LTSV.dump("Memcached error" -> e.getClass.getSimpleName), e)
+      super.processWithConfig(ci, partRequestInfo, params)
     }
   }
 
