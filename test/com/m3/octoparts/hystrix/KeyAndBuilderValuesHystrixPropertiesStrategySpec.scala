@@ -12,8 +12,10 @@ class KeyAndBuilderValuesHystrixPropertiesStrategySpec extends FunSpec with Matc
   val commandProps = HystrixCommandProperties.Setter()
   describe("getCommandPropertiesCacheKey") {
     it("should return a combination of the commandKey name and commandProps JSON value") {
-      val r = subject.getCommandPropertiesCacheKey(commandKey, commandProps)
-      r should be("""hello-{"circuitBreakerEnabled":null,"circuitBreakerErrorThresholdPercentage":null,"circuitBreakerForceClosed":null,"circuitBreakerForceOpen":null,"circuitBreakerRequestVolumeThreshold":null,"circuitBreakerSleepWindowInMilliseconds":null,"executionIsolationSemaphoreMaxConcurrentRequests":null,"executionIsolationStrategy":null,"executionIsolationThreadInterruptOnTimeout":null,"executionIsolationThreadTimeoutInMilliseconds":null,"fallbackIsolationSemaphoreMaxConcurrentRequests":null,"fallbackEnabled":null,"metricsHealthSnapshotIntervalInMilliseconds":null,"metricsRollingPercentileBucketSize":null,"metricsRollingPercentileEnabled":null,"metricsRollingPercentileWindowInMilliseconds":null,"metricsRollingPercentileWindowBuckets":null,"metricsRollingStatisticalWindowInMilliseconds":null,"metricsRollingStatisticalWindowBuckets":null,"requestCacheEnabled":null,"requestLogEnabled":null}""")
+      val r1 = subject.getCommandPropertiesCacheKey(commandKey, commandProps)
+      r1 should be("""hello-{}""")
+      val r2 = subject.getCommandPropertiesCacheKey(commandKey, HystrixCommandProperties.Setter().withExecutionIsolationThreadTimeoutInMilliseconds(100))
+      r2 should be("""hello-{"executionIsolationThreadTimeoutInMilliseconds":100}""")
     }
   }
 
