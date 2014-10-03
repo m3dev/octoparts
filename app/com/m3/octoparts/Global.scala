@@ -7,7 +7,7 @@ import _root_.controllers.ControllersModule
 import com.kenshoo.play.metrics.MetricsFilter
 import com.m3.octoparts.cache.CacheModule
 import com.m3.octoparts.http.HttpModule
-import com.m3.octoparts.hystrix.{ CachelessHystrixPropertiesStrategy, HystrixMetricsLogger, HystrixModule }
+import com.m3.octoparts.hystrix.{ KeyAndBuilderValuesHystrixPropertiesStrategy, HystrixMetricsLogger, HystrixModule }
 import com.m3.octoparts.logging.PartRequestLogger
 import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.repository.RepositoriesModule
@@ -101,7 +101,7 @@ object Global extends WithFilters(MetricsFilter) with ScaldiSupport {
   }
 
   /**
-   * Tries to set the Hystrix properties strategy to CachelessHystrixPropertiesStrategy
+   * Tries to set the Hystrix properties strategy to [[KeyAndBuilderValuesHystrixPropertiesStrategy]]
    *
    * Resist the temptation to do a HystrixPlugins.getInstance().getPropertiesStrategy first to do
    * checking, as that actually also sets the strategy if it isn't already set.
@@ -109,16 +109,16 @@ object Global extends WithFilters(MetricsFilter) with ScaldiSupport {
   def setHystrixPropertiesStrategy(app: Application): Unit = {
     // If it's defined, we don't need to set anything
     if (sys.props.get("hystrix.plugin.HystrixPropertiesStrategy.implementation").isEmpty) {
-      LTSVLogger.warn("-Dhystrix.plugin.HystrixPropertiesStrategy.implementation is not set. It should be" -> "com.m3.octoparts.hystrix.CachelessHystrixPropertiesStrategy")
+      LTSVLogger.warn("-Dhystrix.plugin.HystrixPropertiesStrategy.implementation is not set. It should be" -> "com.m3.octoparts.hystrix.KeyAndBuilderValuesHystrixPropertiesStrategy")
       try {
-        HystrixPlugins.getInstance().registerPropertiesStrategy(new CachelessHystrixPropertiesStrategy)
+        HystrixPlugins.getInstance().registerPropertiesStrategy(new KeyAndBuilderValuesHystrixPropertiesStrategy)
       } catch {
         case NonFatal(e) => {
           val currentStrategy = HystrixPlugins.getInstance().getPropertiesStrategy.getClass
-          if (currentStrategy != classOf[CachelessHystrixPropertiesStrategy]) {
+          if (currentStrategy != classOf[KeyAndBuilderValuesHystrixPropertiesStrategy]) {
             LTSVLogger.error(e, "Current Hystrix Properties Strategy:" -> currentStrategy)
             if (Play.mode(app) != Mode.Test)
-              sys.error("Tried but failed to set CachelessHystrixPropertiesStrategy as HystrixPropertiesStrategy")
+              sys.error("Tried but failed to set KeyAndBuilderValuesHystrixPropertiesStrategy as HystrixPropertiesStrategy")
           }
         }
       }

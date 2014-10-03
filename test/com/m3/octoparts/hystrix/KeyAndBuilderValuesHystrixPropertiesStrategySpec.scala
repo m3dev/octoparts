@@ -5,15 +5,15 @@ import com.netflix.hystrix.strategy.properties.HystrixPropertiesFactory
 import com.netflix.hystrix.{ HystrixCommandProperties, HystrixCommandKey }
 import org.scalatest.{ Matchers, FunSpec }
 
-class CachelessHystrixPropertiesStrategySpec extends FunSpec with Matchers {
+class KeyAndBuilderValuesHystrixPropertiesStrategySpec extends FunSpec with Matchers {
 
-  val subject = new CachelessHystrixPropertiesStrategy
+  val subject = new KeyAndBuilderValuesHystrixPropertiesStrategy
   val commandKey = HystrixCommandKey.Factory.asKey("hello")
   val commandProps = HystrixCommandProperties.Setter()
   describe("getCommandPropertiesCacheKey") {
-    it("should return null") {
+    it("should return a combination of the commandKey name and commandProps JSON value") {
       val r = subject.getCommandPropertiesCacheKey(commandKey, commandProps)
-      r should be(null)
+      r should be("""hello-{"circuitBreakerEnabled":null,"circuitBreakerErrorThresholdPercentage":null,"circuitBreakerForceClosed":null,"circuitBreakerForceOpen":null,"circuitBreakerRequestVolumeThreshold":null,"circuitBreakerSleepWindowInMilliseconds":null,"executionIsolationSemaphoreMaxConcurrentRequests":null,"executionIsolationStrategy":null,"executionIsolationThreadInterruptOnTimeout":null,"executionIsolationThreadTimeoutInMilliseconds":null,"fallbackIsolationSemaphoreMaxConcurrentRequests":null,"fallbackEnabled":null,"metricsHealthSnapshotIntervalInMilliseconds":null,"metricsRollingPercentileBucketSize":null,"metricsRollingPercentileEnabled":null,"metricsRollingPercentileWindowInMilliseconds":null,"metricsRollingPercentileWindowBuckets":null,"metricsRollingStatisticalWindowInMilliseconds":null,"metricsRollingStatisticalWindowBuckets":null,"requestCacheEnabled":null,"requestLogEnabled":null}""")
     }
   }
 
@@ -22,7 +22,7 @@ class CachelessHystrixPropertiesStrategySpec extends FunSpec with Matchers {
 
     it("should allow HystrixPropertiesFactory.getCommandProperties to instantiate different HystrixCommandProperties for the same command key") {
       if (HystrixPlugins.getInstance().getPropertiesStrategy.getClass != subject.getClass) {
-        fail("HystrixPlugins.getPropertiesStrategy did not return CachelessHystrixPropertiesStrategy")
+        fail("HystrixPlugins.getPropertiesStrategy did not return KeyAndBuilderValuesHystrixPropertiesStrategy")
       }
       val properties1 = HystrixPropertiesFactory.getCommandProperties(
         commandKey,

@@ -72,7 +72,7 @@ object OctopartsBuild extends Build {
       sonatypeSettings ++
       coverallsSettings ++
       Seq(
-        javaOptions += "-Dhystrix.plugin.HystrixPropertiesStrategy.implementation=com.m3.octoparts.hystrix.CachelessHystrixPropertiesStrategy",
+        javaOptions += "-Dhystrix.plugin.HystrixPropertiesStrategy.implementation=com.m3.octoparts.hystrix.KeyAndBuilderValuesHystrixPropertiesStrategy",
         publishArtifact := false,
         libraryDependencies ++= Seq(
           // Logging
