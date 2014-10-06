@@ -3,13 +3,10 @@ package com.m3.octoparts.cache.memcached
 import com.m3.octoparts.cache.{ Cache, CacheException, RawCache }
 import com.m3.octoparts.cache.key._
 import com.beachape.logging.LTSVLogger
-import play.api.Logger
 import shade.memcached.Codec
-import skinny.util.LTSV
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.language.postfixOps
 import scala.util.control.NonFatal
 
 /**
@@ -29,7 +26,7 @@ class MemcachedCache(underlying: RawCache, keyGen: MemcachedKeyGenerator)(implic
    * We could also use Duration.Inf, which Shade would convert to 365 days,
    * or Duration.Zero, which Memcached would treat as infinite.
    */
-  private val VERY_LONG_TTL = 30 days
+  private val VERY_LONG_TTL = 30.days
 
   private def serializeKey(key: CacheKey) = keyGen.toMemcachedKey(key)
 

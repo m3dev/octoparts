@@ -92,6 +92,7 @@ object OctopartsBuild extends Build {
           // Apache HTTP client
           "org.apache.httpcomponents" % "httpclient" % httpClientVersion,
           "org.apache.httpcomponents" % "httpclient-cache" % httpClientVersion,
+          "io.dropwizard.metrics" % "metrics-httpclient" % "3.1.0",
 
           // DB
           "org.postgresql" % "postgresql" % "9.3-1102-jdbc41" % "runtime",

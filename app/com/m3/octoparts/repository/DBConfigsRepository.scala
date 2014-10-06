@@ -9,6 +9,7 @@ import skinny.logging.Logging
 import skinny.orm.SkinnyCRUDMapper
 import skinny.orm.feature.associations.Association
 import skinny.util.LTSV
+import com.m3.octoparts.future.RichFutureWithTiming._
 
 import scala.concurrent.{ Future, blocking }
 
@@ -84,7 +85,7 @@ trait ImmutableDBRepository extends ConfigsRepository with Logging {
       }
       ret
     }
-  }
+  }.measure("DB_GET")
 
   /**
    * Gets all the records from a table and logs the number of records retrieved
@@ -97,7 +98,7 @@ trait ImmutableDBRepository extends ConfigsRepository with Logging {
       debug(LTSV.dump("Table" -> mapper.tableName, "Retrieved records" -> ret.length.toString))
       ret
     }
-  }
+  }.measure("DB_GET")
 
   /**
    * Gets all the records from a table according to a where clause and logs the number of records retrieved
@@ -111,7 +112,7 @@ trait ImmutableDBRepository extends ConfigsRepository with Logging {
       debug(LTSV.dump("Table" -> mapper.tableName, "Retrieved records" -> ret.length.toString))
       ret
     }
-  }
+  }.measure("DB_GET")
 }
 
 trait MutableDBRepository extends MutableConfigsRepository with Logging {
@@ -138,7 +139,7 @@ trait MutableDBRepository extends MutableConfigsRepository with Logging {
       info(LTSV.dump("Table" -> mapper.tableName, "Data" -> model.toString, "Action" -> "Saved"))
       id
     }
-  }
+  }.measure("DB_UPDATE")
 
   /**
    * Deletes using a given Skinny CRUD mapper and an interpolated where clause and logs the where
@@ -150,7 +151,7 @@ trait MutableDBRepository extends MutableConfigsRepository with Logging {
       info(LTSV.dump("Table" -> mapper.tableName, "where" -> where.toString(), "count" -> count.toString, "Action" -> "Deleted"))
       count
     }
-  }
+  }.measure("DB_UPDATE")
 
   /**
    * Truncates a table using the passed in Skinny CRUD mapper and logs how many records were deleted
@@ -161,6 +162,6 @@ trait MutableDBRepository extends MutableConfigsRepository with Logging {
       warn(LTSV.dump("Table" -> mapper.tableName, "count" -> count.toString, "Action" -> "Truncated"))
       count
     }
-  }
+  }.measure("DB_UPDATE")
 }
 
