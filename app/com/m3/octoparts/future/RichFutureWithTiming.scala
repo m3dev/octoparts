@@ -42,6 +42,6 @@ class RichFutureWithTiming[A](val future: Future[A]) extends AnyVal {
   }
 
   def measure(metricsName: String)(implicit executionContext: ExecutionContext): Future[A] = time {
-    case (a, duration) => MetricsRegistry.default.timer(metricsName).update(duration.length, duration.unit)
+    (_, duration) => MetricsRegistry.default.timer(metricsName).update(duration.length, duration.unit)
   }
 }
