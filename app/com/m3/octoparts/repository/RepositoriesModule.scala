@@ -1,10 +1,10 @@
 package com.m3.octoparts.repository
 
 import com.m3.octoparts.cache.key.MemcachedKeyGenerator
-import com.m3.octoparts.cache.memcached._
+import com.m3.octoparts.cache.memcached.MemcachedCache
 import com.m3.octoparts.http.HttpClientPool
 import play.api.Configuration
-import com.m3.octoparts.cache.{RawCache, Cache}
+import com.m3.octoparts.cache.{ MemoryBufferingRawCache, RawCache, Cache }
 import scaldi.Module
 
 import scala.concurrent.duration._

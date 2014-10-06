@@ -1,16 +1,14 @@
-package com.m3.octoparts.cache.memcached
+package com.m3.octoparts.cache
 
 import java.util.concurrent.TimeUnit
 
 import com.google.common.cache.{ CacheBuilder, Cache => GuavaCache }
-import com.m3.octoparts.cache.RawCache
 import play.api.Logger
 import shade.memcached.Codec
 import skinny.util.LTSV
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext
 
 class MemoryBufferingRawCache(networkCache: RawCache, localCacheDuration: Duration) extends RawCache {
 
