@@ -59,6 +59,14 @@
         </div>
 
         <div class="form-group">
+            <label for="description" class="col-sm-2 control-label">@Messages("parts.parameter.description")</label>
+            <div class="row">
+                <div class="col-sm-5">
+                    <input name="description" type="text" class="form-control" value="@maybeParam.flatMap(_.param.description).getOrElse("")"/>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
             <label for="required" class="col-sm-2 control-label">@Messages("parts.parameter.required")</label>
             <div class="row">
                 <div class="col-sm-5">
@@ -74,7 +82,6 @@
                 </div>
             </div>
         </div>
-
         <div class="form-group">
         <label for="cacheGroups" class="col-sm-2 control-label">@Messages("cacheGroups.this")</label>
         <div class="row">

@@ -135,6 +135,7 @@ object AdminForms {
   case class ParamData(
     outputName: String,
     inputNameOverride: Option[String],
+    description: Option[String],
     paramType: String,
     required: Boolean,
     versioned: Boolean,
@@ -144,6 +145,7 @@ object AdminForms {
     mapping(
       "outputName" -> text,
       "inputNameOverride" -> optional(text),
+      "description" -> optional(text),
       "paramType" -> text.verifying(string => ParamType.values.exists(_.toString == string)),
       "required" -> boolean,
       "versioned" -> boolean,

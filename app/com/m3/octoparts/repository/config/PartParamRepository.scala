@@ -32,6 +32,7 @@ object PartParamRepository extends ConfigMapper[PartParam] with TimestampsFeatur
     "versioned" -> SkinnyParamType.Boolean,
     "paramType" -> SkinnyParamType.String,
     "outputName" -> SkinnyParamType.String,
+    "description" -> SkinnyParamType.String,
     "inputNameOverride" -> SkinnyParamType.String,
     "cacheGroupId" -> SkinnyParamType.Long
   )
@@ -84,6 +85,7 @@ object PartParamRepository extends ConfigMapper[PartParam] with TimestampsFeatur
     paramType = ParamType.withName(rs.get(n.paramType)),
     outputName = rs.get(n.outputName),
     inputNameOverride = rs.get(n.inputNameOverride),
+    description = rs.get(n.description),
     createdAt = rs.get(n.createdAt),
     updatedAt = rs.get(n.updatedAt)
   )

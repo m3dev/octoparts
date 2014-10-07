@@ -19,5 +19,7 @@ case class ParamView(param: PartParam) {
 
   def versioned = param.versioned
 
+  def description = param.description
+
   def inputNameJs = StringEscapeUtils.escapeJavaScript(param.inputName)
 }
