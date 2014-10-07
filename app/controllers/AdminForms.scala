@@ -1,5 +1,6 @@
 package controllers
 
+import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config._
 import org.joda.time.DateTime
@@ -32,7 +33,7 @@ object AdminForms {
 
     /** Create a brand new HttpPartConfig using the data input into the form */
     def toNewHttpPartConfig(owner: String, cacheGroups: Set[CacheGroup]): HttpPartConfig = new HttpPartConfig(
-      partId = data.partId,
+      partId = PartData.trimPartId(data.partId),
       owner = owner,
       uriToInterpolate = data.uri,
       description = data.description,
@@ -60,7 +61,7 @@ object AdminForms {
 
     /** Update an existing HttpPartConfig using the data input into the form */
     def toUpdatedHttpPartConfig(originalPart: HttpPartConfig, params: Set[PartParam], cacheGroups: Set[CacheGroup]): HttpPartConfig = originalPart.copy(
-      partId = data.partId,
+      partId = PartData.trimPartId(data.partId),
       parameters = params,
       uriToInterpolate = data.uri,
       description = data.description,
@@ -107,6 +108,14 @@ object AdminForms {
       alertPercentThreshold = part.alertPercentThreshold.map(BigDecimal(_)),
       alertMailRecipients = part.alertMailRecipients
     )
+
+    private def trimPartId(original: String): String = {
+      val trimmed = original.trim
+      if (trimmed != original) {
+        LTSVLogger.info("message" -> "Leading and trailing spaces were trimmed from partId", "before" -> s"'$original'", "after" -> s"'$trimmed'")
+      }
+      trimmed
+    }
 
   }
 
