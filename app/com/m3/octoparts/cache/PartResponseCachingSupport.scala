@@ -63,7 +63,7 @@ trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
 
   private def onCacheFailure(ci: HttpPartConfig,
                              partRequestInfo: PartRequestInfo,
-                             params: Map[ShortPartParam, String]): PartialFunction[Throwable, Future[PartResponse]] = {
+                             params: Map[ShortPartParam, Seq[String]]): PartialFunction[Throwable, Future[PartResponse]] = {
     case ce: CacheException => {
       ce.getCause match {
         case te: shade.TimeoutException =>
