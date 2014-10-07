@@ -10,7 +10,7 @@ import com.m3.octoparts.http.HttpModule
 import com.m3.octoparts.hystrix.{ HystrixMetricsLogger, HystrixModule }
 import com.m3.octoparts.logging.PartRequestLogger
 import com.beachape.logging.LTSVLogger
-import com.m3.octoparts.repository.RepositoriesModule
+import com.m3.octoparts.repository.{ ConfigsRepository, RepositoriesModule }
 import com.typesafe.config.ConfigFactory
 import com.wordnik.swagger.config.{ ConfigFactory => SwaggerConfigFactory }
 import com.wordnik.swagger.model.ApiInfo
@@ -83,18 +83,38 @@ object Global extends WithFilters(MetricsFilter) with ScaldiSupport {
     super.onStart(app)
 
     startPeriodicTasks(app)
+    checkForDodgyPartIds()
   }
 
   /**
    * Register any tasks that should be run on the global Akka scheduler.
    * These tasks will automatically stop running when the app shuts down.
    */
-  def startPeriodicTasks(implicit app: Application): Unit = {
+  private def startPeriodicTasks(implicit app: Application): Unit = {
     import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
     val hystrixLoggingInterval = app.configuration.underlying.getDuration("hystrix.logging.intervalMs", TimeUnit.MILLISECONDS).toInt.millis
     Akka.system.scheduler.schedule(hystrixLoggingInterval, hystrixLoggingInterval) {
       HystrixMetricsLogger.logHystrixMetrics()
+    }
+  }
+
+  /**
+   * Check if there are any registered parts with leading/trailing spaces in their partIds.
+   * Output warning logs if we find any, as they can be a nightmare to debug and are best avoided.
+   */
+  private def checkForDodgyPartIds(): Unit = {
+    import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
+    val configsRepo = inject[ConfigsRepository]
+    for {
+      configs <- configsRepo.findAllConfigs()
+      config <- configs
+    } {
+      val trimmed = config.partId.trim
+      if (trimmed != config.partId) {
+        LTSVLogger.warn("message" -> "This partId is suspicious - it has leading/trailing spaces", "partId" -> s"'${config.partId}'")
+      }
     }
   }
 }
