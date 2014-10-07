@@ -44,4 +44,9 @@ class RichAggregateResponseSpec extends FlatSpec with Matchers {
   it should "deserialize and return the result even if the status code is not 200" in {
     richAggResp.getJsonPart[Frisk]("differentStatusCodePart") should be(Some(Frisk(50, "very minty")))
   }
+  it should "use a custom recovery scheme" in {
+    richAggResp.getJsonPart[Frisk]("brokenJsonPart", { (id, failure) => Some(Frisk(0, failure.toString)) }) should matchPattern {
+      case Some(Frisk(0, mintiness)) if mintiness.contains("Exception") =>
+    }
+  }
 }

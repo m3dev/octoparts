@@ -35,6 +35,7 @@ object AggregateResponseEnrichment {
      * - The method does not check the status code of the response or the presence of error messages.
      *
      * @param id the part request unique id (or partId if the part request did not specify an ID)
+     * @param recoverWith can be customized to return something even if JSON extraction failed.
      * @tparam A the result type, i.e. the type of the JSON-serialized object
      * @return the object, or None if it could not be found and deserialized for some reason.
      */
@@ -104,7 +105,7 @@ object AggregateResponseEnrichment {
   }
 
   val warnFailure: (String, Throwable) => Option[Nothing] = {
-    case (id, failure) =>
+    (id, failure) =>
       logger.warn(s"Object not retrievable from part response: $id", failure)
       None
   }
