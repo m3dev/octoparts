@@ -38,7 +38,7 @@ object AggregateResponseEnrichment {
      * @tparam A the result type, i.e. the type of the JSON-serialized object
      * @return the object, or None if it could not be found and deserialized for some reason.
      */
-    def getJsonPart[A: Reads](id: String, recoverWith: (String, Throwable) => Option[A] = warnFailure[A] _): Option[A] = {
+    def getJsonPart[A: Reads](id: String, recoverWith: (String, Throwable) => Option[A] = warnFailure): Option[A] = {
       tryJsonPart[A](id) match {
         case Failure(e) => recoverWith(id, e)
         case Success(v) => Some(v)
@@ -103,8 +103,9 @@ object AggregateResponseEnrichment {
     }.mkString("; ")
   }
 
-  def warnFailure[A](id: String, failure: Throwable): Option[A] = {
-    logger.warn(s"Object not retrievable from part response: $id", failure)
-    None
+  val warnFailure: (String, Throwable) => Option[Nothing] = {
+    case (id, failure) =>
+      logger.warn(s"Object not retrievable from part response: $id", failure)
+      None
   }
 }
