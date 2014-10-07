@@ -62,7 +62,7 @@
             <label for="description" class="col-sm-2 control-label">@Messages("parts.parameter.description")</label>
             <div class="row">
                 <div class="col-sm-5">
-                    <input name="description" type="text" class="form-control" value="@maybeParam.flatMap(_.param.description).getOrElse("")"/>
+                    <textarea name="description" type="text" class="form-control">@maybeParam.flatMap(_.param.description)</textarea>
                 </div>
             </div>
         </div>

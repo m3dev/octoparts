@@ -83,7 +83,7 @@
                         <td>@paramView.param.inputName</td>
                         <td>@paramView.paramType</td>
                         <td>@paramView.required</td>
-                        <td>@paramView.description</td>
+                        <td style="white-space: pre">@paramView.description</td>
                         <td>@paramView.versioned</td>
                         <td><a href="@controllers.routes.AdminController.editParam(part.partId, paramView.param.id.get)" class="btn btn-primary">@Messages("edit")</a>
                             <form action="@controllers.routes.AdminController.copyParam(part.partId, paramView.param.id.get)" method="post">
