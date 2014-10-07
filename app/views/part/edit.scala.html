@@ -52,7 +52,7 @@
                 <label for="description" class="col-sm-2 control-label">@Messages("parts.description")</label>
                 <div class="row">
                     <div class="col-sm-5">
-                        @helper.textarea(form("description"), 'class -> "form-control validate[required]")
+                        @helper.textarea(form("description"), 'class -> "form-control")
                     </div>
                 </div>
             </div>
@@ -137,7 +137,7 @@
                         @helper.select(
                             field = form("threadPoolConfigId"),
                             options = threadPoolConfigs.map(tpc => (tpc.id.get.toString, s"${tpc.threadPoolKey} (core size: ${tpc.coreSize})")),
-                            args = 'class -> "form-control")
+                            args = 'class -> "form-control validate[required]")
                     </div>
                 </div>
             </div>

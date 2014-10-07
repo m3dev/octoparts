@@ -12,7 +12,7 @@ object AdminForms {
 
   case class PartData(
       partId: String,
-      description: String,
+      description: Option[String],
       deprecatedTo: Option[String],
       uri: String,
       method: String,
@@ -113,7 +113,7 @@ object AdminForms {
   val partForm = Form(
     mapping(
       "partId" -> text,
-      "description" -> text,
+      "description" -> optional(text),
       "deprecatedTo" -> optional(text),
       "uri" -> text,
       "method" -> text.verifying(string => HttpMethod.values.exists(_.toString == string)),
