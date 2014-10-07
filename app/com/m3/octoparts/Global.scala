@@ -109,17 +109,13 @@ object Global extends WithFilters(MetricsFilter) with ScaldiSupport {
   def setHystrixPropertiesStrategy(app: Application): Unit = {
     // If it's defined, we don't need to set anything
     if (sys.props.get("hystrix.plugin.HystrixPropertiesStrategy.implementation").isEmpty) {
-      LTSVLogger.warn("-Dhystrix.plugin.HystrixPropertiesStrategy.implementation is not set. It should be" -> "com.m3.octoparts.hystrix.KeyAndBuilderValuesHystrixPropertiesStrategy")
+      LTSVLogger.info("-Dhystrix.plugin.HystrixPropertiesStrategy.implementation is not set. Defaulting to" -> "com.m3.octoparts.hystrix.KeyAndBuilderValuesHystrixPropertiesStrategy")
       try {
         HystrixPlugins.getInstance().registerPropertiesStrategy(new KeyAndBuilderValuesHystrixPropertiesStrategy)
       } catch {
         case NonFatal(e) => {
           val currentStrategy = HystrixPlugins.getInstance().getPropertiesStrategy.getClass
-          if (currentStrategy != classOf[KeyAndBuilderValuesHystrixPropertiesStrategy]) {
-            LTSVLogger.error(e, "Current Hystrix Properties Strategy:" -> currentStrategy)
-            if (Play.mode(app) != Mode.Test)
-              sys.error("Tried but failed to set KeyAndBuilderValuesHystrixPropertiesStrategy as HystrixPropertiesStrategy")
-          }
+          LTSVLogger.info(e, "Current Hystrix Properties Strategy:" -> currentStrategy)
         }
       }
     }
