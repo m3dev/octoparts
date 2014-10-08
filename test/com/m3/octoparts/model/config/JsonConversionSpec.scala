@@ -85,7 +85,7 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
 
     } yield {
       json.HttpPartConfig(
-        partId, owner, uriToInterpolate, description, method, hystrixConfig,
+        partId, owner, uriToInterpolate, Some(description), method, hystrixConfig,
         additionalValidStatuses, parameters, deprecatedInFavourOf,
         cacheGroups, cacheTtl,
         alertMailsEnabled, alertAbsoluteThreshold, alertPercentThreshold, alertInterval, alertMailRecipients

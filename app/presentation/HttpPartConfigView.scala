@@ -45,7 +45,7 @@ case class HttpPartConfigView(config: HttpPartConfig) {
     case p if !p.inputName.startsWith("meta.") => ParamView(p)
   }
 
-  def description: String = config.description
+  def description: Option[String] = config.description
 
   def deprecation(implicit lang: Lang): Html = config.deprecatedInFavourOf match {
     case Some(s) if s.length() > 0 =>

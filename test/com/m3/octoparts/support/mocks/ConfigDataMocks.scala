@@ -36,7 +36,7 @@ trait ConfigDataMocks extends RequiresDB {
     partId = "something",
     owner = "somebody",
     uriToInterpolate = "http://random.com",
-    description = "",
+    description = None,
     method = Get,
     parameters = Set(mockPartParam),
     cacheTtl = Some(60.seconds),
