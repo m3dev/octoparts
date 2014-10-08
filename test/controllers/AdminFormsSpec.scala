@@ -9,7 +9,7 @@ class AdminFormsSpec extends FunSpec with Matchers with ConfigDataMocks {
 
   describe("PartData") {
     val partDataWithTrimableName = PartData(
-      partId = "  ~ wowzers ~  ",
+      partId = "  　~ wowzers ~　　", // note: a mix of single-byte and multi-byte spaces
       description = "",
       deprecatedTo = None,
       uri = "",

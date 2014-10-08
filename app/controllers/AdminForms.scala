@@ -3,6 +3,7 @@ package controllers
 import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config._
+import org.apache.commons.lang3.StringUtils
 import org.joda.time.DateTime
 import play.api.data.Forms._
 import play.api.data._
@@ -110,7 +111,7 @@ object AdminForms {
     )
 
     private def trimPartId(original: String): String = {
-      val trimmed = original.trim
+      val trimmed = StringUtils.strip(original)
       if (trimmed != original) {
         LTSVLogger.info("message" -> "Leading and trailing spaces were trimmed from partId", "before" -> s"'$original'", "after" -> s"'$trimmed'")
       }

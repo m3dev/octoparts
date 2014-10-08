@@ -14,6 +14,7 @@ import com.m3.octoparts.repository.{ ConfigsRepository, RepositoriesModule }
 import com.typesafe.config.ConfigFactory
 import com.wordnik.swagger.config.{ ConfigFactory => SwaggerConfigFactory }
 import com.wordnik.swagger.model.ApiInfo
+import org.apache.commons.lang3.StringUtils
 import play.api._
 import play.api.libs.concurrent.Akka
 import play.api.mvc._
@@ -111,7 +112,7 @@ object Global extends WithFilters(MetricsFilter) with ScaldiSupport {
       configs <- configsRepo.findAllConfigs()
       config <- configs
     } {
-      val trimmed = config.partId.trim
+      val trimmed = StringUtils.strip(config.partId)
       if (trimmed != config.partId) {
         LTSVLogger.warn("message" -> "This partId is suspicious - it has leading/trailing spaces", "partId" -> s"'${config.partId}'")
       }
