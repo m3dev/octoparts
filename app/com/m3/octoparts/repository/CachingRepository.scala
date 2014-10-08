@@ -3,6 +3,7 @@ package com.m3.octoparts.repository
 import com.m3.octoparts.cache.Cache
 import com.m3.octoparts.cache.key.{ CacheGroupCacheKey, CacheKey, HttpPartConfigCacheKey }
 import com.m3.octoparts.http.HttpClientPool
+import com.beachape.logging.LTSVLogger
 import play.api.Logger
 import shade.memcached.MemcachedCodecs._
 import skinny.util.LTSV
@@ -31,7 +32,7 @@ trait CachingRepository extends ConfigsRepository {
     cache.put(cacheKey, maybeCacheable, Some(Duration.Inf)).recover {
       // no need to propagate cache put errors
       case NonFatal(cacheFailure) =>
-        Logger.error(LTSV.dump("Cache put" -> cacheKey.toString), cacheFailure)
+        LTSVLogger.error(cacheFailure, "Cache put" -> cacheKey.toString)
     }
   }
 
@@ -93,10 +94,10 @@ trait CachingRepository extends ConfigsRepository {
     }.recoverWith {
       case NonFatal(e) =>
         Option(e.getCause).fold {
-          Logger.error(LTSV.dump("Cache retrieve this identifier" -> identifier.toString), e)
+          LTSVLogger.error(e, "Cache retrieve this identifier" -> identifier.toString)
         } {
-          case cause: shade.TimeoutException => Logger.warn(LTSV.dump("Cache retrieve timed out for this identifier" -> identifier.toString))
-          case cause => Logger.error(LTSV.dump("Cache retrieve this identifier" -> identifier.toString), cause)
+          case cause: shade.TimeoutException => LTSVLogger.warn("Cache retrieve timed out for this identifier" -> identifier.toString)
+          case cause => LTSVLogger.error(cause, "Cache retrieve this identifier" -> identifier.toString)
         }
 
         notFromCacheFind(identifier)

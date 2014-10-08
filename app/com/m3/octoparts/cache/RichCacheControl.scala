@@ -25,9 +25,9 @@ class RichCacheControl(val cacheControl: CacheControl) extends AnyVal {
     case Some(expiresAt) => expiresAt <= DateTimeUtils.currentTimeMillis()
   }
 
-  def revalidationHeaders = Seq(
+  def revalidationHeaders: Seq[(String, String)] = Seq(
     cacheControl.etag.map(HeaderConstants.IF_NONE_MATCH -> _),
     cacheControl.lastModified.map(HeaderConstants.IF_MODIFIED_SINCE -> _)
-  ).flatten.toMap
+  ).flatten
 
 }

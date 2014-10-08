@@ -2,6 +2,7 @@ package controllers
 
 import _root_.presentation.NavbarLinks
 import com.m3.octoparts.aggregator.service.PartsService
+import com.m3.octoparts.cache.CacheOps
 import com.m3.octoparts.repository.{ ConfigsRepository, MutableConfigsRepository }
 import controllers.hystrix.HystrixController
 import controllers.system.{ HealthcheckController, SystemConfigController }
@@ -25,7 +26,7 @@ class ControllersModule extends Module {
 
   bind[CacheController] to injected[CacheController]
 
-  bind[AdminController] to new AdminController(inject[MutableConfigsRepository])(inject[NavbarLinks])
+  bind[AdminController] to new AdminController(inject[CacheOps], inject[MutableConfigsRepository])(inject[NavbarLinks])
 
   bind[NavbarLinks] to NavbarLinks(
     kibana = inject[Configuration].getString("urls.kibana"),

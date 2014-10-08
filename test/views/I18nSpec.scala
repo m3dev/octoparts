@@ -16,12 +16,16 @@ class I18nSpec extends FlatSpec with Matchers {
   class MultibyteCharDetector extends SimpleFileVisitor[Path] {
     val violations = ArrayBuffer.empty[Violation]
 
+    val pathMatcher = FileSystems.getDefault.getPathMatcher("glob:**/*.scala*") // Scala files and .scala.html templates
+
     override def visitFile(file: Path, attrs: BasicFileAttributes) = {
-      Source.fromFile(file.toFile).getLines().zipWithIndex.foreach {
-        case (line, lineNum) =>
-          if (line.getBytes(StandardCharsets.UTF_8).length != line.size) {
-            violations += Violation(file, lineNum, line)
-          }
+      if (pathMatcher.matches(file)) {
+        Source.fromFile(file.toFile).getLines().zipWithIndex.foreach {
+          case (line, lineNum) =>
+            if (line.getBytes(StandardCharsets.UTF_8).length != line.size) {
+              violations += Violation(file, lineNum, line)
+            }
+        }
       }
       FileVisitResult.CONTINUE
     }

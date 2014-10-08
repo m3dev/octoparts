@@ -1,15 +1,16 @@
 package com.m3.octoparts.cache.memcached
 
-import com.m3.octoparts.cache.{ Cache, CacheOps }
+import com.m3.octoparts.cache._
 import com.m3.octoparts.cache.directive.CacheDirective
 import com.m3.octoparts.cache.key.{ PartCacheKey, VersionCacheKey }
-import com.m3.octoparts.cache.versioning.{ LatestVersionCache, VersionCache, VersionLookup, VersionedParamKey }
+import com.m3.octoparts.cache.versioning._
 import com.m3.octoparts.model.PartResponse
 import shade.memcached.Codec
 import skinny.logging.Logging
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.control.NonFatal
 
 class MemcachedCacheOps(
   cache: Cache,
@@ -31,19 +32,23 @@ class MemcachedCacheOps(
       if (aVersionIsUnknown) {
         None
       } else {
-        Some(PartCacheKey(directive.partId, internalVersions.flatten, directive.paramMap))
+        Some(PartCacheKey(directive.partId, internalVersions.flatten, directive.paramValues))
       }
     }
   }
 
   object PartResponseCache {
+    import play.api.libs.json.Json
+    import shade.memcached.MemcachedCodecs.StringBinaryCodec
+    import com.m3.octoparts.json.format.ReqResp._
 
-    import shade.memcached.MemcachedCodecs._
-
-    def pollPartResponse(cacheKey: PartCacheKey) = cache.get[PartResponse](cacheKey)
+    def pollPartResponse(cacheKey: PartCacheKey): Future[Option[PartResponse]] = {
+      val fMaybeString = cache.get[String](cacheKey)
+      fMaybeString.map(maybeString => maybeString.map(Json.parse(_).as[PartResponse]))
+    }
 
     def insertPartResponse(cacheKey: PartCacheKey, partResponse: PartResponse, ttl: Option[Duration]): Future[Unit] =
-      cache.put(cacheKey, partResponse, calculateTtl(partResponse.cacheControl, ttl))
+      cache.put[String](cacheKey, Json.toJson(partResponse).toString, calculateTtl(partResponse.cacheControl, ttl))
   }
 
   object CombinedVersionLookup {

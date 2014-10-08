@@ -1,8 +1,10 @@
 package com.m3.octoparts.future
 
+import com.kenshoo.play.metrics.MetricsRegistry
+
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.language.{ implicitConversions, postfixOps }
+import scala.language.implicitConversions
 
 /**
  * Enrichment for scala.concurrent.Future adding methods for measuring execution time.
@@ -37,5 +39,9 @@ class RichFutureWithTiming[A](val future: Future[A]) extends AnyVal {
       r =>
         f(r, Duration.fromNanos(System.nanoTime() - startNanos))
     }
+  }
+
+  def measure(metricsName: String)(implicit executionContext: ExecutionContext): Future[A] = time {
+    (_, duration) => MetricsRegistry.default.timer(metricsName).update(duration.length, duration.unit)
   }
 }

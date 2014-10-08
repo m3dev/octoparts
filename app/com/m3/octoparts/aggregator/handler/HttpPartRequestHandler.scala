@@ -2,7 +2,7 @@ package com.m3.octoparts.aggregator.handler
 
 import java.net.{ URI, URLEncoder }
 
-import com.m3.octoparts.http.{ HttpResponse, _ }
+import com.m3.octoparts.http._
 import com.m3.octoparts.hystrix._
 import com.m3.octoparts.model.{ HttpMethod, PartResponse }
 import com.m3.octoparts.model.config._
@@ -67,10 +67,10 @@ trait HttpPartRequestHandler extends Handler {
   def createBlockingHttpRetrieve(hArgs: HandlerArguments): BlockingHttpRetrieve = {
     new BlockingHttpRetrieve {
       val httpClient = handler.httpClient
-      val method = httpMethod
+      def method = httpMethod
       val uri = new URI(buildUri(hArgs))
       val maybeBody = hArgs.collectFirst {
-        case (p, v) if p.paramType == ParamType.Body => v
+        case (p, values) if p.paramType == ParamType.Body && values.nonEmpty => values.head
       }
       val headers = collectHeaders(hArgs)
     }
@@ -106,10 +106,23 @@ trait HttpPartRequestHandler extends Handler {
    * @return Map[String, String]
    */
   def collectHeaders(hArgs: HandlerArguments): Seq[(String, String)] = {
-    hArgs.toSeq.collect {
-      case (p, v) if p.paramType == ParamType.Header => p.outputName -> v
-      case (p, v) if p.paramType == ParamType.Cookie => "Cookie" -> (escapeCookie(p.outputName) + "=" + escapeCookie(v))
+    // group Cookies. According to RFC 6265, at most one Cookie header may be sent.
+    val cookieHeadersElements = for {
+      (p, values) <- hArgs if p.paramType == ParamType.Cookie
+      cookieName = escapeCookie(p.outputName)
+      v <- values
+    } yield {
+      s"$cookieName=${escapeCookie(v)}"
     }
+    val cookieHeaderValue = if (cookieHeadersElements.isEmpty) None else Some(cookieHeadersElements.mkString("; "))
+
+    // for other headers, no grouping is done. Note: duplicate headers are allowed!
+    cookieHeaderValue.map("Cookie" -> _).toSeq ++ (for {
+      (p, values) <- hArgs if p.paramType == ParamType.Header if p.outputName != "Cookie"
+      v <- values
+    } yield {
+      p.outputName -> v
+    })
   }
 
   /**
@@ -121,12 +134,17 @@ trait HttpPartRequestHandler extends Handler {
    */
   private[handler] def buildUri(hArgs: HandlerArguments): Uri = {
     val baseUri = interpolate(uriToInterpolate) { key =>
+      val ThePathParam = ShortPartParam(key, ParamType.Path)
       val maybeParamsVal: Option[String] = hArgs.collectFirst {
-        case (p, v) if p.paramType == ParamType.Path && p.outputName == key => v
+        case (ThePathParam, v) if v.nonEmpty => v.head
       }
       maybeParamsVal.getOrElse("")
     }
-    baseUri.addParams(hArgs.collect { case (p, v) if p.paramType == ParamType.Query => (p.outputName, v) }.toSeq)
+    val kvs = for {
+      (p, values) <- hArgs if p.paramType == ParamType.Query
+      v <- values
+    } yield p.outputName -> v
+    baseUri.addParams(kvs.toSeq)
   }
 
   /**

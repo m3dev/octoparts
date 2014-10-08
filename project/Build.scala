@@ -19,16 +19,16 @@ import scalariform.formatter.preferences._
 
 object OctopartsBuild extends Build {
 
-  val octopartsVersion = "2.1-SNAPSHOT"
+  val octopartsVersion = "2.2-SNAPSHOT"
 
   val httpPort = 9000
   val theScalaVersion = "2.11.2"
   val thePlayVersion = "2.3.4" // make play-json-formats subproject depend on play-json when bumping to 2.4
   val slf4jVersion = "1.7.7"
-  val hystrixVersion = "1.3.17"
+  val hystrixVersion = "1.3.18"
   val httpClientVersion = "4.3.5"
-  val scalikejdbcVersion = "2.1.1"
-  val swaggerVersion = "1.3.8"
+  val scalikejdbcVersion = "2.1.2"
+  val swaggerVersion = "1.3.10"
   val jacksonVersion = "2.4.2"
 
   val testEnv = sys.env.get("PLAY_ENV") match {
@@ -81,22 +81,24 @@ object OctopartsBuild extends Build {
           "org.slf4j" % "log4j-over-slf4j" % slf4jVersion,
           "org.slf4j" % "jul-to-slf4j" % slf4jVersion,
           "net.kencochrane.raven" % "raven-logback" % "5.0.1",
-          "org.codehaus.janino" % "janino" % "2.7.5",
+          "org.codehaus.janino" % "janino" % "2.7.6",
+          "com.beachape" %% "ltsv-logger" % "0.0.3",
 
           // Hystrix
           "com.netflix.hystrix" % "hystrix-core" % hystrixVersion,
           "com.netflix.hystrix" % "hystrix-metrics-event-stream" % hystrixVersion,
-          "com.netflix.rxjava" % "rxjava-scala" % "0.20.1", // matches version used in hystrix-core
+          "com.netflix.rxjava" % "rxjava-scala" % "0.20.3", // matches version used in hystrix-core
 
           // Apache HTTP client
           "org.apache.httpcomponents" % "httpclient" % httpClientVersion,
           "org.apache.httpcomponents" % "httpclient-cache" % httpClientVersion,
+          "io.dropwizard.metrics" % "metrics-httpclient" % "3.1.0",
 
           // DB
           "org.postgresql" % "postgresql" % "9.3-1102-jdbc41" % "runtime",
-          "org.skinny-framework" %% "skinny-orm" % "1.3.1",
+          "org.skinny-framework" %% "skinny-orm" % "1.3.3",
           "org.scalikejdbc" %% "scalikejdbc" % scalikejdbcVersion,
-          "org.scalikejdbc" %% "scalikejdbc-play-plugin" % "2.3.1",
+          "org.scalikejdbc" %% "scalikejdbc-play-plugin" % "2.3.2",
           "org.apache.commons" % "commons-dbcp2" % "2.0.1",
 
           // Memcached
@@ -106,7 +108,7 @@ object OctopartsBuild extends Build {
           // Misc utils
           "commons-validator" % "commons-validator" % "1.4.0" % "runtime",
           "javax.transaction" % "jta" % "1.1",
-          "com.netaporter" %% "scala-uri" % "0.4.2",
+          "com.netaporter" %% "scala-uri" % "0.4.3",
 
           // Play plugins
           "com.github.tototoshi" %% "play-flyway" % "1.1.2",
@@ -118,8 +120,8 @@ object OctopartsBuild extends Build {
           "com.typesafe.play" %% "play-test" % thePlayVersion % "test",
           "org.scalatest" %% "scalatest" % "2.2.2" % "test",
           "org.scalatestplus" %% "play" % "1.2.0" % "test",
-          "org.scalacheck" %% "scalacheck" % "1.11.5" % "test",
-          "org.codehaus.groovy" % "groovy" % "2.3.6" % "test",
+          "org.scalacheck" %% "scalacheck" % "1.11.6" % "test",
+          "org.codehaus.groovy" % "groovy" % "2.3.7" % "test",
           "org.scalikejdbc" %% "scalikejdbc-test"   % scalikejdbcVersion % "test"
         ).map(_.excludeAll(
           ExclusionRule(organization = "spy", name = "spymemcached"), // spymemcached's org changed from spy to net.spy
@@ -204,7 +206,8 @@ object OctopartsBuild extends Build {
   lazy val authPluginApi = Project(id = "auth-plugin-api", base = file("plugins/auth-plugin-api"), settings = nonPlayAppSettings).settings(
     name := "octoparts-auth-plugin-api",
     libraryDependencies ++= Seq(
-      "com.typesafe.play" %% "play" % thePlayVersion % "provided"
+      "com.typesafe.play" %% "play" % thePlayVersion % "provided",
+      "com.beachape" %% "ltsv-logger" % "0.0.3"
     )
   )
 
@@ -238,7 +241,7 @@ object OctopartsBuild extends Build {
         libraryDependencies ++= Seq(
           "com.google.code.findbugs" % "jsr305" % "3.0.0" intransitive(),
           "org.slf4j" % "slf4j-api" % slf4jVersion,
-          "com.ning" % "async-http-client" % "1.8.13",
+          "com.ning" % "async-http-client" % "1.8.14",
           "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
           "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
           "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
@@ -259,7 +262,7 @@ object OctopartsBuild extends Build {
     .settings(
       libraryDependencies ++= Seq(
         ws, //TODO when upgrading to Play 2.4; change this to use just play-json
-        "org.scalatest" %% "scalatest" % "2.2.1" % "test",
+        "org.scalatest" %% "scalatest" % "2.2.2" % "test",
         "org.scalatestplus" %% "play" % "1.2.0" % "test"
       ),
       name := "octoparts-play-json-formats",
@@ -275,7 +278,7 @@ object OctopartsBuild extends Build {
     .settings(
       libraryDependencies ++= Seq(
         ws,
-        "org.scalatest" %% "scalatest" % "2.2.1" % "test",
+        "org.scalatest" %% "scalatest" % "2.2.2" % "test",
         "org.scalatestplus" %% "play" % "1.2.0" % "test"
       ),
       name := "octoparts-scala-ws-client",

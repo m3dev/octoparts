@@ -4,11 +4,10 @@ import com.m3.octoparts.support.db.RequiresDB
 import org.scalatest._
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import com.m3.octoparts.model.PartRequestParam
 import scala.language.implicitConversions
 import com.m3.octoparts.hystrix.{ MockHttpClientComponent, HystrixExecutor }
 import com.m3.octoparts.model.HttpMethod.Get
-import com.m3.octoparts.model.config.{ ShortPartParam, HystrixConfig }
+import com.m3.octoparts.model.config._
 import com.m3.octoparts.model.config.ParamType._
 import com.m3.octoparts.support.mocks.ConfigDataMocks
 import org.scalatest.concurrent.ScalaFutures
@@ -20,41 +19,33 @@ import com.m3.octoparts.model.PartResponse
 
 class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures with ConfigDataMocks with RequiresDB {
 
-  val mockPartId = "mock"
-  val stringToInterpolate = "http://mock.com/${path1}/${path2}"
-  lazy val mockHystrixArguments = HystrixConfig(
+  private val mockPartId = "mock"
+  private val stringToInterpolate = "http://mock.com/${path1}/${path2}"
+  private val mockHystrixArguments = HystrixConfig(
     commandKey = "mock",
     commandGroupKey = "mock",
     timeoutInMs = (10 seconds).toMillis,
     threadPoolConfig = Some(mockThreadConfig),
     updatedAt = now, createdAt = now)
 
-  val headerParam1 = ShortPartParam("meta.userId", Header)
-  val pathParam1 = ShortPartParam("path1", Path)
-  val pathParam2 = ShortPartParam("path2", Path)
-  val queryParam1 = ShortPartParam("query1", Query)
-  val queryParam2 = ShortPartParam("query2", Query)
+  private val headerParam1 = ShortPartParam("meta.userId", Header)
+  private val pathParam1 = ShortPartParam("path1", Path)
+  private val pathParam2 = ShortPartParam("path2", Path)
+  private val queryParam1 = ShortPartParam("query1", Query)
+  private val queryParam2 = ShortPartParam("query2", Query)
 
-  val completeParamWithArgs: Map[ShortPartParam, String] = Map(
-    headerParam1 -> "1",
-    pathParam1 -> "hi",
-    pathParam2 -> "there",
-    queryParam1 -> "scala",
-    queryParam2 -> "lover")
-
-  val mockRegisteredParams: Set[ShortPartParam] = Set(
-    headerParam1,
-    pathParam1,
-    pathParam2,
-    queryParam1,
-    queryParam2
-  )
-
-  lazy val handler = handlerWithHttpClient(MockHttpClientComponent.httpClient)
-
-  private implicit def paramMapToSeq(m: Map[String, String]): Set[PartRequestParam] = (for ((k, v) <- m) yield PartRequestParam(k, v)).toSet
+  private val handler = handlerWithHttpClient(MockHttpClientComponent.httpClient)
 
   describe("#buildUri") {
+
+    val completeParamWithArgs = Map(
+      headerParam1 -> Seq("1"),
+      pathParam1 -> Seq("hi"),
+      pathParam2 -> Seq("there"),
+      queryParam1 -> Seq("scala"),
+      queryParam2 -> Seq("lover")
+    )
+
     describe("when providing all params") {
       it("should properly interpolate path and query params") {
         val output = handler.buildUri(completeParamWithArgs).toString()
@@ -104,7 +95,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
     describe("when there is no body param") {
       it("should not set a body for the HTTP retrieve") {
         val hArgs = Map(
-          ShortPartParam("query1", Query) -> "query1Value"
+          ShortPartParam("query1", Query) -> Seq("query1Value")
         )
         handler.createBlockingHttpRetrieve(hArgs).maybeBody should be(None)
       }
@@ -112,7 +103,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
     describe("when there is a body param") {
       it("should use the body param to set a body for the HTTP retrieve") {
         val hArgs = Map(
-          ShortPartParam("jsonPayload", Body) -> """{"some":"json"}"""
+          ShortPartParam("jsonPayload", Body) -> Seq("""{"some":"json"}""")
         )
         handler.createBlockingHttpRetrieve(hArgs).maybeBody should be(Some("""{"some":"json"}"""))
       }
@@ -120,25 +111,24 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
   }
 
   describe("#collectHeaders") {
-    it("should collect all headers and cookies into a list of HTTP headers") {
+    it("should collect all headers and cookies into a list of HTTP headers, collapsing the cookies into a single header") {
       val hArgs = Map(
-        ShortPartParam("query1", Query) -> "query1Value",
-        ShortPartParam("query2", Query) -> "query2Value",
-        ShortPartParam("header1", Header) -> "header1Value",
-        ShortPartParam("header2", Header) -> "header2Value",
-        ShortPartParam("cookie1", Cookie) -> "cookie1Value",
-        ShortPartParam("cookie2", Cookie) -> "cookie2Value"
+        ShortPartParam("query1", Query) -> Seq("query1Value"),
+        ShortPartParam("query2", Query) -> Seq("query2Value"),
+        ShortPartParam("header1", Header) -> Seq("header1Value"),
+        ShortPartParam("header2", Header) -> Seq("header2Value"),
+        ShortPartParam("cookie1", Cookie) -> Seq("cookie1Value"),
+        ShortPartParam("cookie2", Cookie) -> Seq("cookie2Value")
       )
       val headers = handler.collectHeaders(hArgs)
-      headers should have length 4
+      headers should have length 3
       headers should contain("header1" -> "header1Value")
       headers should contain("header2" -> "header2Value")
-      headers should contain("Cookie" -> "cookie1=cookie1Value")
-      headers should contain("Cookie" -> "cookie2=cookie2Value")
+      headers should contain("Cookie" -> "cookie1=cookie1Value; cookie2=cookie2Value")
     }
     it("should URL-escape cookie names and values") {
       val hArgs = Map(
-        ShortPartParam("クッキー１", Cookie) -> "クッキー１の値"
+        ShortPartParam("クッキー１", Cookie) -> Seq("クッキー１の値")
       )
       val headers = handler.collectHeaders(hArgs)
       val expectedCookieString = s"${URLEncoder.encode("クッキー１", "UTF-8")}=${URLEncoder.encode("クッキー１の値", "UTF-8")}"
@@ -154,7 +144,6 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
       val hystrixExecutor = HystrixExecutor(mockHystrixArguments)
       def httpMethod = Get
       val additionalValidStatuses = Set.empty[Int]
-      // override val registeredParams = mockRegisteredParams
       def httpClient = client
     }
   }

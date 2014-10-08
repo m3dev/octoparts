@@ -2,13 +2,11 @@ package com.m3.octoparts.cache.memcached
 
 import com.m3.octoparts.cache.{ Cache, CacheException, RawCache }
 import com.m3.octoparts.cache.key._
-import play.api.Logger
+import com.beachape.logging.LTSVLogger
 import shade.memcached.Codec
-import skinny.util.LTSV
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.language.postfixOps
 import scala.util.control.NonFatal
 
 /**
@@ -28,7 +26,7 @@ class MemcachedCache(underlying: RawCache, keyGen: MemcachedKeyGenerator)(implic
    * We could also use Duration.Inf, which Shade would convert to 365 days,
    * or Duration.Zero, which Memcached would treat as infinite.
    */
-  private val VERY_LONG_TTL = 30 days
+  private val VERY_LONG_TTL = 30.days
 
   private def serializeKey(key: CacheKey) = keyGen.toMemcachedKey(key)
 
@@ -51,7 +49,7 @@ class MemcachedCache(underlying: RawCache, keyGen: MemcachedKeyGenerator)(implic
            *  - there is no point, as the element has already expired, or will do very soon
            *  - The TTL will get rounded down to 0, which Memcached treats as meaning "infinite". This is the exact opposite to what we want.
            */
-          Logger.debug(LTSV.dump("message" -> "Skipping cache PUT because ttl is less than 1 second", "key" -> key.toString, "ttl" -> duration.toString))
+          LTSVLogger.debug("message" -> "Skipping cache PUT because ttl is less than 1 second", "key" -> key.toString, "ttl" -> duration.toString)
           Future.successful(())
         case _ =>
           underlying.set[T](serializeKey(key), v, ttl.getOrElse(VERY_LONG_TTL)).recoverWith {
