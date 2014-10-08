@@ -68,7 +68,7 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
       partId = "something",
       owner = "somebody",
       uriToInterpolate = "http://random.com",
-      description = "",
+      description = None,
       method = HttpMethod.Get,
       hystrixConfig = HystrixConfig(
         timeout = 50.millis,

@@ -237,6 +237,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
             paramType = ParamType.withName(data.paramType),
             outputName = data.outputName,
             inputNameOverride = data.inputNameOverride.filterNot(_.isEmpty),
+            description = data.description.filterNot(_.isEmpty),
             cacheGroups = cacheGroups.toSet,
             createdAt = DateTime.now,
             updatedAt = DateTime.now)
@@ -263,6 +264,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
               paramType = ParamType.withName(data.paramType),
               outputName = data.outputName,
               inputNameOverride = data.inputNameOverride.filterNot(_.isEmpty),
+              description = data.description.filterNot(_.isEmpty),
               cacheGroups = cacheGroups.toSet,
               updatedAt = DateTime.now)
             saveAndRedirect {

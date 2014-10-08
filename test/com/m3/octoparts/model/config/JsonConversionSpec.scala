@@ -57,9 +57,10 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
       paramType <- Gen.oneOf(ParamType.values.toSeq)
       outputName <- Arbitrary.arbString.arbitrary
       inputNameOverride <- Gen.option(Arbitrary.arbString.arbitrary)
+      description <- Gen.option(Arbitrary.arbString.arbitrary)
       cacheGroups <- Gen.containerOf[Set, json.CacheGroup](arbCacheGroup.arbitrary)
     } yield {
-      json.PartParam(required, versioned, paramType, outputName, inputNameOverride, cacheGroups)
+      json.PartParam(required, versioned, paramType, outputName, inputNameOverride, description, cacheGroups)
     }
   }
 
@@ -84,7 +85,7 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
 
     } yield {
       json.HttpPartConfig(
-        partId, owner, uriToInterpolate, description, method, hystrixConfig,
+        partId, owner, uriToInterpolate, Some(description), method, hystrixConfig,
         additionalValidStatuses, parameters, deprecatedInFavourOf,
         cacheGroups, cacheTtl,
         alertMailsEnabled, alertAbsoluteThreshold, alertPercentThreshold, alertInterval, alertMailRecipients

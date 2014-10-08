@@ -26,7 +26,7 @@ class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
         partId = "something",
         owner = "somebody",
         uriToInterpolate = "http://random.com",
-        description = "",
+        description = None,
         method = HttpMethod.Get,
         hystrixConfig = json.HystrixConfig(
           timeout = 50 millis,

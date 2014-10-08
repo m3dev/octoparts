@@ -35,6 +35,7 @@ parts.parameter=Parameters
 parts.parameter.create=Create a new parameter
 parts.parameter.outputName=Output name
 parts.parameter.inputName=Input name
+parts.parameter.description=Description
 parts.parameter.type=Output type
 parts.parameter.required=Required
 parts.parameter.versioned=Can triggers cache flushes

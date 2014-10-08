@@ -17,7 +17,7 @@ case class HttpPartConfig(id: Option[Long] = None, // None means that the record
                           partId: String,
                           owner: String,
                           uriToInterpolate: String,
-                          description: String,
+                          description: Option[String],
                           method: HttpMethod.Value,
                           additionalValidStatuses: Set[Int] = Set.empty,
                           parameters: Set[PartParam] = Set.empty,

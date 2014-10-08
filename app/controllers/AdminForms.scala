@@ -14,7 +14,7 @@ object AdminForms {
 
   case class PartData(
       partId: String,
-      description: String,
+      description: Option[String],
       deprecatedTo: Option[String],
       uri: String,
       method: String,
@@ -123,7 +123,7 @@ object AdminForms {
   val partForm = Form(
     mapping(
       "partId" -> text,
-      "description" -> text,
+      "description" -> optional(text),
       "deprecatedTo" -> optional(text),
       "uri" -> text,
       "method" -> text.verifying(string => HttpMethod.values.exists(_.toString == string)),
@@ -145,6 +145,7 @@ object AdminForms {
   case class ParamData(
     outputName: String,
     inputNameOverride: Option[String],
+    description: Option[String],
     paramType: String,
     required: Boolean,
     versioned: Boolean,
@@ -154,6 +155,7 @@ object AdminForms {
     mapping(
       "outputName" -> text,
       "inputNameOverride" -> optional(text),
+      "description" -> optional(text),
       "paramType" -> text.verifying(string => ParamType.values.exists(_.toString == string)),
       "required" -> boolean,
       "versioned" -> boolean,
