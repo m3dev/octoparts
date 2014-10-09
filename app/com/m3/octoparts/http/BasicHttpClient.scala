@@ -40,7 +40,6 @@ class BasicHttpClient(
       .setSocketTimeout(socketTimeout.toMillis.toInt)
       .build()
 
-
     HttpClientBuilder
       .create
       .setRequestExecutor(BasicHttpClient.InstrumentedRequestExecutor)
