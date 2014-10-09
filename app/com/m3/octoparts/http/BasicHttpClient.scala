@@ -3,11 +3,12 @@ package com.m3.octoparts.http
 import java.io.Closeable
 import java.nio.charset.{ Charset, StandardCharsets }
 
-import com.codahale.metrics.httpclient.{ HttpClientMetricNameStrategies, InstrumentedHttpClients }
+import com.codahale.metrics.httpclient._
 import com.kenshoo.play.metrics.MetricsRegistry
 import com.m3.octoparts.util.TimingSupport
 import org.apache.http.client.config.{ CookieSpecs, RequestConfig }
 import org.apache.http.client.methods.HttpUriRequest
+import org.apache.http.impl.client.HttpClientBuilder
 import skinny.logging.Logging
 import skinny.util.LTSV
 
@@ -39,7 +40,12 @@ class BasicHttpClient(
       .setSocketTimeout(socketTimeout.toMillis.toInt)
       .build()
 
-    InstrumentedHttpClients.custom(MetricsRegistry.default, HttpClientMetricNameStrategies.QUERYLESS_URL_AND_METHOD).setDefaultRequestConfig(clientConfig).build
+    HttpClientBuilder
+      .create
+      .setRequestExecutor(BasicHttpClient.InstrumentedRequestExecutor)
+      .setConnectionManager(BasicHttpClient.InstrumentedConnectionManager)
+      .setDefaultRequestConfig(clientConfig)
+      .build
   }
 
   // our custom HttpResponseHandler
@@ -64,4 +70,9 @@ class BasicHttpClient(
   }
 
   def close() = httpClient.close()
+}
+
+object BasicHttpClient {
+  val InstrumentedRequestExecutor = new InstrumentedHttpRequestExecutor(MetricsRegistry.default, HttpClientMetricNameStrategies.QUERYLESS_URL_AND_METHOD)
+  val InstrumentedConnectionManager = new InstrumentedHttpClientConnectionManager(MetricsRegistry.default)
 }
