@@ -1,15 +1,14 @@
 package com.m3.octoparts.http
 
 import java.io.Closeable
-import java.nio.charset.{Charset, StandardCharsets}
+import java.nio.charset.{ Charset, StandardCharsets }
 
 import com.beachape.logging.LTSVLogger
-import com.codahale.metrics.MetricRegistry.{name => registryName, _}
 import com.codahale.metrics.httpclient._
-import com.codahale.metrics.{Gauge, MetricRegistry}
+import com.codahale.metrics.{ Gauge, MetricRegistry }
 import com.m3.octoparts.OctopartsMetricsRegistry
 import com.m3.octoparts.util.TimingSupport
-import org.apache.http.client.config.{CookieSpecs, RequestConfig}
+import org.apache.http.client.config.{ CookieSpecs, RequestConfig }
 import org.apache.http.client.methods.HttpUriRequest
 import org.apache.http.conn._
 import org.apache.http.impl.client.HttpClientBuilder
@@ -61,7 +60,7 @@ class BasicHttpClient(
   private val responseHandler = new HttpResponseHandler(defaultEncoding)
 
   /**
-   * Givne a [[HttpUriRequest]], fetches the HttpResponse for it
+   * Given a [[HttpUriRequest]], fetches the HttpResponse for it
    * @param request HttpUriRequest
    * @return HttpResponse
    */
@@ -95,7 +94,6 @@ class BasicHttpClient(
           case e: IllegalArgumentException => LTSVLogger.warn(e, "Could not register gauge" -> gaugeName)
         }
     }
-
 
     override def shutdown() = {
       super.shutdown()
