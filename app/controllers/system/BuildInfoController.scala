@@ -17,7 +17,7 @@ object BuildInfoController extends Controller {
       "build_time_millis" -> BuildInfo.buildTime,
       "build_time_pretty" -> new LocalDateTime(BuildInfo.buildTime, DateTimeZone.forID("Asia/Tokyo")).toString("yyyy-MM-dd HH:mm:ss"),
       "git_branch" -> BuildInfo.gitBranch,
-      "git_tags" -> JsArray(BuildInfo.gitTags),
+      "git_tags" -> JsArray(BuildInfo.gitTags.map(JsString(_))),
       "git_head" -> JsString(BuildInfo.gitHEAD getOrElse "<unknown>")
     )
     Ok(json)
