@@ -7,5 +7,5 @@ object OctopartsMetricsRegistry {
   /**
    * Same as [[com.kenshoo.play.metrics.MetricsRegistry.default]] when a Play app is running; uses the default name ("default") otherwise
    */
-  lazy val default = SharedMetricRegistries.getOrCreate(Play.maybeApplication.flatMap(_.configuration.getString("metrics.name")).getOrElse("default"))
+  val default = SharedMetricRegistries.getOrCreate(Play.maybeApplication.flatMap(_.configuration.getString("metrics.name")).getOrElse("default"))
 }
