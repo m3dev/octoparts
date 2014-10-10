@@ -35,15 +35,15 @@ class InstrumentedHttpClientHttpClientSpec extends FunSpec with Matchers {
     } finally {
       client.close()
     }
+  }
 
-    it("should set the connection pool size") {
-      val client = new InstrumentedHttpClient("A", connectionPoolSize = 42)
-      try {
-        client.connectionManager.getMaxTotal should be(42)
-        client.connectionManager.getDefaultMaxPerRoute should be(42)
-      } finally {
-        client.close()
-      }
+  it("should set the connection pool size") {
+    val client = new InstrumentedHttpClient("A", connectionPoolSize = 42)
+    try {
+      client.connectionManager.getMaxTotal should be(42)
+      client.connectionManager.getDefaultMaxPerRoute should be(42)
+    } finally {
+      client.close()
     }
   }
 }
