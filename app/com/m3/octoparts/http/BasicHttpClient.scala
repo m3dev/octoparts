@@ -30,6 +30,7 @@ import scala.concurrent.duration._
  */
 class BasicHttpClient(
   name: String,
+  connectionPoolSize: Int = 20,
   connectTimeout: Duration = 1.seconds,
   socketTimeout: Duration = 10.seconds,
   defaultEncoding: Charset = StandardCharsets.UTF_8)
@@ -94,6 +95,9 @@ class BasicHttpClient(
           case e: IllegalArgumentException => LTSVLogger.warn(e, "Could not register gauge" -> gaugeName)
         }
     }
+
+    setDefaultMaxPerRoute(connectionPoolSize)
+    setMaxTotal(connectionPoolSize)
 
     override def shutdown() = {
       super.shutdown()
