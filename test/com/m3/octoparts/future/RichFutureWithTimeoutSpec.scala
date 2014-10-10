@@ -1,15 +1,14 @@
 package com.m3.octoparts.future
 
 import java.io.IOException
-import java.util.concurrent.{ CountDownLatch, TimeoutException }
+import java.util.concurrent.TimeoutException
 
 import com.m3.octoparts.future.RichFutureWithTimeout._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ FunSpec, Matchers }
-import org.scalatestplus.play.OneAppPerSuite
 
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.Future
 import scala.language.postfixOps
 
 class RichFutureWithTimeoutSpec extends FunSpec with Matchers with ScalaFutures {

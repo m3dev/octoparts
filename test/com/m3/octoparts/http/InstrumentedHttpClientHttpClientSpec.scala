@@ -2,7 +2,7 @@ package com.m3.octoparts.http
 
 import com.m3.octoparts.OctopartsMetricsRegistry
 import org.apache.http.client.methods.HttpHead
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.{ FunSpec, Matchers }
 
 class InstrumentedHttpClientHttpClientSpec extends FunSpec with Matchers {
   it("should not fail (only warn) if 2 clients share the same name") {
