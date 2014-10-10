@@ -1,14 +1,20 @@
 package com.m3.octoparts.http
 
 import java.io.Closeable
-import java.nio.charset.{ Charset, StandardCharsets }
+import java.nio.charset.{Charset, StandardCharsets}
 
+import com.beachape.logging.LTSVLogger
+import com.codahale.metrics.MetricRegistry.{name => registryName, _}
 import com.codahale.metrics.httpclient._
+import com.codahale.metrics.{Gauge, MetricRegistry}
 import com.m3.octoparts.OctopartsMetricsRegistry
 import com.m3.octoparts.util.TimingSupport
-import org.apache.http.client.config.{ CookieSpecs, RequestConfig }
+import org.apache.http.client.config.{CookieSpecs, RequestConfig}
 import org.apache.http.client.methods.HttpUriRequest
+import org.apache.http.conn._
 import org.apache.http.impl.client.HttpClientBuilder
+import org.apache.http.impl.conn._
+import org.apache.http.pool.PoolStats
 import skinny.logging.Logging
 import skinny.util.LTSV
 
@@ -20,8 +26,11 @@ import scala.concurrent.duration._
  *
  * Aims to be useful when you don't want to have HTTP requests
  * made in another thread/non-blocking, which most Scala libraries do.
+ *
+ * @param name is used to differentiate instances when printing statistics
  */
 class BasicHttpClient(
+  name: String,
   connectTimeout: Duration = 1.seconds,
   socketTimeout: Duration = 10.seconds,
   defaultEncoding: Charset = StandardCharsets.UTF_8)
@@ -43,7 +52,7 @@ class BasicHttpClient(
     HttpClientBuilder
       .create
       .setRequestExecutor(BasicHttpClient.InstrumentedRequestExecutor)
-      .setConnectionManager(BasicHttpClient.InstrumentedConnectionManager)
+      .setConnectionManager(new InstrumentedHttpClientConnectionManager(OctopartsMetricsRegistry.default))
       .setDefaultRequestConfig(clientConfig)
       .build
   }
@@ -69,10 +78,43 @@ class BasicHttpClient(
     }
   }
 
+  private[http] def registryName(key: String) = MetricRegistry.name(classOf[HttpClientConnectionManager], name, key)
+
+  /**
+   * A [[HttpClientConnectionManager]] which monitors the number of open connections.
+   */
+  private class InstrumentedHttpClientConnectionManager(metricsRegistry: MetricRegistry) extends PoolingHttpClientConnectionManager {
+    BasicHttpClient.gauges.foreach {
+      case (key, f) =>
+        val gaugeName = registryName(key)
+        try {
+          metricsRegistry.register(gaugeName, new Gauge[Any] {
+            def getValue = f(getTotalStats)
+          })
+        } catch {
+          case e: IllegalArgumentException => LTSVLogger.warn(e, "Could not register gauge" -> gaugeName)
+        }
+    }
+
+
+    override def shutdown() = {
+      super.shutdown()
+      BasicHttpClient.gauges.keys.foreach { key =>
+        metricsRegistry.remove(registryName(key))
+      }
+    }
+  }
+
   def close() = httpClient.close()
 }
 
-object BasicHttpClient {
-  val InstrumentedRequestExecutor = new InstrumentedHttpRequestExecutor(OctopartsMetricsRegistry.default, HttpClientMetricNameStrategies.QUERYLESS_URL_AND_METHOD)
-  val InstrumentedConnectionManager = new InstrumentedHttpClientConnectionManager(OctopartsMetricsRegistry.default)
+private[http] object BasicHttpClient {
+  private val InstrumentedRequestExecutor = new InstrumentedHttpRequestExecutor(OctopartsMetricsRegistry.default, HttpClientMetricNameStrategies.QUERYLESS_URL_AND_METHOD)
+
+  val gauges: Map[String, PoolStats => _] = Map(
+    "available-connections" -> { ps: PoolStats => ps.getAvailable },
+    "leased-connections" -> { ps: PoolStats => ps.getLeased },
+    "max-connections" -> { ps: PoolStats => ps.getMax },
+    "pending-connections" -> { ps: PoolStats => ps.getPending }
+  )
 }
