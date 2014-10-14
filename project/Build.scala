@@ -69,6 +69,7 @@ object OctopartsBuild extends Build {
       playSettings ++
       buildInfoSettings ++
       buildInfoStuff ++
+      excludeConfFilesFromJarSettings ++
       sonatypeSettings ++
       coverallsSettings ++
       Seq(
@@ -135,6 +136,19 @@ object OctopartsBuild extends Build {
   lazy val playSettings = Seq(
     playVersion := thePlayVersion,
     playDefaultPort := httpPort
+  )
+
+  lazy val excludeConfFilesFromJarSettings = Seq(
+    // Do not include any config files in the Play app's jar,
+    // as they take precendence over the files in the tarball's /conf dir, thus rendering them useless.
+    // Note: a mapping is a (java.io.File, String) tuple
+    mappings in (Compile, packageBin) ~= { m =>
+      m.filterNot { case (from: java.io.File, _) =>
+        from.getName.endsWith(".conf") ||
+        from.getName.endsWith(".xml") ||
+        from.getName.endsWith(".plugins")
+      }
+    }
   )
 
   lazy val resolverSettings = {
