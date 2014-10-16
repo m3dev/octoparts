@@ -9,6 +9,7 @@ import scoverage.ScoverageSbtPlugin._
 import org.scoverage.coveralls.CoverallsPlugin.coverallsSettings
 import xerial.sbt.Sonatype._
 import SonatypeKeys._
+import com.typesafe.sbt.SbtNativePackager.NativePackagerKeys._
 
 import play.PlayImport.PlayKeys._
 import play.Play.autoImport._
@@ -69,6 +70,7 @@ object OctopartsBuild extends Build {
       playSettings ++
       buildInfoSettings ++
       buildInfoStuff ++
+      addConfDirToClasspathSettings ++
       excludeConfFilesFromJarSettings ++
       sonatypeSettings ++
       coverallsSettings ++
@@ -138,9 +140,17 @@ object OctopartsBuild extends Build {
     playDefaultPort := httpPort
   )
 
+  lazy val addConfDirToClasspathSettings = Seq(
+    // Add the contents of the /conf dir of an unzipped tarball to the start of the classpath
+    // so we can edit the config files of a deployed app.
+    // See https://github.com/playframework/playframework/issues/3473
+    scriptClasspath := "../conf" +: scriptClasspath.value
+  )
+
+
   lazy val excludeConfFilesFromJarSettings = Seq(
-    // Do not include any config files in the Play app's jar,
-    // as they take precendence over the files in the tarball's /conf dir, thus rendering them useless.
+    // Remove config files from the jar, because they conflict with the ones in the /conf directory.
+    // (e.g. Play finds both play.plugins files and loads all the plugins twice...)
     // Note: a mapping is a (java.io.File, String) tuple
     mappings in (Compile, packageBin) ~= { m =>
       m.filterNot { case (from: java.io.File, _) =>
