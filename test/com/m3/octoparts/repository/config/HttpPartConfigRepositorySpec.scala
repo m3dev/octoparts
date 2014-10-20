@@ -248,7 +248,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
           val insertedConfig = HttpPartConfig(
             partId = "testingWithModels",
             owner = "pwner",
-            description = "just trying this out",
+            description = Some("just trying this out"),
             uriToInterpolate = "http://scala-lang.org",
             method = Get,
             parameters = parameters.toSet,
@@ -277,7 +277,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
         val insertedConfig = HttpPartConfig(
           partId = "testingWithModels",
           owner = "pwner",
-          description = "just trying this out",
+          description = Some("just trying this out"),
           uriToInterpolate = "http://scala-lang.org",
           method = Get,
           parameters = parameters.toSet,
@@ -322,7 +322,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
             partId = "northernFront",
             owner = "newManagement",
             uriToInterpolate = "http://beachape.com",
-            description = "Nothing but the newest",
+            description = Some("Nothing but the newest"),
             parameters = updatedParams,
             hystrixConfig = updatedHystrixConfig
           )

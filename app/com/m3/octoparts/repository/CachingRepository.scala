@@ -4,9 +4,7 @@ import com.m3.octoparts.cache.Cache
 import com.m3.octoparts.cache.key.{ CacheGroupCacheKey, CacheKey, HttpPartConfigCacheKey }
 import com.m3.octoparts.http.HttpClientPool
 import com.beachape.logging.LTSVLogger
-import play.api.Logger
 import shade.memcached.MemcachedCodecs._
-import skinny.util.LTSV
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
@@ -42,6 +40,7 @@ trait CachingRepository extends ConfigsRepository {
    * If we eventually add more objects that need to be cached, simply follow the pattern
    */
   protected def reloadCache(): Future[Seq[Unit]] = {
+    LTSVLogger.info("Reloading configs cache")
     val reloadFSeqs = Seq(
       findAllAndCache(findAllConfigs())(c => HttpPartConfigCacheKey(c.partId)),
       findAllAndCache(findAllCacheGroups())(cG => CacheGroupCacheKey(cG.name))
