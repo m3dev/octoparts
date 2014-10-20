@@ -16,7 +16,7 @@ import scala.language.postfixOps
  */
 class PartsService(partRequestService: PartRequestServiceBase,
                    val partRequestLogger: PartRequestLogger = PartRequestLogger,
-                   maximumAggReqTimeout: Duration = 5 seconds)(implicit val executionContext: ExecutionContext)
+                   maximumAggReqTimeout: Duration = 5.seconds)(implicit val executionContext: ExecutionContext)
     extends PartServiceErrorHandler with LogUtil {
 
   /**
@@ -49,7 +49,7 @@ class PartsService(partRequestService: PartRequestServiceBase,
           .timeoutIn(aReqTimeout)
           .time {
             (partResponse, duration) =>
-              LTSVLogger.debug("Part" -> pReq.partId, "Response time" -> duration.toString, "From cache" -> partResponse.retrievedFromCache.toString)
+              LTSVLogger.debug("Part" -> pReq.partId, "Response time" -> toRelevantUnit(duration).toString, "From cache" -> partResponse.retrievedFromCache.toString)
               logPartResponse(requestMeta, partResponse, duration.toMillis)
           })
     }
