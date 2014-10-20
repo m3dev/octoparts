@@ -9,6 +9,15 @@ import shade.memcached.Codec
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 
+/**
+ * Intended as a short buffering component, in front of a network cache, to improve response time and decrease network load.
+ * As such, it won't try to buffer cache entries which lifetime is short enough
+ * @param networkCache the cache to be buffered
+ * @param localCacheDuration should be tuned to compromise between :
+ *                           - performance (long buffering)
+ *                           - receptiveness to external changes (in case the network cache is shared)
+ *
+ */
 class MemoryBufferingRawCache(networkCache: RawCache, localCacheDuration: Duration) extends RawCache {
 
   protected val memoryCache: GuavaCache[String, Object] = configureMemoryCache(CacheBuilder.newBuilder()).build[String, Object]()
@@ -21,6 +30,9 @@ class MemoryBufferingRawCache(networkCache: RawCache, localCacheDuration: Durati
   def set[T](key: String, value: T, exp: Duration)(implicit codec: Codec[T]): Future[Unit] = {
     if (exp >= localCacheDuration) {
       storeInMemoryCache(key, value)
+    } else {
+      // guarantees that the buffer won't hold a reference to an obsolete value if this operation was a mere update to expiry time
+      removeFromMemoryCache(key)
     }
     networkCache.set(key, value, exp)
   }
@@ -40,7 +52,7 @@ class MemoryBufferingRawCache(networkCache: RawCache, localCacheDuration: Durati
   }
 
   def close(): Unit = {
-    memoryCache.asMap().clear()
+    memoryCache.invalidateAll()
     networkCache.close()
   }
 
@@ -50,5 +62,10 @@ class MemoryBufferingRawCache(networkCache: RawCache, localCacheDuration: Durati
       LTSVLogger.trace("Key set in local cache" -> key, "to" -> obj.toString, "for" -> localCacheDuration.toString)
     }
     case _ =>
+  }
+
+  protected def removeFromMemoryCache(key: String) = {
+    memoryCache.invalidate(key)
+    LTSVLogger.trace("Key removed from local cache" -> key)
   }
 }

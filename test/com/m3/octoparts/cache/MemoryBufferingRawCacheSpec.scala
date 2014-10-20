@@ -60,6 +60,17 @@ class MemoryBufferingRawCacheSpec extends FunSpec with Matchers with TimingSuppo
     mbrc.stats.hitCount() should be(1L)
     mbrc.stats.missCount() should be(1L)
   }
+
+  it("should discard entries when the expiry time is updated to a value that is too short") {
+
+    val mbrc = new StatsRecordingMemoryBufferingRawCache(DummyRawCache, 30.minutes)
+
+    Await.result(mbrc.set("ABC", "DEF", 1.hour), 10.millis)
+    Await.result(mbrc.get[String]("ABC"), 10.millis) should be(Some("DEF"))
+
+    Await.result(mbrc.set("ABC", "GHI", 25.minutes), 10.millis)
+    Await.result(mbrc.get[String]("ABC"), 10.millis) should be(None)
+  }
 }
 
 private class StatsRecordingMemoryBufferingRawCache(networkCache: RawCache, val localCacheDuration: Duration) extends MemoryBufferingRawCache(networkCache, localCacheDuration) {
