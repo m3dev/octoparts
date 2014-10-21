@@ -44,7 +44,10 @@ class MemoryBufferingRawCache(networkCache: RawCache, localCacheDuration: Durati
       case _ =>
         LTSVLogger.trace("Key missing in local cache" -> key)
         val cachePoll = networkCache.get(key)
+
         cachePoll.onSuccess {
+          // this may cause the value to be in the local cache for a while after remote cache expiry.
+          // However, the intended use case is remoteCacheDuration >> localCacheDuration, in which case this is not a big issue.
           case Some(value) => storeInMemoryCache(key, value)
         }(ExecutionContext.global)
         cachePoll

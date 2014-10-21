@@ -17,7 +17,7 @@ class RepositoriesModule extends Module {
     val localBuffer = inject[Configuration].getInt("memcached.configLocalBuffer")
 
     val cache = localBuffer match {
-      case Some(localBufferDuration) => {
+      case Some(localBufferDuration) if localBufferDuration > 0 => {
         val networkCache = inject[RawCache]
         val bufferingCache = new MemoryBufferingRawCache(networkCache, localBufferDuration.millis)
         new MemcachedCache(bufferingCache, MemcachedKeyGenerator)
