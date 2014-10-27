@@ -35,6 +35,7 @@ parts.parameter=パラメータ
 parts.parameter.create=パラメータ登録
 parts.parameter.outputName=出力パラメータ名
 parts.parameter.inputName=入力パラメータ名
+parts.parameter.description=説明
 parts.parameter.type=出力方法
 parts.parameter.required=必須
 parts.parameter.versioned=キャッシュ破棄トリガー

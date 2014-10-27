@@ -1,7 +1,12 @@
 package com.m3.octoparts.support.db
 
+import java.sql.Connection
+
+import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.model.config._
 import org.flywaydb.core.Flyway
+import org.flywaydb.core.api.MigrationInfo
+import org.flywaydb.core.api.callback.FlywayCallback
 import org.scalatest.{ BeforeAndAfter, Suite }
 import org.scalatestplus.play.OneAppPerSuite
 import play.api.Logger
@@ -22,6 +27,22 @@ trait RequiresDB extends Suite with OneAppPerSuite {
     val poolName = ConnectionPool.DEFAULT_NAME.name
     val pool = ConnectionPool.get(Symbol(poolName))
     val flyway = new Flyway
+    flyway.setCallbacks(new FlywayCallback {
+      def beforeInit(conn: Connection) = { conn.setReadOnly(false) }
+      def beforeRepair(conn: Connection) = { conn.setReadOnly(false) }
+      def beforeValidate(conn: Connection) = { conn.setReadOnly(false) }
+      def beforeInfo(conn: Connection) = { conn.setReadOnly(false) }
+      def beforeClean(conn: Connection) = { conn.setReadOnly(false) }
+      def beforeMigrate(conn: Connection) = { conn.setReadOnly(false) }
+      def afterInfo(conn: Connection) = {}
+      def afterInit(conn: Connection) = {}
+      def afterRepair(conn: Connection) = {}
+      def afterValidate(conn: Connection) = {}
+      def beforeEachMigrate(conn: Connection, p2: MigrationInfo) = {}
+      def afterEachMigrate(conn: Connection, p2: MigrationInfo) = {}
+      def afterMigrate(conn: Connection) = {}
+      def afterClean(conn: Connection) = {}
+    })
     flyway.setDataSource(pool.dataSource)
     flyway.setPlaceholderPrefix("$flyway{")
     flyway
@@ -47,7 +68,7 @@ trait RequiresDB extends Suite with OneAppPerSuite {
        */
       flyway.clean()
     } catch {
-      case NonFatal(e) => Logger.error(e.getMessage)
+      case NonFatal(e) => LTSVLogger.error(e)
     }
   }
 

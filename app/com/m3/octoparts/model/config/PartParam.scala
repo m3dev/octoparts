@@ -18,6 +18,7 @@ case class PartParam(
     id: Option[Long] = None, //Implies not yet inserted into the DB
     httpPartConfigId: Option[Long] = None,
     httpPartConfig: Option[HttpPartConfig] = None,
+    description: Option[String] = None,
     required: Boolean,
     versioned: Boolean,
     paramType: ParamType.Value,
@@ -31,9 +32,6 @@ case class PartParam(
    * This is the key used to look for a value inside the PartRequest
    */
   def inputName: String = inputNameOverride.getOrElse(outputName)
-
-  def shorter = ShortPartParam(outputName, paramType)
-
 }
 
 object PartParam {
@@ -48,6 +46,7 @@ object PartParam {
       paramType = param.paramType,
       outputName = param.outputName,
       inputNameOverride = param.inputNameOverride,
+      description = param.description,
       cacheGroups = param.cacheGroups.map(CacheGroup.toJsonModel)
     )
   }
@@ -59,6 +58,7 @@ object PartParam {
       paramType = param.paramType,
       outputName = param.outputName,
       inputNameOverride = param.inputNameOverride,
+      description = param.description,
       cacheGroups = param.cacheGroups.map(CacheGroup.fromJsonModel),
       createdAt = DateTime.now,
       updatedAt = DateTime.now

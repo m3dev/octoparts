@@ -7,12 +7,15 @@ import _root_.controllers.ControllersModule
 import com.kenshoo.play.metrics.MetricsFilter
 import com.m3.octoparts.cache.CacheModule
 import com.m3.octoparts.http.HttpModule
-import com.m3.octoparts.hystrix.{ HystrixMetricsLogger, HystrixModule }
+import com.m3.octoparts.hystrix.{ KeyAndBuilderValuesHystrixPropertiesStrategy, HystrixMetricsLogger, HystrixModule }
 import com.m3.octoparts.logging.PartRequestLogger
-import com.m3.octoparts.repository.RepositoriesModule
+import com.beachape.logging.LTSVLogger
+import com.m3.octoparts.repository.{ ConfigsRepository, RepositoriesModule }
+import com.netflix.hystrix.strategy.HystrixPlugins
 import com.typesafe.config.ConfigFactory
 import com.wordnik.swagger.config.{ ConfigFactory => SwaggerConfigFactory }
 import com.wordnik.swagger.model.ApiInfo
+import org.apache.commons.lang3.StringUtils
 import play.api._
 import play.api.libs.concurrent.Akka
 import play.api.mvc._
@@ -21,6 +24,7 @@ import scaldi.play.ScaldiSupport
 
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.duration._
+import scala.util.control.NonFatal
 
 object Global extends WithFilters(MetricsFilter) with ScaldiSupport {
 
@@ -73,22 +77,26 @@ object Global extends WithFilters(MetricsFilter) with ScaldiSupport {
         case (_, env) => env
       }
     }
-    Logger.debug(s"Play environment = $playEnv (mode = $mode, application.env = ${config.getString("application.env")}). Loading extra config from application.$playEnv.conf, if it exists.")
+    LTSVLogger.debug("Play environment" -> playEnv, "mode" -> mode, "application.env" -> config.getString("application.env"), "message" -> "Loading extra config...")
     val modeSpecificConfig = config ++ Configuration(ConfigFactory.load(s"application.$playEnv.conf"))
     super.onLoadConfig(modeSpecificConfig, path, classloader, mode)
   }
 
   override def onStart(app: Application) = {
+    // Need to do this as early as possible, before Hystrix gets instantiated
+    setHystrixPropertiesStrategy(app)
+
     super.onStart(app)
 
     startPeriodicTasks(app)
+    checkForDodgyPartIds()
   }
 
   /**
    * Register any tasks that should be run on the global Akka scheduler.
    * These tasks will automatically stop running when the app shuts down.
    */
-  def startPeriodicTasks(implicit app: Application): Unit = {
+  private def startPeriodicTasks(implicit app: Application): Unit = {
     import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
     val hystrixLoggingInterval = app.configuration.underlying.getDuration("hystrix.logging.intervalMs", TimeUnit.MILLISECONDS).toInt.millis
@@ -96,4 +104,44 @@ object Global extends WithFilters(MetricsFilter) with ScaldiSupport {
       HystrixMetricsLogger.logHystrixMetrics()
     }
   }
+
+  /**
+   * Check if there are any registered parts with leading/trailing spaces in their partIds.
+   * Output warning logs if we find any, as they can be a nightmare to debug and are best avoided.
+   */
+  private def checkForDodgyPartIds(): Unit = {
+    import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
+    val configsRepo = inject[ConfigsRepository]
+    for {
+      configs <- configsRepo.findAllConfigs()
+      config <- configs
+    } {
+      val trimmed = StringUtils.strip(config.partId)
+      if (trimmed != config.partId) {
+        LTSVLogger.warn("message" -> "This partId is suspicious - it has leading/trailing spaces", "partId" -> s"'${config.partId}'")
+      }
+    }
+  }
+
+  /**
+   * Tries to set the Hystrix properties strategy to [[KeyAndBuilderValuesHystrixPropertiesStrategy]]
+   *
+   * Resist the temptation to do a HystrixPlugins.getInstance().getPropertiesStrategy first to do
+   * checking, as that actually also sets the strategy if it isn't already set.
+   */
+  private def setHystrixPropertiesStrategy(app: Application): Unit = {
+    // If it's defined, we don't need to set anything
+    if (sys.props.get("hystrix.plugin.HystrixPropertiesStrategy.implementation").isEmpty) {
+      LTSVLogger.info("-Dhystrix.plugin.HystrixPropertiesStrategy.implementation is not set. Defaulting to" -> "com.m3.octoparts.hystrix.KeyAndBuilderValuesHystrixPropertiesStrategy")
+      try {
+        HystrixPlugins.getInstance().registerPropertiesStrategy(new KeyAndBuilderValuesHystrixPropertiesStrategy)
+      } catch {
+        case NonFatal(e) =>
+          val currentStrategy = HystrixPlugins.getInstance().getPropertiesStrategy.getClass
+          LTSVLogger.info(e, "Current Hystrix Properties Strategy:" -> currentStrategy)
+      }
+    }
+  }
+
 }

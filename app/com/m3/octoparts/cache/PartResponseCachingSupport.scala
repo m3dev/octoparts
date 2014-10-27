@@ -11,6 +11,7 @@ import skinny.util.LTSV
 import com.m3.octoparts.cache.RichCacheControl._
 
 import scala.concurrent.Future
+import scala.util.control.NonFatal
 
 private[cache] object PartResponseCachingSupport {
 
@@ -36,23 +37,15 @@ trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
 
   override def processWithConfig(ci: HttpPartConfig,
                                  partRequestInfo: PartRequestInfo,
-                                 params: Map[ShortPartParam, String]): Future[PartResponse] = {
+                                 params: Map[ShortPartParam, Seq[String]]): Future[PartResponse] = {
 
     if (partRequestInfo.noCache || !ci.cacheConfig.cachingEnabled) {
       // noCache or TTL defined but 0 => skip caching
       super.processWithConfig(ci, partRequestInfo, params)
     } else {
       val directive = CacheDirectiveGenerator.generateDirective(ci.partId, params, ci.cacheConfig)
-      val futureMaybeFromCache = cacheOps.putIfAbsent(directive)(super.processWithConfig(ci, partRequestInfo, params)).recoverWith {
-        case ce: CacheException =>
-          ce.getCause match {
-            case te: shade.TimeoutException =>
-              warn(LTSV.dump("Memcached error" -> "timed out", "cache key" -> ce.key.toString))
-            case other =>
-              error(LTSV.dump("Memcached error" -> other.getClass.getSimpleName, "cache key" -> ce.key.toString), other)
-          }
-          super.processWithConfig(ci, partRequestInfo, params)
-      }
+      val futureMaybeFromCache = cacheOps.putIfAbsent(directive)(super.processWithConfig(ci, partRequestInfo, params)).
+        recoverWith(onCacheFailure(ci, partRequestInfo, params))
       futureMaybeFromCache.flatMap {
         partResponse =>
           // at this point, the response may come from cache and be stale.
@@ -68,14 +61,34 @@ trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
     }
   }
 
+  private def onCacheFailure(ci: HttpPartConfig,
+                             partRequestInfo: PartRequestInfo,
+                             params: Map[ShortPartParam, Seq[String]]): PartialFunction[Throwable, Future[PartResponse]] = {
+    case ce: CacheException => {
+      ce.getCause match {
+        case te: shade.TimeoutException =>
+          warn(LTSV.dump("Memcached error" -> "timed out", "cache key" -> ce.key.toString))
+        case other =>
+          error(LTSV.dump("Memcached error" -> other.getClass.getSimpleName, "cache key" -> ce.key.toString), other)
+      }
+      super.processWithConfig(ci, partRequestInfo, params)
+    }
+    case NonFatal(e) => {
+      error(LTSV.dump("Memcached error" -> e.getClass.getSimpleName), e)
+      super.processWithConfig(ci, partRequestInfo, params)
+    }
+  }
+
   private[cache] def revalidate(partResponse: PartResponse,
                                 directive: CacheDirective,
                                 ci: HttpPartConfig,
                                 partRequestInfo: PartRequestInfo,
-                                params: Map[ShortPartParam, String]): Future[PartResponse] = {
+                                params: Map[ShortPartParam, Seq[String]]): Future[PartResponse] = {
 
-    val revalidationParams = partResponse.cacheControl.revalidationHeaders.map {
-      case (k, v) => ShortPartParam(outputName = k, paramType = ParamType.Header) -> v
+    val revalidationParams = for {
+      (name, value) <- partResponse.cacheControl.revalidationHeaders
+    } yield {
+      ShortPartParam(name, ParamType.Header) -> Seq(value)
     }
     val revalidationResult = super.processWithConfig(ci, partRequestInfo, params ++ revalidationParams)
     val revalidatedFResp = revalidationResult.map {

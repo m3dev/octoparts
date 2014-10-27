@@ -40,8 +40,8 @@ object Sample {
     ),
     requests = Seq(
       // A list of the endpoints you want to call, with parameters to send
-      PartRequest(partId = "UserProfile", params = Set(PartRequestParam("uid", "123"))),
-      PartRequest(partId = "LatestNews", params = Set(PartRequestParam("limit", "10")))
+      PartRequest(partId = "UserProfile", params = Seq(PartRequestParam("uid", "123"))),
+      PartRequest(partId = "LatestNews", params = Seq(PartRequestParam("limit", "10")))
     )
   )
 

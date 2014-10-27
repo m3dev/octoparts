@@ -3,6 +3,7 @@ package com.m3.octoparts.ws
 import java.io.IOException
 
 import com.m3.octoparts.model.{ AggregateResponse, PartResponse }
+import org.apache.commons.lang3.StringUtils
 import play.api.Logger
 import play.api.data.validation.ValidationError
 import play.api.i18n.Messages
@@ -34,15 +35,13 @@ object AggregateResponseEnrichment {
      * - The method does not check the status code of the response or the presence of error messages.
      *
      * @param id the part request unique id (or partId if the part request did not specify an ID)
+     * @param recoverWith can be customized to return something even if JSON extraction failed.
      * @tparam A the result type, i.e. the type of the JSON-serialized object
      * @return the object, or None if it could not be found and deserialized for some reason.
      */
-    def getJsonPart[A: Reads](id: String): Option[A] = {
+    def getJsonPart[A: Reads](id: String, recoverWith: (String, Throwable) => Option[A] = warnFailure): Option[A] = {
       tryJsonPart[A](id) match {
-        case Failure(e) => {
-          logger.warn(s"Object not retrievable from part response: $id", e)
-          None
-        }
+        case Failure(e) => recoverWith(id, e)
         case Success(v) => Some(v)
       }
     }
@@ -68,12 +67,13 @@ object AggregateResponseEnrichment {
   }
 
   private def getContents(id: String, part: PartResponse): Try[String] = {
-    part.contents.fold[Try[String]] {
-      Failure(new IOException(part.errors.headOption.getOrElse("No content")))
-    } { contents =>
-      // print remaining errors
-      printErrors(id, part)
-      Success(contents)
+    part.contents match {
+      case Some(contents) if StringUtils.isNotBlank(contents) => {
+        // print remaining errors
+        printErrors(id, part)
+        Success(contents)
+      }
+      case _ => Failure(new IOException(part.errors.headOption.getOrElse("No content")))
     }
   }
 
@@ -104,4 +104,9 @@ object AggregateResponseEnrichment {
     }.mkString("; ")
   }
 
+  val warnFailure: (String, Throwable) => Option[Nothing] = {
+    (id, failure) =>
+      logger.warn(s"Object not retrievable from part response: $id", failure)
+      None
+  }
 }

@@ -12,5 +12,6 @@ case class PartParam(
   @(ApiModelProperty @field)(required = true) versioned: Boolean,
   @(ApiModelProperty @field)(required = true, dataType = "string", allowableValues = "query, path, header, cookie, body")@JsonScalaEnumeration(classOf[ParamTypeType]) paramType: ParamType.Value,
   @(ApiModelProperty @field)(required = true) outputName: String,
+  @(ApiModelProperty @field)(required = false, dataType = "string") description: Option[String] = None,
   @(ApiModelProperty @field)(required = false, dataType = "string") inputNameOverride: Option[String] = None,
   cacheGroups: Set[CacheGroup] = Set.empty)

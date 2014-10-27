@@ -12,7 +12,7 @@ class KeyedResourcePoolSpec extends FunSpec with Matchers {
       var i = 0
       var j = 0
 
-      def makeNew() = {
+      def makeNew(k: String) = {
         i += 1
         i
       }
@@ -40,7 +40,7 @@ class KeyedResourcePoolSpec extends FunSpec with Matchers {
   it("should never return closed items") {
     val firstTime = new MutableBoolean(false)
     val holder = new KeyedResourcePool[String, MutableBoolean] {
-      def makeNew() = {
+      def makeNew(k: String) = {
         if (firstTime.booleanValue()) {
           firstTime.setValue(false)
           // do a map.get within another map.get

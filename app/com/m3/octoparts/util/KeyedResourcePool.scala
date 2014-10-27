@@ -12,7 +12,7 @@ trait KeyedResourcePool[K, V] {
   /**
    * Factory method to create a new element
    */
-  protected def makeNew(): V
+  protected def makeNew(key: K): V
 
   /**
    * Listener that is run after a value is removed
@@ -27,7 +27,7 @@ trait KeyedResourcePool[K, V] {
   def getOrCreate(key: K): V = Option(holder.get(key)) match {
     case Some(v) => v
     case None =>
-      val d = makeNew()
+      val d = makeNew(key)
       val old = holder.put(key, d)
       // once d has been put, old (if it went in before last get) must be discarded properly
       if (old != null) {

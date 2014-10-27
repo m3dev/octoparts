@@ -12,7 +12,7 @@ case class HttpPartConfig(
   @(ApiModelProperty @field)(required = true) partId: String,
   @(ApiModelProperty @field)(required = true) owner: String,
   @(ApiModelProperty @field)(required = true) uriToInterpolate: String,
-  @(ApiModelProperty @field)(required = true) description: String,
+  @(ApiModelProperty @field)(required = false, dataType = "string") description: Option[String],
   @(ApiModelProperty @field)(dataType = "string", allowableValues = "get, post, put, delete, head, patch, options")@JsonScalaEnumeration(classOf[HttpMethodType]) method: HttpMethod.Value,
   @(ApiModelProperty @field)(required = true) hystrixConfig: HystrixConfig,
   @(ApiModelProperty @field)(dataType = "array[integer]") additionalValidStatuses: Set[Int] = Set.empty,

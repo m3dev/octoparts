@@ -10,7 +10,7 @@ import scala.util.Try
  */
 class HttpClientPool extends KeyedResourcePool[String, HttpClientLike] {
 
-  def makeNew() = new BasicHttpClient
+  def makeNew(key: String) = new InstrumentedHttpClient(key)
 
   def onRemove(value: HttpClientLike) = value match {
     case cl: AutoCloseable => Try {

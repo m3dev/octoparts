@@ -94,11 +94,7 @@ class PartsController(
       "timeoutMs" -> aggregateRequest.requestMeta.timeout.fold("default")(_.toMillis.toString),
       "requestUrl" -> aggregateRequest.requestMeta.requestUrl.getOrElse("unknown"),
       "numParts" -> aggregateRequest.requests.size.toString)
-    if (Logger.isDebugEnabled) {
-      debugRc(logData: _*)
-    } else {
-      Logger.info(LTSV.dump(logData: _*))
-    }
+    if (underlying.isDebugEnabled) debugRc(logData: _*) else info(logData: _*)
   }
 
   private def withRequestTimeout(fResponse: Future[AggregateResponse]): Future[Result] = {

@@ -1,6 +1,6 @@
 package com.m3.octoparts.auth
 
-import play.api.Logger
+import com.beachape.logging.LTSVLogger
 import play.api.libs.json.{ JsSuccess, JsError, Json }
 import play.api.mvc.{ Request, Result, Session }
 
@@ -23,12 +23,12 @@ object PrincipalSessionPersistence {
     session.get(SessionKey).flatMap { sessionValue =>
       Try(Json.parse(sessionValue)) match {
         case Failure(e) =>
-          Logger.warn(s"Rejecting invalid principal found in session (not valid json): $sessionValue")
+          LTSVLogger.warn("Rejecting invalid principal found in session (not valid json)" -> sessionValue)
           None
         case Success(json) =>
           json.validate[Principal] match {
             case JsError(_) =>
-              Logger.warn(s"Rejecting invalid principal found in session (unexpected json): $sessionValue")
+              LTSVLogger.warn("Rejecting invalid principal found in session (unexpected json)" -> sessionValue)
               None
             case JsSuccess(principal, _) =>
               // Everything's OK

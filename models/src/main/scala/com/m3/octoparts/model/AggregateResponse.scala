@@ -95,7 +95,7 @@ object CacheControl {
  */
 case class CacheControl(@(ApiModelProperty @field)(required = true)@BooleanBeanProperty noStore: Boolean = false,
                         @(ApiModelProperty @field)(required = true)@BooleanBeanProperty noCache: Boolean = false,
-                        @(ApiModelProperty @field)(required = false, dataType = "integer")@BeanProperty expiresAt: Option[Long] = None,
+                        @(ApiModelProperty @field)(required = false, dataType = "long")@BeanProperty expiresAt: Option[Long] = None,
                         @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty etag: Option[String] = None,
                         @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty lastModified: Option[String] = None) {
 
