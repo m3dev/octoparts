@@ -19,7 +19,7 @@ trait PartRequestLogger {
 
 object PartRequestLogger extends PartRequestLogger with LTSVLoggerLike {
 
-  val underlying = Logger("PartRequests").underlyingLogger
+  val underlyingLogger = Logger("PartRequests").underlyingLogger
 
   def logSuccess(partId: String, parentRequestId: String, serviceId: Option[String], cacheHit: Boolean, responseMs: Long): Unit = {
     val hitOrMiss = if (cacheHit) "hit" else "miss"

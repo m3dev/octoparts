@@ -9,11 +9,9 @@ import com.m3.octoparts.repository.ConfigsRepository
 import com.wordnik.swagger.annotations._
 import controllers.support.LoggingSupport
 import org.apache.http.client.cache.HeaderConstants
-import play.api.Logger
 import play.api.libs.concurrent.Promise
 import play.api.libs.json.Json
 import play.api.mvc._
-import skinny.util.LTSV
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -94,7 +92,7 @@ class PartsController(
       "timeoutMs" -> aggregateRequest.requestMeta.timeout.fold("default")(_.toMillis.toString),
       "requestUrl" -> aggregateRequest.requestMeta.requestUrl.getOrElse("unknown"),
       "numParts" -> aggregateRequest.requests.size.toString)
-    if (underlying.isDebugEnabled) debugRc(logData: _*) else info(logData: _*)
+    if (underlyingLogger.isDebugEnabled) debugRc(logData: _*) else info(logData: _*)
   }
 
   private def withRequestTimeout(fResponse: Future[AggregateResponse]): Future[Result] = {

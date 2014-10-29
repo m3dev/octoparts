@@ -6,10 +6,10 @@ resolvers += Classpaths.sbtPluginReleases
 resolvers += "jgit-repo" at "http://download.eclipse.org/jgit/maven"
 
 // The Play plugin
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.3.4")
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.3.6")
 
 // scoverage for test coverage
-addSbtPlugin("org.scoverage" %% "sbt-scoverage" % "0.99.7.1")
+addSbtPlugin("org.scoverage" %% "sbt-scoverage" % "0.99.9")
 
 // to show transitive dependencies as a graph
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.7.4")

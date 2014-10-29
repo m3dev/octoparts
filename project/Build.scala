@@ -24,13 +24,13 @@ object OctopartsBuild extends Build {
 
   val httpPort = 9000
   val theScalaVersion = "2.11.2"
-  val thePlayVersion = "2.3.4" // make play-json-formats subproject depend on play-json when bumping to 2.4
+  val thePlayVersion = "2.3.6" // make play-json-formats subproject depend on play-json when bumping to 2.4
   val slf4jVersion = "1.7.7"
   val hystrixVersion = "1.3.18"
   val httpClientVersion = "4.3.5"
   val scalikejdbcVersion = "2.1.2"
   val swaggerVersion = "1.3.10"
-  val jacksonVersion = "2.4.2"
+  val jacksonVersion = "2.4.3"
 
   val testEnv = sys.env.get("PLAY_ENV") match {
     case Some("ci") => "ci"
@@ -85,7 +85,7 @@ object OctopartsBuild extends Build {
           "org.slf4j" % "jul-to-slf4j" % slf4jVersion,
           "net.kencochrane.raven" % "raven-logback" % "5.0.1",
           "org.codehaus.janino" % "janino" % "2.7.6",
-          "com.beachape" %% "ltsv-logger" % "0.0.3",
+          "com.beachape" %% "ltsv-logger" % "0.0.8",
 
           // Hystrix
           "com.netflix.hystrix" % "hystrix-core" % hystrixVersion,
@@ -99,7 +99,7 @@ object OctopartsBuild extends Build {
 
           // DB
           "org.postgresql" % "postgresql" % "9.3-1102-jdbc41" % "runtime",
-          "org.skinny-framework" %% "skinny-orm" % "1.3.3",
+          "org.skinny-framework" %% "skinny-orm" % "1.3.4",
           "org.scalikejdbc" %% "scalikejdbc" % scalikejdbcVersion,
           "org.scalikejdbc" %% "scalikejdbc-play-plugin" % "2.3.2",
           "org.apache.commons" % "commons-dbcp2" % "2.0.1",
@@ -116,7 +116,7 @@ object OctopartsBuild extends Build {
           // Play plugins
           "com.github.tototoshi" %% "play-flyway" % "1.1.2",
           "org.scaldi" %% "scaldi-play" % "0.4.1",
-          "com.kenshoo" %% "metrics-play" % "2.3.0_0.1.6",
+          "com.kenshoo" %% "metrics-play" % "2.3.0_0.1.7",
           "com.wordnik" %% "swagger-play2" % swaggerVersion,
 
           // Test
@@ -198,7 +198,7 @@ object OctopartsBuild extends Build {
     instrumentSettings ++
     Seq(
       ScoverageKeys.highlighting := true,
-      ScoverageKeys.excludedPackages in ScoverageCompile := """com\.kenshoo.*;.*controllers\.javascript\..*;.*controllers\.ref\..*;.*controllers\.Reverse.*;.*BuildInfo.*;.*views\.html\..*;Routes""",
+      ScoverageKeys.scoverageExcludedFiles := ".*(classes|src)_managed.*",
       testOptions in ScoverageTest += Tests.Argument("-u", "target/test-reports")
     )
 
@@ -231,7 +231,7 @@ object OctopartsBuild extends Build {
     name := "octoparts-auth-plugin-api",
     libraryDependencies ++= Seq(
       "com.typesafe.play" %% "play" % thePlayVersion % "provided",
-      "com.beachape" %% "ltsv-logger" % "0.0.3"
+      "com.beachape" %% "ltsv-logger" % "0.0.8"
     )
   )
 
@@ -246,7 +246,7 @@ object OctopartsBuild extends Build {
         "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion intransitive(),
         "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion intransitive()
       ),
-      crossScalaVersions := Seq("2.10.4", "2.11.2"),
+      crossScalaVersions := Seq("2.10.4", theScalaVersion),
       crossVersion := CrossVersion.binary
     )
 
@@ -258,7 +258,7 @@ object OctopartsBuild extends Build {
     Project(id = "java-client", base = file("java-client"), settings = nonPlayAppSettings)
       .settings(
         name := "octoparts-java-client",
-        crossScalaVersions := Seq("2.10.4", "2.11.2"),
+        crossScalaVersions := Seq("2.10.4", theScalaVersion),
         javacOptions in compile ++= Seq("-source", "1.6", "-target", "1.6", "-Xlint"),
         javacOptions in doc ++= Seq("-source", "1.6"),
 
@@ -290,7 +290,7 @@ object OctopartsBuild extends Build {
         "org.scalatestplus" %% "play" % "1.2.0" % "test"
       ),
       name := "octoparts-play-json-formats",
-      crossScalaVersions := Seq("2.10.4", "2.11.2"),
+      crossScalaVersions := Seq("2.10.4", theScalaVersion),
       crossVersion := CrossVersion.binary
     )
     .dependsOn(models)
@@ -306,7 +306,7 @@ object OctopartsBuild extends Build {
         "org.scalatestplus" %% "play" % "1.2.0" % "test"
       ),
       name := "octoparts-scala-ws-client",
-      crossScalaVersions := Seq("2.10.4", "2.11.2"),
+      crossScalaVersions := Seq("2.10.4", theScalaVersion),
       crossVersion := CrossVersion.binary
     )
     .dependsOn(models, playJsonFormats)

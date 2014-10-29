@@ -1,12 +1,12 @@
 package controllers.support
 
-import com.beachape.logging.{ LTSVLoggerLike, LTSVLogger }
+import com.beachape.logging.LTSVLoggerLike
 import play.api.Logger
 import play.api.mvc.RequestHeader
 
 trait LoggingSupport extends LTSVLoggerLike {
 
-  val underlying = Logger.underlyingLogger
+  val underlyingLogger = Logger.underlyingLogger
 
   /**
    * @return remote address, uri, query
@@ -20,9 +20,9 @@ trait LoggingSupport extends LTSVLoggerLike {
 
   // those shortcuts make sure to print the requestContext
   @inline protected def warnRc(msg: (String, String)*)(implicit request: RequestHeader) = warn(buildRequestContext ++ msg: _*)
-  @inline protected def warnRc(msg: (String, String), e: Throwable)(implicit request: RequestHeader) = warn(e, (buildRequestContext :+ msg): _*)
+  @inline protected def warnRc(msg: (String, String), e: Throwable)(implicit request: RequestHeader) = warn(e, buildRequestContext :+ msg: _*)
   @inline protected def errorRc(e: Throwable)(implicit request: RequestHeader) = error(e, buildRequestContext: _*)
-  @inline protected def errorRc(msg: (String, String), e: Throwable)(implicit request: RequestHeader) = error(e, (buildRequestContext :+ msg): _*)
+  @inline protected def errorRc(msg: (String, String), e: Throwable)(implicit request: RequestHeader) = error(e, buildRequestContext :+ msg: _*)
   @inline protected def debugRc(implicit request: RequestHeader) = debug(buildRequestContext: _*)
   @inline protected def debugRc(msg: (String, String)*)(implicit request: RequestHeader) = debug(buildRequestContext ++ msg: _*)
   @inline protected def infoRc(implicit request: RequestHeader) = info(buildRequestContext: _*)
