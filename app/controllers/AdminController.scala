@@ -612,10 +612,10 @@ object AdminController {
           case (Some(beforeTtl), Some(afterTtl)) if beforeTtl > afterTtl => true
           case _ => false
         })
-    (hasChangedOn(_.uriToInterpolate) ||
+    hasChangedOn(_.uriToInterpolate) ||
       hasChangedOn(_.method) ||
       hasChangedOn(_.additionalValidStatuses) ||
-      cacheTTLReduced)
+      cacheTTLReduced
   }
 
   def shouldBustCache(param: PartParam): Boolean = {
