@@ -231,7 +231,7 @@ object OctopartsBuild extends Build {
     name := "octoparts-auth-plugin-api",
     libraryDependencies ++= Seq(
       "com.typesafe.play" %% "play" % thePlayVersion % "provided",
-      "com.beachape" %% "ltsv-logger" % "0.0.3"
+      "com.beachape" %% "ltsv-logger" % "0.0.8"
     )
   )
 
@@ -246,7 +246,7 @@ object OctopartsBuild extends Build {
         "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion intransitive(),
         "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion intransitive()
       ),
-      crossScalaVersions := Seq("2.10.4", "2.11.2"),
+      crossScalaVersions := Seq("2.10.4", "2.11.4"),
       crossVersion := CrossVersion.binary
     )
 
@@ -258,7 +258,7 @@ object OctopartsBuild extends Build {
     Project(id = "java-client", base = file("java-client"), settings = nonPlayAppSettings)
       .settings(
         name := "octoparts-java-client",
-        crossScalaVersions := Seq("2.10.4", "2.11.2"),
+        crossScalaVersions := Seq("2.10.4", "2.11.4"),
         javacOptions in compile ++= Seq("-source", "1.6", "-target", "1.6", "-Xlint"),
         javacOptions in doc ++= Seq("-source", "1.6"),
 
@@ -290,7 +290,7 @@ object OctopartsBuild extends Build {
         "org.scalatestplus" %% "play" % "1.2.0" % "test"
       ),
       name := "octoparts-play-json-formats",
-      crossScalaVersions := Seq("2.10.4", "2.11.2"),
+      crossScalaVersions := Seq("2.10.4", "2.11.4"),
       crossVersion := CrossVersion.binary
     )
     .dependsOn(models)
@@ -306,7 +306,7 @@ object OctopartsBuild extends Build {
         "org.scalatestplus" %% "play" % "1.2.0" % "test"
       ),
       name := "octoparts-scala-ws-client",
-      crossScalaVersions := Seq("2.10.4", "2.11.2"),
+      crossScalaVersions := Seq("2.10.4", "2.11.4"),
       crossVersion := CrossVersion.binary
     )
     .dependsOn(models, playJsonFormats)
