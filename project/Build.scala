@@ -23,7 +23,7 @@ object OctopartsBuild extends Build {
   val octopartsVersion = "2.3-SNAPSHOT"
 
   val httpPort = 9000
-  val theScalaVersion = "2.11.4"
+  val theScalaVersion = "2.11.2"
   val thePlayVersion = "2.3.6" // make play-json-formats subproject depend on play-json when bumping to 2.4
   val slf4jVersion = "1.7.7"
   val hystrixVersion = "1.3.18"
@@ -246,7 +246,7 @@ object OctopartsBuild extends Build {
         "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion intransitive(),
         "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion intransitive()
       ),
-      crossScalaVersions := Seq("2.10.4", "2.11.4"),
+      crossScalaVersions := Seq("2.10.4", theScalaVersion),
       crossVersion := CrossVersion.binary
     )
 
@@ -258,7 +258,7 @@ object OctopartsBuild extends Build {
     Project(id = "java-client", base = file("java-client"), settings = nonPlayAppSettings)
       .settings(
         name := "octoparts-java-client",
-        crossScalaVersions := Seq("2.10.4", "2.11.4"),
+        crossScalaVersions := Seq("2.10.4", theScalaVersion),
         javacOptions in compile ++= Seq("-source", "1.6", "-target", "1.6", "-Xlint"),
         javacOptions in doc ++= Seq("-source", "1.6"),
 
@@ -290,7 +290,7 @@ object OctopartsBuild extends Build {
         "org.scalatestplus" %% "play" % "1.2.0" % "test"
       ),
       name := "octoparts-play-json-formats",
-      crossScalaVersions := Seq("2.10.4", "2.11.4"),
+      crossScalaVersions := Seq("2.10.4", theScalaVersion),
       crossVersion := CrossVersion.binary
     )
     .dependsOn(models)
@@ -306,7 +306,7 @@ object OctopartsBuild extends Build {
         "org.scalatestplus" %% "play" % "1.2.0" % "test"
       ),
       name := "octoparts-scala-ws-client",
-      crossScalaVersions := Seq("2.10.4", "2.11.4"),
+      crossScalaVersions := Seq("2.10.4", theScalaVersion),
       crossVersion := CrossVersion.binary
     )
     .dependsOn(models, playJsonFormats)
