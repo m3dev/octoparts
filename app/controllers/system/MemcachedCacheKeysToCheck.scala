@@ -1,6 +1,6 @@
 package controllers.system
 
-trait MemcachedCacheKeysToCheck extends Function0[Seq[String]]
+trait MemcachedCacheKeysToCheck extends (() => Seq[String])
 
 /**
  * Generates n random keys. Useful when your memcached setup has several non-redundant instances

@@ -22,8 +22,7 @@ class HealthcheckController(configsRepo: ConfigsRepository,
 
   import controllers.system.HealthcheckController._
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
-
-  private implicit val stringCodec = MemcachedCodecs.AnyRefBinaryCodec[String]
+  import MemcachedCodecs.StringBinaryCodec
 
   def healthcheck = Action.async { request =>
     val fDbStatus = checkDb()
