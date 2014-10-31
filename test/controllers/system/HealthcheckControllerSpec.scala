@@ -34,13 +34,13 @@ class HealthcheckControllerSpec
     reset(configsRepo, hystrixHealthReporter, cache)
 
     // Return healthy-looking results by default
-    when(configsRepo.findAllConfigs).thenReturn(Future.successful(mockConfigs))
+    when(configsRepo.findAllConfigs()).thenReturn(Future.successful(mockConfigs))
     when(hystrixHealthReporter.getCommandKeysWithOpenCircuitBreakers).thenReturn(Seq())
     when(cache.get[String](org.mockito.Matchers.any(classOf[String]))(org.mockito.Matchers.any(classOf[Codec[String]])))
       .thenReturn(Future.successful(Some("pong")))
   }
 
-  val controller = new HealthcheckController(configsRepo, hystrixHealthReporter, cache)
+  val controller = new HealthcheckController(configsRepo, hystrixHealthReporter, cache, SingleMemcachedCacheKeyToCheck)
 
   it should "return a 200 OK response" in {
     status(controller.healthcheck.apply(FakeRequest())) should be(200)
@@ -56,7 +56,7 @@ class HealthcheckControllerSpec
   }
 
   it should "be YELLOW and show DB as not OK if there are no part configs" in {
-    when(configsRepo.findAllConfigs).thenReturn(Future.successful(Seq.empty))
+    when(configsRepo.findAllConfigs()).thenReturn(Future.successful(Seq.empty))
 
     checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
       colour should be("YELLOW")
@@ -65,7 +65,7 @@ class HealthcheckControllerSpec
   }
 
   it should "be YELLOW and show DB as not OK if DB query throws an exception" in {
-    when(configsRepo.findAllConfigs).thenReturn(Future.failed(new RuntimeException("OH MY GOD!")))
+    when(configsRepo.findAllConfigs()).thenReturn(Future.failed(new RuntimeException("OH MY GOD!")))
 
     checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
       colour should be("YELLOW")

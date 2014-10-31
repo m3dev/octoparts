@@ -1,14 +1,12 @@
 package controllers.system
 
+import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.cache.RawCache
 import com.m3.octoparts.hystrix.HystrixHealthReporter
-import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.repository.ConfigsRepository
-import play.api.Logger
 import play.api.libs.json.{ Json, Writes }
 import play.api.mvc.{ Action, Controller }
 import shade.memcached.MemcachedCodecs
-import skinny.util.LTSV
 
 import scala.concurrent.Future
 import scala.util.control.NonFatal
@@ -19,7 +17,8 @@ import scala.util.control.NonFatal
  */
 class HealthcheckController(configsRepo: ConfigsRepository,
                             hystrixHealthReporter: HystrixHealthReporter,
-                            memcached: RawCache) extends Controller {
+                            memcached: RawCache,
+                            memcachedCacheKeysToCheck: MemcachedCacheKeysToCheck) extends Controller {
 
   import controllers.system.HealthcheckController._
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -67,14 +66,18 @@ class HealthcheckController(configsRepo: ConfigsRepository,
    * Check that Memcached is alive and responding to GET requests
    */
   private def checkMemcached(): Future[MemcachedStatus] = {
-    val fResult = memcached.get[String]("ping")
-    fResult.map { result =>
-      // Don't care whether we get a cache hit or not
-      MemcachedStatus(ok = true)
-    }.recover {
-      case NonFatal(e) =>
-        LTSVLogger.warn(e, "Health check failed" -> "Memcached")
-        MemcachedStatus(ok = false)
+    Future.sequence {
+      for (key <- memcachedCacheKeysToCheck()) yield {
+        val memcachedGet = memcached.get[String](key)
+        memcachedGet map { _ => true // Don't care whether we get a cache hit or not
+        } recover {
+          case NonFatal(e) =>
+            LTSVLogger.warn(e, "Health check failed" -> "Memcached", "key" -> key)
+            false
+        }
+      }
+    } map {
+      bools => MemcachedStatus(bools.forall(identity))
     }
   }
 
