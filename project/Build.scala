@@ -68,71 +68,14 @@ object OctopartsBuild extends Build {
   lazy val playAppSettings =
       commonSettings ++
       playSettings ++
-      buildInfoSettings ++
-      buildInfoStuff ++
+      BuildInfo.settings ++
       addConfDirToClasspathSettings ++
       excludeConfFilesFromJarSettings ++
       sonatypeSettings ++
       coverallsSettings ++
       Seq(
         publishArtifact := false,
-        libraryDependencies ++= Seq(
-          // Logging
-          "ch.qos.logback" % "logback-classic" % "1.1.2",
-          "org.slf4j" % "slf4j-api" % slf4jVersion,
-          "org.slf4j" % "jcl-over-slf4j" % slf4jVersion,
-          "org.slf4j" % "log4j-over-slf4j" % slf4jVersion,
-          "org.slf4j" % "jul-to-slf4j" % slf4jVersion,
-          "net.kencochrane.raven" % "raven-logback" % "5.0.1",
-          "org.codehaus.janino" % "janino" % "2.7.6",
-          "com.beachape" %% "ltsv-logger" % "0.0.8",
-
-          // Hystrix
-          "com.netflix.hystrix" % "hystrix-core" % hystrixVersion,
-          "com.netflix.hystrix" % "hystrix-metrics-event-stream" % hystrixVersion,
-          "com.netflix.rxjava" % "rxjava-scala" % "0.20.3", // matches version used in hystrix-core
-
-          // Apache HTTP client
-          "org.apache.httpcomponents" % "httpclient" % httpClientVersion,
-          "org.apache.httpcomponents" % "httpclient-cache" % httpClientVersion,
-          "io.dropwizard.metrics" % "metrics-httpclient" % "3.1.0",
-
-          // DB
-          "org.postgresql" % "postgresql" % "9.3-1102-jdbc41" % "runtime",
-          "org.skinny-framework" %% "skinny-orm" % "1.3.4",
-          "org.scalikejdbc" %% "scalikejdbc" % scalikejdbcVersion,
-          "org.scalikejdbc" %% "scalikejdbc-play-plugin" % "2.3.2",
-          "org.apache.commons" % "commons-dbcp2" % "2.0.1",
-
-          // Memcached
-          "com.bionicspirit" %% "shade" % "1.6.0",
-          "net.spy" % "spymemcached" % "2.11.4",
-
-          // Misc utils
-          "commons-validator" % "commons-validator" % "1.4.0" % "runtime",
-          "javax.transaction" % "jta" % "1.1",
-          "com.netaporter" %% "scala-uri" % "0.4.3",
-
-          // Play plugins
-          "com.github.tototoshi" %% "play-flyway" % "1.1.2",
-          "org.scaldi" %% "scaldi-play" % "0.4.1",
-          "com.kenshoo" %% "metrics-play" % "2.3.0_0.1.7",
-          "com.wordnik" %% "swagger-play2" % swaggerVersion,
-
-          // Test
-          "com.typesafe.play" %% "play-test" % thePlayVersion % "test",
-          "org.scalatest" %% "scalatest" % "2.2.2" % "test",
-          "org.scalatestplus" %% "play" % "1.2.0" % "test",
-          "org.scalacheck" %% "scalacheck" % "1.11.6" % "test",
-          "org.codehaus.groovy" % "groovy" % "2.3.7" % "test",
-          "org.scalikejdbc" %% "scalikejdbc-test"   % scalikejdbcVersion % "test"
-        ).map(_.excludeAll(
-          ExclusionRule(organization = "spy", name = "spymemcached"), // spymemcached's org changed from spy to net.spy
-          ExclusionRule(organization = "org.slf4j", name = "slf4j-log4j12"),
-          ExclusionRule(organization = "org.slf4j", name = "slf4j-jdk14"),
-          ExclusionRule(organization = "org.slf4j", name = "slf4j-jcl"),
-          ExclusionRule(organization = "org.slf4j", name = "slf4j-nop"),
-          ExclusionRule(organization = "org.slf4j", name = "slf4j-simple")))
+        libraryDependencies ++= Dependencies.rootDependencies
       )
 
   lazy val playSettings = Seq(
@@ -206,22 +149,6 @@ object OctopartsBuild extends Build {
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
       .setPreference(AlignParameters, true)
       .setPreference(DoubleIndentClassDeclaration, true)
-  )
-
-  lazy val buildInfoStuff = Seq(
-    sourceGenerators in Compile <+= buildInfo,
-    buildInfoPackage := "com.m3.octoparts",
-    buildInfoKeys := Seq[BuildInfoKey](
-      "name" -> "Octoparts",
-      version,
-      scalaVersion,
-      BuildInfoKey.action("buildTime") {
-        System.currentTimeMillis
-      },
-      "gitBranch" -> git.gitCurrentBranch.value,
-      "gitTags" -> git.gitCurrentTags.value,
-      "gitHEAD" -> git.gitHeadCommit.value
-    )
   )
 
   // -------------------------------------------------------
