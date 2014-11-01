@@ -16,7 +16,8 @@ object Common {
     initialCommands := "import com.m3.octoparts._",
     organization := "com.m3",
     version := Version.octopartsVersion,
-    scalaVersion := Version.theScalaVersion
+    scalaVersion := Version.theScalaVersion,
+    shellPrompt  := ShellPrompt.buildShellPrompt
   ) ++
     Dependencies.resolverSettings ++
     graphSettings ++
