@@ -52,7 +52,7 @@ object OctopartsBuild extends Build {
     resolverSettings ++
     ideSettings ++
     testSettings ++
-    scoverageSettings
+    Scoverage.settings
 
   /*
    * Settings that are common for every project _except_ the Play app
@@ -136,14 +136,6 @@ object OctopartsBuild extends Build {
   lazy val testSettings = Seq(Test, ScoverageSbtPlugin.ScoverageTest).flatMap { t =>
     Seq(parallelExecution in t := false) // Avoid DB-related tests stomping on each other
   }
-
-  lazy val scoverageSettings =
-    instrumentSettings ++
-    Seq(
-      ScoverageKeys.highlighting := true,
-      ScoverageKeys.scoverageExcludedFiles := ".*(classes|src)_managed.*",
-      testOptions in ScoverageTest += Tests.Argument("-u", "target/test-reports")
-    )
 
   lazy val formatterPrefs = Seq(
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
