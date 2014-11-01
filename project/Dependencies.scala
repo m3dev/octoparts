@@ -3,6 +3,23 @@ import sbt.Keys._
 
 object Dependencies {
 
+  val resolverSettings = {
+    // Use in-house Maven repo instead of Maven central if env var is set
+    sys.env.get("INHOUSE_MAVEN_REPO").fold[Seq[sbt.Def.Setting[_]]] {
+      Seq(
+        resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/",
+        resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+      )
+    } { inhouse =>
+      Seq(
+        // Speed up resolution using local Maven cache
+        resolvers += "Local Maven" at Path.userHome.asFile.toURI.toURL + ".m2/repository",
+        resolvers += "Inhouse" at inhouse,
+        externalResolvers := Resolver.withDefaultResolvers(resolvers.value, mavenCentral = false)
+      )
+    }
+  }
+
   val thePlayVersion = play.core.PlayVersion.current
   val slf4jVersion = "1.7.7"
   val hystrixVersion = "1.3.18"
@@ -26,7 +43,8 @@ object Dependencies {
   val hystrixStream       = "com.netflix.hystrix"       % "hystrix-metrics-event-stream"  % hystrixVersion
   val rxJavaScala         = "com.netflix.rxjava"        % "rxjava-scala"                  % "0.20.3" // matches version used in hystrix-core
 
-  // Apache HTTP client
+  // HTTP clients
+  val asyncHttpClient     = "com.ning"                  % "async-http-client"             % "1.8.14"
   val httpClient          = "org.apache.httpcomponents" % "httpclient"                    % httpClientVersion
   val httpClientCache     = "org.apache.httpcomponents" % "httpclient-cache"              % httpClientVersion
   val metricsHttpClient   = "io.dropwizard.metrics"     % "metrics-httpclient"            % "3.1.0"
@@ -42,16 +60,20 @@ object Dependencies {
   val shade               = "com.bionicspirit"          %% "shade"                        % "1.6.0"
   val spyMemcached        = "net.spy"                   % "spymemcached"                  % "2.11.4"
 
-  // Misc utils
-  val commonsValidator    = "commons-validator"         % "commons-validator"             % "1.4.0"             % "runtime"
-  val jta                 = "javax.transaction"         % "jta"                           % "1.1"
-  val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.3"
-
   // Play plugins
   val playFlyway          = "com.github.tototoshi"      %% "play-flyway"                  % "1.1.2"
   val scaldiPlay          = "org.scaldi"                %% "scaldi-play"                  % "0.4.1"
   val metricsPlay         = "com.kenshoo"               %% "metrics-play"                 % "2.3.0_0.1.7"
+  val providedPlay        = "com.typesafe.play"         %% "play"                         % thePlayVersion      % "provided"
+
+  // Swagger
   val swaggerPlay         = "com.wordnik"               %% "swagger-play2"                % swaggerVersion
+  val swaggerAnnotations  = "com.wordnik"               % "swagger-annotations"           % swaggerVersion
+
+  // Jackson
+  val jacksonCore         = "com.fasterxml.jackson.core"   % "jackson-core"               % jacksonVersion
+  val jacksonScala        = "com.fasterxml.jackson.module" %% "jackson-module-scala"      % jacksonVersion
+  val jacksonDatabind     = "com.fasterxml.jackson.core"   % "jackson-databind"           % jacksonVersion
 
   // Test
   val playTest            = "com.typesafe.play"         %% "play-test"                    % thePlayVersion      % "test"
@@ -60,6 +82,12 @@ object Dependencies {
   val scalacheck          = "org.scalacheck"            %% "scalacheck"                   % "1.11.6"            % "test"
   val groovy              = "org.codehaus.groovy"       % "groovy"                        % "2.3.7"             % "test"
   val scalikeJdbcTest     = "org.scalikejdbc"           %% "scalikejdbc-test"             % scalikejdbcVersion  % "test"
+
+  // Misc utils
+  val commonsValidator    = "commons-validator"         % "commons-validator"             % "1.4.0"             % "runtime"
+  val jta                 = "javax.transaction"         % "jta"                           % "1.1"
+  val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.3"
+  val findbugs            = "com.google.code.findbugs"  % "jsr305"                        % "3.0.0"
 
   val withoutExcluded = { (m: ModuleID) =>
     m.excludeAll(
@@ -122,5 +150,28 @@ object Dependencies {
     scalikeJdbcTest
   ).map(withoutExcluded)
 
+  val authPluginDependencies = Seq(
+    providedPlay,
+    ltsvLogger
+  )
 
+  val modelsDependencies = Seq(
+    swaggerAnnotations intransitive(),
+    jacksonCore intransitive(),
+    jacksonScala intransitive()
+  )
+
+  val javaClientDependncies = Seq(
+    findbugs intransitive(),
+    slf4jApi,
+    asyncHttpClient,
+    jacksonCore,
+    jacksonScala,
+    jacksonDatabind,
+    logbackClassic % "test",
+    jclOverSlf4j intransitive(),
+    log4jOverSlf4j intransitive(),
+    julToSlf4j intransitive(),
+    scalatest
+  )
 }

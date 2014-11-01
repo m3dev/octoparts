@@ -3,6 +3,7 @@ import sbt.Tests
 import scoverage.ScoverageSbtPlugin._
 
 object Scoverage {
+
   val settings =
     instrumentSettings ++
       Seq(
