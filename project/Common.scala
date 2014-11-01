@@ -42,7 +42,7 @@ object Common {
     )
 
   /**
-   * Settings for the Play app
+   * Settings for the (main) Play app
    */
   lazy val playAppSettings =
     commonSettings ++
