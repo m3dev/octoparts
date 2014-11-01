@@ -7,7 +7,6 @@ import net.virtualvoid.sbt.graph.Plugin._
 import xerial.sbt.Sonatype._
 import org.scoverage.coveralls.CoverallsPlugin.coverallsSettings
 
-
 object Common {
 
   /**

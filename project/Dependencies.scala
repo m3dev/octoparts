@@ -1,5 +1,7 @@
 import sbt._
 import sbt.Keys._
+import play.Play.autoImport._
+import play._
 
 object Dependencies {
 
@@ -150,6 +152,11 @@ object Dependencies {
     scalikeJdbcTest
   ).map(withoutExcluded)
 
+  val playScalatestDependencies = Seq(
+    scalatest,
+    scalatestPlay
+  )
+
   val authPluginDependencies = Seq(
     providedPlay,
     ltsvLogger
@@ -174,4 +181,9 @@ object Dependencies {
     julToSlf4j intransitive(),
     scalatest
   )
+
+  // TODO when bumping to Play 2.4, depend on play-json instead of ws
+  val playJsonFormatsDependencies = playScalatestDependencies :+ ws
+
+  val scalaWsClientDependencies = playScalatestDependencies :+ ws
 }
