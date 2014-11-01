@@ -14,6 +14,7 @@ object Common {
    * Settings that are common to every single project
    */
   lazy val commonSettings = Seq(
+    initialCommands := "import com.m3.octoparts._",
     organization := "com.m3",
     version := Version.octopartsVersion,
     scalaVersion := Version.theScalaVersion
