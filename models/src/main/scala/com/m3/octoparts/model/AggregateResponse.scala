@@ -4,7 +4,7 @@ import com.wordnik.swagger.annotations.ApiModelProperty
 
 import scala.annotation.meta.field
 import scala.beans.{ BeanProperty, BooleanBeanProperty }
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.FiniteDuration
 
 /**
  * An AggregateResponse is the output result version of an AggregateRequest
@@ -39,7 +39,7 @@ case class AggregateResponse(@(ApiModelProperty @field)(required = true)@BeanPro
 }
 
 case class ResponseMeta(@(ApiModelProperty @field)(required = true)@BeanProperty id: String,
-                        @(ApiModelProperty @field)(required = true, dataType = "integer", value = "in ms")@BeanProperty processTime: Duration)
+                        @(ApiModelProperty @field)(required = true, dataType = "integer", value = "in ms")@BeanProperty processTime: FiniteDuration)
 
 /**
  * @param partId same as corresponding partRequest

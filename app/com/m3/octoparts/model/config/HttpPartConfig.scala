@@ -24,11 +24,11 @@ case class HttpPartConfig(id: Option[Long] = None, // None means that the record
                           hystrixConfig: Option[HystrixConfig] = None,
                           deprecatedInFavourOf: Option[String] = None,
                           cacheGroups: Set[CacheGroup] = Set.empty,
-                          cacheTtl: Option[Duration] = Some(Duration.Zero), // in seconds
+                          cacheTtl: Option[FiniteDuration] = Some(Duration.Zero), // in seconds
                           alertMailsEnabled: Boolean,
                           alertAbsoluteThreshold: Option[Int],
                           alertPercentThreshold: Option[Double],
-                          alertInterval: Duration,
+                          alertInterval: FiniteDuration,
                           alertMailRecipients: Option[String],
                           createdAt: DateTime,
                           updatedAt: DateTime) extends ConfigModel[HttpPartConfig] {
