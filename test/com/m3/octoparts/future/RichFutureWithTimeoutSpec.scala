@@ -38,12 +38,12 @@ class RichFutureWithTimeoutSpec extends FunSpec with Matchers with ScalaFutures 
       }
     }
 
+    // This fails fairly consistently
     it("should cause all Futures to timeout after the passed in duration time") {
       val futuresTimeoutDoubles = Seq.fill(10) {
         val timeout = (300 + Random.nextInt(10)).millis
         val f = Future {
           val start = System.currentTimeMillis()
-          // Depending on timeout duration, e.g. if the amount added to the sleep is < 20 millis, the future won't timeout properly
           Thread.sleep((timeout + (20 millis)).toMillis)
           System.currentTimeMillis() - start
         }.timeoutIn(timeout)
