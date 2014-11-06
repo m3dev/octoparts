@@ -12,6 +12,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.postfixOps
 import scala.util.Random
+import scala.util.control.NonFatal
 
 class RichFutureWithTimeoutSpec extends FunSpec with Matchers with ScalaFutures {
 
@@ -40,7 +41,7 @@ class RichFutureWithTimeoutSpec extends FunSpec with Matchers with ScalaFutures 
 
     // This fails fairly consistently
     it("should cause all Futures to timeout after the passed in duration time") {
-      val futuresTimeoutDoubles = Seq.fill(10) {
+      val futuresTimeoutDoubles = Seq.fill(500) {
         val timeout = (300 + Random.nextInt(10)).millis
         val f = Future {
           val start = System.currentTimeMillis()
@@ -55,7 +56,7 @@ class RichFutureWithTimeoutSpec extends FunSpec with Matchers with ScalaFutures 
           e shouldBe a[TimeoutException]
           e.getMessage should include(timeout.toString())
         }) catch {
-          case _ => {
+          case NonFatal(e) => {
             whenReady(f) { runtime => fail(s"timeout was $timeout but the future completed in $runtime millis") }
           }
         }
