@@ -10,6 +10,7 @@ import org.scalatest.{ FunSpec, Matchers }
 import scala.concurrent.duration._
 import scala.concurrent.Future
 import scala.language.postfixOps
+import scala.util.Random
 
 class RichFutureWithTimeoutSpec extends FunSpec with Matchers with ScalaFutures {
 
@@ -24,12 +25,32 @@ class RichFutureWithTimeoutSpec extends FunSpec with Matchers with ScalaFutures 
 
     it("should cause a Future to timeout after the passed in duration time") {
       val fWithTimeout: Future[Int] = Future {
-        Thread.sleep((fTimeout + (100 millis)).toMillis)
+        Thread.sleep((fTimeout + (20 millis)).toMillis)
         99
       }.timeoutIn(fTimeout)
       whenReady(fWithTimeout.failed) { e =>
         e shouldBe a[TimeoutException]
         e.getMessage should include(fTimeout.toString())
+      }
+    }
+
+    it("should cause all Futures to timeout after the passed in duration time") {
+      // Playing with n in Seq.fill(n), e.g. increasing it beyond ~300, causes timeout errors in the later tests
+      val futuresTimeoutDoubles = Seq.fill(200) {
+        val timeout = (300 + Random.nextInt(400)).millis
+        val f = Future {
+          // Depending on timeout duration, e.g. if the amount added to the sleep is < 20 millis, the future won't timeout properly
+          Thread.sleep((timeout + (30 millis)).toMillis)
+          99
+        }.timeoutIn(timeout)
+        (f, timeout)
+      }
+      futuresTimeoutDoubles.foreach { fAndTimeout =>
+        val (f, timeout) = fAndTimeout
+        whenReady(f.failed) { e =>
+          e shouldBe a[TimeoutException]
+          e.getMessage should include(timeout.toString())
+        }
       }
     }
 
