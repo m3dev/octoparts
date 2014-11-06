@@ -1,20 +1,24 @@
 package com.m3.octoparts.future
 
 import java.io.IOException
-import java.util.concurrent.TimeoutException
+import java.util.concurrent.{ Executors, TimeoutException }
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.m3.octoparts.future.RichFutureWithTimeout._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ FunSpec, Matchers }
 
 import scala.concurrent.duration._
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.postfixOps
 import scala.util.Random
 
 class RichFutureWithTimeoutSpec extends FunSpec with Matchers with ScalaFutures {
 
-  import scala.concurrent.ExecutionContext.Implicits.global
+  implicit val testEC = {
+    val namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("future-timeout-%d").build()
+    ExecutionContext.fromExecutor(Executors.newCachedThreadPool(namedThreadFactory))
+  }
 
   // Implicit PatienceConfig for ScalaFutures
   implicit val p = PatienceConfig(timeout = 10 seconds)
@@ -36,20 +40,25 @@ class RichFutureWithTimeoutSpec extends FunSpec with Matchers with ScalaFutures 
 
     it("should cause all Futures to timeout after the passed in duration time") {
       // Playing with n in Seq.fill(n), e.g. increasing it beyond ~300, causes timeout errors in the later tests
-      val futuresTimeoutDoubles = Seq.fill(200) {
-        val timeout = (300 + Random.nextInt(400)).millis
+      val futuresTimeoutDoubles = Seq.fill(500) {
+        val timeout = (300 + Random.nextInt(10)).millis
         val f = Future {
+          val start = System.currentTimeMillis()
           // Depending on timeout duration, e.g. if the amount added to the sleep is < 20 millis, the future won't timeout properly
-          Thread.sleep((timeout + (30 millis)).toMillis)
-          99
+          Thread.sleep((timeout + (20 millis)).toMillis)
+          System.currentTimeMillis() - start
         }.timeoutIn(timeout)
         (f, timeout)
       }
       futuresTimeoutDoubles.foreach { fAndTimeout =>
         val (f, timeout) = fAndTimeout
-        whenReady(f.failed) { e =>
+        try (whenReady(f.failed) { e =>
           e shouldBe a[TimeoutException]
           e.getMessage should include(timeout.toString())
+        }) catch {
+          case _ => {
+            whenReady(f) { runtime => fail(s"timeout was $timeout but the future completed in $runtime millis") }
+          }
         }
       }
     }
