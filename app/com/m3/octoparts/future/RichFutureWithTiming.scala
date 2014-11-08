@@ -18,7 +18,7 @@ object RichFutureWithTiming {
      *
      * @param tapper a callback that uses the future's result and time taken, e.g. for performance logging
      */
-    def time(tapper: (A, Duration) => Unit)(implicit executionContext: ExecutionContext): Future[A] = {
+    def time(tapper: (A, FiniteDuration) => Unit)(implicit executionContext: ExecutionContext): Future[A] = {
       val startNanos = System.nanoTime()
       future.onSuccess {
         case r => tapper(r, Duration.fromNanos(System.nanoTime() - startNanos))
@@ -31,7 +31,7 @@ object RichFutureWithTiming {
      *
      * @param f a callback that takes the future's result and time taken, and transforms them into some other result
      */
-    def timeAndTransform[B](f: (A, Duration) => B)(implicit executionContext: ExecutionContext): Future[B] = {
+    def timeAndTransform[B](f: (A, FiniteDuration) => B)(implicit executionContext: ExecutionContext): Future[B] = {
       val startNanos = System.nanoTime()
       future.map {
         r =>

@@ -4,7 +4,7 @@ import com.wordnik.swagger.annotations.ApiModelProperty
 
 import scala.annotation.meta.field
 import scala.beans.BeanProperty
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.FiniteDuration
 
 /**
  * AggregateRequest contains RequestMeta (which contains extra, common fields like
@@ -23,7 +23,7 @@ case class RequestMeta(
   @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty sessionId: Option[String] = None,
   @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty requestUrl: Option[String] = None,
   @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty userAgent: Option[String] = None,
-  @(ApiModelProperty @field)(required = false, dataType = "integer", value = "in ms")@BeanProperty timeout: Option[Duration] = None)
+  @(ApiModelProperty @field)(required = false, dataType = "integer", value = "in ms")@BeanProperty timeout: Option[FiniteDuration] = None)
 
 /**
  * A request for a given part. One of more of these can be combined into a single AggregateRequest.

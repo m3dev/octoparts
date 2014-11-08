@@ -16,7 +16,7 @@ import scala.language.postfixOps
  */
 class PartsService(partRequestService: PartRequestServiceBase,
                    val partRequestLogger: PartRequestLogger = PartRequestLogger,
-                   maximumAggReqTimeout: Duration = 5.seconds)(implicit val executionContext: ExecutionContext)
+                   maximumAggReqTimeout: FiniteDuration = 5.seconds)(implicit val executionContext: ExecutionContext)
     extends PartServiceErrorHandler with LogUtil {
 
   /**
@@ -35,7 +35,7 @@ class PartsService(partRequestService: PartRequestServiceBase,
    */
   def processParts(aggregateRequest: AggregateRequest, noCache: Boolean = false): Future[AggregateResponse] = {
     val requestMeta = aggregateRequest.requestMeta
-    val aReqTimeout = requestMeta.timeout.getOrElse(maximumAggReqTimeout) min maximumAggReqTimeout
+    val aReqTimeout: FiniteDuration = requestMeta.timeout.getOrElse(maximumAggReqTimeout) min maximumAggReqTimeout
     val partsResponsesFutures = aggregateRequest.requests.map {
       pReq =>
         val partRequestInfo = PartRequestInfo(requestMeta, pReq, noCache)

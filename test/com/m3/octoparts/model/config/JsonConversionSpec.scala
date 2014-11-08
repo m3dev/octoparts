@@ -7,7 +7,7 @@ import org.scalacheck.{ Arbitrary, Gen }
 import org.scalatest._
 import org.scalatest.prop.{ Checkers, GeneratorDrivenPropertyChecks }
 
-import scala.concurrent.duration.{ Duration, FiniteDuration }
+import scala.concurrent.duration.FiniteDuration
 
 class JsonConversionSpec extends FunSpec with Matchers with Checkers with GeneratorDrivenPropertyChecks {
 
@@ -31,7 +31,7 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
     }
   }
 
-  private val genShortDuration: Gen[Duration] = {
+  private val genShortDuration: Gen[FiniteDuration] = {
     for {
       length <- Gen.chooseNum(0L, TimeUnit.DAYS.toMillis(1L))
     } yield {
