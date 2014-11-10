@@ -10,7 +10,7 @@ import scala.util.control.NonFatal
 
 object RichFutureWithTimeout {
 
-  private val actorSystem = Play.maybeApplication.fold(ActorSystem())(Akka.system(_))
+  private val actorSystem = Play.maybeApplication.fold(ActorSystem("future-timeout-actor-system"))(Akka.system(_))
 
   /*
    * this execution context is dedicated to scheduling future timeouts
