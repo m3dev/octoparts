@@ -63,7 +63,7 @@ class HealthcheckController(configsRepo: ConfigsRepository,
       case NonFatal(e) =>
         LTSVLogger.warn(e, "Health check failed" -> "DB")
         DbStatus(ok = false, message = e.toString)
-    } time { case(status, duration) =>  LTSVLogger.info("DbStatus" -> status, "Time taken" -> toRelevantUnit(duration)) }
+    } time { case (status, duration) => LTSVLogger.info("DbStatus" -> status, "Time taken" -> toRelevantUnit(duration)) }
   }
 
   /**
@@ -82,7 +82,7 @@ class HealthcheckController(configsRepo: ConfigsRepository,
       }
     } map {
       bools => MemcachedStatus(bools.forall(identity))
-    } time { case(status, duration) =>  LTSVLogger.info("MemcachedStatus" -> status, "Time taken" -> toRelevantUnit(duration)) }
+    } time { case (status, duration) => LTSVLogger.info("MemcachedStatus" -> status, "Time taken" -> toRelevantUnit(duration)) }
   }
 
   /**
