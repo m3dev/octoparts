@@ -28,12 +28,6 @@ class InMemoryLatestVersionCache(maxCacheKeys: Long) extends LatestVersionCache 
     builder.maximumSize(maxCacheKeys)
   }
 
-  private def getVersionFrom[A, B](cache: Cache[A, B])(key: A): Option[B] = {
-    val local = Option(cache.getIfPresent(key))
-    local match {
-      case Some(value) => Some(value.asInstanceOf[B])
-      case _ => None
-    }
-  }
+  private def getVersionFrom[A, B](cache: Cache[A, B])(key: A): Option[B] = Option(cache.getIfPresent(key))
 
 }
