@@ -19,6 +19,8 @@ class PartsService(partRequestService: PartRequestServiceBase,
                    maximumAggReqTimeout: FiniteDuration = 5.seconds)(implicit val executionContext: ExecutionContext)
     extends PartServiceErrorHandler with LogUtil {
 
+  import com.m3.octoparts.logging.LTSVables._
+
   /**
    * Given an AggregateRequest, returns a Future[AggregateResponse]
    *
@@ -49,7 +51,7 @@ class PartsService(partRequestService: PartRequestServiceBase,
           .timeoutIn(aReqTimeout)
           .time {
             (partResponse, duration) =>
-              LTSVLogger.debug("Part" -> pReq.partId, "Response time" -> toRelevantUnit(duration).toString, "From cache" -> partResponse.retrievedFromCache.toString)
+              LTSVLogger.debug((requestMeta, partResponse), "Time taken" -> toRelevantUnit(duration))
               logPartResponse(requestMeta, partResponse, duration.toMillis)
           })
     }
@@ -58,11 +60,7 @@ class PartsService(partRequestService: PartRequestServiceBase,
         val responseMeta = ResponseMeta(requestMeta.id, duration)
         val aggregateResponse = AggregateResponse(responseMeta, partsResponses)
 
-        LTSVLogger.debug(
-          "Request Id" -> responseMeta.id,
-          "Num parts" -> aggregateRequest.requests.size.toString,
-          "aggregateRequest" -> truncateValue(aggregateRequest),
-          "aggregateResponse" -> truncateValue(aggregateResponse))
+        LTSVLogger.debug((aggregateRequest, aggregateResponse))
 
         aggregateResponse
     }
