@@ -20,14 +20,11 @@ class InMemoryLatestVersionCache(maxCacheKeys: Long) extends LatestVersionCache 
     paramVersions.put(versionedParamKey, version)
   }
 
-  def getPartVersion(partId: PartId) = getVersionFrom(partVersions)(partId).map(Long.unbox)
+  def getPartVersion(partId: PartId) = Option(partVersions.getIfPresent(partId)).map(Long.unbox)
 
-  def getParamVersion(versionedParamKey: VersionedParamKey) = getVersionFrom(paramVersions)(versionedParamKey).map(Long.unbox)
+  def getParamVersion(versionedParamKey: VersionedParamKey) = Option(paramVersions.getIfPresent(versionedParamKey)).map(Long.unbox)
 
   private def configureMemoryCache(builder: CacheBuilder[Object, Object]): CacheBuilder[Object, Object] = {
     builder.maximumSize(maxCacheKeys)
   }
-
-  private def getVersionFrom[A, B](cache: Cache[A, B])(key: A): Option[B] = Option(cache.getIfPresent(key))
-
 }
