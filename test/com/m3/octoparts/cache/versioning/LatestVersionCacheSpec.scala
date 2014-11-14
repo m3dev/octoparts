@@ -2,6 +2,8 @@ package com.m3.octoparts.cache.versioning
 
 import org.scalatest.{ Matchers, FunSpec }
 
+import scala.util.Random
+
 class LatestVersionCacheSpec extends FunSpec with Matchers {
 
   it("should make a growing, unique version ID") {
@@ -13,11 +15,25 @@ class LatestVersionCacheSpec extends FunSpec with Matchers {
   }
 
   it("should return None by default") {
-    val latestVersionCache: LatestVersionCache = new InMemoryLatestVersionCache
+    val latestVersionCache: LatestVersionCache = new InMemoryLatestVersionCache(100000)
     val versionedParamKeys = Seq(VersionedParamKey("id", "b", "some value"), VersionedParamKey("id", "a", "some other value"))
     val r = versionedParamKeys.map(latestVersionCache.getParamVersion)
     r.find {
       _.isDefined
     } should be('empty)
+  }
+
+  describe("InMemoryLatestVersionCache implementation") {
+
+    val maxKeys = 100
+    val latestVersionCache = new InMemoryLatestVersionCache(maxKeys)
+
+    it("have internal caches that are limited by the #maxKeys argument") {
+      for (i <- 0 to (2 * maxKeys)) latestVersionCache.updatePartVersion(i.toString, i + 1)
+      for (i <- 0 to (2 * maxKeys)) latestVersionCache.updateParamVersion(VersionedParamKey(i.toString, Random.nextString(3), Random.nextString(3)), i + 1)
+      latestVersionCache.partVersions.size() should be(maxKeys)
+      latestVersionCache.paramVersions.size() should be(maxKeys)
+    }
+
   }
 }
