@@ -35,5 +35,12 @@ class LatestVersionCacheSpec extends FunSpec with Matchers {
       latestVersionCache.paramVersions.size() should be(maxKeys)
     }
 
+    it("should return proper last-updated values") {
+      latestVersionCache.updatePartVersion("hello", 101)
+      latestVersionCache.getPartVersion("hello").get should be(101L)
+      latestVersionCache.updateParamVersion(VersionedParamKey("goodbye", "stop", "go"), 420)
+      latestVersionCache.getParamVersion(VersionedParamKey("goodbye", "stop", "go")).get should be(420L)
+    }
+
   }
 }
