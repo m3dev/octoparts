@@ -7,7 +7,7 @@ import com.m3.octoparts.cache.memcached._
 import com.m3.octoparts.cache.dummy.{ DummyCache, DummyRawCache, DummyCacheOps, DummyLatestVersionCache }
 import com.m3.octoparts.cache.key.MemcachedKeyGenerator
 import com.m3.octoparts.cache.versioning.{ InMemoryLatestVersionCache, LatestVersionCache }
-import play.api.Configuration
+import play.api.{ Play, Configuration }
 import scaldi.{ Condition, Module }
 import shade.memcached.{ AuthConfiguration, Memcached, Protocol, Configuration => ShadeConfig }
 
@@ -52,7 +52,8 @@ class CacheModule extends Module {
   }
 
   when(cachingEnabled) {
-    bind[LatestVersionCache] to new InMemoryLatestVersionCache
+    lazy val maxInMemoryLVCKeys = inject[Configuration].getLong("caching.versionCachingSize").getOrElse(100000L)
+    bind[LatestVersionCache] to new InMemoryLatestVersionCache(maxInMemoryLVCKeys)
     when(useInMemoryCache) {
       bind[RawCache] to new InMemoryRawCache()(cacheExecutor) destroyWith (_.close())
     }
