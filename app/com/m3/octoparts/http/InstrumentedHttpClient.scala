@@ -1,6 +1,7 @@
 package com.m3.octoparts.http
 
 import java.io.Closeable
+import java.net.URI
 import java.nio.charset.{ Charset, StandardCharsets }
 
 import com.beachape.logging.LTSVLogger
@@ -8,6 +9,8 @@ import com.codahale.metrics.httpclient._
 import com.codahale.metrics.{ Gauge, MetricRegistry }
 import com.m3.octoparts.OctopartsMetricsRegistry
 import com.m3.octoparts.util.TimingSupport
+import org.apache.http.HttpRequest
+import org.apache.http.client.HttpClient
 import org.apache.http.client.config.{ CookieSpecs, RequestConfig }
 import org.apache.http.client.methods.HttpUriRequest
 import org.apache.http.conn.HttpClientConnectionManager
@@ -54,7 +57,7 @@ class InstrumentedHttpClient(
 
     HttpClientBuilder
       .create
-      .setRequestExecutor(InstrumentedRequestExecutor)
+      .setRequestExecutor(instrumentedRequestExecutor)
       .setConnectionManager(connectionManager)
       .setDefaultRequestConfig(clientConfig)
       .build
@@ -114,7 +117,18 @@ class InstrumentedHttpClient(
 }
 
 private[http] object InstrumentedHttpClient {
-  private val InstrumentedRequestExecutor = new InstrumentedHttpRequestExecutor(OctopartsMetricsRegistry.default, HttpClientMetricNameStrategies.QUERYLESS_URL_AND_METHOD)
+  private val instrumentedRequestExecutor = {
+    /**
+     * see [[com.codahale.metrics.httpclient.HttpClientMetricNameStrategies]]
+     */
+    val hostStrategy = new HttpClientMetricNameStrategy {
+      def getNameFor(name: String, request: HttpRequest): String = {
+        val uri = URI.create(request.getRequestLine.getUri)
+        MetricRegistry.name(classOf[HttpClient], name, uri.getHost)
+      }
+    }
+    new InstrumentedHttpRequestExecutor(OctopartsMetricsRegistry.default, hostStrategy)
+  }
 
   val gauges: Map[String, PoolStats => Int] = Map(
     "available-connections" -> { ps: PoolStats => ps.getAvailable },
