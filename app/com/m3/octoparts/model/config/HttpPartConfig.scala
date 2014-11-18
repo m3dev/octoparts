@@ -1,8 +1,11 @@
 package com.m3.octoparts.model.config
 
+import java.nio.charset.{ Charset, StandardCharsets }
+
 import com.m3.octoparts.cache.config.CacheConfig
 import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config.json.{ HttpPartConfig => JsonHttpPartConfig }
+import com.sun.xml.internal.bind.api.impl.NameConverter.Standard
 import org.joda.time.DateTime
 
 import scala.concurrent.duration._
@@ -32,6 +35,15 @@ case class HttpPartConfig(id: Option[Long] = None, // None means that the record
                           alertMailRecipients: Option[String],
                           createdAt: DateTime,
                           updatedAt: DateTime) extends ConfigModel[HttpPartConfig] {
+
+  // TODO make those configurable
+  def httpPoolSize: Int = 20
+
+  def httpConnectionTimeout: FiniteDuration = 1.second
+
+  def httpSocketTimeout: FiniteDuration = 10.seconds
+
+  def httpDefaultEncoding: Charset = StandardCharsets.UTF_8
 
   /**
    * Method to use when we are sure we have a HystrixConfig inside the

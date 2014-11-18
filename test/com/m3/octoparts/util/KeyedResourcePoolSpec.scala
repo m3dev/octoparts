@@ -6,11 +6,12 @@ import org.scalatest.{ FunSpec, Matchers }
 class KeyedResourcePoolSpec extends FunSpec with Matchers {
 
   it("should clean up obsolete clients") {
-    import scala.language.reflectiveCalls
 
-    val holder = new KeyedResourcePool[String, Int] {
+    object holder extends KeyedResourcePool[String, String, Int] {
       var i = 0
       var j = 0
+
+      def makeKey(s: String) = s
 
       def makeNew(k: String) = {
         i += 1
@@ -39,7 +40,9 @@ class KeyedResourcePoolSpec extends FunSpec with Matchers {
 
   it("should never return closed items") {
     val firstTime = new MutableBoolean(false)
-    val holder = new KeyedResourcePool[String, MutableBoolean] {
+    object holder extends KeyedResourcePool[String, String, MutableBoolean] {
+      def makeKey(s: String) = s
+
       def makeNew(k: String) = {
         if (firstTime.booleanValue()) {
           firstTime.setValue(false)

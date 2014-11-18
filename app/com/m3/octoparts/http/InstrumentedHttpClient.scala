@@ -29,9 +29,9 @@ import scala.concurrent.duration._
  */
 class InstrumentedHttpClient(
   name: String,
-  connectionPoolSize: Int = 20,
-  connectTimeout: Duration = 1.seconds,
-  socketTimeout: Duration = 10.seconds,
+  connectionPoolSize: Int,
+  connectTimeout: FiniteDuration,
+  socketTimeout: FiniteDuration,
   defaultEncoding: Charset = StandardCharsets.UTF_8)
     extends HttpClientLike
     with Closeable {

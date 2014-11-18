@@ -6,13 +6,15 @@ import java.util.concurrent.{ ConcurrentHashMap, ConcurrentMap }
  * A pool of key-value pairs.
  * It has a method to build a new value and a method to clean up all values that are no longer needed.
  */
-trait KeyedResourcePool[K, V] {
+trait KeyedResourcePool[K, O, V] {
   private val holder: ConcurrentMap[K, V] = new ConcurrentHashMap[K, V]()
 
   /**
    * Factory method to create a new element
    */
-  protected def makeNew(key: K): V
+  protected def makeNew(obj: O): V
+
+  protected def makeKey(obj: O): K
 
   /**
    * Listener that is run after a value is removed
@@ -24,16 +26,19 @@ trait KeyedResourcePool[K, V] {
    * Get the value corresponding to the given key.
    * If no such value existed, a new one is created.
    */
-  def getOrCreate(key: K): V = Option(holder.get(key)) match {
-    case Some(v) => v
-    case None =>
-      val d = makeNew(key)
-      val old = holder.put(key, d)
-      // once d has been put, old (if it went in before last get) must be discarded properly
-      if (old != null) {
-        onRemove(old)
-      }
-      d
+  def getOrCreate(obj: O): V = {
+    val key = makeKey(obj)
+    Option(holder.get(key)) match {
+      case Some(v) => v
+      case None =>
+        val d = makeNew(obj)
+        val old = holder.put(key, d)
+        // once d has been put, old (if it went in before last get) must be discarded properly
+        if (old != null) {
+          onRemove(old)
+        }
+        d
+    }
   }
 
   /**
