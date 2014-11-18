@@ -1,15 +1,13 @@
 package com.m3.octoparts.http
 
 import java.io.Closeable
-import java.net.URI
 import java.nio.charset.{ Charset, StandardCharsets }
 
 import com.beachape.logging.LTSVLogger
-import com.codahale.metrics.httpclient._
 import com.codahale.metrics.{ Gauge, MetricRegistry }
 import com.m3.octoparts.OctopartsMetricsRegistry
 import com.m3.octoparts.util.TimingSupport
-import org.apache.http.HttpRequest
+import org.apache.http.{ HttpClientConnection, HttpRequest }
 import org.apache.http.client.HttpClient
 import org.apache.http.client.config.{ CookieSpecs, RequestConfig }
 import org.apache.http.client.methods.HttpUriRequest
@@ -17,6 +15,7 @@ import org.apache.http.conn.HttpClientConnectionManager
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.pool.PoolStats
+import org.apache.http.protocol.{ HttpContext, HttpRequestExecutor }
 import skinny.logging.Logging
 import skinny.util.LTSV
 
@@ -44,6 +43,7 @@ class InstrumentedHttpClient(
   import InstrumentedHttpClient._
 
   private[http] val connectionManager = new InstrumentedHttpClientConnectionMgr
+  private val requestExecutor = new InstrumentedHttpRequestExecutor
 
   // the underlying Apache HTTP client
   private val httpClient = {
@@ -57,7 +57,7 @@ class InstrumentedHttpClient(
 
     HttpClientBuilder
       .create
-      .setRequestExecutor(instrumentedRequestExecutor)
+      .setRequestExecutor(requestExecutor)
       .setConnectionManager(connectionManager)
       .setDefaultRequestConfig(clientConfig)
       .build
@@ -84,14 +84,14 @@ class InstrumentedHttpClient(
     }
   }
 
-  private[http] def registryName(key: String) = MetricRegistry.name(classOf[HttpClientConnectionManager], name, key)
-
   /**
    * A [[PoolingHttpClientConnectionManager]] which monitors the number of open connections.
    */
   private[http] class InstrumentedHttpClientConnectionMgr extends PoolingHttpClientConnectionManager {
     setDefaultMaxPerRoute(connectionPoolSize)
     setMaxTotal(connectionPoolSize)
+
+    private[http] def registryName(key: String) = MetricRegistry.name(classOf[HttpClientConnectionManager], name, key)
 
     gauges.foreach {
       case (key, f) =>
@@ -113,22 +113,32 @@ class InstrumentedHttpClient(
     }
   }
 
-  def close() = httpClient.close()
+  private[http] class InstrumentedHttpRequestExecutor extends HttpRequestExecutor with Closeable {
+
+    private val registryName = MetricRegistry.name(classOf[HttpClient], name)
+
+    override def execute(request: HttpRequest, conn: HttpClientConnection, context: HttpContext) = {
+      val timerContext = OctopartsMetricsRegistry.default.timer(registryName).time
+      try {
+        super.execute(request, conn, context)
+      } finally {
+        timerContext.stop
+      }
+    }
+
+    def close() = OctopartsMetricsRegistry.default.remove(registryName)
+  }
+
+  def close() = {
+    try {
+      httpClient.close()
+    } finally {
+      requestExecutor.close()
+    }
+  }
 }
 
 private[http] object InstrumentedHttpClient {
-  private val instrumentedRequestExecutor = {
-    /**
-     * see [[com.codahale.metrics.httpclient.HttpClientMetricNameStrategies]]
-     */
-    val hostStrategy = new HttpClientMetricNameStrategy {
-      def getNameFor(name: String, request: HttpRequest): String = {
-        val uri = URI.create(request.getRequestLine.getUri)
-        MetricRegistry.name(classOf[HttpClient], name, uri.getHost)
-      }
-    }
-    new InstrumentedHttpRequestExecutor(OctopartsMetricsRegistry.default, hostStrategy)
-  }
 
   val gauges: Map[String, PoolStats => Int] = Map(
     "available-connections" -> { ps: PoolStats => ps.getAvailable },
