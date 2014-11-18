@@ -1,14 +1,13 @@
 package com.m3.octoparts.repository
 
+import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.repository.config._
 import play.api.Play
 import play.api.libs.concurrent.Akka
 import scalikejdbc._
-import skinny.logging.Logging
 import skinny.orm.SkinnyCRUDMapper
 import skinny.orm.feature.associations.Association
-import skinny.util.LTSV
 import com.m3.octoparts.future.RichFutureWithTiming._
 
 import scala.concurrent.{ Future, blocking }
@@ -45,7 +44,7 @@ object DBContext {
 
 }
 
-trait ImmutableDBRepository extends ConfigsRepository with Logging {
+trait ImmutableDBRepository extends ConfigsRepository {
   import DBContext._
 
   // Configs
@@ -81,7 +80,7 @@ trait ImmutableDBRepository extends ConfigsRepository with Logging {
     blocking {
       val ret = mapper.joins(joins: _*).includes(includes: _*).findBy(where)
       ret.foreach {
-        ci => debug(LTSV.dump("Table" -> mapper.tableName, "where" -> where.toString(), "Data" -> ret.toString))
+        ci => LTSVLogger.debug("Table" -> mapper.tableName, "where" -> where.toString(), "Data" -> ret.toString)
       }
       ret
     }
@@ -95,7 +94,7 @@ trait ImmutableDBRepository extends ConfigsRepository with Logging {
                                                includes: Seq[Association[A]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[Seq[A]] = Future {
     blocking {
       val ret = mapper.joins(joins: _*).includes(includes: _*).findAll()
-      debug(LTSV.dump("Table" -> mapper.tableName, "Retrieved records" -> ret.length.toString))
+      LTSVLogger.debug("Table" -> mapper.tableName, "Retrieved records" -> ret.length.toString)
       ret
     }
   }.measure("DB_GET")
@@ -109,13 +108,13 @@ trait ImmutableDBRepository extends ConfigsRepository with Logging {
                                                  includes: Seq[Association[A]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[Seq[A]] = Future {
     blocking {
       val ret = mapper.joins(joins: _*).includes(includes: _*).findAllBy(where)
-      debug(LTSV.dump("Table" -> mapper.tableName, "Retrieved records" -> ret.length.toString))
+      LTSVLogger.debug("Table" -> mapper.tableName, "Retrieved records" -> ret.length.toString)
       ret
     }
   }.measure("DB_GET")
 }
 
-trait MutableDBRepository extends MutableConfigsRepository with Logging {
+trait MutableDBRepository extends MutableConfigsRepository {
   import DBContext._
 
   def save[A <: ConfigModel[A]: ConfigMapper](obj: A): Future[Long] = DB.futureLocalTx { implicit session => saveWithSession(implicitly[ConfigMapper[A]], obj) }
@@ -136,7 +135,7 @@ trait MutableDBRepository extends MutableConfigsRepository with Logging {
   private[repository] def saveWithSession[A <: ConfigModel[A]](mapper: ConfigMapper[A], model: A)(implicit session: DBSession = AutoSession): Future[Long] = Future {
     blocking {
       val id = mapper.save(model)
-      info(LTSV.dump("Table" -> mapper.tableName, "Data" -> model.toString, "Action" -> "Saved"))
+      LTSVLogger.info("Table" -> mapper.tableName, "Data" -> model.toString, "Action" -> "Saved")
       id
     }
   }.measure("DB_UPDATE")
@@ -148,7 +147,7 @@ trait MutableDBRepository extends MutableConfigsRepository with Logging {
   private[repository] def deleteWithSession(mapper: SkinnyCRUDMapper[_], where: SQLSyntax)(implicit session: DBSession = AutoSession): Future[Int] = Future {
     blocking {
       val count = mapper.deleteBy(where)
-      info(LTSV.dump("Table" -> mapper.tableName, "where" -> where.toString(), "count" -> count.toString, "Action" -> "Deleted"))
+      LTSVLogger.info("Table" -> mapper.tableName, "where" -> where.toString(), "count" -> count.toString, "Action" -> "Deleted")
       count
     }
   }.measure("DB_UPDATE")
@@ -159,7 +158,7 @@ trait MutableDBRepository extends MutableConfigsRepository with Logging {
   private[repository] def deleteAllWithSession(mapper: SkinnyCRUDMapper[_])(implicit session: DBSession = AutoSession): Future[Int] = Future {
     blocking {
       val count = mapper.deleteAll
-      warn(LTSV.dump("Table" -> mapper.tableName, "count" -> count.toString, "Action" -> "Truncated"))
+      LTSVLogger.warn("Table" -> mapper.tableName, "count" -> count.toString, "Action" -> "Truncated")
       count
     }
   }.measure("DB_UPDATE")

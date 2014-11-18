@@ -1,13 +1,12 @@
 package com.m3.octoparts.cache
 
+import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.aggregator.service.PartRequestServiceBase
 import com.m3.octoparts.cache.directive.{ CacheDirective, CacheDirectiveGenerator }
 import com.m3.octoparts.model.PartResponse
 import com.m3.octoparts.model.config._
 import org.apache.http.HttpStatus
-import skinny.logging.Logging
-import skinny.util.LTSV
 import com.m3.octoparts.cache.RichCacheControl._
 
 import scala.concurrent.Future
@@ -30,7 +29,7 @@ private[cache] object PartResponseCachingSupport {
   }
 }
 
-trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
+trait PartResponseCachingSupport extends PartRequestServiceBase {
   import PartResponseCachingSupport._
 
   def cacheOps: CacheOps
@@ -67,14 +66,14 @@ trait PartResponseCachingSupport extends PartRequestServiceBase with Logging {
     case ce: CacheException => {
       ce.getCause match {
         case te: shade.TimeoutException =>
-          warn(LTSV.dump("Memcached error" -> "timed out", "cache key" -> ce.key.toString))
+          LTSVLogger.warn("Memcached error" -> "timed out", "cache key" -> ce.key.toString)
         case other =>
-          error(LTSV.dump("Memcached error" -> other.getClass.getSimpleName, "cache key" -> ce.key.toString), other)
+          LTSVLogger.error(other, "Memcached error" -> other.getClass.getSimpleName, "cache key" -> ce.key.toString)
       }
       super.processWithConfig(ci, partRequestInfo, params)
     }
     case NonFatal(e) => {
-      error(LTSV.dump("Memcached error" -> e.getClass.getSimpleName), e)
+      LTSVLogger.error(e, "Memcached error" -> e.getClass.getSimpleName)
       super.processWithConfig(ci, partRequestInfo, params)
     }
   }
