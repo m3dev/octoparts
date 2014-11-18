@@ -19,11 +19,11 @@ class InstrumentedHttpClientHttpClientSpec extends FunSpec with Matchers {
   it("should remove gauges on close") {
     val client = new InstrumentedHttpClient("A")
     InstrumentedHttpClient.gauges.keys.foreach { key =>
-      OctopartsMetricsRegistry.default.getGauges.get(client.registryName(key)) shouldNot be(null)
+      OctopartsMetricsRegistry.default.getGauges.get(client.connectionManager.registryName(key)) shouldNot be(null)
     }
     client.close()
     InstrumentedHttpClient.gauges.keys.foreach { key =>
-      OctopartsMetricsRegistry.default.getGauges.get(client.registryName(key)) should be(null)
+      OctopartsMetricsRegistry.default.getGauges.get(client.connectionManager.registryName(key)) should be(null)
     }
   }
 
