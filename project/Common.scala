@@ -94,6 +94,9 @@ object Common {
   )
 
   private lazy val testSettings = Seq(Test, ScoverageSbtPlugin.ScoverageTest).flatMap { t =>
-    Seq(parallelExecution in t := false) // Avoid DB-related tests stomping on each other
+    Seq(
+      parallelExecution in t := false,  // Avoid DB-related tests stomping on each other
+      testOptions in t += Tests.Argument("-oF") // full stack traces
+    )
   }
 }
