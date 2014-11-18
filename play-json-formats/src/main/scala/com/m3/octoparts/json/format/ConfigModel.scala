@@ -11,7 +11,8 @@ import play.api.libs.json._
  */
 object ConfigModel {
 
-  import Duration.format
+  import DurationFormat.durationFormat
+  import CharsetFormat.charsetFormat
 
   implicit val threadPoolConfigFormat = Json.format[ThreadPoolConfig]
   implicit val cacheGroupConfigFormat = Json.format[CacheGroup]

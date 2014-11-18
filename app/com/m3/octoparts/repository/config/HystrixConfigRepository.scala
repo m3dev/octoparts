@@ -19,7 +19,7 @@ object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with Timestam
     "threadPoolConfigId" -> SkinnyParamType.Long,
     "commandKey" -> SkinnyParamType.String,
     "commandGroupKey" -> SkinnyParamType.String,
-    "timeoutInMs" -> SkinnyParamType.Long
+    "timeoutInMs" -> ExtraParamType.FineDurationParamType
   )
 
   // #byDefault is used for now in case we ever need to refer back to the HttpPartConfig
@@ -53,10 +53,9 @@ object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with Timestam
     id = rs.get(n.id),
     httpPartConfigId = rs.get(n.httpPartConfigId),
     threadPoolConfigId = rs.get(n.threadPoolConfigId),
-    commandKey = rs.get(n.commandKey),
-    commandGroupKey = rs.get(n.commandGroupKey),
-    timeoutInMs = rs.get(n.timeoutInMs),
+    commandKey = rs.string(n.commandKey),
+    commandGroupKey = rs.string(n.commandGroupKey),
+    timeoutInMs = rs.long(n.timeoutInMs).millis,
     createdAt = rs.get(n.createdAt),
     updatedAt = rs.get(n.updatedAt))
-
 }

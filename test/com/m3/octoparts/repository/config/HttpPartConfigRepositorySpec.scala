@@ -1,5 +1,7 @@
 package com.m3.octoparts.repository.config
 
+import java.nio.charset.StandardCharsets
+
 import com.m3.octoparts.model.HttpMethod._
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.support.db.DBSuite
@@ -9,7 +11,6 @@ import org.scalatest.{ Matchers, fixture }
 import scalikejdbc.DBSession
 
 import scala.concurrent.duration._
-import scala.language.postfixOps
 
 class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Matchers with ConfigDataMocks {
 
@@ -17,14 +18,18 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
     'partId -> "whatUpDependency",
     'owner -> "someone@me.com",
     'uriToInterpolate -> "http://skysports.com/fooball",
-    'method -> "get"
+    'method -> "get",
+    'httpPoolSize -> 5,
+    'httpConnectionTimeout -> 1.second.toMillis,
+    'httpSocketTimeout -> 5.seconds.toMillis,
+    'httpDefaultEncoding -> StandardCharsets.UTF_8.name()
   )
 
   val httpPartConfigMapWithDeprecation = httpPartConfigMap :+ ('deprecatedInFavourOf -> Some("theNewHotness"))
 
   // ---- Helper functions ----
   private def createCacheGroup(howMany: Int = 1)(implicit session: DBSession): Seq[CacheGroup] = {
-    for (i <- (0 until howMany)) yield {
+    for (i <- 0 until howMany) yield {
       val id = CacheGroupRepository.createWithAttributes('name -> s"myLittleGroup $i")
       CacheGroupRepository.findById(id).get
     }
@@ -46,6 +51,10 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
         config.uriToInterpolate should be("http://skysports.com/fooball")
         config.method should be(Get)
         config.deprecatedInFavourOf should be(None)
+        config.httpPoolSize should be(5)
+        config.httpConnectionTimeout should be(1.second)
+        config.httpSocketTimeout should be(5.seconds)
+        config.httpDefaultEncoding should be(StandardCharsets.UTF_8)
     }
 
     it("should work when passing Option values") {
@@ -103,7 +112,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
           val partParam = mockPartParam.copy(id = None, cacheGroups = cacheGroups)
           HttpPartConfigRepository.save(mockHttpPartConfig.copy(parameters = Set(partParam)))
           val retrievedCacheGroups = cacheGroups.map(cG => CacheGroupRepository.withChildren.findById(cG.id.get).get)
-          retrievedCacheGroups.foreach(_.partParams.map(_.outputName).contains(partParam.outputName) should be(true))
+          retrievedCacheGroups.foreach(_.partParams.map(_.outputName) should contain(partParam.outputName))
         }
 
       }
@@ -128,7 +137,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
           val partParam = mockPartParam.copy(id = None, outputName = "param2", cacheGroups = cacheGroups, httpPartConfigId = part.id)
           HttpPartConfigRepository.save(part.copy(parameters = Set(partParam)))
           val retrievedCacheGroups = cacheGroups.map(cG => CacheGroupRepository.withChildren.findById(cG.id.get).get)
-          retrievedCacheGroups.foreach(_.partParams.map(_.outputName).contains(partParam.outputName) should be(true))
+          retrievedCacheGroups.foreach(_.partParams.map(_.outputName) should contain(partParam.outputName))
         }
 
       }
@@ -155,7 +164,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
         'threadPoolConfigId -> threadPoolConfigId,
         'commandKey -> "myWish",
         'commandGroupKey -> "isYourCommand",
-        'timeoutInMs -> 3000
+        'timeoutInMs -> 3.seconds.toMillis
       )
       partId
     }
@@ -165,7 +174,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
         val partId = setup(session)
         val config = HttpPartConfigRepository.joins(HttpPartConfigRepository.hystrixConfigRef).findById(partId).get
         val hystrixConfig = config.hystrixConfig.get
-        hystrixConfig.timeoutInMs should be(3000)
+        hystrixConfig.timeoutInMs should be(3.seconds)
         hystrixConfig.commandKey should be("myWish")
         hystrixConfig.commandGroupKey should be("isYourCommand")
     }
@@ -251,6 +260,10 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
             description = Some("just trying this out"),
             uriToInterpolate = "http://scala-lang.org",
             method = Get,
+            httpPoolSize = 5,
+            httpConnectionTimeout = 1.second,
+            httpSocketTimeout = 5.seconds,
+            httpDefaultEncoding = StandardCharsets.US_ASCII,
             parameters = parameters.toSet,
             hystrixConfig = Some(insertedHystrixConfig),
             cacheTtl = Some(30.seconds),
@@ -280,6 +293,10 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
           description = Some("just trying this out"),
           uriToInterpolate = "http://scala-lang.org",
           method = Get,
+          httpPoolSize = 5,
+          httpConnectionTimeout = 1.second,
+          httpSocketTimeout = 5.seconds,
+          httpDefaultEncoding = StandardCharsets.US_ASCII,
           parameters = parameters.toSet,
           hystrixConfig = Some(insertedHystrixConfig),
           cacheTtl = Some(10.minutes),
@@ -315,7 +332,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
               c.copy(
                 commandKey = c.commandKey + "_new",
                 commandGroupKey = c.commandGroupKey + "_new",
-                timeoutInMs = 999
+                timeoutInMs = 999.milliseconds
               )
           }
           val updatedConfig = oldConfig.copy(
@@ -359,7 +376,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
         val cacheGroups = createCacheGroup(2).toSet
         val partId = HttpPartConfigRepository.save(mockHttpPartConfig.copy(cacheGroups = cacheGroups))
         val retrievedCacheGroups = cacheGroups.map(cG => CacheGroupRepository.withChildren.findById(cG.id.get).get)
-        retrievedCacheGroups.foreach(_.httpPartConfigs.map(_.id).contains(Some(partId)) should be(true))
+        retrievedCacheGroups.foreach(_.httpPartConfigs.map(_.id) should contain(Some(partId)))
       }
 
     }
@@ -379,7 +396,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
         val part = createPartConfig
         HttpPartConfigRepository.save(part.copy(cacheGroups = cacheGroups))
         val retrievedCacheGroups = cacheGroups.map(cG => CacheGroupRepository.withChildren.findById(cG.id.get).get)
-        retrievedCacheGroups.foreach(_.httpPartConfigs.map(_.id).contains(Some(part.id.get)) should be(true))
+        retrievedCacheGroups.foreach(_.httpPartConfigs.map(_.id) should contain(Some(part.id.get)))
       }
 
     }

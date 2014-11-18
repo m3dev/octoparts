@@ -1,5 +1,7 @@
 package controllers
 
+import java.nio.charset.Charset
+
 import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config._
@@ -12,6 +14,12 @@ import scala.concurrent.duration._
 
 object AdminForms {
 
+  case class AlertMailData(enabled: Boolean,
+                           interval: Option[Int],
+                           absoluteThreshold: Option[Int],
+                           percentThreshold: Option[BigDecimal],
+                           recipients: Option[String])
+
   case class PartData(
       partId: String,
       description: Option[String],
@@ -19,17 +27,17 @@ object AdminForms {
       uri: String,
       method: String,
       additionalValidStatuses: Option[String],
+      httpPoolSize: Int,
+      httpConnectionTimeoutInMs: Int,
+      httpSocketTimeoutInMs: Int,
+      httpDefaultEncoding: String,
       commandKey: String,
       commandGroupKey: String,
-      timeoutInMs: Long,
+      timeoutInMs: Int,
       threadPoolConfigId: Long,
-      ttl: Option[Long],
+      ttl: Option[Int],
       cacheGroupNames: Seq[String],
-      alertMailsEnabled: Boolean,
-      alertInterval: Option[Long],
-      alertAbsoluteThreshold: Option[Int],
-      alertPercentThreshold: Option[BigDecimal],
-      alertMailRecipients: Option[String]) {
+      alertMailData: AlertMailData) {
     data =>
 
     /** Create a brand new HttpPartConfig using the data input into the form */
@@ -40,22 +48,26 @@ object AdminForms {
       description = data.description,
       method = HttpMethod.withName(data.method),
       additionalValidStatuses = HttpPartConfig.parseValidStatuses(data.additionalValidStatuses.filterNot(_.isEmpty)),
+      httpPoolSize = data.httpPoolSize,
+      httpConnectionTimeout = data.httpConnectionTimeoutInMs.milliseconds,
+      httpSocketTimeout = data.httpSocketTimeoutInMs.milliseconds,
+      httpDefaultEncoding = Charset.forName(data.httpDefaultEncoding),
       hystrixConfig = Some(new HystrixConfig(
         commandKey = data.commandKey,
         commandGroupKey = data.commandGroupKey,
         threadPoolConfigId = Some(data.threadPoolConfigId),
-        timeoutInMs = data.timeoutInMs,
+        timeoutInMs = data.timeoutInMs.milliseconds,
         createdAt = DateTime.now,
         updatedAt = DateTime.now
       )),
       deprecatedInFavourOf = data.deprecatedTo,
       cacheTtl = data.ttl.map(_.seconds),
       cacheGroups = cacheGroups,
-      alertMailsEnabled = data.alertMailsEnabled,
-      alertInterval = data.alertInterval.getOrElse(60L).seconds,
-      alertAbsoluteThreshold = data.alertAbsoluteThreshold,
-      alertPercentThreshold = data.alertPercentThreshold.map(_.toDouble),
-      alertMailRecipients = data.alertMailRecipients,
+      alertMailsEnabled = alertMailData.enabled,
+      alertInterval = alertMailData.interval.map(_.seconds).getOrElse(1.minute),
+      alertAbsoluteThreshold = alertMailData.absoluteThreshold,
+      alertPercentThreshold = alertMailData.percentThreshold.map(_.toDouble),
+      alertMailRecipients = alertMailData.recipients,
       createdAt = DateTime.now,
       updatedAt = DateTime.now
     )
@@ -68,21 +80,25 @@ object AdminForms {
       description = data.description,
       method = HttpMethod.withName(data.method),
       additionalValidStatuses = HttpPartConfig.parseValidStatuses(data.additionalValidStatuses.filterNot(_.isEmpty)),
+      httpPoolSize = data.httpPoolSize,
+      httpConnectionTimeout = data.httpConnectionTimeoutInMs.milliseconds,
+      httpSocketTimeout = data.httpSocketTimeoutInMs.milliseconds,
+      httpDefaultEncoding = Charset.forName(data.httpDefaultEncoding),
       hystrixConfig = Some(originalPart.hystrixConfigItem.copy(
         commandKey = data.commandKey,
         commandGroupKey = data.commandGroupKey,
         threadPoolConfigId = Some(data.threadPoolConfigId),
-        timeoutInMs = data.timeoutInMs,
+        timeoutInMs = data.timeoutInMs.milliseconds,
         updatedAt = DateTime.now
       )),
       deprecatedInFavourOf = data.deprecatedTo,
       cacheTtl = data.ttl.map(_.seconds),
       cacheGroups = cacheGroups,
-      alertMailsEnabled = data.alertMailsEnabled,
-      alertInterval = data.alertInterval.getOrElse(60L).seconds,
-      alertAbsoluteThreshold = data.alertAbsoluteThreshold,
-      alertPercentThreshold = data.alertPercentThreshold.map(_.toDouble),
-      alertMailRecipients = data.alertMailRecipients,
+      alertMailsEnabled = alertMailData.enabled,
+      alertInterval = alertMailData.interval.map(_.seconds).getOrElse(1.minute),
+      alertAbsoluteThreshold = alertMailData.absoluteThreshold,
+      alertPercentThreshold = alertMailData.percentThreshold.map(_.toDouble),
+      alertMailRecipients = alertMailData.recipients,
       updatedAt = DateTime.now
     )
 
@@ -97,17 +113,23 @@ object AdminForms {
       uri = part.uriToInterpolate,
       method = part.method.toString,
       additionalValidStatuses = Some(part.additionalValidStatuses.mkString(",")).filterNot(_.isEmpty),
+      httpPoolSize = part.httpPoolSize,
+      httpConnectionTimeoutInMs = part.httpConnectionTimeout.toMillis.toInt,
+      httpSocketTimeoutInMs = part.httpSocketTimeout.toMillis.toInt,
+      httpDefaultEncoding = part.httpDefaultEncoding.name(),
       commandKey = part.hystrixConfigItem.commandKey,
       commandGroupKey = part.hystrixConfigItem.commandGroupKey,
-      timeoutInMs = part.hystrixConfigItem.timeoutInMs,
+      timeoutInMs = part.hystrixConfigItem.timeoutInMs.toMillis.toInt,
       threadPoolConfigId = part.hystrixConfigItem.threadPoolConfigId.get,
-      ttl = part.cacheTtl.map(_.toSeconds),
+      ttl = part.cacheTtl.map(_.toSeconds.toInt),
       cacheGroupNames = part.cacheGroups.map(_.name).toSeq,
-      alertMailsEnabled = part.alertMailsEnabled,
-      alertInterval = Some(part.alertInterval.toSeconds),
-      alertAbsoluteThreshold = part.alertAbsoluteThreshold,
-      alertPercentThreshold = part.alertPercentThreshold.map(BigDecimal(_)),
-      alertMailRecipients = part.alertMailRecipients
+      alertMailData = AlertMailData(
+        enabled = part.alertMailsEnabled,
+        interval = Some(part.alertInterval.toSeconds.toInt),
+        absoluteThreshold = part.alertAbsoluteThreshold,
+        percentThreshold = part.alertPercentThreshold.map(BigDecimal(_)),
+        recipients = part.alertMailRecipients
+      )
     )
 
     private def trimPartId(original: String): String = {
@@ -128,17 +150,23 @@ object AdminForms {
       "uri" -> text,
       "method" -> text.verifying(string => HttpMethod.values.exists(_.toString == string)),
       "additionalValidStatuses" -> optional(text),
+      "httpPoolSize" -> number(min = 1),
+      "httpConnectionTimeoutInMs" -> number(min = 0),
+      "httpSocketTimeoutInMs" -> number(min = 0),
+      "httpDefaultEncoding" -> text.verifying(string => Charset.isSupported(string)),
       "commandKey" -> text,
       "commandGroupKey" -> text,
-      "timeoutInMs" -> longNumber,
+      "timeoutInMs" -> number(min = 0),
       "threadPoolConfigId" -> longNumber,
-      "ttl" -> optional(longNumber),
+      "ttl" -> optional(number(min = 0)),
       "cacheGroupNames" -> seq(text),
-      "alertMailsEnabled" -> boolean,
-      "alertInterval" -> optional(longNumber),
-      "alertAbsoluteThreshold" -> optional(number),
-      "alertPercentThreshold" -> optional(bigDecimal),
-      "alertMailRecipients" -> optional(text)
+      "alertMail" -> mapping(
+        "enabled" -> boolean,
+        "interval" -> optional(number(min = 1)),
+        "absoluteThreshold" -> optional(number(min = 1)),
+        "percentThreshold" -> optional(bigDecimal),
+        "recipients" -> optional(text)
+      )(AlertMailData.apply)(AlertMailData.unapply)
     )(PartData.apply)(PartData.unapply)
   )
 

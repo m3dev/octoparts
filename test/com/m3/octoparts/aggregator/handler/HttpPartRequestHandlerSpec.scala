@@ -24,7 +24,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
   private val mockHystrixArguments = HystrixConfig(
     commandKey = "mock",
     commandGroupKey = "mock",
-    timeoutInMs = (10 seconds).toMillis,
+    timeoutInMs = 10.seconds,
     threadPoolConfig = Some(mockThreadConfig),
     updatedAt = now, createdAt = now)
 
@@ -51,7 +51,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
         val output = handler.buildUri(completeParamWithArgs).toString()
         val baseUrl = "http://mock.com/hi/there"
         // Due to lack of ordering in Maps and Sets, we need to do some hackery here
-        Seq(s"$baseUrl?query1=scala&query2=lover", s"$baseUrl?query2=lover&query1=scala").contains(output) should be(true)
+        Seq(s"$baseUrl?query1=scala&query2=lover", s"$baseUrl?query2=lover&query1=scala") should contain(output)
       }
     }
     describe("when providing only some params") {

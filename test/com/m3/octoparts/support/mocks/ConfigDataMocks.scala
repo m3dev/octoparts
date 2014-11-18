@@ -1,5 +1,7 @@
 package com.m3.octoparts.support.mocks
 
+import java.nio.charset.StandardCharsets
+
 import com.m3.octoparts.model.HttpMethod._
 import com.m3.octoparts.model.config.ParamType._
 import com.m3.octoparts.model.config._
@@ -38,6 +40,10 @@ trait ConfigDataMocks extends RequiresDB {
     uriToInterpolate = "http://random.com",
     description = None,
     method = Get,
+    httpPoolSize = 5,
+    httpConnectionTimeout = 1.second,
+    httpSocketTimeout = 5.seconds,
+    httpDefaultEncoding = StandardCharsets.US_ASCII,
     parameters = Set(mockPartParam),
     cacheTtl = Some(60.seconds),
     alertMailsEnabled = true,
@@ -52,7 +58,7 @@ trait ConfigDataMocks extends RequiresDB {
   def mockHystrixConfig = HystrixConfig(
     commandKey = "command",
     commandGroupKey = "GroupKey",
-    timeoutInMs = 50L,
+    timeoutInMs = 50.milliseconds,
     threadPoolConfig = Some(mockThreadConfig),
     createdAt = now,
     updatedAt = now

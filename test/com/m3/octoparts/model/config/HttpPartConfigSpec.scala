@@ -1,5 +1,7 @@
 package com.m3.octoparts.model.config
 
+import java.nio.charset.StandardCharsets
+
 import com.m3.octoparts.model.HttpMethod
 import scala.concurrent.duration._
 import com.m3.octoparts.support.mocks.ConfigDataMocks
@@ -37,6 +39,10 @@ class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
           commandKey = "command",
           commandGroupKey = "GroupKey"),
         additionalValidStatuses = Set(302),
+        httpPoolSize = 5,
+        httpConnectionTimeout = 1.second,
+        httpSocketTimeout = 5.seconds,
+        httpDefaultEncoding = StandardCharsets.US_ASCII,
         parameters = Set(
           json.PartParam(
             required = true,

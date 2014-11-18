@@ -1,5 +1,7 @@
 package com.m3.octoparts.ws
 
+import java.nio.charset.StandardCharsets
+
 import com.m3.octoparts.json.format.ReqResp._
 import com.m3.octoparts.json.format.ConfigModel._
 import com.m3.octoparts.model._
@@ -79,6 +81,10 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
         commandKey = "command",
         commandGroupKey = "GroupKey"),
       additionalValidStatuses = Set(302),
+      httpPoolSize = 20,
+      httpConnectionTimeout = 1.second,
+      httpSocketTimeout = 5.seconds,
+      httpDefaultEncoding = StandardCharsets.UTF_8,
       parameters = Set(
         PartParam(
           required = true,

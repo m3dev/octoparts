@@ -25,7 +25,7 @@ case class HttpPartConfigView(config: HttpPartConfig) {
 
   def commandGroup: String = config.hystrixConfig.fold("")(_.commandGroupKey)
 
-  def timeoutInMs: Long = config.hystrixConfig.fold(5000L)(_.timeoutInMs)
+  def timeoutInMs: Int = config.hystrixConfig.fold(5000)(_.timeoutInMs.toMillis.toInt)
 
   def commandKey: String = config.hystrixConfig.fold("")(_.commandKey)
 
@@ -60,7 +60,7 @@ case class HttpPartConfigView(config: HttpPartConfig) {
   def cacheTtlStr(implicit lang: Lang): String = {
     config.cacheTtl.fold(Messages("parts.cache.unlimited")) {
       case Duration.Zero => Messages("parts.cache.none")
-      case dd => dd.toString // not worth localizing yet
+      case dd => dd.toString() // not worth localizing yet
     }
   }
 
@@ -69,7 +69,7 @@ case class HttpPartConfigView(config: HttpPartConfig) {
       config.alertAbsoluteThreshold.map(Messages("parts.alertMail.condition.absolute", _)) ++
       config.alertPercentThreshold.map(Messages("parts.alertMail.condition.relative", _))
     ).mkString(s" ${Messages("parts.alertMail.condition.or")} ")
-    Html(Messages("parts.alertMail.condition.summary", config.alertInterval.toString, thresholdCondition))
+    Html(Messages("parts.alertMail.condition.summary", config.alertInterval.toString(), thresholdCondition))
   }
 
   def alertMailRecipients(implicit lang: Lang): String = config.alertMailRecipients.getOrElse(Messages("parts.alertMail.recipients.none"))

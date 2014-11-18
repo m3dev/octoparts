@@ -1,5 +1,7 @@
 package com.m3.octoparts.model.config.json
 
+import java.nio.charset.Charset
+
 import com.fasterxml.jackson.module.scala.JsonScalaEnumeration
 import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.jackson.HttpMethodType
@@ -16,6 +18,10 @@ case class HttpPartConfig(
   @(ApiModelProperty @field)(dataType = "string", allowableValues = "get, post, put, delete, head, patch, options")@JsonScalaEnumeration(classOf[HttpMethodType]) method: HttpMethod.Value,
   @(ApiModelProperty @field)(required = true) hystrixConfig: HystrixConfig,
   @(ApiModelProperty @field)(dataType = "array[integer]") additionalValidStatuses: Set[Int] = Set.empty,
+  @(ApiModelProperty @field)(required = true, dataType = "integer", allowableValues = "range[1, Infinity]") httpPoolSize: Int,
+  @(ApiModelProperty @field)(required = true, dataType = "integer", allowableValues = "range[0, Infinity]") httpConnectionTimeout: FiniteDuration,
+  @(ApiModelProperty @field)(required = true, dataType = "integer", allowableValues = "range[0, Infinity]") httpSocketTimeout: FiniteDuration,
+  @(ApiModelProperty @field)(required = true, dataType = "string") httpDefaultEncoding: Charset,
   parameters: Set[PartParam] = Set.empty,
   @(ApiModelProperty @field)(dataType = "string", required = false) deprecatedInFavourOf: Option[String] = None,
   cacheGroups: Set[CacheGroup] = Set.empty,

@@ -2,7 +2,7 @@ package controllers
 
 import com.m3.octoparts.model.config.{ PartParam, CacheGroup }
 import com.m3.octoparts.support.mocks.ConfigDataMocks
-import controllers.AdminForms.PartData
+import controllers.AdminForms.{ AlertMailData, PartData }
 import org.scalatest.{ FunSpec, Matchers }
 
 class AdminFormsSpec extends FunSpec with Matchers with ConfigDataMocks {
@@ -15,17 +15,23 @@ class AdminFormsSpec extends FunSpec with Matchers with ConfigDataMocks {
       uri = "",
       method = "get",
       additionalValidStatuses = None,
+      httpPoolSize = 20,
+      httpConnectionTimeoutInMs = 1000,
+      httpSocketTimeoutInMs = 5000,
+      httpDefaultEncoding = "UTF-8",
       commandKey = "",
       commandGroupKey = "",
-      timeoutInMs = 1000L,
+      timeoutInMs = 1000,
       threadPoolConfigId = 42L,
       cacheGroupNames = Nil,
       ttl = None,
-      alertMailsEnabled = false,
-      alertInterval = None,
-      alertAbsoluteThreshold = None,
-      alertPercentThreshold = None,
-      alertMailRecipients = None)
+      alertMailData = AlertMailData(
+        enabled = false,
+        interval = None,
+        absoluteThreshold = None,
+        percentThreshold = None,
+        recipients = None)
+    )
 
     describe("#toNewHttpPartConfig") {
       it("should trim leading and trailing spaces from the partId") {

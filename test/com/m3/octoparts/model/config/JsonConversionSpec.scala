@@ -1,5 +1,6 @@
 package com.m3.octoparts.model.config
 
+import java.nio.charset.Charset
 import java.util.concurrent.TimeUnit
 
 import com.m3.octoparts.model.HttpMethod
@@ -7,6 +8,7 @@ import org.scalacheck.{ Arbitrary, Gen }
 import org.scalatest._
 import org.scalatest.prop.{ Checkers, GeneratorDrivenPropertyChecks }
 
+import scala.collection.convert.Wrappers._
 import scala.concurrent.duration.FiniteDuration
 
 class JsonConversionSpec extends FunSpec with Matchers with Checkers with GeneratorDrivenPropertyChecks {
@@ -73,6 +75,10 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
       method <- Gen.oneOf(HttpMethod.values.toSeq)
       hystrixConfig <- arbHystrixConfig.arbitrary
       additionalValidStatuses <- Gen.containerOf[Set, Int](Gen.choose(400, 599))
+      httpPoolSize <- Gen.chooseNum(1, Int.MaxValue)
+      httpConnectionTimeout <- genShortDuration
+      httpSocketTimeout <- genShortDuration
+      httpDefaultEncoding <- Gen.oneOf(JCollectionWrapper(Charset.availableCharsets().values()).toSeq)
       parameters <- Gen.containerOf[Set, json.PartParam](arbPartParam.arbitrary)
       deprecatedInFavourOf <- Gen.option(Arbitrary.arbString.arbitrary)
       cacheGroups <- Gen.containerOf[Set, json.CacheGroup](arbCacheGroup.arbitrary)
@@ -86,8 +92,8 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
     } yield {
       json.HttpPartConfig(
         partId, owner, uriToInterpolate, Some(description), method, hystrixConfig,
-        additionalValidStatuses, parameters, deprecatedInFavourOf,
-        cacheGroups, cacheTtl,
+        additionalValidStatuses, httpPoolSize, httpConnectionTimeout, httpSocketTimeout, httpDefaultEncoding,
+        parameters, deprecatedInFavourOf, cacheGroups, cacheTtl,
         alertMailsEnabled, alertAbsoluteThreshold, alertPercentThreshold, alertInterval, alertMailRecipients
       )
     }
@@ -109,7 +115,7 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
     forAll {
       jhc: json.HystrixConfig =>
         val hc = HystrixConfig.fromJsonModel(jhc)
-        hc.timeoutInMs should be(jhc.timeout.toMillis)
+        hc.timeoutInMs should be(jhc.timeout)
         val ejtpc = jhc.threadPoolConfig.copy(queueSize = ThreadPoolConfig.defaultQueueSize)
         hc.threadPoolConfig.map(ThreadPoolConfig.toJsonModel) should be(Some(ejtpc))
         hc.commandKey should be(jhc.commandKey)
