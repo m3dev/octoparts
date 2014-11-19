@@ -5,7 +5,7 @@ import com.m3.octoparts.aggregator.service.PartsService
 import com.m3.octoparts.cache.CacheOps
 import com.m3.octoparts.repository.{ ConfigsRepository, MutableConfigsRepository }
 import controllers.hystrix.HystrixController
-import controllers.system.{ HealthcheckController, SystemConfigController }
+import controllers.system._
 import play.api.Configuration
 import scaldi.Module
 
@@ -36,6 +36,12 @@ class ControllersModule extends Module {
   )
 
   // System controllers
+  bind[MemcachedCacheKeysToCheck] to {
+    inject[Int](identified by "memcached.monitoring.randomChecks") match {
+      case 0 => SingleMemcachedCacheKeyToCheck
+      case n => RandomMemcachedCacheKeysToCheck(n)
+    }
+  }
   bind[HealthcheckController] to injected[HealthcheckController]
   bind[SystemConfigController] to new SystemConfigController(inject[Configuration].underlying)
   bind[HystrixController] to new HystrixController()

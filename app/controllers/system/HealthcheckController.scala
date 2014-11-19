@@ -1,16 +1,18 @@
 package controllers.system
 
+import java.util.concurrent.TimeUnit
+
+import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.cache.RawCache
 import com.m3.octoparts.hystrix.HystrixHealthReporter
-import com.beachape.logging.LTSVLogger
+import com.m3.octoparts.logging.LogUtil
 import com.m3.octoparts.repository.ConfigsRepository
-import play.api.Logger
 import play.api.libs.json.{ Json, Writes }
 import play.api.mvc.{ Action, Controller }
 import shade.memcached.MemcachedCodecs
-import skinny.util.LTSV
 
 import scala.concurrent.Future
+import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
 
 /**
@@ -19,12 +21,13 @@ import scala.util.control.NonFatal
  */
 class HealthcheckController(configsRepo: ConfigsRepository,
                             hystrixHealthReporter: HystrixHealthReporter,
-                            memcached: RawCache) extends Controller {
+                            memcached: RawCache,
+                            memcachedCacheKeysToCheck: MemcachedCacheKeysToCheck) extends Controller with LogUtil {
 
   import controllers.system.HealthcheckController._
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
-
-  private implicit val stringCodec = MemcachedCodecs.AnyRefBinaryCodec[String]
+  import MemcachedCodecs.StringBinaryCodec
+  import com.m3.octoparts.future.RichFutureWithTiming._
 
   def healthcheck = Action.async { request =>
     val fDbStatus = checkDb()
@@ -60,31 +63,38 @@ class HealthcheckController(configsRepo: ConfigsRepository,
       case NonFatal(e) =>
         LTSVLogger.warn(e, "Health check failed" -> "DB")
         DbStatus(ok = false, message = e.toString)
-    }
+    } time { case (status, duration) => LTSVLogger.info("DbStatus" -> status, "Time taken" -> toRelevantUnit(duration)) }
   }
 
   /**
    * Check that Memcached is alive and responding to GET requests
    */
   private def checkMemcached(): Future[MemcachedStatus] = {
-    val fResult = memcached.get[String]("ping")
-    fResult.map { result =>
-      // Don't care whether we get a cache hit or not
-      MemcachedStatus(ok = true)
-    }.recover {
-      case NonFatal(e) =>
-        LTSVLogger.warn(e, "Health check failed" -> "Memcached")
-        MemcachedStatus(ok = false)
-    }
+    Future.sequence {
+      for (key <- memcachedCacheKeysToCheck()) yield {
+        val memcachedGet = memcached.get[String](key)
+        memcachedGet map { _ => true // Don't care whether we get a cache hit or not
+        } recover {
+          case NonFatal(e) =>
+            LTSVLogger.warn(e, "Health check failed" -> "Memcached", "key" -> key)
+            false
+        }
+      }
+    } map {
+      bools => MemcachedStatus(bools.forall(identity))
+    } time { case (status, duration) => LTSVLogger.info("MemcachedStatus" -> status, "Time taken" -> toRelevantUnit(duration)) }
   }
 
   /**
    * Check whether there are any Hystrix commands whose circuit breakers are currently open.
    */
   private def checkHystrix(): HystrixStatus = {
+    val startTime = System.nanoTime()
     val commandKeysWithOpenCircuitBreakers = hystrixHealthReporter.getCommandKeysWithOpenCircuitBreakers
     val ok = commandKeysWithOpenCircuitBreakers.isEmpty
-    HystrixStatus(ok, commandKeysWithOpenCircuitBreakers)
+    val hystrixStatus = HystrixStatus(ok, commandKeysWithOpenCircuitBreakers)
+    LTSVLogger.info("HystrixStatus" -> hystrixStatus, "Time taken" -> toRelevantUnit(Duration(System.nanoTime() - startTime, TimeUnit.NANOSECONDS)))
+    hystrixStatus
   }
 }
 

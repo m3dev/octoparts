@@ -1,32 +1,27 @@
 package com.m3.octoparts.future
 
-import java.util.concurrent.{ Executors, TimeUnit }
-
 import akka.actor.ActorSystem
-import com.google.common.util.concurrent.ThreadFactoryBuilder
+import play.api.libs.concurrent.Akka
+import play.api.{ Mode, Play }
 
-import scala.concurrent.{ Future, ExecutionContext, Promise, TimeoutException }
-import scala.concurrent.duration.{ Duration, FiniteDuration }
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{ Future, Promise, TimeoutException }
+import scala.util.control.NonFatal
 
 object RichFutureWithTimeout {
 
-  private val actorSystem = ActorSystem("FutureTimeoutSystem")
+  private val actorSystem = Play.maybeApplication.fold(ActorSystem("future-timeout-actor-system"))(Akka.system(_))
 
   /*
-    Using a CachedThreadPool because this is for spawning many short-lived futures that just block
-    until the timeout time is over
-  */
-  private val timeoutEC = {
-    val namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("future-timeout-%d").build()
-    ExecutionContext.fromExecutor(Executors.newCachedThreadPool(namedThreadFactory))
+   * this execution context is dedicated to scheduling future timeouts
+  **/
+  private val timeoutEC = try {
+    actorSystem.dispatchers.lookup("contexts.future-timeout")
+  } catch {
+    // for tests
+    case NonFatal(e) if Play.maybeApplication.fold(false)(_.mode == Mode.Test) => actorSystem.dispatcher
   }
 
-  /**
-   * Rich Future with timeout support on an individual Future basis
-   *
-   * Extends from AnyVal for zero run-time conversion penalties.
-   * Should really be instantiated via implicit conversion from a Future instead.
-   */
   implicit class RichFutureWithTimeoutOps[A](val f: Future[A]) extends AnyVal {
 
     /**
@@ -37,9 +32,11 @@ object RichFutureWithTimeout {
      * @param timeout Duration until the Future is timed out
      * @return a Future[A]
      */
-    def timeoutIn(timeout: Duration): Future[A] = {
+    def timeoutIn(timeout: FiniteDuration): Future[A] = {
       val p = Promise[A]()
-      val cancellable = actorSystem.scheduler.scheduleOnce(FiniteDuration(timeout.toMillis, TimeUnit.MILLISECONDS)) {
+
+      // default values for the scheduler (10ms tick, 512 wheel size) is fine
+      val cancellable = actorSystem.scheduler.scheduleOnce(timeout) {
         p.tryFailure(new TimeoutException(s"Timed out after $timeout"))
       }(timeoutEC)
       f.onComplete { r =>

@@ -6,7 +6,7 @@ import com.m3.octoparts.model.jackson.HttpMethodType
 import com.wordnik.swagger.annotations.ApiModelProperty
 
 import scala.annotation.meta.field
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{ Duration, FiniteDuration }
 
 case class HttpPartConfig(
   @(ApiModelProperty @field)(required = true) partId: String,
@@ -19,9 +19,9 @@ case class HttpPartConfig(
   parameters: Set[PartParam] = Set.empty,
   @(ApiModelProperty @field)(dataType = "string", required = false) deprecatedInFavourOf: Option[String] = None,
   cacheGroups: Set[CacheGroup] = Set.empty,
-  @(ApiModelProperty @field)(dataType = "integer", required = false, allowableValues = "range[0, Infinity]", value = "in ms") cacheTtl: Option[Duration] = Some(Duration.Zero),
+  @(ApiModelProperty @field)(dataType = "integer", required = false, allowableValues = "range[0, Infinity]", value = "in ms") cacheTtl: Option[FiniteDuration] = Some(Duration.Zero),
   @(ApiModelProperty @field)(required = true) alertMailsEnabled: Boolean = false,
   @(ApiModelProperty @field)(dataType = "integer", required = false, allowableValues = "range[0, Infinity]") alertAbsoluteThreshold: Option[Int] = None,
   @(ApiModelProperty @field)(dataType = "float", required = false, allowableValues = "range[0, 100]") alertPercentThreshold: Option[Double] = None,
-  @(ApiModelProperty @field)(dataType = "integer", required = true, allowableValues = "range[0, Infinity]", value = "in ms") alertInterval: Duration,
+  @(ApiModelProperty @field)(dataType = "integer", required = true, allowableValues = "range[0, Infinity]", value = "in ms") alertInterval: FiniteDuration,
   @(ApiModelProperty @field)(dataType = "string", required = false) alertMailRecipients: Option[String] = None)

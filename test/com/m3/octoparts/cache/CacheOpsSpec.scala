@@ -34,7 +34,7 @@ class CacheOpsSpec extends FunSpec with Matchers with ScalaFutures with Eventual
   def createCacheStuff: CacheStuff = {
     val rawCache = new InMemoryRawCache()
     val cache = new MemcachedCache(rawCache, MemcachedKeyGenerator)
-    val latestVersionCache = new InMemoryLatestVersionCache
+    val latestVersionCache = new InMemoryLatestVersionCache(100000)
     val client = new MemcachedCacheOps(cache, latestVersionCache)
     CacheStuff(rawCache, latestVersionCache, client)
   }
