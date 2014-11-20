@@ -1,12 +1,18 @@
 package com.m3.octoparts.util
 
 import org.apache.commons.lang3.mutable.MutableBoolean
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ FunSpec, Matchers }
 
-class KeyedResourcePoolSpec extends FunSpec with Matchers {
+import scala.collection.concurrent.TrieMap
+import scala.concurrent.Future
+
+class KeyedResourcePoolSpec extends FunSpec with Matchers with ScalaFutures {
+
+  import scala.concurrent.ExecutionContext.Implicits.global
+  import scala.language.reflectiveCalls
 
   it("should clean up obsolete clients") {
-    import scala.language.reflectiveCalls
 
     val holder = new KeyedResourcePool[String, Int] {
       var i = 0
@@ -57,6 +63,38 @@ class KeyedResourcePoolSpec extends FunSpec with Matchers {
 
     // failure cause bug #85949
     holder.getOrCreate("a").booleanValue() should be(false)
+  }
+
+  describe("#getOrCreate") {
+
+    def globalStateAndPool = {
+      val trieMap = new TrieMap[String, Int]
+      val subject = new KeyedResourcePool[String, Int] {
+        var creates = 0
+
+        def makeNew(k: String) = {
+          creates = creates + 1
+          trieMap.put("state", 1)
+          1
+        }
+
+        override def onRemove(value: Int): Unit = {
+          trieMap.remove("state")
+        }
+      }
+      (trieMap, subject)
+    }
+
+    it("should not cause race conditions on global mutable state") {
+      val (mutableState, pool) = globalStateAndPool
+      val aLotOfSimultaneousGets = Future.sequence((1 to 100).map(_ => Future { pool.getOrCreate("hello") }))
+      whenReady(aLotOfSimultaneousGets) { r =>
+        r.forall(_ == 1) should be(true)
+        mutableState.get("state") should be(Some(1))
+        pool.creates should be(1)
+      }
+    }
+
   }
 
 }
