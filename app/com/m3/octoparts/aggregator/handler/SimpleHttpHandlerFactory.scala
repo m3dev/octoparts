@@ -11,7 +11,7 @@ class SimpleHttpHandlerFactory(httpClientPool: HttpClientPool)(
 
   override def makeHandler(config: HttpPartConfig) = {
     // Get or create the HTTP client corresponding to this partId
-    val httpClient = httpClientPool.getOrCreate(config.partId)
+    val httpClient = httpClientPool.getOrCreate(Symbol(config.partId))
 
     new SimpleHttpPartRequestHandler(
       config.partId,

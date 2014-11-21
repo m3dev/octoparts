@@ -4,13 +4,13 @@ package com.m3.octoparts.util
  * A pool of key-value pairs.
  * It has a method to build a new value and a method to clean up all values that are no longer needed.
  */
-trait SyncedKeyedResourcePool[K, V] {
-  private var holder: Map[K, V] = Map.empty[K, V]
+trait SyncedKeyedResourcePool[V] {
+  private var holder: Map[Symbol, V] = Map.empty[Symbol, V]
 
   /**
    * Factory method to create a new element
    */
-  protected def makeNew(key: K): V
+  protected def makeNew(key: Symbol): V
 
   /**
    * Listener that is run after a value is removed
@@ -22,7 +22,7 @@ trait SyncedKeyedResourcePool[K, V] {
    * Get the value corresponding to the given key.
    * If no such value existed, a new one is created.
    */
-  final def getOrCreate(key: K): V = synchronized {
+  final def getOrCreate(key: Symbol): V = key.synchronized {
     holder.get(key) match {
       case Some(v) => v
       case None => {
@@ -39,7 +39,7 @@ trait SyncedKeyedResourcePool[K, V] {
    *
    * @param validKeys all keys that you want to keep
    */
-  final def cleanObsolete(validKeys: Set[K]): Unit = synchronized {
+  final def cleanObsolete(validKeys: Set[Symbol]): Unit = synchronized {
     holder.foreach {
       case (key, value) =>
         if (!validKeys.contains(key)) {
