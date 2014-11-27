@@ -17,7 +17,10 @@ object Common {
     organization := "com.m3",
     version := Version.octopartsVersion,
     scalaVersion := Version.theScalaVersion,
-    shellPrompt  := ShellPrompt.buildShellPrompt
+    shellPrompt  := ShellPrompt.buildShellPrompt,
+    updateOptions := updateOptions.value
+      .withCircularDependencyLevel(CircularDependencyLevel.Error)
+      .withCachedResolution(true)
   ) ++
     Dependencies.resolverSettings ++
     graphSettings ++
