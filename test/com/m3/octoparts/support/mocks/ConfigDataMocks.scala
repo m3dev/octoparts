@@ -9,13 +9,6 @@ import scala.concurrent.duration._
 
 /**
  * Trait to allow us to get a hold of mock versions of our case classes
- *
- * Note that RequiresDB is used here simply because SkinnyORM does
- * some tricky (pronounced nasty) stuff that essentially stops us from instantiating
- * the case classes that are tied to its CRUD mappers when we don't have a
- * JDBC connection O_O RequiresDB gives us this crucial connection.
- *
- * (Same reason for using defs and not vals)
  */
 trait ConfigDataMocks {
 
