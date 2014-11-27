@@ -3,7 +3,6 @@ package com.m3.octoparts.support.mocks
 import com.m3.octoparts.model.HttpMethod._
 import com.m3.octoparts.model.config.ParamType._
 import com.m3.octoparts.model.config._
-import com.m3.octoparts.support.db.RequiresDB
 import org.joda.time.DateTime
 
 import scala.concurrent.duration._
@@ -18,7 +17,7 @@ import scala.concurrent.duration._
  *
  * (Same reason for using defs and not vals)
  */
-trait ConfigDataMocks extends RequiresDB {
+trait ConfigDataMocks {
 
   val now = DateTime.now
 
