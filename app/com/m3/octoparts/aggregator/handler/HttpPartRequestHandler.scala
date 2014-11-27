@@ -141,7 +141,8 @@ trait HttpPartRequestHandler extends Handler {
       maybeParamsVal.getOrElse("")
     }
     val kvs = for {
-      (p, values) <- hArgs if p.paramType == ParamType.Query
+      // toSeq because we don't want the result to be a map (with unique keys)
+      (p, values) <- hArgs.toSeq if p.paramType == ParamType.Query
       v <- values
     } yield p.outputName -> v
     baseUri.addParams(kvs.toSeq)

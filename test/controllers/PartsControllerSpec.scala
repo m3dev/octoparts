@@ -10,6 +10,7 @@ import com.m3.octoparts.model.config.HttpPartConfig
 import com.m3.octoparts.support.mocks.{ ConfigDataMocks, MockConfigRespository }
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatestplus.play.OneAppPerSuite
 import play.api.libs.json.{ JsSuccess, Json }
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -18,7 +19,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with ConfigDataMocks {
+class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with ConfigDataMocks with OneAppPerSuite {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 

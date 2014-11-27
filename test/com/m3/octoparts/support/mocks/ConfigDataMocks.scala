@@ -3,22 +3,14 @@ package com.m3.octoparts.support.mocks
 import com.m3.octoparts.model.HttpMethod._
 import com.m3.octoparts.model.config.ParamType._
 import com.m3.octoparts.model.config._
-import com.m3.octoparts.support.db.RequiresDB
 import org.joda.time.DateTime
 
 import scala.concurrent.duration._
 
 /**
  * Trait to allow us to get a hold of mock versions of our case classes
- *
- * Note that RequiresDB is used here simply because SkinnyORM does
- * some tricky (pronounced nasty) stuff that essentially stops us from instantiating
- * the case classes that are tied to its CRUD mappers when we don't have a
- * JDBC connection O_O RequiresDB gives us this crucial connection.
- *
- * (Same reason for using defs and not vals)
  */
-trait ConfigDataMocks extends RequiresDB {
+trait ConfigDataMocks {
 
   val now = DateTime.now
 
