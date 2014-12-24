@@ -16,7 +16,7 @@ class ExtractorsSpec extends FunSpec with Matchers {
       val serialized = OctopartsApiBuilder.Mapper.writeValueAsBytes(ar)
       val wrapper = AggregateResponseExtractor.deserialize(new ByteArrayInputStream(serialized))
       wrapper.getResponseMeta should be(ar.responseMeta)
-      wrapper.getPartResponses.iterator().hasNext should be(false)
+      wrapper.getPartResponses.iterator().hasNext shouldBe false
     }
   }
   describe("EndpointListExtractor") {
