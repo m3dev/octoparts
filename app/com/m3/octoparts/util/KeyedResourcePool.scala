@@ -1,13 +1,11 @@
 package com.m3.octoparts.util
 
-import java.util.concurrent.{ ConcurrentHashMap, ConcurrentMap }
-
 /**
  * A pool of key-value pairs.
  * It has a method to build a new value and a method to clean up all values that are no longer needed.
  */
 trait KeyedResourcePool[V] {
-  private val holder: ConcurrentMap[Symbol, V] = new ConcurrentHashMap[Symbol, V]()
+  private var holder: Map[Symbol, V] = Map.empty[Symbol, V]
 
   /**
    * Factory method to create a new element
@@ -24,16 +22,15 @@ trait KeyedResourcePool[V] {
    * Get the value corresponding to the given key.
    * If no such value existed, a new one is created.
    */
-  def getOrCreate(key: Symbol): V = Option(holder.get(key)) match {
-    case Some(v) => v
-    case None =>
-      val d = makeNew(key)
-      val old = holder.put(key, d)
-      // once d has been put, old (if it went in before last get) must be discarded properly
-      if (old != null) {
-        onRemove(old)
+  final def getOrCreate(key: Symbol): V = key.synchronized {
+    holder.get(key) match {
+      case Some(v) => v
+      case None => {
+        val d = makeNew(key)
+        holder = holder + (key -> d)
+        d
       }
-      d
+    }
   }
 
   /**
@@ -42,16 +39,13 @@ trait KeyedResourcePool[V] {
    *
    * @param validKeys all keys that you want to keep
    */
-  final def cleanObsolete(validKeys: Set[Symbol]): Unit = {
-    val it = holder.entrySet().iterator
-    while (it.hasNext) {
-      val next = it.next()
-      if (!validKeys.contains(next.getKey)) {
-        // Must remove before evicting, or callers might get an evicted value
-        it.remove()
-
-        onRemove(next.getValue)
-      }
+  final def cleanObsolete(validKeys: Set[Symbol]): Unit = synchronized {
+    holder.foreach {
+      case (key, value) =>
+        if (!validKeys.contains(key)) {
+          holder = holder - key
+          onRemove(value)
+        }
     }
   }
 
