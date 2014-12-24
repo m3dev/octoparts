@@ -16,4 +16,4 @@ before_script:
 
 script: "sbt clean coverage test"
 
-after_success: "sbt coveralls"
+after_success: "sbt coverageAggregate coveralls"
