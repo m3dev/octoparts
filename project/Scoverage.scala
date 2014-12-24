@@ -7,6 +7,6 @@ object Scoverage {
 
   val settings = Seq(
     coverageHighlighting := true,
-    coverageExcludedFiles := ".*(classes|src)_managed.*"
+    coverageExcludedFiles := Seq(".*(classes|src)_managed.*", ".*twirl/.*").mkString(";")
   )
 }
