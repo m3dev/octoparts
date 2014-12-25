@@ -95,6 +95,20 @@ class KeyedResourcePoolSpec extends FunSpec with Matchers with ScalaFutures {
       }
     }
 
+    it("should not cause race conditions when used with cleanObsolete") {
+      val (mutableState, pool) = globalStateAndPool
+      // This is up for debate
+      val aLotOfSimultaneousGets = Future.sequence((1 to 1000).map { _ =>
+        Future { pool.cleanObsolete(Set('hello)) }
+        Future { pool.getOrCreate('hello) }
+      })
+      whenReady(aLotOfSimultaneousGets) { r =>
+        r.forall(_ == 1) should be(true)
+        mutableState.get("state") should be(Some(1))
+        pool.creates should be(1)
+      }
+    }
+
   }
 
 }
