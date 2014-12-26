@@ -117,7 +117,7 @@ trait CachingRepository extends ConfigsRepository {
         }
       })
       // Shutdown any HTTP clients for partIds that no longer exist (e.g due to renaming/deletion of configs)
-      httpClientPool.cleanObsolete(cSeq.map(p => Symbol(p.partId)).toSet)
+      httpClientPool.cleanObsolete(cSeq.map(_.partId).toSet)
       futures
   }
 

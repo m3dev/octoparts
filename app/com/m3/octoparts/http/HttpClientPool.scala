@@ -8,9 +8,9 @@ import scala.util.Try
  * A pool to manage HTTP clients.
  * Holds one HTTP client per partId.
  */
-class HttpClientPool extends KeyedResourcePool[HttpClientLike] {
+class HttpClientPool extends KeyedResourcePool[String, HttpClientLike] {
 
-  def makeNew(key: Symbol) = new InstrumentedHttpClient(key.toString())
+  def makeNew(key: String) = new InstrumentedHttpClient(key)
 
   def onRemove(value: HttpClientLike) = value match {
     case cl: AutoCloseable => Try {
