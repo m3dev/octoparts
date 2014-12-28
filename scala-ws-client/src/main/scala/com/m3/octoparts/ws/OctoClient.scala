@@ -11,20 +11,19 @@ import play.api.{ Application, Logger }
 import play.api.libs.json._
 import play.api.libs.ws._
 
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.control.NonFatal
 import com.m3.octoparts.model.config.json.HttpPartConfig
-import com.m3.octoparts.json.format.ConfigModel._
 
 /**
  * Default Octoparts [[OctoClientLike]] implementation
  *
  * Has a rescuer method that tries its best to recover from all reasonable errors.
  */
-class OctoClient(val baseUrl: String, protected val httpRequestTimeout: Duration)(implicit val octoPlayApp: Application) extends OctoClientLike {
+class OctoClient(val baseUrl: String, protected val httpRequestTimeout: Duration, protected val extraWait: Duration = 50.milliseconds)(implicit val octoPlayApp: Application) extends OctoClientLike {
 
-  protected def wsHolderFor(url: String) = WS.url(url).withRequestTimeout(httpRequestTimeout.toMillis.toInt)
+  protected def wsHolderFor(url: String) = WS.url(url).withRequestTimeout((httpRequestTimeout + extraWait).toMillis.toInt)
 
   protected def rescuer[A](defaultReturn: => A): PartialFunction[Throwable, A] = {
     case JsResultException(e) => {
