@@ -32,7 +32,7 @@ class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
     httpMethod = "POST"
   )
   def invalidatePart(
-    @ApiParam(value = "The id of the endpoint that you you wish to invalidate", required = true)@PathParam("partId") partId: String) = Action.async { implicit request =>
+    @ApiParam(value = "The id of the endpoint that you wish to invalidate", required = true)@PathParam("partId") partId: String) = Action.async { implicit request =>
     // TODO could check if part exists and return a 404 if not
     debugRc("action" -> "invalidateAll", "partId" -> partId)
     checkResult(cacheOps.increasePartVersion(partId))
@@ -46,7 +46,7 @@ class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
     httpMethod = "POST"
   )
   def invalidatePartParam(
-    @ApiParam(value = "The id of the endpoint that you you wish to invalidate", required = true)@PathParam("partId") partId: String,
+    @ApiParam(value = "The id of the endpoint that you wish to invalidate", required = true)@PathParam("partId") partId: String,
     @ApiParam(value = "The parameter name that you wish to invalidate with", required = true)@PathParam("paramName") paramName: String,
     @ApiParam(value = "The specific parameter value that you wish to invalidate by", required = true)@PathParam("paramValue") paramValue: String) = Action.async { implicit request =>
     // TODO could check if part exists and return a 404 if not
