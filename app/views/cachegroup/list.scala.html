@@ -39,9 +39,7 @@
                 <td>@group.partParams.size</td>
                 <td width="150px">
                     <a href="@controllers.routes.AdminController.editCacheGroup(group.name)" class="btn btn-primary">@Messages("edit")</a>
-                    <form action="@controllers.routes.AdminController.deleteCacheGroup(group.name)" method="post">
-                        <input type="submit" value="@Messages("delete")" class="btn btn-danger" />
-                    </form>
+                    <a href="@controllers.routes.AdminController.confirmDeleteCacheGroup(group.name)" class="btn btn-danger">@Messages("delete")</a>
                 </td>
             </tr>
         }

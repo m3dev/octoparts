@@ -1,0 +1,16 @@
+@(itemTypeKey: String, itemName: String, cancelUrl: String)(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
+
+@views.html.adminlayout(Messages("delete")) { } {
+
+    <h2>@Messages("admin.delete.title", Messages(itemTypeKey))</h2>
+
+    <p>@Messages("admin.delete.confirmation", Messages(itemTypeKey), itemName)</p>
+
+    <div>
+        <a href="@cancelUrl" class="btn btn-default">@Messages("cancel")</a>
+        <form method="post" style="display: inline">
+            <input type="submit" value="@Messages("delete")" class="btn btn-danger" />
+        </form>
+    </div>
+
+}
