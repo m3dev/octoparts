@@ -42,9 +42,7 @@
 					<form action="@controllers.routes.AdminController.copyPart(partView.partId)" method="post">
                         <input type="submit" value="@Messages("duplicate")" class="btn btn-info" />
                     </form>
-                    <form action="@controllers.routes.AdminController.deletePart(partView.partId)" method="post">
-                        <input type="submit" value="@Messages("delete")" class="btn btn-danger" />
-                    </form>
+                    <a href="@controllers.routes.AdminController.confirmDeletePart(partView.partId)" class="btn btn-danger">@Messages("delete")</a>
                 </td>
             </tr>
         }

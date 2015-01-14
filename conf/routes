@@ -29,6 +29,7 @@ GET         /admin/parts/:partId/show                                           
 GET         /admin/parts/:partId/edit                                              @controllers.AdminController.editPart(partId)
 POST        /admin/parts/:partId/update                                            @controllers.AdminController.updatePart(partId)
 POST        /admin/parts/:partId/copy                                              @controllers.AdminController.copyPart(partId)
+GET         /admin/parts/:partId/delete                                            @controllers.AdminController.confirmDeletePart(partId)
 POST        /admin/parts/:partId/delete                                            @controllers.AdminController.deletePart(partId)
 GET         /admin/parts/:partId/test                                              @controllers.AdminController.testPart(partId)
 
@@ -37,6 +38,7 @@ POST        /admin/parts/:partId/params/create                                  
 GET         /admin/parts/:partId/params/:paramId/edit                              @controllers.AdminController.editParam(partId, paramId: Long)
 POST        /admin/parts/:partId/params/:paramId/update                            @controllers.AdminController.updateParam(partId, paramId: Long)
 POST        /admin/parts/:partId/params/:paramId/copy                              @controllers.AdminController.copyParam(partId, paramId: Long)
+GET         /admin/parts/:partId/params/:paramId/delete                            @controllers.AdminController.confirmDeleteParam(partId, paramId: Long)
 POST        /admin/parts/:partId/params/:paramId/delete                            @controllers.AdminController.deleteParam(partId, paramId: Long)
 
 GET         /admin/thread-pools                                                    @controllers.AdminController.listThreadPools
@@ -44,6 +46,7 @@ GET         /admin/thread-pools/new                                             
 POST        /admin/thread-pools/create                                             @controllers.AdminController.createThreadPool
 GET         /admin/thread-pools/:threadPoolId/edit                                 @controllers.AdminController.editThreadPool(threadPoolId: Long)
 POST        /admin/thread-pools/:threadPoolId/update                               @controllers.AdminController.updateThreadPool(threadPoolId: Long)
+GET         /admin/thread-pools/:threadPoolId/delete                               @controllers.AdminController.confirmDeleteThreadPool(threadPoolId: Long)
 POST        /admin/thread-pools/:threadPoolId/delete                               @controllers.AdminController.deleteThreadPool(threadPoolId: Long)
 
 GET         /admin/cache-groups                                                    @controllers.AdminController.listCacheGroups
@@ -51,6 +54,7 @@ GET         /admin/cache-groups/new                                             
 POST        /admin/cache-groups/create                                             @controllers.AdminController.createCacheGroup
 GET         /admin/cache-groups/:cacheGroupName/edit                               @controllers.AdminController.editCacheGroup(cacheGroupName)
 POST        /admin/cache-groups/:cacheGroupName/update                             @controllers.AdminController.updateCacheGroup(cacheGroupName)
+GET         /admin/cache-groups/:cacheGroupName/delete                             @controllers.AdminController.confirmDeleteCacheGroup(cacheGroupName)
 POST        /admin/cache-groups/:cacheGroupName/delete                             @controllers.AdminController.deleteCacheGroup(cacheGroupName)
 
 

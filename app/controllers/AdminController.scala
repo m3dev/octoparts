@@ -127,6 +127,13 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
     }
   }
 
+  def confirmDeletePart(partId: String) = AuthorizedAction.async { implicit req =>
+    infoRc
+    findAndUsePart(partId) { part =>
+      Future.successful(Ok(views.html.confirmDelete("admin.delete.part", part.partId, routes.AdminController.listParts.url)))
+    }
+  }
+
   def deletePart(partId: String) = AuthorizedAction.async { implicit req =>
     infoRc
     findAndUsePart(partId) { part =>
@@ -291,6 +298,13 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
     }
   }
 
+  def confirmDeleteParam(partId: String, paramId: Long) = AuthorizedAction.async { implicit req =>
+    infoRc
+    findAndUseParam(partId, paramId) { param =>
+      Future.successful(Ok(views.html.confirmDelete("admin.delete.param", param.inputName, routes.AdminController.showPart(partId).url)))
+    }
+  }
+
   def deleteParam(partId: String, paramId: Long) = AuthorizedAction.async { implicit req =>
     infoRc
     findAndUsePart(partId) { part =>
@@ -348,6 +362,13 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
     }
   }
 
+  def confirmDeleteThreadPool(id: Long) = AuthorizedAction.async { implicit req =>
+    infoRc
+    findAndUseThreadPool(id) { tpc =>
+      Future.successful(Ok(views.html.confirmDelete("admin.delete.threadPool", tpc.threadPoolKey, routes.AdminController.listThreadPools.url)))
+    }
+  }
+
   def deleteThreadPool(id: Long) = AuthorizedAction.async { implicit req =>
     infoRc
     simpleSaveAndRedirect {
@@ -399,6 +420,13 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
           repository.save(updatedCacheGroup)
         }(routes.AdminController.listCacheGroups, _ => routes.AdminController.editCacheGroup(updatedCacheGroup.name))
       })
+    }
+  }
+
+  def confirmDeleteCacheGroup(name: String) = AuthorizedAction.async { implicit req =>
+    infoRc
+    findAndUseCacheGroup(name) { cg =>
+      Future.successful(Ok(views.html.confirmDelete("admin.delete.cacheGroup", cg.name, routes.AdminController.listCacheGroups.url)))
     }
   }
 
