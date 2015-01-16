@@ -21,6 +21,11 @@ import com.m3.octoparts.json.format.ConfigModel._ // For serdes of the models
  * Default Octoparts [[OctoClientLike]] implementation
  *
  * Has a rescuer method that tries its best to recover from all reasonable errors.
+ *
+ * @param baseUrl The base URL of the Octoparts service you would like to hit with the instantiated client
+ * @param clientTimeout The (HTTP) timeout that you would like this client to use. Note that sending [[AggregateRequest]]
+ *                      will result in using the max of this parameter and the timeout on the request (if it exists)
+ * @param extraWait Extra margin of wait time for timeouts. Defaults to 50 milliseconds.
  */
 class OctoClient(val baseUrl: String, protected val clientTimeout: FiniteDuration, protected val extraWait: FiniteDuration = 50.milliseconds)(implicit val octoPlayApp: Application) extends OctoClientLike {
 
@@ -200,6 +205,9 @@ trait OctoClientLike {
    * Asynchronously sends a POST request to Octoparts.
    *
    * You may wish to (abstract) override this if you want to do custom error-handling on the WS request level.
+   *
+   * @param url URL to post to
+   * @param timeout Timeout value for the request
    */
   protected def wsPost[A](url: String, timeout: FiniteDuration, body: A)(implicit wrt: Writeable[A], ct: ContentTypeOf[A]): Future[WSResponse] =
     wsHolderFor(url, timeout).post(body)
