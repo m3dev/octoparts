@@ -2,6 +2,7 @@ package controllers
 
 import java.util.UUID
 
+import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.json.format.ReqResp._
 import com.m3.octoparts.aggregator.handler._
 import com.m3.octoparts.aggregator.service._
@@ -41,7 +42,7 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
   val voidHandler = new Handler {
     val partId = "something"
 
-    def process(args: HandlerArguments) = Future.successful(PartResponse(partId, partId))
+    def process(pri: PartRequestInfo, args: HandlerArguments) = Future.successful(PartResponse(partId, partId))
   }
   val partsRequestService = new PartRequestService(configsRepository, new HttpHandlerFactory {
     override def makeHandler(ci: HttpPartConfig) = ci.partId match {
