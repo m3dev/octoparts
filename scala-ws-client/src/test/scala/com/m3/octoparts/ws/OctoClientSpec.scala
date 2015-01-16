@@ -103,7 +103,8 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
 
     def mockSubject(respPost: Future[WSResponse], respGet: Future[WSResponse], baseURL: String = "http://bobby.com/") = new OctoClientLike {
       val baseUrl = baseURL
-      def wsHolderFor(url: String): WSRequestHolder = mockWSHolder(respPost, respGet)
+      protected val clientTimeout = 10 seconds
+      def wsHolderFor(url: String, timeout: FiniteDuration): WSRequestHolder = mockWSHolder(respPost, respGet)
       def rescuer[A](obj: => A) = PartialFunction.empty
       protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
       protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Seq.empty
@@ -191,8 +192,9 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
         val wsHolderCreator = mockWSHolderCreator
         val subject = new OctoClientLike {
           val baseUrl = "http://bobby.com"
-          def wsHolderFor(url: String): WSRequestHolder = wsHolderCreator.apply(url)
+          def wsHolderFor(url: String, timeout: FiniteDuration): WSRequestHolder = wsHolderCreator.apply(url)
           def rescuer[A](obj: => A): PartialFunction[Throwable, A] = PartialFunction.empty
+          protected val clientTimeout = 10 seconds
           protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
           protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Seq.empty
         }
