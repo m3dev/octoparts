@@ -2,6 +2,7 @@ package com.m3.octoparts.aggregator.handler
 
 import java.net.{ URI, URLEncoder }
 
+import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.http._
 import com.m3.octoparts.hystrix._
 import com.m3.octoparts.model.{ HttpMethod, PartResponse }
@@ -47,12 +48,13 @@ trait HttpPartRequestHandler extends Handler {
    * contain a Failure instead of Success. Make sure to transform with
    * .recover
    *
+   * @param partRequestInfo info about the request, used for generating HTTP headers for request tracing
    * @param hArgs Preparsed HystrixArguments
    * @return Future[PartResponse]
    */
-  def process(hArgs: HandlerArguments): Future[PartResponse] = {
+  def process(partRequestInfo: PartRequestInfo, hArgs: HandlerArguments): Future[PartResponse] = {
     hystrixExecutor.future {
-      createBlockingHttpRetrieve(hArgs).retrieve()
+      createBlockingHttpRetrieve(partRequestInfo, hArgs).retrieve()
     }.map {
       createPartResponse
     }
@@ -64,7 +66,7 @@ trait HttpPartRequestHandler extends Handler {
    * @param hArgs Handler arguments
    * @return a command object that will perform an HTTP request on demand
    */
-  def createBlockingHttpRetrieve(hArgs: HandlerArguments): BlockingHttpRetrieve = {
+  def createBlockingHttpRetrieve(partRequestInfo: PartRequestInfo, hArgs: HandlerArguments): BlockingHttpRetrieve = {
     new BlockingHttpRetrieve {
       val httpClient = handler.httpClient
       def method = httpMethod
@@ -72,8 +74,17 @@ trait HttpPartRequestHandler extends Handler {
       val maybeBody = hArgs.collectFirst {
         case (p, values) if p.paramType == ParamType.Body && values.nonEmpty => values.head
       }
-      val headers = collectHeaders(hArgs)
+      val headers = collectHeaders(hArgs) ++ buildTracingHeaders(partRequestInfo)
     }
+  }
+
+  private def buildTracingHeaders(partRequestInfo: PartRequestInfo): Seq[(String, String)] = {
+    import HttpPartRequestHandler._
+    Seq(
+      AggregateRequestIdHeader -> partRequestInfo.requestMeta.id,
+      PartRequestIdHeader -> partRequestInfo.partRequestId,
+      PartIdHeader -> partRequestInfo.partRequest.partId
+    )
   }
 
   /**
@@ -158,4 +169,10 @@ trait HttpPartRequestHandler extends Handler {
   private def interpolate(stringToInterpolate: String)(replacer: String => String) =
     PlaceholderReplacer.replaceAllIn(stringToInterpolate, { m => replacer(m.group(1)) })
 
+}
+
+object HttpPartRequestHandler {
+  val AggregateRequestIdHeader = "X-OCTOPARTS-PARENT-REQUEST-ID"
+  val PartRequestIdHeader = "X-OCTOPARTS-REQUEST-ID"
+  val PartIdHeader = "X-OCTOPARTS-PART-ID"
 }

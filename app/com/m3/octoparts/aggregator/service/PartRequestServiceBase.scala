@@ -81,7 +81,7 @@ trait PartRequestServiceBase extends RequestParamSupport {
    */
   protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, Seq[String]]): Future[PartResponse] = {
     val handler = handlerFactory.makeHandler(ci)
-    val fResp = handler.process(params)
+    val fResp = handler.process(partRequestInfo, params)
     fResp.map {
       resp =>
         val respWithId = resp.copy(id = partRequestInfo.partRequestId)

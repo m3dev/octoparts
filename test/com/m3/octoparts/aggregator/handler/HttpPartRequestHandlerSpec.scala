@@ -2,10 +2,11 @@ package com.m3.octoparts.aggregator.handler
 
 import java.net.URLEncoder
 
+import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.http.{ HttpClientLike, HttpResponse }
 import com.m3.octoparts.hystrix.{ HystrixExecutor, MockHttpClientComponent }
 import com.m3.octoparts.model.HttpMethod.Get
-import com.m3.octoparts.model.PartResponse
+import com.m3.octoparts.model.{ PartRequest, RequestMeta, PartResponse }
 import com.m3.octoparts.model.config.ParamType._
 import com.m3.octoparts.model.config._
 import org.apache.http.HttpStatus
@@ -25,6 +26,11 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
   private val pathParam2 = ShortPartParam("path2", Path)
   private val queryParam1 = ShortPartParam("query1", Query)
   private val queryParam2 = ShortPartParam("query2", Query)
+
+  private val partRequestInfo = PartRequestInfo(
+    RequestMeta(id = "hey man that's so meta"),
+    partRequest = PartRequest(partId = "foob", id = Some("bande a part"))
+  )
 
   private val handler = handlerWithHttpClient(MockHttpClientComponent.httpClient)
 
@@ -64,7 +70,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
             def retrieve(request: HttpUriRequest) = HttpResponse(status = HttpStatus.SC_OK, message = "OK", mimeType = Some("text/plain"), body = Some("hello"))
           }
           val handler = handlerWithHttpClient(client)
-          whenReady(handler.process(Map.empty)) {
+          whenReady(handler.process(partRequestInfo, Map.empty)) {
             partResp =>
               partResp should be(PartResponse(partId = mockPartId, id = mockPartId, statusCode = Some(HttpStatus.SC_OK), mimeType = Some("text/plain"), contents = Some("hello"), errors = Nil))
           }
@@ -76,7 +82,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
             def retrieve(request: HttpUriRequest) = HttpResponse(status = HttpStatus.SC_NOT_FOUND, message = "Not Found", mimeType = Some("text/plain"), body = Some("not found"))
           }
           val handler = handlerWithHttpClient(client)
-          whenReady(handler.process(Map.empty)) {
+          whenReady(handler.process(partRequestInfo, Map.empty)) {
             partResp =>
               partResp should be(PartResponse(partId = mockPartId, id = mockPartId, statusCode = Some(HttpStatus.SC_NOT_FOUND), mimeType = Some("text/plain"), contents = Some("not found"), errors = Seq("Not Found")))
           }
@@ -91,7 +97,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
         val hArgs = Map(
           ShortPartParam("query1", Query) -> Seq("query1Value")
         )
-        handler.createBlockingHttpRetrieve(hArgs).maybeBody should be(None)
+        handler.createBlockingHttpRetrieve(partRequestInfo, hArgs).maybeBody should be(None)
       }
     }
     describe("when there is a body param") {
@@ -99,8 +105,14 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
         val hArgs = Map(
           ShortPartParam("jsonPayload", Body) -> Seq("""{"some":"json"}""")
         )
-        handler.createBlockingHttpRetrieve(hArgs).maybeBody should be(Some("""{"some":"json"}"""))
+        handler.createBlockingHttpRetrieve(partRequestInfo, hArgs).maybeBody should be(Some("""{"some":"json"}"""))
       }
+    }
+    it("should include custom HTTP headers for request tracing") {
+      val headers = handler.createBlockingHttpRetrieve(partRequestInfo, Map.empty).headers
+      headers should contain("X-OCTOPARTS-PART-ID" -> "foob")
+      headers should contain("X-OCTOPARTS-REQUEST-ID" -> "bande a part")
+      headers should contain("X-OCTOPARTS-PARENT-REQUEST-ID" -> "hey man that's so meta")
     }
   }
 
