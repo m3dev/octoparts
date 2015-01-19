@@ -28,6 +28,7 @@ object Octoparts extends Build {
   // -------------------------------------------------------
   lazy val authPluginApi = nonPlayProject("auth-plugin-api")("plugins/auth-plugin-api")
     .settings(
+      name := "octoparts-auth-plugin-api",
       libraryDependencies ++= Dependencies.authPluginDependencies
     )
 
@@ -36,6 +37,7 @@ object Octoparts extends Build {
   // -------------------------------------------------------
   lazy val models = nonPlayProject("models")()
     .settings(
+      name := "octoparts-models",
       libraryDependencies ++= Dependencies.modelsDependencies
     )
 
@@ -44,6 +46,7 @@ object Octoparts extends Build {
   // -------------------------------------------------------
   lazy val javaClient = nonPlayProject("java-client")()
     .settings(
+      name := "octoparts-java-client",
       javacOptions in compile ++= Seq("-source", "1.6", "-target", "1.6", "-Xlint"),
       javacOptions in doc ++= Seq("-source", "1.6"),
       libraryDependencies ++= Dependencies.javaClientDependncies
@@ -55,6 +58,7 @@ object Octoparts extends Build {
   // -------------------------------------------------------
   lazy val playJsonFormats = nonPlayProject("play-json-formats")()
     .settings(
+      name := "octoparts-play-json-formats",
       libraryDependencies ++= Dependencies.playJsonFormatsDependencies
     )
     .dependsOn(models)
@@ -64,6 +68,7 @@ object Octoparts extends Build {
   // -------------------------------------------------------
   lazy val scalaWsClient =  nonPlayProject("scala-ws-client")()
     .settings(
+      name := "octoparts-scala-ws-client",
       libraryDependencies ++= Dependencies.scalaWsClientDependencies
     )
     .dependsOn(models, playJsonFormats)
