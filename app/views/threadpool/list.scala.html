@@ -33,9 +33,7 @@
                 <td>@tpc.coreSize</td>
                 <td width="150px">
                     <a href="@controllers.routes.AdminController.editThreadPool(tpc.id.get)" class="btn btn-primary">@Messages("edit")</a>
-                    <form action="@controllers.routes.AdminController.deleteThreadPool(tpc.id.get)" method="post">
-                        <input type="submit" value="@Messages("delete")" class="btn btn-danger" />
-                    </form>
+                    <a href="@controllers.routes.AdminController.confirmDeleteThreadPool(tpc.id.get)" class="btn btn-danger">@Messages("delete")</a>
                 </td>
             </tr>
         }

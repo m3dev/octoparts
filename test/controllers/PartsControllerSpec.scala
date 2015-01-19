@@ -2,6 +2,7 @@ package controllers
 
 import java.util.UUID
 
+import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.json.format.ReqResp._
 import com.m3.octoparts.aggregator.handler._
 import com.m3.octoparts.aggregator.service._
@@ -10,6 +11,7 @@ import com.m3.octoparts.model.config.HttpPartConfig
 import com.m3.octoparts.support.mocks.{ ConfigDataMocks, MockConfigRespository }
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatestplus.play.OneAppPerSuite
 import play.api.libs.json.{ JsSuccess, Json }
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -18,7 +20,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with ConfigDataMocks {
+class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with ConfigDataMocks with OneAppPerSuite {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -40,7 +42,7 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
   val voidHandler = new Handler {
     val partId = "something"
 
-    def process(args: HandlerArguments) = Future.successful(PartResponse(partId, partId))
+    def process(pri: PartRequestInfo, args: HandlerArguments) = Future.successful(PartResponse(partId, partId))
   }
   val partsRequestService = new PartRequestService(configsRepository, new HttpHandlerFactory {
     override def makeHandler(ci: HttpPartConfig) = ci.partId match {

@@ -26,7 +26,7 @@ object Sample {
   import AggregateResponseEnrichment._
 
   // Create a client
-  val octoClient = new OctoClient("http://octoparts/", httpRequestTimeout = 1.second)
+  val octoClient = new OctoClient("http://octoparts/", clientTimeout = 1.second)
 
   // Build an AggregateRequest to send to Octoparts
   val aggregateRequest = AggregateRequest(

@@ -2,7 +2,6 @@ package com.m3.octoparts.repository.config
 
 import com.m3.octoparts.model.config._
 import scalikejdbc.DBSession
-import skinny.logging.Logging
 import skinny.orm.SkinnyCRUDMapper
 import skinny.{ PermittedStrongParameters, StrongParameters, ParamType => SkinnyParamType }
 
@@ -12,7 +11,7 @@ import skinny.{ PermittedStrongParameters, StrongParameters, ParamType => Skinny
  * Contains helper methods to direct how a model should be saved by a
  * Mapper companion object
  */
-trait ConfigMapper[A <: ConfigModel[A]] extends SkinnyCRUDMapper[A] with Logging {
+trait ConfigMapper[A <: ConfigModel[A]] extends SkinnyCRUDMapper[A] {
 
   /**
    * Converts a given case class-like thing into a Map[Symbol, Any]

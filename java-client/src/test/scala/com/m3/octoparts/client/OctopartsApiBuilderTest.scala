@@ -19,7 +19,7 @@ class OctopartsApiBuilderTest extends FunSpec with BeforeAndAfterAll with Matche
     ningrequest.getBodyEncoding should be(StandardCharsets.UTF_8.name())
     OctopartsApiBuilder.Mapper.readValue(ningrequest.getByteData, classOf[AggregateRequest]) should be(agr)
     ningrequest.getMethod should be("POST")
-    ningrequest.getRawUrl should startWith("http://octoparts/")
+    ningrequest.getUrl should startWith("http://octoparts/")
   }
 
   it("should escape var arguments, handling nulls") {

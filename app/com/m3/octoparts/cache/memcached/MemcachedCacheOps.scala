@@ -6,18 +6,15 @@ import com.m3.octoparts.cache.key.{ PartCacheKey, VersionCacheKey }
 import com.m3.octoparts.cache.versioning._
 import com.m3.octoparts.model.PartResponse
 import shade.memcached.Codec
-import skinny.logging.Logging
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.control.NonFatal
 
 class MemcachedCacheOps(
   cache: Cache,
   latestVersionCache: LatestVersionCache)(implicit executionContext: ExecutionContext)
     extends CacheOps
-    with TtlCalculator
-    with Logging {
+    with TtlCalculator {
 
   import com.m3.octoparts.cache.versioning.LatestVersionCache.Version
 
@@ -48,7 +45,7 @@ class MemcachedCacheOps(
     }
 
     def insertPartResponse(cacheKey: PartCacheKey, partResponse: PartResponse, ttl: Option[Duration]): Future[Unit] =
-      cache.put[String](cacheKey, Json.toJson(partResponse).toString, calculateTtl(partResponse.cacheControl, ttl))
+      cache.put[String](cacheKey, Json.toJson(partResponse).toString(), calculateTtl(partResponse.cacheControl, ttl))
   }
 
   object CombinedVersionLookup {

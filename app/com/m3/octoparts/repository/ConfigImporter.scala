@@ -1,10 +1,10 @@
 package com.m3.octoparts.repository
 
+import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.model.config.json
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.repository.config._
 import scalikejdbc._
-import skinny.util.LTSV
 
 import scala.concurrent.Future
 
@@ -38,7 +38,7 @@ trait ConfigImporter {
             saveWithSession(ThreadPoolConfigRepository, ThreadPoolConfig.fromJsonModel(threadPoolConfig)).map(threadPoolConfig.threadPoolKey -> _)
           } {
             tpcWasThere =>
-              debug(LTSV.dump("Thread pool" -> tpcWasThere.threadPoolKey, "Action" -> "Skipping import"))
+              LTSVLogger.debug("Thread pool" -> tpcWasThere.threadPoolKey, "Action" -> "Skipping import")
               Future.successful(threadPoolConfig.threadPoolKey -> tpcWasThere.id.get)
           }
         }
@@ -63,7 +63,7 @@ trait ConfigImporter {
               getWithSession(CacheGroupRepository, sqls.eq(CacheGroupRepository.defaultAlias.id, cacheGroupId)).map(jCacheGroup.name -> _.get)
             }
           } { cgWasThere =>
-            debug(LTSV.dump("Cache group" -> cgWasThere.name, "Action" -> "Skipping import"))
+            LTSVLogger.debug("Cache group" -> cgWasThere.name, "Action" -> "Skipping import")
             Future.successful(cgWasThere.name -> cgWasThere)
           }
         }
@@ -116,7 +116,7 @@ trait ConfigImporter {
      * @return the [[HttpPartConfig.partId]] if inserted, else [[None]]
      */
     private[repository] def insertConfigIfMissing(jpart: json.HttpPartConfig)(implicit session: DBSession): Future[Option[String]] = {
-      info(LTSV.dump("part" -> jpart.toString, "action" -> "insert if missing"))
+      LTSVLogger.info("part" -> jpart.toString, "action" -> "insert if missing")
 
       val oldConfig = getWithSession(HttpPartConfigRepository, sqls.eq(HttpPartConfigRepository.defaultAlias.partId, jpart.partId))
       oldConfig.flatMap { mbConfigWasThere =>
