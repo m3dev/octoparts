@@ -5,6 +5,7 @@ import com.m3.octoparts.json.format.ConfigModel._
 import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.ParamType
 import com.m3.octoparts.model.config.json.{ PartParam, ThreadPoolConfig, HystrixConfig, HttpPartConfig }
+import org.scalatestplus.play.OneAppPerSuite
 import play.api.libs.json._
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
@@ -43,6 +44,7 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
 
     def mockWSHolder(fWSRespPost: Future[WSResponse], fWSRespGet: Future[WSResponse]): WSRequestHolder = {
       val mockWS = mock[WSRequestHolder]
+      when(mockWS.withQueryString(anyVararg())).thenReturn(mockWS)
       when(mockWS.get()).thenReturn(fWSRespGet)
       when(mockWS.post(anyObject[JsValue])(anyObject(), anyObject())).thenReturn(fWSRespPost)
       when(mockWS.post(anyObject[EmptyContent])(anyObject(), anyObject())).thenReturn(fWSRespPost)
