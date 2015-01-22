@@ -2,10 +2,8 @@ import com.typesafe.sbt.packager.Keys._
 import play.PlayImport.PlayKeys._
 import sbt.Keys._
 import sbt._
-import scoverage.ScoverageSbtPlugin
 import net.virtualvoid.sbt.graph.Plugin._
 import xerial.sbt.Sonatype._
-import org.scoverage.coveralls.CoverallsPlugin.coverallsSettings
 
 object Common {
 
@@ -17,7 +15,10 @@ object Common {
     organization := "com.m3",
     version := Version.octopartsVersion,
     scalaVersion := Version.theScalaVersion,
-    shellPrompt  := ShellPrompt.buildShellPrompt
+    shellPrompt  := ShellPrompt.buildShellPrompt,
+    updateOptions := updateOptions.value
+      .withCircularDependencyLevel(CircularDependencyLevel.Error)
+      .withCachedResolution(true)
   ) ++
     Dependencies.resolverSettings ++
     graphSettings ++
@@ -51,7 +52,6 @@ object Common {
     addConfDirToClasspathSettings ++
     excludeConfFilesFromJarSettings ++
     sonatypeSettings ++
-    coverallsSettings ++
     Seq(
       playVersion := Dependencies.thePlayVersion,
       playDefaultPort := 9000,
@@ -93,7 +93,7 @@ object Common {
     scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xlint")
   )
 
-  private lazy val testSettings = Seq(Test, ScoverageSbtPlugin.ScoverageTest).flatMap { t =>
-    Seq(parallelExecution in t := false) // Avoid DB-related tests stomping on each other
+  private lazy val testSettings = inConfig(Test){
+    Seq(parallelExecution := false) // Avoid DB-related tests stomping on each other
   }
 }

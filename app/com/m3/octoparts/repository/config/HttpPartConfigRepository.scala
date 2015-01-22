@@ -1,11 +1,11 @@
 package com.m3.octoparts.repository.config
 
+import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config._
 import scalikejdbc._
 import skinny.orm._
 import skinny.orm.feature.TimestampsFeature
-import skinny.util.LTSV
 import skinny.{ AbstractParamType, ParamType => SkinnyParamType }
 
 import scala.concurrent.duration._
@@ -58,11 +58,11 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
     c.parameters.foreach(p => PartParamRepository.save(p.copy(httpPartConfigId = Some(newId.toLong))))
     c.hystrixConfig.foreach(h => HystrixConfigRepository.save(h.copy(httpPartConfigId = Some(newId.toLong))))
     saveCacheGroups(c.copy(id = Some(newId)))
-    info(LTSV.dump(
+    LTSVLogger.info(
       "Part" -> c.partId,
       "Action" -> "Updated",
       "Part data" -> c.toString
-    ))
+    )
     newId
   } {
     id =>
@@ -70,11 +70,11 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
       c.parameters.foreach(PartParamRepository.save)
       c.hystrixConfig.foreach(HystrixConfigRepository.save)
       saveCacheGroups(c)
-      info(LTSV.dump(
+      LTSVLogger.info(
         "Part" -> c.partId,
         "Action" -> "Inserted",
         "Part data" -> c.toString
-      ))
+      )
       id
   }
 

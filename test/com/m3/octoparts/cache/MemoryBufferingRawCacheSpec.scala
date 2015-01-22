@@ -3,14 +3,13 @@ package com.m3.octoparts.cache
 import com.google.common.cache.CacheBuilder
 import com.m3.octoparts.cache.dummy.DummyRawCache
 import com.m3.octoparts.cache.memcached.InMemoryRawCache
-import com.m3.octoparts.util.TimingSupport
 import org.scalatest.{ FunSpec, Matchers }
 import play.api.Logger
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class MemoryBufferingRawCacheSpec extends FunSpec with Matchers with TimingSupport {
+class MemoryBufferingRawCacheSpec extends FunSpec with Matchers {
 
   import shade.memcached.Codec.StringBinaryCodec
 

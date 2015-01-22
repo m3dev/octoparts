@@ -1,5 +1,6 @@
 package com.m3.octoparts.aggregator.handler
 
+import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.model.PartResponse
 import com.m3.octoparts.model.config.ShortPartParam
 
@@ -21,5 +22,6 @@ trait Handler {
   // Used primarily for creating a PartResponse, but also for logging purposes
   def partId: String
 
-  def process(arguments: HandlerArguments): Future[PartResponse]
+  def process(partRequestInfo: PartRequestInfo, arguments: HandlerArguments): Future[PartResponse]
+
 }

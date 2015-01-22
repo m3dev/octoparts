@@ -11,20 +11,26 @@ import play.api.{ Application, Logger }
 import play.api.libs.json._
 import play.api.libs.ws._
 
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.control.NonFatal
 import com.m3.octoparts.model.config.json.HttpPartConfig
-import com.m3.octoparts.json.format.ConfigModel._
+import com.m3.octoparts.json.format.ConfigModel._ // For serdes of the models
 
 /**
  * Default Octoparts [[OctoClientLike]] implementation
  *
  * Has a rescuer method that tries its best to recover from all reasonable errors.
+ *
+ * @param baseUrl The base URL of the Octoparts service you would like to hit with the instantiated client
+ * @param clientTimeout The (HTTP) timeout that you would like this client to use. Note that sending [[AggregateRequest]]
+ *                      will result in using the max of this parameter and the timeout on the request (if it exists)
+ * @param extraWait Extra margin of wait time for timeouts. Defaults to 50 milliseconds.
  */
-class OctoClient(val baseUrl: String, protected val httpRequestTimeout: Duration)(implicit val octoPlayApp: Application) extends OctoClientLike {
+class OctoClient(val baseUrl: String, protected val clientTimeout: FiniteDuration, protected val extraWait: FiniteDuration = 50.milliseconds)(implicit val octoPlayApp: Application) extends OctoClientLike {
 
-  protected def wsHolderFor(url: String) = WS.url(url).withRequestTimeout(httpRequestTimeout.toMillis.toInt)
+  protected def wsHolderFor(url: String, timeout: FiniteDuration) =
+    WS.url(url).withRequestTimeout((timeout + extraWait).toMillis.toInt)
 
   protected def rescuer[A](defaultReturn: => A): PartialFunction[Throwable, A] = {
     case JsResultException(e) => {
@@ -57,7 +63,12 @@ trait OctoClientLike {
   /**
    * Returns a [[play.api.libs.ws.WSRequestHolder]] for a given a URL string
    */
-  protected def wsHolderFor(url: String): WSRequestHolder
+  protected def wsHolderFor(url: String, timeout: FiniteDuration): WSRequestHolder
+
+  /**
+   * The client-wide timeout
+   */
+  protected def clientTimeout: FiniteDuration
 
   /**
    * PartialFunction for `recover`ing from errors when hitting Octoparts
@@ -108,8 +119,9 @@ trait OctoClientLike {
       Future.successful(emptyReqResponse)
     else {
       val jsonBody = Json.toJson(aggReq)
+      val timeout = aggReq.requestMeta.timeout.map(_ max clientTimeout).getOrElse(clientTimeout)
       logger.debug(s"OctopartsId: ${aggReq.requestMeta.id}, RequestBody: $jsonBody")
-      wsPost(urlFor(Invoke), jsonBody)
+      wsPost(urlFor(Invoke), timeout, jsonBody)
         .map(resp => resp.json.as[AggregateResponse])
         .recover(rescuer(rescueAggregateResponse))
     }
@@ -134,7 +146,7 @@ trait OctoClientLike {
    * @param partIds a list of partIds in specific to retrieve endpoint info for.
    */
   def listEndpoints(partIds: String*)(implicit ec: ExecutionContext): Future[Seq[HttpPartConfig]] = {
-    wsHolderFor(urlFor(ListEndpoints))
+    wsHolderFor(urlFor(ListEndpoints), clientTimeout)
       .withQueryString(partIds.map(n => partIdFilterName -> n): _*)
       .get()
       .map(resp => resp.json.as[Seq[HttpPartConfig]])
@@ -173,7 +185,7 @@ trait OctoClientLike {
    * less than 400 or false otherwise
    */
   def emptyPostOk(url: String)(implicit ec: ExecutionContext): Future[Boolean] =
-    wsPost(url, EmptyContent()).map { resp =>
+    wsPost(url, clientTimeout, EmptyContent()).map { resp =>
       val code = resp.status
       if (code < 400) {
         logger.trace(s"$url -> ${resp.body}")
@@ -199,8 +211,12 @@ trait OctoClientLike {
    * Asynchronously sends a POST request to Octoparts.
    *
    * You may wish to (abstract) override this if you want to do custom error-handling on the WS request level.
+   *
+   * @param url URL to post to
+   * @param timeout Timeout value for the request
    */
-  protected def wsPost[A](url: String, body: A)(implicit wrt: Writeable[A], ct: ContentTypeOf[A]): Future[WSResponse] = wsHolderFor(url).post(body)
+  protected def wsPost[A](url: String, timeout: FiniteDuration, body: A)(implicit wrt: Writeable[A], ct: ContentTypeOf[A]): Future[WSResponse] =
+    wsHolderFor(url, timeout).post(body)
 
   /**
    * Generates a default dumb/empty [[com.m3.octoparts.model.AggregateResponse]].

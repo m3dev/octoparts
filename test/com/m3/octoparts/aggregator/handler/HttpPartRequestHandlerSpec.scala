@@ -1,38 +1,36 @@
 package com.m3.octoparts.aggregator.handler
 
-import com.m3.octoparts.support.db.RequiresDB
-import org.scalatest._
-import scala.concurrent.duration._
-import scala.language.postfixOps
-import scala.language.implicitConversions
-import com.m3.octoparts.hystrix.{ MockHttpClientComponent, HystrixExecutor }
-import com.m3.octoparts.model.HttpMethod.Get
-import com.m3.octoparts.model.config._
-import com.m3.octoparts.model.config.ParamType._
-import com.m3.octoparts.support.mocks.ConfigDataMocks
-import org.scalatest.concurrent.ScalaFutures
-import com.m3.octoparts.http.{ HttpResponse, HttpClientLike }
-import org.apache.http.client.methods.HttpUriRequest
 import java.net.URLEncoder
-import org.apache.http.HttpStatus
-import com.m3.octoparts.model.PartResponse
 
-class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures with ConfigDataMocks with RequiresDB {
+import com.m3.octoparts.aggregator.PartRequestInfo
+import com.m3.octoparts.http.{ HttpClientLike, HttpResponse }
+import com.m3.octoparts.hystrix.{ HystrixExecutor, MockHttpClientComponent }
+import com.m3.octoparts.model.HttpMethod.Get
+import com.m3.octoparts.model.{ PartRequest, RequestMeta, PartResponse }
+import com.m3.octoparts.model.config.ParamType._
+import com.m3.octoparts.model.config._
+import org.apache.http.HttpStatus
+import org.apache.http.client.methods.HttpUriRequest
+import org.scalatest._
+import org.scalatest.concurrent.ScalaFutures
+
+import scala.concurrent.Future
+
+class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures {
 
   private val mockPartId = "mock"
   private val stringToInterpolate = "http://mock.com/${path1}/${path2}"
-  private val mockHystrixArguments = HystrixConfig(
-    commandKey = "mock",
-    commandGroupKey = "mock",
-    timeoutInMs = (10 seconds).toMillis,
-    threadPoolConfig = Some(mockThreadConfig),
-    updatedAt = now, createdAt = now)
 
   private val headerParam1 = ShortPartParam("meta.userId", Header)
   private val pathParam1 = ShortPartParam("path1", Path)
   private val pathParam2 = ShortPartParam("path2", Path)
   private val queryParam1 = ShortPartParam("query1", Query)
   private val queryParam2 = ShortPartParam("query2", Query)
+
+  private val partRequestInfo = PartRequestInfo(
+    RequestMeta(id = "hey man that's so meta"),
+    partRequest = PartRequest(partId = "foob", id = Some("bande a part"))
+  )
 
   private val handler = handlerWithHttpClient(MockHttpClientComponent.httpClient)
 
@@ -43,15 +41,17 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
       pathParam1 -> Seq("hi"),
       pathParam2 -> Seq("there"),
       queryParam1 -> Seq("scala"),
-      queryParam2 -> Seq("lover")
+      queryParam2 -> Seq("lover", "lover2")
     )
 
     describe("when providing all params") {
       it("should properly interpolate path and query params") {
-        val output = handler.buildUri(completeParamWithArgs).toString()
-        val baseUrl = "http://mock.com/hi/there"
-        // Due to lack of ordering in Maps and Sets, we need to do some hackery here
-        Seq(s"$baseUrl?query1=scala&query2=lover", s"$baseUrl?query2=lover&query1=scala").contains(output) should be(true)
+        val output = handler.buildUri(completeParamWithArgs)
+        output.host shouldBe Some("mock.com")
+        output.protocol shouldBe Some("http")
+        output.path shouldBe "/hi/there"
+        output.query.params(queryParam1.outputName) shouldBe Seq("scala")
+        output.query.params(queryParam2.outputName).toSet shouldBe Set("lover", "lover2")
       }
     }
     describe("when providing only some params") {
@@ -70,7 +70,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
             def retrieve(request: HttpUriRequest) = HttpResponse(status = HttpStatus.SC_OK, message = "OK", mimeType = Some("text/plain"), body = Some("hello"))
           }
           val handler = handlerWithHttpClient(client)
-          whenReady(handler.process(Map.empty)) {
+          whenReady(handler.process(partRequestInfo, Map.empty)) {
             partResp =>
               partResp should be(PartResponse(partId = mockPartId, id = mockPartId, statusCode = Some(HttpStatus.SC_OK), mimeType = Some("text/plain"), contents = Some("hello"), errors = Nil))
           }
@@ -82,7 +82,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
             def retrieve(request: HttpUriRequest) = HttpResponse(status = HttpStatus.SC_NOT_FOUND, message = "Not Found", mimeType = Some("text/plain"), body = Some("not found"))
           }
           val handler = handlerWithHttpClient(client)
-          whenReady(handler.process(Map.empty)) {
+          whenReady(handler.process(partRequestInfo, Map.empty)) {
             partResp =>
               partResp should be(PartResponse(partId = mockPartId, id = mockPartId, statusCode = Some(HttpStatus.SC_NOT_FOUND), mimeType = Some("text/plain"), contents = Some("not found"), errors = Seq("Not Found")))
           }
@@ -97,7 +97,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
         val hArgs = Map(
           ShortPartParam("query1", Query) -> Seq("query1Value")
         )
-        handler.createBlockingHttpRetrieve(hArgs).maybeBody should be(None)
+        handler.createBlockingHttpRetrieve(partRequestInfo, hArgs).maybeBody should be(None)
       }
     }
     describe("when there is a body param") {
@@ -105,8 +105,14 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
         val hArgs = Map(
           ShortPartParam("jsonPayload", Body) -> Seq("""{"some":"json"}""")
         )
-        handler.createBlockingHttpRetrieve(hArgs).maybeBody should be(Some("""{"some":"json"}"""))
+        handler.createBlockingHttpRetrieve(partRequestInfo, hArgs).maybeBody should be(Some("""{"some":"json"}"""))
       }
+    }
+    it("should include custom HTTP headers for request tracing") {
+      val headers = handler.createBlockingHttpRetrieve(partRequestInfo, Map.empty).headers
+      headers should contain("X-OCTOPARTS-PART-ID" -> "foob")
+      headers should contain("X-OCTOPARTS-REQUEST-ID" -> "bande a part")
+      headers should contain("X-OCTOPARTS-PARENT-REQUEST-ID" -> "hey man that's so meta")
     }
   }
 
@@ -139,11 +145,19 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
   def handlerWithHttpClient(client: HttpClientLike): HttpPartRequestHandler = {
     new HttpPartRequestHandler {
       def executionContext = scala.concurrent.ExecutionContext.global
+
       def partId = mockPartId
+
       def uriToInterpolate = stringToInterpolate
-      val hystrixExecutor = HystrixExecutor(mockHystrixArguments)
+
+      val hystrixExecutor = new HystrixExecutor(null) {
+        override def future[T](f: => T) = Future.successful(f)
+      }
+
       def httpMethod = Get
+
       val additionalValidStatuses = Set.empty[Int]
+
       def httpClient = client
     }
   }

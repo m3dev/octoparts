@@ -1,7 +1,6 @@
 import sbt._
 import sbt.Keys._
 import play.Play.autoImport._
-import play._
 
 object Dependencies {
 
@@ -24,11 +23,11 @@ object Dependencies {
 
   val thePlayVersion = play.core.PlayVersion.current
   val slf4jVersion = "1.7.7"
-  val hystrixVersion = "1.3.18"
-  val httpClientVersion = "4.3.5"
-  val scalikejdbcVersion = "2.1.2"
-  val swaggerVersion = "1.3.10"
-  val jacksonVersion = "2.4.3"
+  val hystrixVersion = "1.3.19"
+  val httpClientVersion = "4.3.6"
+  val scalikejdbcVersion = "2.2.1"
+  val swaggerVersion = "1.3.12"
+  val jacksonVersion = "2.4.4"
 
   // Logging
   val logbackClassic      = "ch.qos.logback"            % "logback-classic"               % "1.1.2"
@@ -36,8 +35,8 @@ object Dependencies {
   val jclOverSlf4j        = "org.slf4j"                 % "jcl-over-slf4j"                % slf4jVersion
   val log4jOverSlf4j      = "org.slf4j"                 % "log4j-over-slf4j"              % slf4jVersion
   val julToSlf4j          = "org.slf4j"                 % "jul-to-slf4j"                  % slf4jVersion
-  val ravenLogback        = "net.kencochrane.raven"     % "raven-logback"                 % "5.0.1"
-  val janino              = "org.codehaus.janino"       % "janino"                        % "2.7.6"
+  val ravenLogback        = "net.kencochrane.raven"     % "raven-logback"                 % "5.0.1"   % Runtime
+  val janino              = "org.codehaus.janino"       % "janino"                        % "2.7.7"
   val ltsvLogger          = "com.beachape"              %% "ltsv-logger"                  % "0.0.8"
 
   // Hystrix
@@ -46,27 +45,27 @@ object Dependencies {
   val rxJavaScala         = "com.netflix.rxjava"        % "rxjava-scala"                  % "0.20.3" // matches version used in hystrix-core
 
   // HTTP clients
-  val asyncHttpClient     = "com.ning"                  % "async-http-client"             % "1.8.14"
+  val asyncHttpClient     = "com.ning"                  % "async-http-client"             % "1.9.3"
   val httpClient          = "org.apache.httpcomponents" % "httpclient"                    % httpClientVersion
   val httpClientCache     = "org.apache.httpcomponents" % "httpclient-cache"              % httpClientVersion
   val metricsHttpClient   = "io.dropwizard.metrics"     % "metrics-httpclient"            % "3.1.0"
 
   // DB
-  val postgres            = "org.postgresql"            % "postgresql"                    % "9.3-1102-jdbc41"   % "runtime"
-  val skinnyOrm           = "org.skinny-framework"      %% "skinny-orm"                   % "1.3.4"
+  val postgres            = "org.postgresql"            % "postgresql"                    % "9.3-1102-jdbc41"   % Runtime
+  val skinnyOrm           = "org.skinny-framework"      %% "skinny-orm"                   % "1.3.8"
   val scalikeJdbc         = "org.scalikejdbc"           %% "scalikejdbc"                  % scalikejdbcVersion
-  val scalikeJdbcPlay     = "org.scalikejdbc"           %% "scalikejdbc-play-plugin"      % "2.3.2"
+  val scalikeJdbcPlay     = "org.scalikejdbc"           %% "scalikejdbc-play-plugin"      % "2.3.4"
   val dbcp2               = "org.apache.commons"        % "commons-dbcp2"                 % "2.0.1"
 
   // Memcached
   val shade               = "com.bionicspirit"          %% "shade"                        % "1.6.0"
-  val spyMemcached        = "net.spy"                   % "spymemcached"                  % "2.11.4"
+  val spyMemcached        = "net.spy"                   % "spymemcached"                  % "2.11.5"
 
   // Play plugins
-  val playFlyway          = "com.github.tototoshi"      %% "play-flyway"                  % "1.1.2"
+  val playFlyway          = "com.github.tototoshi"      %% "play-flyway"                  % "1.2.0"
   val scaldiPlay          = "org.scaldi"                %% "scaldi-play"                  % "0.4.1"
   val metricsPlay         = "com.kenshoo"               %% "metrics-play"                 % "2.3.0_0.1.7"
-  val providedPlay        = "com.typesafe.play"         %% "play"                         % thePlayVersion      % "provided"
+  val providedPlay        = "com.typesafe.play"         %% "play"                         % thePlayVersion      % Provided
 
   // Swagger
   val swaggerPlay         = "com.wordnik"               %% "swagger-play2"                % swaggerVersion
@@ -78,17 +77,17 @@ object Dependencies {
   val jacksonDatabind     = "com.fasterxml.jackson.core"   % "jackson-databind"           % jacksonVersion
 
   // Test
-  val playTest            = "com.typesafe.play"         %% "play-test"                    % thePlayVersion      % "test"
-  val scalatest           = "org.scalatest"             %% "scalatest"                    % "2.2.2"             % "test"
-  val scalatestPlay       = "org.scalatestplus"         %% "play"                         % "1.2.0"             % "test"
-  val scalacheck          = "org.scalacheck"            %% "scalacheck"                   % "1.11.6"            % "test"
-  val groovy              = "org.codehaus.groovy"       % "groovy"                        % "2.3.7"             % "test"
-  val scalikeJdbcTest     = "org.scalikejdbc"           %% "scalikejdbc-test"             % scalikejdbcVersion  % "test"
+  val playTest            = "com.typesafe.play"         %% "play-test"                    % thePlayVersion      % Test
+  val scalatest           = "org.scalatest"             %% "scalatest"                    % "2.2.3"             % Test
+  val scalatestPlay       = "org.scalatestplus"         %% "play"                         % "1.2.0"             % Test
+  val scalacheck          = "org.scalacheck"            %% "scalacheck"                   % "1.12.1"            % Test
+  val groovy              = "org.codehaus.groovy"       % "groovy"                        % "2.3.9"             % Test
+  val scalikeJdbcTest     = "org.scalikejdbc"           %% "scalikejdbc-test"             % scalikejdbcVersion  % Test
 
   // Misc utils
-  val commonsValidator    = "commons-validator"         % "commons-validator"             % "1.4.0"             % "runtime"
+  val commonsValidator    = "commons-validator"         % "commons-validator"             % "1.4.0"             % Runtime
   val jta                 = "javax.transaction"         % "jta"                           % "1.1"
-  val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.3"
+  val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.4"
   val findbugs            = "com.google.code.findbugs"  % "jsr305"                        % "3.0.0"
 
   val withoutExcluded = { (m: ModuleID) =>
@@ -175,7 +174,7 @@ object Dependencies {
     jacksonCore,
     jacksonScala,
     jacksonDatabind,
-    logbackClassic % "test",
+    logbackClassic % Test,
     jclOverSlf4j intransitive(),
     log4jOverSlf4j intransitive(),
     julToSlf4j intransitive(),

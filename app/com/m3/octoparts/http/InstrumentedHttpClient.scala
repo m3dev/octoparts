@@ -6,7 +6,6 @@ import java.nio.charset.{ Charset, StandardCharsets }
 import com.beachape.logging.LTSVLogger
 import com.codahale.metrics.{ Gauge, MetricRegistry }
 import com.m3.octoparts.OctopartsMetricsRegistry
-import com.m3.octoparts.util.TimingSupport
 import org.apache.http.{ HttpClientConnection, HttpRequest }
 import org.apache.http.client.HttpClient
 import org.apache.http.client.config.{ CookieSpecs, RequestConfig }
@@ -16,8 +15,6 @@ import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.pool.PoolStats
 import org.apache.http.protocol.{ HttpContext, HttpRequestExecutor }
-import skinny.logging.Logging
-import skinny.util.LTSV
 
 import scala.concurrent.duration._
 
@@ -37,8 +34,6 @@ class InstrumentedHttpClient(
   socketTimeout: Duration = 10.seconds,
   defaultEncoding: Charset = StandardCharsets.UTF_8)
     extends HttpClientLike
-    with TimingSupport
-    with Logging
     with Closeable {
   import InstrumentedHttpClient._
 
@@ -71,18 +66,7 @@ class InstrumentedHttpClient(
    * @param request HttpUriRequest
    * @return HttpResponse
    */
-  def retrieve(request: HttpUriRequest): HttpResponse = {
-    debug(LTSV.dump("HTTP request" -> request.toString))
-    time {
-      httpClient.execute(request, responseHandler)
-    } {
-      (httpResponse, duration) =>
-        debug(LTSV.dump(
-          "HTTP status" -> httpResponse.status.toString,
-          "HTTP response time" -> duration.toString
-        ))
-    }
-  }
+  def retrieve(request: HttpUriRequest): HttpResponse = httpClient.execute(request, responseHandler)
 
   /**
    * A [[PoolingHttpClientConnectionManager]] which monitors the number of open connections.

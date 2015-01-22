@@ -17,7 +17,7 @@ import org.mockito.Mockito._
 import org.mockito.Matchers._
 import com.m3.octoparts.cache.versioning.VersionedParamKey
 
-class CacheControllerSpec extends FlatSpec with Matchers with MockitoSugar with ConfigDataMocks with ScalaFutures with OneAppPerSuite {
+class CacheControllerSpec extends FlatSpec with Matchers with MockitoSugar with ConfigDataMocks with ScalaFutures {
 
   val futureUnit = Future.successful(())
   val mockRepository = new MockConfigRespository {

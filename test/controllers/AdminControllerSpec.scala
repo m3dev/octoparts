@@ -10,6 +10,7 @@ import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.repository.MutableConfigsRepository
 import com.m3.octoparts.repository.config._
+import com.m3.octoparts.support.db.RequiresDB
 import com.m3.octoparts.support.mocks.ConfigDataMocks
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.mime.MultipartEntityBuilder
@@ -100,7 +101,8 @@ class AdminControllerSpec extends FunSpec
     with Matchers
     with ScalaFutures
     with IntegrationPatience
-    with ConfigDataMocks {
+    with ConfigDataMocks
+    with RequiresDB {
 
   protected val aGroup = "some group"
 
