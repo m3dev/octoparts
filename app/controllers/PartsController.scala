@@ -1,5 +1,7 @@
 package controllers
 
+import javax.ws.rs.QueryParam
+
 import com.m3.octoparts.json.format.ConfigModel._
 import com.m3.octoparts.json.format.ReqResp._
 import com.m3.octoparts.aggregator.service.PartsService
@@ -67,11 +69,7 @@ class PartsController(
     response = classOf[HttpPartConfig],
     responseContainer = "List",
     httpMethod = "GET")
-  @ApiParam(allowMultiple = true,
-    name = "partId",
-    value = "Optional filter for the partId"
-  )
-  def list(partIdParams: List[String] = Nil) = Action.async { implicit request =>
+  def list(@ApiParam(value = "Optional part ids to filter on. Note, this should be passed as multiple partIdParams=partId, e.g ?partIdParams=wut&partIdParams=wut3 ", allowMultiple = true)@QueryParam("partIdParams") partIdParams: List[String] = Nil) = Action.async { implicit request =>
     debugRc
     val fConfigs = partIdParams match {
       case Nil => configsRepository.findAllConfigs()
