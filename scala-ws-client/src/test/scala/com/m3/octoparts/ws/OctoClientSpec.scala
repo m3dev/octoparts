@@ -5,7 +5,6 @@ import com.m3.octoparts.json.format.ConfigModel._
 import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.ParamType
 import com.m3.octoparts.model.config.json.{ PartParam, ThreadPoolConfig, HystrixConfig, HttpPartConfig }
-import org.scalatestplus.play.OneAppPerSuite
 import play.api.libs.json._
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
@@ -17,7 +16,6 @@ import org.mockito.Matchers._
 import play.api.mvc.RequestHeader
 import play.api.mvc.Results.EmptyContent
 import play.api.test.FakeRequest
-import scala.concurrent.duration._
 
 import scala.language.postfixOps
 import scala.concurrent.Future
