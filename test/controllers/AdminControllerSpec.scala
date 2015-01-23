@@ -189,9 +189,9 @@ class AdminControllerSpec extends FunSpec
     def setupController: (AdminController, CacheOps, MutableConfigsRepository, HttpPartConfig) = {
       val repository = mock[MutableConfigsRepository]
       val cacheOps = mock[CacheOps]
-      when(cacheOps.increasePartVersion(anyString())).thenReturn(Future.successful(()))
       val adminController = new AdminController(cacheOps = cacheOps, repository = repository)
       val part2 = part.copy(hystrixConfig = Some(mockHystrixConfig))
+      doReturn(Future.successful(())).when(cacheOps).increasePartVersion(anyString())
       doReturn(Future.successful(Some(part2))).when(repository).findConfigByPartId(part.partId)
       doReturn(Future.successful(1)).when(repository).deleteConfigByPartId(part.partId)
       doReturn(Future.successful(Seq.empty)).when(repository).findAllCacheGroupsByName(anyVararg[String]())
