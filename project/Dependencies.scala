@@ -33,7 +33,7 @@ object Dependencies {
   // Hystrix
   val hystrixCore         = "com.netflix.hystrix"       % "hystrix-core"                  % hystrixVersion
   val hystrixStream       = "com.netflix.hystrix"       % "hystrix-metrics-event-stream"  % hystrixVersion
-  val rxJavaScala         = "com.netflix.rxjava"        % "rxjava-scala"                  % "0.20.3" // matches version used in hystrix-core
+  val rxJavaScala         = "io.reactivex"             %% "rxscala"                       % "0.23.0" // matches the version rxjava used in hystrix-core
 
   // HTTP clients
   val asyncHttpClient     = "com.ning"                  % "async-http-client"             % "1.9.6"
@@ -78,6 +78,7 @@ object Dependencies {
 
   // Misc utils
   val commonsValidator    = "commons-validator"         % "commons-validator"             % "1.4.1"             % Runtime
+  val guava               = "com.google.guava"          % "guava"                         % "18.0"
   val jta                 = "javax.transaction"         % "jta"                           % "1.1"
   val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.5"
   val findbugs            = "com.google.code.findbugs"  % "jsr305"                        % "3.0.0"
@@ -162,6 +163,7 @@ object Dependencies {
 
   val javaClientDependncies = Seq(
     findbugs intransitive(),
+    guava,
     slf4jApi,
     asyncHttpClient,
     jacksonCore,
