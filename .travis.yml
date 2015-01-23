@@ -19,3 +19,8 @@ script: "sbt clean coverage test"
 after_success: "sbt coverageAggregate coveralls"
 
 sudo: false
+
+cache:
+  directories:
+  - $HOME/.sbt
+  - $HOME/.ivy2
