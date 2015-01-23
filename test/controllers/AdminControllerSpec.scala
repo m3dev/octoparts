@@ -15,7 +15,7 @@ import com.m3.octoparts.support.mocks.ConfigDataMocks
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.mime.MultipartEntityBuilder
 import org.apache.http.entity.mime.content.FileBody
-import org.mockito.{Mockito, ArgumentCaptor}
+import org.mockito.{ Mockito, ArgumentCaptor }
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest._
