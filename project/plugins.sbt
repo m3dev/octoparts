@@ -1,6 +1,6 @@
 // The Typesafe repository
 resolvers ++= Seq(
-  "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
+  Resolver.typesafeRepo("releases"),
   "jgit-repo"           at "http://download.eclipse.org/jgit/maven",
   Classpaths.sbtPluginReleases
 )
@@ -8,7 +8,7 @@ resolvers ++= Seq(
 // The Play plugin
 addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.3.7")
 // scoverage for test coverage
-addSbtPlugin("org.scoverage" %% "sbt-scoverage" % "1.0.1")
+addSbtPlugin("org.scoverage" %% "sbt-scoverage" % "1.0.2")
 // to show transitive dependencies as a graph
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.7.4")
 // for code formatting
