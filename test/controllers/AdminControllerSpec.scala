@@ -15,7 +15,7 @@ import com.m3.octoparts.support.mocks.ConfigDataMocks
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.mime.MultipartEntityBuilder
 import org.apache.http.entity.mime.content.FileBody
-import org.mockito.ArgumentCaptor
+import org.mockito.{ Mockito, ArgumentCaptor }
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest._
@@ -209,7 +209,7 @@ class AdminControllerSpec extends FunSpec
         val result = controller.updatePart(part.partId).apply(FakeRequest().withFormUrlEncodedBody(validPartEditFormParams: _*))
         status(result) should be(FOUND)
         redirectLocation(result).get should include(routes.AdminController.showPart("aNewName").url)
-        verify(cacheOps).increasePartVersion(part.partId)
+        verify(cacheOps, Mockito.timeout(1000)).increasePartVersion(part.partId)
       }
     }
 
@@ -315,7 +315,7 @@ class AdminControllerSpec extends FunSpec
 
           verify(repository).findConfigByPartId(part.partId)
           verify(repository).deleteConfigByPartId(part.partId)
-          verify(cacheOps).increasePartVersion(part.partId)
+          verify(cacheOps, Mockito.timeout(1000)).increasePartVersion(part.partId)
         }
       }
     }
@@ -441,7 +441,7 @@ class AdminControllerSpec extends FunSpec
       val newCiCaptor = ArgumentCaptor.forClass(classOf[PartParam])
       verify(repository).save(newCiCaptor.capture())(anyObject[ConfigMapper[PartParam]])
       verify(repository).findAllCacheGroupsByName(Seq.empty: _*)
-      verify(cacheOps).increasePartVersion(part.partId)
+      verify(cacheOps, Mockito.timeout(1000)).increasePartVersion(part.partId)
 
       newCiCaptor.getValue.outputName should be("someName")
       newCiCaptor.getValue.paramType should be(ParamType.Cookie)
@@ -470,7 +470,7 @@ class AdminControllerSpec extends FunSpec
       val newCiCaptor = ArgumentCaptor.forClass(classOf[PartParam])
       verify(repository).save(newCiCaptor.capture())(anyObject[ConfigMapper[PartParam]])
       verify(repository).findAllCacheGroupsByName(Seq.empty: _*)
-      verify(cacheOps).increasePartVersion(part.partId)
+      verify(cacheOps, Mockito.timeout(1000)).increasePartVersion(part.partId)
 
       newCiCaptor.getValue.outputName should be("newName")
       newCiCaptor.getValue.paramType should be(ParamType.Body)
@@ -494,7 +494,7 @@ class AdminControllerSpec extends FunSpec
       verify(repository).findConfigByPartId(part.partId)
       val newCiCaptor = ArgumentCaptor.forClass(classOf[Long])
       verify(repository).deletePartParamById(newCiCaptor.capture())
-      verify(cacheOps).increasePartVersion(part.partId)
+      verify(cacheOps, Mockito.timeout(1000)).increasePartVersion(part.partId)
       newCiCaptor.getValue should be(part.id.get)
     }
   }
