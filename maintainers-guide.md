@@ -32,4 +32,4 @@ addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0")
 - Run `./scripts/publish_libs.sh`
 - Use `sbt sonatypeRelease` from `sbt-sonatype` plugin or access sonatype console (https://oss.sonatype.org/)
 - Set version as "{next-version}-SNAPSHOT" on develop branch
-
+- Update documentation (https://github.com/m3dev/octoparts-site/blob/develop/data/versions.yml)
