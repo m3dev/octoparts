@@ -50,7 +50,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
         output.host shouldBe Some("mock.com")
         output.protocol shouldBe Some("http")
         output.path shouldBe "/hi/there"
-        output.query.params(queryParam1.outputName) shouldBe Seq("scala")
+        output.query.params(queryParam1.outputName) shouldBe Seq(Some("scala"))
         output.query.params(queryParam2.outputName).toSet shouldBe Set("lover", "lover2")
       }
     }
