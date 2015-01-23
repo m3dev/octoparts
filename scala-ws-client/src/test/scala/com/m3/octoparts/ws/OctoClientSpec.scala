@@ -16,7 +16,6 @@ import org.mockito.Matchers._
 import play.api.mvc.RequestHeader
 import play.api.mvc.Results.EmptyContent
 import play.api.test.FakeRequest
-import scala.concurrent.duration._
 
 import scala.language.postfixOps
 import scala.concurrent.Future
@@ -43,6 +42,7 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
 
     def mockWSHolder(fWSRespPost: Future[WSResponse], fWSRespGet: Future[WSResponse]): WSRequestHolder = {
       val mockWS = mock[WSRequestHolder]
+      when(mockWS.withQueryString(anyVararg())).thenReturn(mockWS)
       when(mockWS.get()).thenReturn(fWSRespGet)
       when(mockWS.post(anyObject[JsValue])(anyObject(), anyObject())).thenReturn(fWSRespPost)
       when(mockWS.post(anyObject[EmptyContent])(anyObject(), anyObject())).thenReturn(fWSRespPost)

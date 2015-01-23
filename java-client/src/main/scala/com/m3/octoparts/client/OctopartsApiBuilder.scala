@@ -11,6 +11,7 @@ import com.m3.octoparts.model.{ AggregateRequest, RequestMeta }
 import com.ning.http.client.{ AsyncHttpClient, AsyncHttpClientConfig, ListenableFuture }
 import org.slf4j.LoggerFactory
 
+import scala.annotation.varargs
 import scala.concurrent.duration._
 
 private[client] object OctopartsApiBuilder {
@@ -110,9 +111,17 @@ class OctopartsApiBuilder(@Nonnull apiRootUrl: String, @Nullable serviceId: Stri
     sendCachePost(uri)
   }
 
-  @Nonnull def listEndpoints(): ListenableFuture[java.util.List[HttpPartConfig]] = {
+  /**
+   * @param partIds when specified, filters the endpoint list. Note: not specifying a filter will prevent Octoparts from using the part config cache.
+   */
+  @varargs @Nonnull def listEndpoints(@Nonnull partIds: String*): ListenableFuture[java.util.List[HttpPartConfig]] = {
+    import scala.collection.convert.Wrappers._
+    val queryParams: java.util.Map[String, java.util.List[String]] = {
+      if (partIds.isEmpty) java.util.Collections.emptyMap() else MutableMapWrapper(scala.collection.mutable.Map("partIdParams" -> SeqWrapper(partIds)))
+    }
     val request = asyncHttpClient.
       prepareGet(s"$octopartsApiEndpointUrl/list").
+      setQueryParams(queryParams).
       build
     asyncHttpClient.executeRequest(request, EndpointListExtractor)
   }

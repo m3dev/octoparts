@@ -4,7 +4,7 @@ jdk:
   - oraclejdk8
 
 scala:
-  - 2.11.4
+  - 2.11.5
 
 addons:
   postgresql: "9.3"
@@ -17,3 +17,10 @@ before_script:
 script: "sbt clean coverage test"
 
 after_success: "sbt coverageAggregate coveralls"
+
+sudo: false
+
+cache:
+  directories:
+  - $HOME/.sbt
+  - $HOME/.ivy2
