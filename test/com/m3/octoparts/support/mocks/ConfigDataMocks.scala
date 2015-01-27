@@ -37,6 +37,8 @@ trait ConfigDataMocks {
     alertPercentThreshold = Some(33),
     alertInterval = 10.minutes,
     alertMailRecipients = Some("l-chan@m3.com"),
+    localContentsEnabled = true,
+    localContents = Some("{}"),
     updatedAt = now,
     createdAt = now
   )

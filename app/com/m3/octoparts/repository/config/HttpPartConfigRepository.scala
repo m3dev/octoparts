@@ -31,7 +31,9 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
     "alertAbsoluteThreshold" -> SkinnyParamType.Int,
     "alertPercentThreshold" -> SkinnyParamType.Double,
     "alertInterval" -> DurationParamType,
-    "alertMailRecipients" -> SkinnyParamType.String
+    "alertMailRecipients" -> SkinnyParamType.String,
+    "localContentsEnabled" -> SkinnyParamType.Boolean,
+    "localContents" -> SkinnyParamType.String
   )
 
   case object DurationParamType extends AbstractParamType({
@@ -155,6 +157,8 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
     alertPercentThreshold = rs.get(n.alertPercentThreshold),
     alertInterval = rs.long(n.alertInterval).seconds,
     alertMailRecipients = rs.get(n.alertMailRecipients),
+    localContentsEnabled = rs.get(n.localContentsEnabled),
+    localContents = rs.get(n.localContents),
     createdAt = rs.get(n.createdAt),
     updatedAt = rs.get(n.updatedAt)
   )

@@ -24,6 +24,7 @@
                 <th>@Messages("parts.partId")</th>
                 <th>@Messages("parts.url")</th>
                 <th>@Messages("parts.owner")</th>
+                <th>@Messages("parts.section.localContents")</th>
                 <th>@Messages("action")</th>
             </tr>
         </thead>
@@ -35,6 +36,13 @@
                 </td>
                 <td>@partView.uriToInterpolate</td>
                 <td>@partView.config.owner</td>
+                <td>
+                    @if(partView.config.localContentsEnabled) {
+                        @Messages("parts.localContents.enabled")
+                    } else {
+                        @Messages("parts.localContents.disabled")
+                    }
+                </td>
                 <td width="390px">
                     <a href="@partView.tryItLink" class="btn btn-default">@Messages("parts.tryIt")</a>
                     <a href="@partView.detailLink" class="btn btn-success">@Messages("detail")</a>

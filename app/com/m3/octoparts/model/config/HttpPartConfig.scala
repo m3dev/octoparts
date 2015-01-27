@@ -30,6 +30,8 @@ case class HttpPartConfig(id: Option[Long] = None, // None means that the record
                           alertPercentThreshold: Option[Double],
                           alertInterval: FiniteDuration,
                           alertMailRecipients: Option[String],
+                          localContentsEnabled: Boolean,
+                          localContents: Option[String],
                           createdAt: DateTime,
                           updatedAt: DateTime) extends ConfigModel[HttpPartConfig] {
 
@@ -79,7 +81,9 @@ object HttpPartConfig {
       alertAbsoluteThreshold = config.alertAbsoluteThreshold,
       alertPercentThreshold = config.alertPercentThreshold,
       alertInterval = config.alertInterval,
-      alertMailRecipients = config.alertMailRecipients
+      alertMailRecipients = config.alertMailRecipients,
+      localContentsEnabled = config.localContentsEnabled,
+      localContents = config.localContents
     )
   }
 
@@ -101,6 +105,8 @@ object HttpPartConfig {
       alertPercentThreshold = config.alertPercentThreshold,
       alertInterval = config.alertInterval,
       alertMailRecipients = config.alertMailRecipients,
+      localContentsEnabled = config.localContentsEnabled,
+      localContents = config.localContents,
       createdAt = DateTime.now,
       updatedAt = DateTime.now
     )

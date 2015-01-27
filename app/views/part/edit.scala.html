@@ -30,6 +30,14 @@
             prettySelect : true
         });
     });
+
+    function validateJsonString(field) {
+        try {
+            JSON.parse(field.val());
+        } catch (e) {
+            return "@Messages("parts.localContents.invalid.contents")";
+        }
+    }
     </script>
 } {
 
@@ -220,6 +228,30 @@
             </div>
         </fieldset>
 
+        <fieldset>
+            <legend>@Messages("parts.section.localContents")</legend>
+
+            <div class="form-group">
+                <label for="localContentsEnabled" class="col-sm-2 control-label">@Messages("parts.localContents.enabled")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                    @helper.checkbox(form("localContentsConfig.enabled"))
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="localContents" class="col-sm-2 control-label">@Messages("parts.localContents.contents")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                    @helper.textarea(form("localContentsConfig.contents"),
+                        'class -> "form-control validate[condRequired[funcCall[validateJsonString]]]",
+                        'rows -> 12)
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
         <br/>
         <div class="form-group">
             <label class="col-sm-2 control-label">&nbsp;</label>
@@ -230,5 +262,4 @@
             </div>
         </div>
     </form>
-
 }

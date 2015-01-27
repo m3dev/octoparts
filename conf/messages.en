@@ -70,6 +70,11 @@ parts.alertMail.interval.label=Interval (seconds)
 parts.alertMail.selectOne=At least one of these must be selected
 parts.alertMail.none=Disabled
 parts.alertMail.enabled=Enabled
+parts.section.localContents=Local content settings
+parts.localContents.enabled=Enabled
+parts.localContents.disabled=Disabled
+parts.localContents.contents=Content
+parts.localContents.invalid.contents=Input JSON.
 
 tryIt.title=Try {0} !
 tryIt.disable=Disable

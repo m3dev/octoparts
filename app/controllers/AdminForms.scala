@@ -29,7 +29,8 @@ object AdminForms {
       alertInterval: Option[Long],
       alertAbsoluteThreshold: Option[Int],
       alertPercentThreshold: Option[BigDecimal],
-      alertMailRecipients: Option[String]) {
+      alertMailRecipients: Option[String],
+      localContentsConfig: LocalContentsConfig) {
     data =>
 
     /** Create a brand new HttpPartConfig using the data input into the form */
@@ -56,6 +57,8 @@ object AdminForms {
       alertAbsoluteThreshold = data.alertAbsoluteThreshold,
       alertPercentThreshold = data.alertPercentThreshold.map(_.toDouble),
       alertMailRecipients = data.alertMailRecipients,
+      localContentsEnabled = data.localContentsConfig.enabled,
+      localContents = data.localContentsConfig.contents,
       createdAt = DateTime.now,
       updatedAt = DateTime.now
     )
@@ -83,6 +86,8 @@ object AdminForms {
       alertAbsoluteThreshold = data.alertAbsoluteThreshold,
       alertPercentThreshold = data.alertPercentThreshold.map(_.toDouble),
       alertMailRecipients = data.alertMailRecipients,
+      localContentsEnabled = data.localContentsConfig.enabled,
+      localContents = data.localContentsConfig.contents,
       updatedAt = DateTime.now
     )
 
@@ -107,7 +112,10 @@ object AdminForms {
       alertInterval = Some(part.alertInterval.toSeconds),
       alertAbsoluteThreshold = part.alertAbsoluteThreshold,
       alertPercentThreshold = part.alertPercentThreshold.map(BigDecimal(_)),
-      alertMailRecipients = part.alertMailRecipients
+      alertMailRecipients = part.alertMailRecipients,
+      localContentsConfig = LocalContentsConfig(
+        enabled = part.localContentsEnabled,
+        contents = part.localContents)
     )
 
     private def trimPartId(original: String): String = {
@@ -138,9 +146,17 @@ object AdminForms {
       "alertInterval" -> optional(longNumber),
       "alertAbsoluteThreshold" -> optional(number),
       "alertPercentThreshold" -> optional(bigDecimal),
-      "alertMailRecipients" -> optional(text)
+      "alertMailRecipients" -> optional(text),
+      "localContentsConfig" -> mapping(
+        "enabled" -> boolean,
+        "contents" -> optional(text.verifying(scala.util.parsing.json.JSON.parseRaw(_).isDefined))
+      )(LocalContentsConfig.apply)(LocalContentsConfig.unapply)
     )(PartData.apply)(PartData.unapply)
   )
+
+  case class LocalContentsConfig(
+    enabled: Boolean,
+    contents: Option[String])
 
   case class ParamData(
     outputName: String,

@@ -154,4 +154,11 @@
         <p>@Messages("parts.alertMail.none")</p>
     }
 
+    <hr/>
+    <h2>@Messages("parts.section.localContents")</h2>
+    @if(part.config.localContentsEnabled) {
+        <pre>@part.config.localContents.orNull</pre>
+    } else {
+        <p>@Messages("parts.localContents.disabled")</p>
+    }
 }

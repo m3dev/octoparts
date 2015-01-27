@@ -24,4 +24,6 @@ case class HttpPartConfig(
   @(ApiModelProperty @field)(dataType = "integer", required = false, allowableValues = "range[0, Infinity]") alertAbsoluteThreshold: Option[Int] = None,
   @(ApiModelProperty @field)(dataType = "float", required = false, allowableValues = "range[0, 100]") alertPercentThreshold: Option[Double] = None,
   @(ApiModelProperty @field)(dataType = "integer", required = true, allowableValues = "range[0, Infinity]", value = "in ms") alertInterval: FiniteDuration,
-  @(ApiModelProperty @field)(dataType = "string", required = false) alertMailRecipients: Option[String] = None)
+  @(ApiModelProperty @field)(dataType = "string", required = false) alertMailRecipients: Option[String] = None,
+  @(ApiModelProperty @field)(required = true) localContentsEnabled: Boolean = false,
+  @(ApiModelProperty @field)(dataType = "string", required = false) localContents: Option[String] = None)
