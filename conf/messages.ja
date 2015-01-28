@@ -74,7 +74,9 @@ parts.section.localContents=ローカルコンテンツ設定
 parts.localContents.enabled=有効
 parts.localContents.disabled=無効
 parts.localContents.contents=コンテンツ
-parts.localContents.invalid.contents=JSONを入力してください。
+parts.localContents.validateJson=JSON確認
+parts.localContents.contents.valid=有効なJSONです
+parts.localContents.contents.invalid=無効なJSONです
 
 tryIt.title={0}の送信テスト
 tryIt.disable=無効にする

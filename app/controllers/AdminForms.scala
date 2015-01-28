@@ -149,7 +149,7 @@ object AdminForms {
       "alertMailRecipients" -> optional(text),
       "localContentsConfig" -> mapping(
         "enabled" -> boolean,
-        "contents" -> optional(text.verifying(scala.util.parsing.json.JSON.parseRaw(_).isDefined))
+        "contents" -> optional(text)
       )(LocalContentsConfig.apply)(LocalContentsConfig.unapply)
     )(PartData.apply)(PartData.unapply)
   )

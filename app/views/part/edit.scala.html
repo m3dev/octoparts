@@ -29,15 +29,31 @@
         $("#editPart").validationEngine({
             prettySelect : true
         });
-    });
 
-    function validateJsonString(field) {
-        try {
-            JSON.parse(field.val());
-        } catch (e) {
-            return "@Messages("parts.localContents.invalid.contents")";
+        var localContentsConfigContents = $("#localContentsConfig_contents");
+        var localContents = $("#localContents");
+
+        $("#jsonValidateButton").click(function () {
+            var valid = isValidJsonString(localContentsConfigContents.val());
+            localContents.toggleClass("has-success", valid);
+            localContents.toggleClass("has-error", !valid);
+            localContentsConfigContents.popover("show");
+        });
+
+        localContentsConfigContents.popover({trigger: "manual", content: function() {
+            var valid = isValidJsonString($(this).val());
+            return valid ? '@Messages("parts.localContents.contents.valid")' : '@Messages("parts.localContents.contents.invalid")';
+        }});
+
+        function isValidJsonString(s) {
+            try {
+                JSON.parse(s);
+                return true;
+            } catch (e) {
+                return false;
+            }
         }
-    }
+    });
     </script>
 } {
 
@@ -240,14 +256,16 @@
                 </div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" id="localContents">
                 <label for="localContents" class="col-sm-2 control-label">@Messages("parts.localContents.contents")</label>
                 <div class="row">
                     <div class="col-sm-5">
                     @helper.textarea(form("localContentsConfig.contents"),
-                        'class -> "form-control validate[condRequired[funcCall[validateJsonString]]]",
-                        'rows -> 12)
+                        'class -> "form-control",
+                        'rows -> 12,
+                        Symbol("data-placement") -> "top")
                     </div>
+                    <button id="jsonValidateButton" type="button" class="btn btn-default">@Messages("parts.localContents.validateJson")</button>
                 </div>
             </div>
         </fieldset>
