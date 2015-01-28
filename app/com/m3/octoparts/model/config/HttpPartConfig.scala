@@ -12,6 +12,9 @@ import scala.util.Try
 /**
  * Model for holding configuration data for a Http dependency that
  * comes with a companion-object that can populate it from the database
+ *
+ * @param localContentsEnabled whether local contents is enabled
+ * @param localContents the static contents which is used instead of actual contents of this part
  */
 case class HttpPartConfig(id: Option[Long] = None, // None means that the record is new
                           partId: String,
