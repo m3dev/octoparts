@@ -30,6 +30,12 @@ public class Sample implements Closeable {
       return FutureResponseHandler.awaitListEndpoints(apiBuilder.listEndpoints(), 10000L);
     }
 
+    public HttpPartConfig showEndpoint(String partId) {
+        List<HttpPartConfig> results = FutureResponseHandler.awaitListEndpoints(apiBuilder.listEndpoints(partId), 10000L);
+        if (results.isEmpty()) return null;
+        else return results.get(0);
+    }
+
     public Boolean invalidateCache(String cacheGroupName) {
         return FutureResponseHandler.awaitCacheInvalidationResponse(apiBuilder.invalidateCacheGroup(cacheGroupName), 1000L);
     }

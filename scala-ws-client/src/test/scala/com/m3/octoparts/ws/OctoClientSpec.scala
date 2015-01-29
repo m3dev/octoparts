@@ -16,7 +16,6 @@ import org.mockito.Matchers._
 import play.api.mvc.RequestHeader
 import play.api.mvc.Results.EmptyContent
 import play.api.test.FakeRequest
-import scala.concurrent.duration._
 
 import scala.language.postfixOps
 import scala.concurrent.Future
@@ -43,6 +42,7 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
 
     def mockWSHolder(fWSRespPost: Future[WSResponse], fWSRespGet: Future[WSResponse]): WSRequestHolder = {
       val mockWS = mock[WSRequestHolder]
+      when(mockWS.withQueryString(anyVararg())).thenReturn(mockWS)
       when(mockWS.get()).thenReturn(fWSRespGet)
       when(mockWS.post(anyObject[JsValue])(anyObject(), anyObject())).thenReturn(fWSRespPost)
       when(mockWS.post(anyObject[EmptyContent])(anyObject(), anyObject())).thenReturn(fWSRespPost)
@@ -103,7 +103,8 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
 
     def mockSubject(respPost: Future[WSResponse], respGet: Future[WSResponse], baseURL: String = "http://bobby.com/") = new OctoClientLike {
       val baseUrl = baseURL
-      def wsHolderFor(url: String): WSRequestHolder = mockWSHolder(respPost, respGet)
+      protected val clientTimeout = 10 seconds
+      def wsHolderFor(url: String, timeout: FiniteDuration): WSRequestHolder = mockWSHolder(respPost, respGet)
       def rescuer[A](obj: => A) = PartialFunction.empty
       protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
       protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Seq.empty
@@ -191,8 +192,9 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
         val wsHolderCreator = mockWSHolderCreator
         val subject = new OctoClientLike {
           val baseUrl = "http://bobby.com"
-          def wsHolderFor(url: String): WSRequestHolder = wsHolderCreator.apply(url)
+          def wsHolderFor(url: String, timeout: FiniteDuration): WSRequestHolder = wsHolderCreator.apply(url)
           def rescuer[A](obj: => A): PartialFunction[Throwable, A] = PartialFunction.empty
+          protected val clientTimeout = 10 seconds
           protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
           protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Seq.empty
         }

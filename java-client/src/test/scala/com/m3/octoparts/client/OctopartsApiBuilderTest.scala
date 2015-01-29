@@ -2,6 +2,7 @@ package com.m3.octoparts.client
 
 import java.nio.charset.StandardCharsets
 
+import com.fasterxml.jackson.databind.ObjectReader
 import com.m3.octoparts.model.config.ParamType
 import com.m3.octoparts.model.{ HttpMethod, AggregateRequest }
 import com.m3.octoparts.model.config.json.HttpPartConfig
@@ -60,7 +61,8 @@ class OctopartsApiBuilderTest extends FunSpec with BeforeAndAfterAll with Matche
                |    "alertPercentThreshold": 5,
                |    "alertInterval": 60000
                |  }""".stripMargin
-    val partConfig = OctopartsApiBuilder.Mapper.reader(classOf[HttpPartConfig]).readValue[HttpPartConfig](source)
+    val reader: ObjectReader = OctopartsApiBuilder.Mapper.reader(classOf[HttpPartConfig])
+    val partConfig = reader.readValue[HttpPartConfig](source)
     partConfig.method should be(HttpMethod.Put)
     partConfig.parameters.head.paramType should be(ParamType.Header)
   }

@@ -25,8 +25,9 @@
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/languages/jquery.validationEngine-@{lang.language}.min.js"></script>
     <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/validationEngine.jquery.min.css"/>
     <script type="text/javascript">
-    $(document).ready(function(){
-        $("#editPart").validationEngine({
+    $(document).ready(function() {
+        var form = $('#editPart');
+        form.validationEngine({
             prettySelect : true
         });
 
@@ -53,6 +54,22 @@
                 return false;
             }
         }
+
+        form.on('submit', function(e) {
+            var partIdInput = $('#partId');
+            var origPartId = partIdInput.data('orig-value');
+            var newPartId = partIdInput.val();
+            if (!!origPartId && origPartId !== newPartId) {
+                // partId has been changed
+                return confirm(
+                    'DANGER: You are changing the part ID from "' + origPartId + '" to "' + newPartId + '"\n\n' +
+                    'Are you sure you want to do this?!\n\n' +
+                    'Any Octoparts client service that relies on the old ID will be adversely affected.');
+            } else {
+                // OK to submit form
+                return true;
+            }
+        });
     });
     </script>
 } {
@@ -67,7 +84,9 @@
                 <label for="id" class="col-sm-2 control-label">@Messages("parts.partId")</label>
                 <div class="row">
                     <div class="col-sm-5">
-                        @helper.inputText(form("partId"), 'class -> "form-control validate[required]")
+                        @helper.inputText(form("partId"),
+                            'class -> "form-control validate[required]",
+                            Symbol("data-orig-value") -> form("partId").value.getOrElse(""))
                     </div>
                 </div>
             </div>
