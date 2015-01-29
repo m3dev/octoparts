@@ -2,7 +2,7 @@ package controllers
 
 import com.m3.octoparts.model.config.{ PartParam, CacheGroup }
 import com.m3.octoparts.support.mocks.ConfigDataMocks
-import controllers.AdminForms.PartData
+import controllers.AdminForms.{ LocalContentsConfig, PartData }
 import org.scalatest.{ FunSpec, Matchers }
 
 class AdminFormsSpec extends FunSpec with Matchers with ConfigDataMocks {
@@ -25,7 +25,8 @@ class AdminFormsSpec extends FunSpec with Matchers with ConfigDataMocks {
       alertInterval = None,
       alertAbsoluteThreshold = None,
       alertPercentThreshold = None,
-      alertMailRecipients = None)
+      alertMailRecipients = None,
+      localContentsConfig = LocalContentsConfig(enabled = false, contents = None))
 
     describe("#toNewHttpPartConfig") {
       it("should trim leading and trailing spaces from the partId") {

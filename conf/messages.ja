@@ -71,6 +71,13 @@ parts.alertMail.interval.label=間隔（秒）
 parts.alertMail.selectOne=どちらか指定必須、両方指定も可能
 parts.alertMail.none=送信しません
 parts.alertMail.enabled=有効
+parts.section.localContents=ローカルコンテンツ設定
+parts.localContents.enabled=有効
+parts.localContents.disabled=無効
+parts.localContents.contents=コンテンツ
+parts.localContents.validateJson=JSON確認
+parts.localContents.contents.valid=有効なJSONです
+parts.localContents.contents.invalid=無効なJSONです
 
 tryIt.title={0}の送信テスト
 tryIt.disable=無効にする

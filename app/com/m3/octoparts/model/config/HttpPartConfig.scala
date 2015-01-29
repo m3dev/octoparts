@@ -12,6 +12,9 @@ import scala.util.Try
 /**
  * Model for holding configuration data for a Http dependency that
  * comes with a companion-object that can populate it from the database
+ *
+ * @param localContentsEnabled whether local contents is enabled
+ * @param localContents the static contents which is used instead of actual contents of this part
  */
 case class HttpPartConfig(id: Option[Long] = None, // None means that the record is new
                           partId: String,
@@ -30,6 +33,8 @@ case class HttpPartConfig(id: Option[Long] = None, // None means that the record
                           alertPercentThreshold: Option[Double],
                           alertInterval: FiniteDuration,
                           alertMailRecipients: Option[String],
+                          localContentsEnabled: Boolean,
+                          localContents: Option[String],
                           createdAt: DateTime,
                           updatedAt: DateTime) extends ConfigModel[HttpPartConfig] {
 
@@ -79,7 +84,9 @@ object HttpPartConfig {
       alertAbsoluteThreshold = config.alertAbsoluteThreshold,
       alertPercentThreshold = config.alertPercentThreshold,
       alertInterval = config.alertInterval,
-      alertMailRecipients = config.alertMailRecipients
+      alertMailRecipients = config.alertMailRecipients,
+      localContentsEnabled = config.localContentsEnabled,
+      localContents = config.localContents
     )
   }
 
@@ -101,6 +108,8 @@ object HttpPartConfig {
       alertPercentThreshold = config.alertPercentThreshold,
       alertInterval = config.alertInterval,
       alertMailRecipients = config.alertMailRecipients,
+      localContentsEnabled = config.localContentsEnabled,
+      localContents = config.localContents,
       createdAt = DateTime.now,
       updatedAt = DateTime.now
     )
