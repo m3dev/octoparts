@@ -1,10 +1,13 @@
 package com.m3.octoparts.support.mocks
 
+import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.model.HttpMethod._
 import com.m3.octoparts.model.config.ParamType._
 import com.m3.octoparts.model.config._
+import com.m3.octoparts.model.{ CacheControl, PartResponse, PartRequest, RequestMeta }
 import org.joda.time.DateTime
 
+import scala.concurrent.duration
 import scala.concurrent.duration._
 
 /**
@@ -66,4 +69,40 @@ trait ConfigDataMocks {
     updatedAt = now
   )
 
+  def mockPartRequestInfo = PartRequestInfo(
+    requestMeta = mockRequestMeta,
+    partRequest = mockPartRequest,
+    noCache = false
+  )
+
+  def mockRequestMeta = RequestMeta(
+    id = "id",
+    serviceId = Some("serviceId"),
+    userId = Some("uesrId"),
+    sessionId = Some("sessionId"),
+    requestUrl = Some("https://example.com/"),
+    userAgent = Some("userAgent"),
+    timeout = Some(FiniteDuration.apply(30, duration.SECONDS))
+  )
+
+  def mockPartRequest = PartRequest(
+    partId = "partId",
+    id = Some("id"),
+    params = Nil
+  )
+
+  def mockPartResponse = PartResponse(
+    partId = "pardId",
+    id = "id",
+    cookies = Nil,
+    statusCode = Some(200),
+    mimeType = Some("text/plain"),
+    charset = Some("UTF-8"),
+    cacheControl = CacheControl.NotSet,
+    contents = Some("contents"),
+    warnings = Seq("warning"),
+    errors = Seq("errors"),
+    retrievedFromCache = false,
+    retrievedFromLocalContents = true
+  )
 }
