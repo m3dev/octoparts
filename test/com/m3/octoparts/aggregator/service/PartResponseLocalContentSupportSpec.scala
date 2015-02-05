@@ -49,7 +49,7 @@ class PartResponseLocalContentSupportSpec extends FlatSpec
       resp should not be theSameInstanceAs(partResponseFromSuper)
       resp should be(PartResponse(
         partId = "something",
-        id = "something",
+        id = "id",
         statusCode = Some(200),
         contents = Some("{}"),
         retrievedFromLocalContents = true

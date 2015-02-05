@@ -21,7 +21,7 @@ trait PartResponseLocalContentSupport extends PartRequestServiceBase {
   private def createPartResponse(ci: HttpPartConfig,
                                  partRequestInfo: PartRequestInfo) = PartResponse(
     ci.partId,
-    id = ci.partId,
+    id = partRequestInfo.partRequestId,
     statusCode = Some(200),
     contents = ci.localContents,
     retrievedFromLocalContents = true
