@@ -19,8 +19,14 @@ object AggregateResponseEnrichment {
 
   implicit class RichPartResponse(val part: PartResponse) extends AnyVal {
 
+    /**
+     * @return The partId and the request-specific id. Used to uniquely identify parts when printing messages.
+     */
     def fullId: String = if (part.id == part.partId) part.id else s"${part.partId} (${part.id})"
 
+    /**
+     * @return [[PartResponse.contents]] only if there is some non-blank contents.
+     */
     def tryContents: Try[String] = {
       part.contents match {
         case Some(contents) if StringUtils.isNotBlank(contents) => Success(contents)
@@ -28,10 +34,17 @@ object AggregateResponseEnrichment {
       }
     }
 
+    /**
+     * Prints all parts warnings (deprecation...)
+     */
     def printWarnings(): Unit = for (warning <- part.warnings) {
       logger.warn(s"In part $fullId: $warning")
     }
 
+    /**
+     * Prints [[PartResponse.warnings]], and try to extract [[PartResponse.contents]] only if there were no [[PartResponse.errors]] .
+     * @return
+     */
     def tryContentsIfNoError: Try[String] = {
       printWarnings()
       if (part.errors.isEmpty) tryContents else Failure(OctopartsException(part.errors))
@@ -55,6 +68,9 @@ object AggregateResponseEnrichment {
       }
     }
 
+    /**
+     * Same as [[tryJson]] but only tries it when there is no [[PartResponse.errors]]
+     */
     def tryJsonIfNoError[A: Reads]: Try[A] = {
       for {
         contents <- tryContentsIfNoError
