@@ -231,6 +231,8 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
       observed.description should be(expected.description)
       observed.uriToInterpolate should be(expected.uriToInterpolate)
       observed.method should be(expected.method)
+      observed.localContentsEnabled should be(expected.localContentsEnabled)
+      observed.localContents should be(expected.localContents)
 
       observedHystrixConfig.commandKey should be(expectedHystrixConfig.commandKey)
       observedHystrixConfig.commandGroupKey should be(expectedHystrixConfig.commandGroupKey)
@@ -259,6 +261,8 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
             alertPercentThreshold = Some(50),
             alertInterval = 5.minutes,
             alertMailRecipients = Some("c-birchall@m3.com"),
+            localContentsEnabled = true,
+            localContents = Some("{}"),
             createdAt = DateTime.now,
             updatedAt = DateTime.now
           )
@@ -288,6 +292,8 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
           alertPercentThreshold = Some(50),
           alertInterval = 5.minutes,
           alertMailRecipients = Some("v-pericart@m3.com"),
+          localContentsEnabled = true,
+          localContents = Some("{}"),
           createdAt = DateTime.now,
           updatedAt = DateTime.now
         )

@@ -53,6 +53,7 @@ case class ResponseMeta(@(ApiModelProperty @field)(required = true)@BeanProperty
  * @param errors
  * @param warnings
  * @param retrievedFromCache
+ * @param retrievedFromLocalContents
  *
  */
 case class PartResponse(@(ApiModelProperty @field)(required = true)@BeanProperty partId: String,
@@ -65,7 +66,8 @@ case class PartResponse(@(ApiModelProperty @field)(required = true)@BeanProperty
                         @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty contents: Option[String] = None,
                         @BeanProperty warnings: Seq[String] = Nil,
                         @BeanProperty errors: Seq[String] = Nil,
-                        @(ApiModelProperty @field)(required = true)@BooleanBeanProperty retrievedFromCache: Boolean = false)
+                        @(ApiModelProperty @field)(required = true)@BooleanBeanProperty retrievedFromCache: Boolean = false,
+                        @(ApiModelProperty @field)(required = true)@BooleanBeanProperty retrievedFromLocalContents: Boolean = false)
 
 /**
  * Immutable wrapper for cookies

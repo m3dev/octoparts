@@ -53,7 +53,9 @@ class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
         alertAbsoluteThreshold = Some(1000),
         alertPercentThreshold = Some(33.0),
         alertInterval = 10 minutes,
-        alertMailRecipients = Some("l-chan@m3.com"))
+        alertMailRecipients = Some("l-chan@m3.com"),
+        localContentsEnabled = true,
+        localContents = Some("{}"))
       jsonModel should be(expectedModel)
     }
 

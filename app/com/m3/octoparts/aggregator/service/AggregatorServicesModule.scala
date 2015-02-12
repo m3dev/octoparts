@@ -17,7 +17,7 @@ class AggregatorServicesModule extends Module {
   bind[PartRequestServiceBase] to new PartRequestService(
     inject[ConfigsRepository],
     inject[HttpHandlerFactory]
-  ) with PartResponseCachingSupport {
+  ) with PartResponseCachingSupport with PartResponseLocalContentSupport {
     val cacheOps = inject[CacheOps]
   }
 
