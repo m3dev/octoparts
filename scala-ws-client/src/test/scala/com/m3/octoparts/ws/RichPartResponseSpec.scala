@@ -1,7 +1,7 @@
 package com.m3.octoparts.ws
 
 import com.m3.octoparts.model.PartResponse
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.{ FunSpec, Matchers }
 
 import scala.util.Success
 
@@ -15,11 +15,11 @@ class RichPartResponseSpec extends FunSpec with Matchers {
   }
 
   describe("#tryContentsIfNoError") {
-    it ("should stop if there are errors") {
+    it("should stop if there are errors") {
       val partResponse = PartResponse("partId", "id", contents = Some("woot!"), errors = Seq("Oops"))
       partResponse.tryContentsIfNoError.isFailure shouldBe true
     }
-    it ("should not stop for mere warnings") {
+    it("should not stop for mere warnings") {
       val partResponse = PartResponse("partId", "id", contents = Some("woot!"), warnings = Seq("Oops"))
       partResponse.tryContentsIfNoError shouldBe Success("woot!")
     }

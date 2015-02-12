@@ -13,7 +13,7 @@ import scala.util.{ Failure, Success, Try }
 
 object AggregateResponseEnrichment {
 
-  case class OctopartsException(errors: Seq[String]) extends RuntimeException(errors.mkString(SystemUtils.LINE_SEPARATOR))
+  case class OctopartsException(partResponse: PartResponse) extends RuntimeException(partResponse.errors.mkString(SystemUtils.LINE_SEPARATOR))
 
   private val logger = Logger("com.m3.octoparts.AggregateResponseEnrichment")
 
@@ -47,7 +47,7 @@ object AggregateResponseEnrichment {
      */
     def tryContentsIfNoError: Try[String] = {
       printWarnings()
-      if (part.errors.isEmpty) tryContents else Failure(OctopartsException(part.errors))
+      if (part.errors.isEmpty) tryContents else Failure(OctopartsException(part))
     }
 
     /**
@@ -83,7 +83,7 @@ object AggregateResponseEnrichment {
   }
 
   /**
-   * Convenience methods to make it easier to work with [[com.m3.octoparts.model.AggregateResponse]]
+   * Convenience methods to make it easier to work with [[AggregateResponse]]
    */
   implicit class RichAggregateResponse(val aggResp: AggregateResponse) extends AnyVal {
 
@@ -118,6 +118,10 @@ object AggregateResponseEnrichment {
       case Success(a) => Some(a)
       case Failure(failure) =>
         logger.warn(s"Object not retrievable from part response: $id", failure)
+        failure match {
+          case OctopartsException(pr) => logger.debug(s"Part response: $pr")
+          case _ =>
+        }
         None
     }
 
