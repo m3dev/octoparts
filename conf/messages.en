@@ -45,6 +45,7 @@ parts.hystrix.commandKey=Command key
 parts.hystrix.commandGroupKey=Command group
 parts.hystrix.timeoutInMs=Timeout
 parts.hystrix.timeoutInMs.label=Timeout (ms)
+parts.hystrix.localContentsAsFallback=Use local contents as fallback
 parts.hystrix.none.title=Error!
 parts.hystrix.none.body=The Hystrix configuration is missing.
 parts.section.cache=Cache settings

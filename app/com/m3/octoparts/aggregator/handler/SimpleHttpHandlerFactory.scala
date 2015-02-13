@@ -20,7 +20,7 @@ class SimpleHttpHandlerFactory(httpClientPool: HttpClientPool)(
       config.method,
       config.additionalValidStatuses,
       config.parameters,
-      HystrixExecutor(config.hystrixConfigItem)
+      HystrixExecutor(config)
     )
   }
 

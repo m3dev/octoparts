@@ -120,10 +120,11 @@ class AdminControllerSpec extends FunSpec
     "description" -> "stuff",
     "uri" -> "http://www.example2.com",
     "method" -> "post",
-    "commandKey" -> "commandKey",
-    "commandGroupKey" -> "commandGroupKey",
-    "timeoutInMs" -> "5000",
-    "threadPoolConfigId" -> "3"
+    "hystrixConfig.commandKey" -> "commandKey",
+    "hystrixConfig.commandGroupKey" -> "commandGroupKey",
+    "hystrixConfig.timeoutInMs" -> "5000",
+    "hystrixConfig.threadPoolConfigId" -> "3",
+    "hystrixConfig.localContentsAsFallback" -> "true"
   )
 
   it("should show a list of parts") {

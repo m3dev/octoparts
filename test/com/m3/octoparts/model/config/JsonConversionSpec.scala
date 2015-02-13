@@ -45,8 +45,9 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
       threadPoolConfig <- arbThreadPoolConfig.arbitrary
       commandKey <- Arbitrary.arbString.arbitrary
       commandGroupKey <- Arbitrary.arbString.arbitrary
+      localContentsAsFallback <- Arbitrary.arbBool.arbitrary
     } yield {
-      json.HystrixConfig(timeout, threadPoolConfig, commandKey, commandGroupKey)
+      json.HystrixConfig(timeout, threadPoolConfig, commandKey, commandGroupKey, localContentsAsFallback)
     }
   }
 

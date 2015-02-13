@@ -19,10 +19,7 @@ object AdminForms {
       uri: String,
       method: String,
       additionalValidStatuses: Option[String],
-      commandKey: String,
-      commandGroupKey: String,
-      timeoutInMs: Long,
-      threadPoolConfigId: Long,
+      hystrixConfig: HystrixConfigData,
       ttl: Option[Long],
       cacheGroupNames: Seq[String],
       alertMailsEnabled: Boolean,
@@ -42,10 +39,11 @@ object AdminForms {
       method = HttpMethod.withName(data.method),
       additionalValidStatuses = HttpPartConfig.parseValidStatuses(data.additionalValidStatuses.filterNot(_.isEmpty)),
       hystrixConfig = Some(new HystrixConfig(
-        commandKey = data.commandKey,
-        commandGroupKey = data.commandGroupKey,
-        threadPoolConfigId = Some(data.threadPoolConfigId),
-        timeoutInMs = data.timeoutInMs,
+        commandKey = data.hystrixConfig.commandKey,
+        commandGroupKey = data.hystrixConfig.commandGroupKey,
+        threadPoolConfigId = Some(data.hystrixConfig.threadPoolConfigId),
+        timeoutInMs = data.hystrixConfig.timeoutInMs,
+        localContentsAsFallback = data.hystrixConfig.localContentsAsFallback,
         createdAt = DateTime.now,
         updatedAt = DateTime.now
       )),
@@ -57,6 +55,7 @@ object AdminForms {
       alertAbsoluteThreshold = data.alertAbsoluteThreshold,
       alertPercentThreshold = data.alertPercentThreshold.map(_.toDouble),
       alertMailRecipients = data.alertMailRecipients,
+
       localContentsEnabled = data.localContentsConfig.enabled,
       localContents = data.localContentsConfig.contents,
       createdAt = DateTime.now,
@@ -72,10 +71,11 @@ object AdminForms {
       method = HttpMethod.withName(data.method),
       additionalValidStatuses = HttpPartConfig.parseValidStatuses(data.additionalValidStatuses.filterNot(_.isEmpty)),
       hystrixConfig = Some(originalPart.hystrixConfigItem.copy(
-        commandKey = data.commandKey,
-        commandGroupKey = data.commandGroupKey,
-        threadPoolConfigId = Some(data.threadPoolConfigId),
-        timeoutInMs = data.timeoutInMs,
+        commandKey = data.hystrixConfig.commandKey,
+        commandGroupKey = data.hystrixConfig.commandGroupKey,
+        threadPoolConfigId = Some(data.hystrixConfig.threadPoolConfigId),
+        localContentsAsFallback = data.hystrixConfig.localContentsAsFallback,
+        timeoutInMs = data.hystrixConfig.timeoutInMs,
         updatedAt = DateTime.now
       )),
       deprecatedInFavourOf = data.deprecatedTo,
@@ -102,10 +102,13 @@ object AdminForms {
       uri = part.uriToInterpolate,
       method = part.method.toString,
       additionalValidStatuses = Some(part.additionalValidStatuses.mkString(",")).filterNot(_.isEmpty),
-      commandKey = part.hystrixConfigItem.commandKey,
-      commandGroupKey = part.hystrixConfigItem.commandGroupKey,
-      timeoutInMs = part.hystrixConfigItem.timeoutInMs,
-      threadPoolConfigId = part.hystrixConfigItem.threadPoolConfigId.get,
+      hystrixConfig = HystrixConfigData(
+        commandKey = part.hystrixConfigItem.commandKey,
+        commandGroupKey = part.hystrixConfigItem.commandGroupKey,
+        timeoutInMs = part.hystrixConfigItem.timeoutInMs,
+        threadPoolConfigId = part.hystrixConfigItem.threadPoolConfigId.get,
+        localContentsAsFallback = part.hystrixConfigItem.localContentsAsFallback
+      ),
       ttl = part.cacheTtl.map(_.toSeconds),
       cacheGroupNames = part.cacheGroups.map(_.name).toSeq,
       alertMailsEnabled = part.alertMailsEnabled,
@@ -136,10 +139,13 @@ object AdminForms {
       "uri" -> text,
       "method" -> text.verifying(string => HttpMethod.values.exists(_.toString == string)),
       "additionalValidStatuses" -> optional(text),
-      "commandKey" -> text,
-      "commandGroupKey" -> text,
-      "timeoutInMs" -> longNumber,
-      "threadPoolConfigId" -> longNumber,
+      "hystrixConfig" -> mapping(
+        "commandKey" -> text,
+        "commandGroupKey" -> text,
+        "timeoutInMs" -> longNumber,
+        "threadPoolConfigId" -> longNumber,
+        "localContentsAsFallback" -> boolean
+      )(HystrixConfigData.apply)(HystrixConfigData.unapply),
       "ttl" -> optional(longNumber),
       "cacheGroupNames" -> seq(text),
       "alertMailsEnabled" -> boolean,
@@ -157,6 +163,13 @@ object AdminForms {
   case class LocalContentsConfig(
     enabled: Boolean,
     contents: Option[String])
+
+  case class HystrixConfigData(
+    commandKey: String,
+    commandGroupKey: String,
+    timeoutInMs: Long,
+    threadPoolConfigId: Long,
+    localContentsAsFallback: Boolean)
 
   case class ParamData(
     outputName: String,

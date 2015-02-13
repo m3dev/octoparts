@@ -150,7 +150,7 @@
                 <label for="commandKey" class="col-sm-2 control-label">@Messages("parts.hystrix.commandKey")</label>
                 <div class="row">
                     <div class="col-sm-5">
-                        @helper.inputText(form("commandKey"), 'class -> "form-control validate[required]")
+                        @helper.inputText(form("hystrixConfig.commandKey"), 'class -> "form-control validate[required]")
                     </div>
                 </div>
             </div>
@@ -159,7 +159,7 @@
                 <label for="commandGroupKey" class="col-sm-2 control-label">@Messages("parts.hystrix.commandGroupKey")</label>
                 <div class="row">
                     <div class="col-sm-5">
-                        @helper.inputText(form("commandGroupKey"), 'class -> "form-control validate[required]")
+                        @helper.inputText(form("hystrixConfig.commandGroupKey"), 'class -> "form-control validate[required]")
                     </div>
                 </div>
             </div>
@@ -168,7 +168,16 @@
                 <label for="timeoutInMs" class="col-sm-2 control-label">@Messages("parts.hystrix.timeoutInMs.label")</label>
                 <div class="row">
                     <div class="col-sm-5">
-                        @helper.inputText(form("timeoutInMs"), 'class -> "form-control validate[required]")
+                        @helper.inputText(form("hystrixConfig.timeoutInMs"), 'class -> "form-control validate[required]")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="commandKey" class="col-sm-2 control-label">@Messages("parts.hystrix.localContentsAsFallback")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                    @helper.checkbox(form("hystrixConfig.localContentsAsFallback"), 'class -> "form-control validate[required]")
                     </div>
                 </div>
             </div>
@@ -178,7 +187,7 @@
                 <div class="row">
                     <div class="col-sm-5">
                         @helper.select(
-                            field = form("threadPoolConfigId"),
+                            field = form("hystrixConfig.threadPoolConfigId"),
                             options = threadPoolConfigs.map(tpc => (tpc.id.get.toString, s"${tpc.threadPoolKey} (core size: ${tpc.coreSize})")),
                             args = 'class -> "form-control validate[required]")
                     </div>

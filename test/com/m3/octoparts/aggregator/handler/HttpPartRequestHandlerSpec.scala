@@ -151,7 +151,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
       def uriToInterpolate = stringToInterpolate
 
       val hystrixExecutor = new HystrixExecutor(null) {
-        override def future[T](f: => T) = Future.successful(f)
+        override def future[T](f: => T, fallbackTransform: Option[String] => T) = Future.successful(f)
       }
 
       def httpMethod = Get

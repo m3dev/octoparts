@@ -51,6 +51,7 @@ trait ConfigDataMocks {
     commandGroupKey = "GroupKey",
     timeoutInMs = 50L,
     threadPoolConfig = Some(mockThreadConfig),
+    localContentsAsFallback = false,
     createdAt = now,
     updatedAt = now
   )

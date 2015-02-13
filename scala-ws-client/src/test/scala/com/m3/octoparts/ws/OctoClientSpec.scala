@@ -77,7 +77,8 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
           coreSize = 2,
           queueSize = 256),
         commandKey = "command",
-        commandGroupKey = "GroupKey"),
+        commandGroupKey = "GroupKey",
+        false),
       additionalValidStatuses = Set(302),
       parameters = Set(
         PartParam(
