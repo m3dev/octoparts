@@ -1,8 +1,7 @@
 package com.m3.octoparts.hystrix
 
-import com.m3.octoparts.model.config.{ HttpPartConfig, HystrixConfig }
+import com.m3.octoparts.model.config.HttpPartConfig
 import com.netflix.hystrix.HystrixCommand
-import com.netflix.hystrix.HystrixCommand.Setter
 
 import scala.concurrent.Future
 
