@@ -12,9 +12,14 @@ trait PartResponseLocalContentSupport extends PartRequestServiceBase {
                                  partRequestInfo: PartRequestInfo,
                                  params: Map[ShortPartParam, Seq[String]]): Future[PartResponse] = {
     if (ci.localContentsEnabled) {
-      Future(createPartResponse(ci, partRequestInfo))
+      Future.successful(createPartResponse(ci, partRequestInfo))
     } else {
-      super.processWithConfig(ci, partRequestInfo, params)
+      super.processWithConfig(ci, partRequestInfo, params).map { pr =>
+        if (pr.statusCode.contains(503) && ci.hystrixConfigItem.localContentsAsFallback)
+          createPartResponse(ci, partRequestInfo)
+        else
+          pr
+      }
     }
   }
 
@@ -22,7 +27,7 @@ trait PartResponseLocalContentSupport extends PartRequestServiceBase {
                                  partRequestInfo: PartRequestInfo) = PartResponse(
     ci.partId,
     id = partRequestInfo.partRequestId,
-    statusCode = Some(200),
+    statusCode = Some(203),
     contents = ci.localContents,
     retrievedFromLocalContents = true
   )
