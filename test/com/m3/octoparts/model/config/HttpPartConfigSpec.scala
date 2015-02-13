@@ -35,7 +35,8 @@ class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
             coreSize = 2,
             queueSize = 256),
           commandKey = "command",
-          commandGroupKey = "GroupKey"),
+          commandGroupKey = "GroupKey",
+          false),
         additionalValidStatuses = Set(302),
         parameters = Set(
           json.PartParam(

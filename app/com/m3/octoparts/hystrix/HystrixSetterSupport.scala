@@ -23,6 +23,6 @@ trait HystrixSetterSupport {
       andThreadPoolPropertiesDefaults(threadPoolProperties).
       andCommandPropertiesDefaults(HystrixCommandProperties.Setter().
         withExecutionIsolationThreadTimeoutInMilliseconds(config.timeoutInMs.toInt).
-        withFallbackEnabled(false))
+        withFallbackEnabled(config.localContentsAsFallback))
   }
 }

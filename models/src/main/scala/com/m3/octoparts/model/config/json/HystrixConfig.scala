@@ -8,4 +8,5 @@ import scala.concurrent.duration.FiniteDuration
 case class HystrixConfig(@(ApiModelProperty @field)(required = true, dataType = "integer", value = "in ms") timeout: FiniteDuration,
                          @(ApiModelProperty @field)(required = true) threadPoolConfig: ThreadPoolConfig,
                          @(ApiModelProperty @field)(required = true) commandKey: String,
-                         @(ApiModelProperty @field)(required = true) commandGroupKey: String)
+                         @(ApiModelProperty @field)(required = true) commandGroupKey: String,
+                         @(ApiModelProperty @field)(required = true) localContentsAsFallback: Boolean)

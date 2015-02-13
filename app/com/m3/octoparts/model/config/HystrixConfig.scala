@@ -18,6 +18,7 @@ object HystrixConfig {
       threadPoolConfig = ThreadPoolConfig.toJsonModel(config.threadPoolConfig.get),
       commandKey = config.commandKey,
       commandGroupKey = config.commandGroupKey,
+      localContentsAsFallback = config.localContentsAsFallback,
       timeout = config.timeoutInMs.millis
     )
   }
@@ -28,6 +29,7 @@ object HystrixConfig {
       commandKey = config.commandKey,
       commandGroupKey = config.commandGroupKey,
       timeoutInMs = config.timeout.toMillis,
+      localContentsAsFallback = config.localContentsAsFallback,
       createdAt = DateTime.now,
       updatedAt = DateTime.now
     )
@@ -36,8 +38,6 @@ object HystrixConfig {
 
 /**
  * Holds the Hystrix Configuration data for a given dependency
- *
- * TODO: Link to a ThreadPoolConfig
  */
 case class HystrixConfig(
     id: Option[Long] = None, // None means the HystrixConfig is new (not inserted yet)
@@ -48,6 +48,7 @@ case class HystrixConfig(
     commandKey: String,
     commandGroupKey: String,
     timeoutInMs: Long = HystrixConfig.defaultTimeout,
+    localContentsAsFallback: Boolean,
     createdAt: DateTime,
     updatedAt: DateTime) extends ConfigModel[HystrixConfig] {
 

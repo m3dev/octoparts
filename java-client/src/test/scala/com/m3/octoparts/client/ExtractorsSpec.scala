@@ -22,7 +22,7 @@ class ExtractorsSpec extends FunSpec with Matchers {
   describe("EndpointListExtractor") {
     it("should extract something that has just been serialized") {
       val configs = Seq(HttpPartConfig("p", "me", "http://localhost", Some(""),
-        HttpMethod.Post, HystrixConfig(5.seconds, ThreadPoolConfig("knitty", 1, 10), "p", "knitty"), alertMailsEnabled = false, alertInterval = 50.minutes))
+        HttpMethod.Post, HystrixConfig(5.seconds, ThreadPoolConfig("knitty", 1, 10), "p", "knitty", false), alertMailsEnabled = false, alertInterval = 50.minutes))
       val serialized = OctopartsApiBuilder.Mapper.writeValueAsBytes(configs)
       EndpointListExtractor.deserialize(new ByteArrayInputStream(serialized)) should equal(SeqWrapper(configs))
     }

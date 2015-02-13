@@ -16,6 +16,7 @@ import com.m3.octoparts.model.{ CacheControl, Cookie }
  * @param cookies maybe a Sequence of cookies
  * @param mimeType maybe a MimeType
  * @param charset maybe a Charset
+ * @param fromFallback whether or not this HTTP response from a fallback
  * @param body maybe a body String
  */
 case class HttpResponse(
@@ -26,4 +27,5 @@ case class HttpResponse(
   mimeType: Option[String] = None,
   charset: Option[String] = None,
   cacheControl: CacheControl = CacheControl.NotSet,
+  fromFallback: Boolean = false,
   body: Option[String] = None)

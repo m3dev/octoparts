@@ -53,11 +53,17 @@ trait HttpPartRequestHandler extends Handler {
    * @return Future[PartResponse]
    */
   def process(partRequestInfo: PartRequestInfo, hArgs: HandlerArguments): Future[PartResponse] = {
-    hystrixExecutor.future {
-      createBlockingHttpRetrieve(partRequestInfo, hArgs).retrieve()
-    }.map {
-      createPartResponse
-    }
+    hystrixExecutor.future(
+      createBlockingHttpRetrieve(partRequestInfo, hArgs).retrieve().copy(),
+      maybeContents => HttpResponse(
+        status = 203, // 203 -> Non-authoritative info
+        body = maybeContents,
+        fromFallback = true,
+        message = "From fallback"
+      )
+    ).map {
+        createPartResponse
+      }
   }
 
   /**
@@ -101,6 +107,7 @@ trait HttpPartRequestHandler extends Handler {
     charset = httpResp.charset,
     cacheControl = httpResp.cacheControl,
     contents = httpResp.body,
+    retrievedFromLocalContents = httpResp.fromFallback,
     errors = if (httpResp.status < 400 || additionalValidStatuses.contains(httpResp.status)) Nil else Seq(httpResp.message)
   )
 

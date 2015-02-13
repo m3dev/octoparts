@@ -50,8 +50,34 @@ class PartResponseLocalContentSupportSpec extends FlatSpec
       resp should be(PartResponse(
         partId = "something",
         id = "id",
-        statusCode = Some(200),
+        statusCode = Some(203),
         contents = Some("{}"),
+        retrievedFromLocalContents = true
+      ))
+    }
+  }
+
+  it should "return response as local contents if localContentsAsFallback is true in Hystrix config and response status is 503" in {
+    val fallbackConfig = mockHttpPartConfig.copy(
+      localContentsEnabled = false,
+      localContents = Some("""{ "hello": "lloyd" }"""),
+      hystrixConfig = Some(mockHystrixConfig.copy(localContentsAsFallback = true, timeoutInMs = 500L)))
+    val partRequestInfo = mockPartRequestInfo
+    val params = Map.empty[ShortPartParam, Seq[String]]
+
+    trait SuperFail extends Super {
+      override def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, Seq[String]]): Future[PartResponse] = {
+        Future.successful(mockPartResponse.copy(statusCode = Some(503)))
+      }
+    }
+    val subject = new SuperFail with PartResponseLocalContentSupport
+
+    whenReady(subject.processWithConfig(fallbackConfig, partRequestInfo, params)) { resp =>
+      resp should be(PartResponse(
+        partId = "something",
+        id = "id",
+        statusCode = Some(203),
+        contents = Some("""{ "hello": "lloyd" }"""),
         retrievedFromLocalContents = true
       ))
     }

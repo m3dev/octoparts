@@ -200,6 +200,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
         threadPoolConfigId = Some(ThreadPoolConfigRepository.save(threadPool)),
         commandKey = "myCommand",
         commandGroupKey = "myCommandGroup",
+        localContentsAsFallback = false,
         createdAt = DateTime.now,
         updatedAt = DateTime.now)
 

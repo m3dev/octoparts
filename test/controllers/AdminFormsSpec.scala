@@ -2,7 +2,7 @@ package controllers
 
 import com.m3.octoparts.model.config.{ PartParam, CacheGroup }
 import com.m3.octoparts.support.mocks.ConfigDataMocks
-import controllers.AdminForms.{ LocalContentsConfig, PartData }
+import controllers.AdminForms.{ HystrixConfigData, LocalContentsConfig, PartData }
 import org.scalatest.{ FunSpec, Matchers }
 
 class AdminFormsSpec extends FunSpec with Matchers with ConfigDataMocks {
@@ -15,10 +15,13 @@ class AdminFormsSpec extends FunSpec with Matchers with ConfigDataMocks {
       uri = "",
       method = "get",
       additionalValidStatuses = None,
-      commandKey = "",
-      commandGroupKey = "",
-      timeoutInMs = 1000L,
-      threadPoolConfigId = 42L,
+      HystrixConfigData(
+        commandKey = "",
+        commandGroupKey = "",
+        timeoutInMs = 1000L,
+        threadPoolConfigId = 42L,
+        localContentsAsFallback = false
+      ),
       cacheGroupNames = Nil,
       ttl = None,
       alertMailsEnabled = false,

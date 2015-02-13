@@ -107,6 +107,8 @@
                 <dd>@hystrixConfigItem.commandGroupKey</dd>
                 <dt>@Messages("parts.hystrix.timeoutInMs")</dt>
                 <dd>@hystrixConfigItem.timeoutInMs</dd>
+                <dt>@Messages("parts.hystrix.localContentsAsFallback")</dt>
+                <dd>@hystrixConfigItem.localContentsAsFallback</dd>
                 <dt>@Messages("threadPools.key")</dt>
                 <dd>@hystrixConfigItem.threadPoolConfigItem.threadPoolKey</dd>
             }
@@ -115,6 +117,14 @@
                 <dd>@Messages("parts.hystrix.none.body")</dd>
             }
         }
+
+        <h3>@Messages("parts.section.localContents")</h3>
+
+        <dt>@Messages("parts.localContents.always")</dt>
+        <dd>@part.config.localContentsEnabled</dd>
+        <dt>@Messages("parts.localContents.contents")</dt>
+        <dd>@part.config.localContents.getOrElse("")</dd>
+
     </dl>
 
     <hr/>
@@ -151,10 +161,4 @@
     }
 
     <hr/>
-    <h2>@Messages("parts.section.localContents")</h2>
-    @if(part.config.localContentsEnabled) {
-        <pre>@part.config.localContents.orNull</pre>
-    } else {
-        <p>@Messages("parts.localContents.disabled")</p>
-    }
 }

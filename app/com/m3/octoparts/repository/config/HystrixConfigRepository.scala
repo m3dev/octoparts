@@ -19,6 +19,7 @@ object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with Timestam
     "threadPoolConfigId" -> SkinnyParamType.Long,
     "commandKey" -> SkinnyParamType.String,
     "commandGroupKey" -> SkinnyParamType.String,
+    "localContentsAsFallback" -> SkinnyParamType.Boolean,
     "timeoutInMs" -> SkinnyParamType.Long
   )
 
@@ -56,6 +57,7 @@ object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with Timestam
     commandKey = rs.get(n.commandKey),
     commandGroupKey = rs.get(n.commandGroupKey),
     timeoutInMs = rs.get(n.timeoutInMs),
+    localContentsAsFallback = rs.get(n.localContentsAsFallback),
     createdAt = rs.get(n.createdAt),
     updatedAt = rs.get(n.updatedAt))
 
