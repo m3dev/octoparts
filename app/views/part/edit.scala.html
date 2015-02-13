@@ -193,6 +193,33 @@
                     </div>
                 </div>
             </div>
+
+            <fieldset>
+                <legend>@Messages("parts.section.localContents")</legend>
+
+                <div class="form-group">
+                    <label for="localContentsEnabled" class="col-sm-2 control-label">@Messages("parts.localContents.always")</label>
+                    <div class="row">
+                        <div class="col-sm-5">
+                        @helper.checkbox(form("localContentsConfig.enabled"))
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="localContents">
+                    <label for="localContents" class="col-sm-2 control-label">@Messages("parts.localContents.contents")</label>
+                    <div class="row">
+                        <div class="col-sm-5">
+                        @helper.textarea(form("localContentsConfig.contents"),
+                            'class -> "form-control",
+                            'rows -> 12,
+                            Symbol("data-placement") -> "top")
+                        </div>
+                        <button id="jsonValidateButton" type="button" class="btn btn-default">@Messages("parts.localContents.validateJson")</button>
+                    </div>
+                </div>
+            </fieldset>
+
         </fieldset>
 
         <fieldset>
@@ -268,32 +295,6 @@
                         @helper.inputText(form("alertMailRecipients"), 'class -> "form-control")
                         <p class="help-block">@Messages("parts.alertMail.recipients.help")</p>
                     </div>
-                </div>
-            </div>
-        </fieldset>
-
-        <fieldset>
-            <legend>@Messages("parts.section.localContents")</legend>
-
-            <div class="form-group">
-                <label for="localContentsEnabled" class="col-sm-2 control-label">@Messages("parts.localContents.enabled")</label>
-                <div class="row">
-                    <div class="col-sm-5">
-                    @helper.checkbox(form("localContentsConfig.enabled"))
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-group" id="localContents">
-                <label for="localContents" class="col-sm-2 control-label">@Messages("parts.localContents.contents")</label>
-                <div class="row">
-                    <div class="col-sm-5">
-                    @helper.textarea(form("localContentsConfig.contents"),
-                        'class -> "form-control",
-                        'rows -> 12,
-                        Symbol("data-placement") -> "top")
-                    </div>
-                    <button id="jsonValidateButton" type="button" class="btn btn-default">@Messages("parts.localContents.validateJson")</button>
                 </div>
             </div>
         </fieldset>

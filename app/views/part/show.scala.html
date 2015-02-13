@@ -117,6 +117,14 @@
                 <dd>@Messages("parts.hystrix.none.body")</dd>
             }
         }
+
+        <h3>@Messages("parts.section.localContents")</h3>
+
+        <dt>@Messages("parts.localContents.always")</dt>
+        <dd>@part.config.localContentsEnabled</dd>
+        <dt>@Messages("parts.localContents.contents")</dt>
+        <dd>@part.config.localContents.getOrElse("")</dd>
+
     </dl>
 
     <hr/>
@@ -153,11 +161,4 @@
     }
 
     <hr/>
-    <h2>@Messages("parts.section.localContents")</h2>
-    <dl>
-        <dt>@Messages("parts.localContents.enabled")</dt>
-        <dd>@part.config.localContentsEnabled</dd>
-        <dt>@Messages("parts.localContents.contents")</dt>
-        <dd>@part.config.localContents.getOrElse("")</dd>
-    </dl>
 }

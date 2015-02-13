@@ -73,6 +73,7 @@ parts.alertMail.selectOne=どちらか指定必須、両方指定も可能
 parts.alertMail.none=送信しません
 parts.alertMail.enabled=有効
 parts.section.localContents=ローカルコンテンツ設定
+parts.localContents.always=いつも使う
 parts.localContents.enabled=有効
 parts.localContents.disabled=無効
 parts.localContents.contents=コンテンツ
