@@ -28,6 +28,8 @@ class CacheModule extends Module {
       new ThreadPoolExecutor(0, poolSize, 1L, TimeUnit.MINUTES, queue, namedThreadFactory))
   }
 
+  bind[ExecutionContext] to cacheExecutor
+
   private def buildMemcachedRawCache(): RawCache = {
     val playConfig = inject[Configuration]
     val tsConfig = playConfig.underlying
