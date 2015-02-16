@@ -8,7 +8,7 @@ resolvers ++= Seq(
 // The Play plugin
 addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.3.7")
 // scoverage for test coverage
-addSbtPlugin("org.scoverage" %% "sbt-scoverage" % "1.0.2")
+addSbtPlugin("org.scoverage" %% "sbt-scoverage" % "1.0.4")
 // to show transitive dependencies as a graph
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.7.4")
 // for code formatting
