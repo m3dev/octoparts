@@ -105,7 +105,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
         val hArgs = Map(
           ShortPartParam("jsonPayload", Body) -> Seq("""{"some":"json"}""")
         )
-        handler.createBlockingHttpRetrieve(partRequestInfo, hArgs).maybeBody should be(Some("""{"some":"json"}"""))
+        handler.createBlockingHttpRetrieve(partRequestInfo, hArgs).maybeBody should be(Some("jsonPayload=%7B%22some%22%3A%22json%22%7D"))
       }
     }
     it("should include custom HTTP headers for request tracing") {

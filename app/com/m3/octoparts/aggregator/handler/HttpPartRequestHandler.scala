@@ -77,8 +77,11 @@ trait HttpPartRequestHandler extends Handler {
       val httpClient = handler.httpClient
       def method = httpMethod
       val uri = new URI(buildUri(hArgs))
-      val maybeBody = hArgs.collectFirst {
-        case (p, values) if p.paramType == ParamType.Body && values.nonEmpty => values.head
+      val maybeBody = {
+        val bodyParams = hArgs.collect {
+          case (p, values) if p.paramType == ParamType.Body && values.nonEmpty => s"${p.outputName}=${URLEncoder.encode(values.head, "UTF-8")}" // TODO: encoding customisable
+        }
+        if (bodyParams.isEmpty) None else Some(bodyParams.mkString("&"))
       }
       val headers = collectHeaders(hArgs) ++ buildTracingHeaders(partRequestInfo)
     }
