@@ -8,6 +8,8 @@ import play.api.libs.json.Json
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
+import PartRequestEnrichment._
+
 /**
  * Sample showing how to use the client.
  */
@@ -43,7 +45,19 @@ object Sample {
   val requests = Seq(
     // A list of the endpoints you want to call, with parameters to send
     PartRequest(partId = "UserProfile", params = Seq(PartRequestParam("uid", "123"))),
-    PartRequest(partId = "LatestNews", params = Seq(PartRequestParam("limit", "10")))
+    PartRequest(partId = "LatestNews", params = Seq(PartRequestParam("limit", "10"))),
+
+    // Example of adding a Json string as the "body" parameter for a request
+    PartRequest(partId = "TrackView", params = Seq(PartRequestParam("uid", "123"))).withBody(Json.obj("hello" -> "world")),
+
+    // Example of adding a UrlEncodedForm string as the "body" parameter for a request
+    PartRequest(
+      partId = "TrackClick",
+      params = Seq(
+        PartRequestParam("uid", "123")
+      )
+    ).withBody(Map("tabs" -> Seq("1", "2", "3")))
+
   )
 
   // Send the requests, get back a Future
