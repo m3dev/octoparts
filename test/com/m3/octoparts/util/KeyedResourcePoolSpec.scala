@@ -18,12 +18,12 @@ class KeyedResourcePoolSpec extends FunSpec with Matchers with ScalaFutures {
       var i = 0
       var j = 0
 
-      def makeNew(k: String) = {
+      protected def makeNew(k: String) = {
         i += 1
         i
       }
 
-      override def onRemove(value: Int): Unit = {
+      protected def onRemove(value: Int): Unit = {
         j += value
       }
     }
@@ -46,23 +46,23 @@ class KeyedResourcePoolSpec extends FunSpec with Matchers with ScalaFutures {
   it("should never return closed items") {
     val firstTime = new MutableBoolean(false)
     val holder = new KeyedResourcePool[String, MutableBoolean] {
-      def makeNew(k: String) = {
+      protected def makeNew(k: String) = {
         if (firstTime.booleanValue()) {
           firstTime.setValue(false)
           // do a map.get within another map.get
-          getOrCreate("a").booleanValue() should be(false)
+          getOrCreate("a").booleanValue() shouldBe false
         }
 
         new MutableBoolean(false)
       }
 
-      def onRemove(value: MutableBoolean) = value.setValue(true) // true represents "closed"
+      protected def onRemove(value: MutableBoolean) = value.setValue(true) // true represents "closed"
     }
 
-    holder.getOrCreate("a").booleanValue() should be(false)
+    holder.getOrCreate("a").booleanValue() shouldBe false
 
     // failure cause bug #85949
-    holder.getOrCreate("a").booleanValue() should be(false)
+    holder.getOrCreate("a").booleanValue() shouldBe false
   }
 
   describe("#getOrCreate") {
@@ -72,13 +72,13 @@ class KeyedResourcePoolSpec extends FunSpec with Matchers with ScalaFutures {
       val subject = new KeyedResourcePool[String, Int] {
         var creates = 0
 
-        def makeNew(k: String) = {
+        protected def makeNew(k: String) = {
           creates = creates + 1
           trieMap.put("state", 1)
           1
         }
 
-        override def onRemove(value: Int): Unit = {
+        protected def onRemove(value: Int): Unit = {
           trieMap.remove("state")
         }
       }
@@ -89,7 +89,7 @@ class KeyedResourcePoolSpec extends FunSpec with Matchers with ScalaFutures {
       val (mutableState, pool) = globalStateAndPool
       val aLotOfSimultaneousGets = Future.sequence((1 to 100).map(_ => Future { pool.getOrCreate("hello") }))
       whenReady(aLotOfSimultaneousGets) { r =>
-        r.forall(_ == 1) should be(true)
+        r.forall(_ == 1) shouldBe true
         mutableState.get("state") should be(Some(1))
         pool.creates should be(1)
       }
@@ -103,7 +103,7 @@ class KeyedResourcePoolSpec extends FunSpec with Matchers with ScalaFutures {
         Future { pool.getOrCreate("hello") }
       })
       whenReady(aLotOfSimultaneousGets) { r =>
-        r.forall(_ == 1) should be(true)
+        r.forall(_ == 1) shouldBe true
         mutableState.get("state") should be(Some(1))
         pool.creates should be(1)
       }

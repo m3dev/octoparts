@@ -1,13 +1,13 @@
 package com.m3.octoparts.support.mocks
 
+import java.nio.charset.StandardCharsets
+
 import com.m3.octoparts.aggregator.PartRequestInfo
-import com.m3.octoparts.model.HttpMethod._
+import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.ParamType._
 import com.m3.octoparts.model.config._
-import com.m3.octoparts.model.{ CacheControl, PartResponse, PartRequest, RequestMeta }
 import org.joda.time.DateTime
 
-import scala.concurrent.duration
 import scala.concurrent.duration._
 
 /**
@@ -32,7 +32,12 @@ trait ConfigDataMocks {
     owner = "somebody",
     uriToInterpolate = "http://random.com",
     description = None,
-    method = Get,
+    method = HttpMethod.Get,
+    httpPoolSize = 5,
+    httpConnectionTimeout = 1.second,
+    httpSocketTimeout = 5.seconds,
+    httpDefaultEncoding = StandardCharsets.US_ASCII,
+    httpProxy = Some("localhost:666"),
     parameters = Set(mockPartParam),
     cacheTtl = Some(60.seconds),
     alertMailsEnabled = true,
@@ -49,7 +54,7 @@ trait ConfigDataMocks {
   def mockHystrixConfig = HystrixConfig(
     commandKey = "command",
     commandGroupKey = "GroupKey",
-    timeoutInMs = 50L,
+    timeout = 50.milliseconds,
     threadPoolConfig = Some(mockThreadConfig),
     localContentsAsFallback = false,
     createdAt = now,
@@ -83,7 +88,7 @@ trait ConfigDataMocks {
     sessionId = Some("sessionId"),
     requestUrl = Some("https://example.com/"),
     userAgent = Some("userAgent"),
-    timeout = Some(FiniteDuration.apply(30, duration.SECONDS))
+    timeout = Some(30.seconds)
   )
 
   def mockPartRequest = PartRequest(

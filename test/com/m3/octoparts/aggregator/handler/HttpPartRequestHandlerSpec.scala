@@ -6,9 +6,9 @@ import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.http.{ HttpClientLike, HttpResponse }
 import com.m3.octoparts.hystrix.{ HystrixExecutor, MockHttpClientComponent }
 import com.m3.octoparts.model.HttpMethod.Get
-import com.m3.octoparts.model.{ PartRequest, RequestMeta, PartResponse }
 import com.m3.octoparts.model.config.ParamType._
 import com.m3.octoparts.model.config._
+import com.m3.octoparts.model.{ PartRequest, PartResponse, RequestMeta }
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpUriRequest
 import org.scalatest._
@@ -145,19 +145,13 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
   def handlerWithHttpClient(client: HttpClientLike): HttpPartRequestHandler = {
     new HttpPartRequestHandler {
       def executionContext = scala.concurrent.ExecutionContext.global
-
       def partId = mockPartId
-
       def uriToInterpolate = stringToInterpolate
-
       val hystrixExecutor = new HystrixExecutor(null) {
         override def future[T](f: => T, fallbackTransform: Option[String] => T) = Future.successful(f)
       }
-
       def httpMethod = Get
-
       val additionalValidStatuses = Set.empty[Int]
-
       def httpClient = client
     }
   }

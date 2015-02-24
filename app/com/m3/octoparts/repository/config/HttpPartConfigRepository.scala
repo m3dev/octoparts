@@ -1,12 +1,14 @@
 package com.m3.octoparts.repository.config
 
+import java.nio.charset.Charset
+
 import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config._
 import scalikejdbc._
 import skinny.orm._
 import skinny.orm.feature.TimestampsFeature
-import skinny.{ AbstractParamType, ParamType => SkinnyParamType }
+import skinny.{ ParamType => SkinnyParamType }
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -23,27 +25,23 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
     "uriToInterpolate" -> SkinnyParamType.String,
     "description" -> SkinnyParamType.String,
     "method" -> SkinnyParamType.String,
-    "additionalValidStatuses" -> IntSetParamType,
+    "additionalValidStatuses" -> ExtraParamType.IntSetParamType,
+    "httpPoolSize" -> SkinnyParamType.Int,
+    "httpConnectionTimeout" -> ExtraParamType.FineDurationParamType,
+    "httpSocketTimeout" -> ExtraParamType.FineDurationParamType,
+    "httpDefaultEncoding" -> SkinnyParamType.String,
+    "httpProxy" -> SkinnyParamType.String,
     "deprecatedInFavourOf" -> SkinnyParamType.String,
     "cacheGroupId" -> SkinnyParamType.Long,
-    "cacheTtl" -> DurationParamType,
+    "cacheTtl" -> ExtraParamType.DurationParamType,
     "alertMailsEnabled" -> SkinnyParamType.Boolean,
     "alertAbsoluteThreshold" -> SkinnyParamType.Int,
     "alertPercentThreshold" -> SkinnyParamType.Double,
-    "alertInterval" -> DurationParamType,
+    "alertInterval" -> ExtraParamType.DurationParamType,
     "alertMailRecipients" -> SkinnyParamType.String,
     "localContentsEnabled" -> SkinnyParamType.Boolean,
     "localContents" -> SkinnyParamType.String
   )
-
-  case object DurationParamType extends AbstractParamType({
-    case d: Duration => d.toSeconds
-  })
-
-  case object IntSetParamType extends AbstractParamType({
-    // this will actually be a Set[Int] but the compiler complains about it.
-    case s: Set[_] => s.mkString(",")
-  })
 
   /**
    * Overridden version of .save to allow us to save nested children objects
@@ -150,6 +148,10 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
     description = rs.get(n.description),
     method = HttpMethod.withName(rs.string(n.method)),
     additionalValidStatuses = HttpPartConfig.parseValidStatuses(rs.get(n.additionalValidStatuses)),
+    httpPoolSize = rs.int(n.httpPoolSize),
+    httpConnectionTimeout = rs.long(n.httpConnectionTimeout).milliseconds,
+    httpSocketTimeout = rs.long(n.httpSocketTimeout).milliseconds,
+    httpDefaultEncoding = Charset.forName(rs.string(n.httpDefaultEncoding)),
     deprecatedInFavourOf = rs.get(n.deprecatedInFavourOf),
     cacheTtl = rs.longOpt(n.cacheTtl).map(_.seconds),
     alertMailsEnabled = rs.get(n.alertMailsEnabled),

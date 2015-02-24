@@ -7,7 +7,7 @@ import com.m3.octoparts.model.config.json.{ HystrixConfig => JsonHystrixConfig }
 import scala.language.postfixOps
 
 object HystrixConfig {
-  val defaultTimeout = (5 seconds).toMillis
+  val defaultTimeout = 5.seconds
 
   /**
    * Returns a [[JsonHystrixConfig]] for a given [[HystrixConfig]]
@@ -19,7 +19,7 @@ object HystrixConfig {
       commandKey = config.commandKey,
       commandGroupKey = config.commandGroupKey,
       localContentsAsFallback = config.localContentsAsFallback,
-      timeout = config.timeoutInMs.millis
+      timeout = config.timeout
     )
   }
 
@@ -28,7 +28,7 @@ object HystrixConfig {
       threadPoolConfig = Some(ThreadPoolConfig.fromJsonModel(config.threadPoolConfig)),
       commandKey = config.commandKey,
       commandGroupKey = config.commandGroupKey,
-      timeoutInMs = config.timeout.toMillis,
+      timeout = config.timeout,
       localContentsAsFallback = config.localContentsAsFallback,
       createdAt = DateTime.now,
       updatedAt = DateTime.now
@@ -47,7 +47,7 @@ case class HystrixConfig(
     threadPoolConfig: Option[ThreadPoolConfig] = None,
     commandKey: String,
     commandGroupKey: String,
-    timeoutInMs: Long = HystrixConfig.defaultTimeout,
+    timeout: FiniteDuration = HystrixConfig.defaultTimeout,
     localContentsAsFallback: Boolean,
     createdAt: DateTime,
     updatedAt: DateTime) extends ConfigModel[HystrixConfig] {

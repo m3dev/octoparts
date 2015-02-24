@@ -11,7 +11,7 @@ import play.api.libs.json._
  */
 object ConfigModel {
 
-  import Duration.format
+  import CustomFormatters._
 
   implicit val threadPoolConfigFormat = Json.format[ThreadPoolConfig]
   implicit val cacheGroupConfigFormat = Json.format[CacheGroup]
@@ -19,6 +19,7 @@ object ConfigModel {
   implicit val paramTypeEnumFormat = EnumerationHelper.formats(ParamType)
   implicit val partParamFormat = Json.format[PartParam]
   implicit val hystrixConfigFormat = Json.format[HystrixConfig]
+  implicit val alertMailSettingsFormat = Json.format[AlertMailSettings]
   implicit val httpPartConfigFormat = Json.format[HttpPartConfig]
 
 }

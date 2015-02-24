@@ -9,18 +9,18 @@ import scala.concurrent.ExecutionContext
 class SimpleHttpHandlerFactory(httpClientPool: HttpClientPool)(
     implicit executionContext: ExecutionContext) extends HttpHandlerFactory {
 
-  override def makeHandler(config: HttpPartConfig) = {
+  def makeHandler(config: HttpPartConfig) = {
     // Get or create the HTTP client corresponding to this partId
-    val httpClient = httpClientPool.getOrCreate(config.partId)
+    val httpClient = httpClientPool.getOrCreate(HttpClientPool.HttpPartConfigClientKey(config))
 
     new SimpleHttpPartRequestHandler(
-      config.partId,
-      httpClient,
-      config.uriToInterpolate,
-      config.method,
-      config.additionalValidStatuses,
-      config.parameters,
-      HystrixExecutor(config)
+      partId = config.partId,
+      httpClient = httpClient,
+      uriToInterpolate = config.uriToInterpolate,
+      httpMethod = config.method,
+      additionalValidStatuses = config.additionalValidStatuses,
+      registeredParams = config.parameters,
+      hystrixExecutor = HystrixExecutor(config)
     )
   }
 
