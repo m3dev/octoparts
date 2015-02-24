@@ -1,6 +1,8 @@
 # Java client
 
-This simple client uses Async HTTP Client for transport. It is built for Java 6 but should work on Java 7 and 8
+This simple client uses Async HTTP Client for transport. It is build for Java 8 but should compile on Java 7 too.
+
+*It will not run on Java 6*
 
 See Sample.java for usage
 
