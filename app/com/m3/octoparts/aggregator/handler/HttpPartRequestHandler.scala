@@ -8,7 +8,9 @@ import com.m3.octoparts.hystrix._
 import com.m3.octoparts.model.{ HttpMethod, PartResponse }
 import com.m3.octoparts.model.config._
 import com.netaporter.uri.Uri
-import com.netaporter.uri.dsl._
+import com.netaporter.uri.config.UriConfig
+import com.netaporter.uri.decoding.PercentDecoder
+import com.netaporter.uri.encoding.PercentEncoder
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.matching.Regex
@@ -19,6 +21,8 @@ import scala.util.matching.Regex
  */
 trait HttpPartRequestHandler extends Handler {
   handler =>
+
+  import HttpPartRequestHandler._
 
   implicit def executionContext: ExecutionContext
 
@@ -31,13 +35,6 @@ trait HttpPartRequestHandler extends Handler {
   def additionalValidStatuses: Set[Int]
 
   def hystrixExecutor: HystrixExecutor
-
-  /**
-   * A regex for matching "${...}" placeholders in strings
-   */
-  private val PlaceholderReplacer: Regex = """\$\{([^\}]+)\}""".r
-
-  // def registeredParams: Set[PartParam]
 
   /**
    * Given arguments for this handler, builds a blocking HTTP request with the proper
@@ -76,21 +73,12 @@ trait HttpPartRequestHandler extends Handler {
     new BlockingHttpRetrieve {
       val httpClient = handler.httpClient
       def method = httpMethod
-      val uri = new URI(buildUri(hArgs))
+      val uri = new URI(buildUri(hArgs).toString(VeryConservativeUriConfig))
       val maybeBody = hArgs.collectFirst {
         case (p, values) if p.paramType == ParamType.Body && values.nonEmpty => values.head
       }
       val headers = collectHeaders(hArgs) ++ buildTracingHeaders(partRequestInfo)
     }
-  }
-
-  private def buildTracingHeaders(partRequestInfo: PartRequestInfo): Seq[(String, String)] = {
-    import HttpPartRequestHandler._
-    Seq(
-      AggregateRequestIdHeader -> partRequestInfo.requestMeta.id,
-      PartRequestIdHeader -> partRequestInfo.partRequestId,
-      PartIdHeader -> partRequestInfo.partRequest.partId
-    )
   }
 
   /**
@@ -110,13 +98,6 @@ trait HttpPartRequestHandler extends Handler {
     retrievedFromLocalContents = httpResp.fromFallback,
     errors = if (httpResp.status < 400 || additionalValidStatuses.contains(httpResp.status)) Nil else Seq(httpResp.message)
   )
-
-  /**
-   * Turns a string into an escaped string for cookies
-   * @param c Cookie name or value
-   * @return escaped cookie string
-   */
-  def escapeCookie(c: String) = URLEncoder.encode(c, "UTF-8")
 
   /**
    * Isolates the header-related arguments, taking care to escape Cookie headers
@@ -163,8 +144,24 @@ trait HttpPartRequestHandler extends Handler {
       (p, values) <- hArgs.toSeq if p.paramType == ParamType.Query
       v <- values
     } yield p.outputName -> v
-    baseUri.addParams(kvs.toSeq)
+    Uri.parse(baseUri).addParams(kvs.toSeq)
   }
+}
+
+object HttpPartRequestHandler {
+  val AggregateRequestIdHeader = "X-OCTOPARTS-PARENT-REQUEST-ID"
+  val PartRequestIdHeader = "X-OCTOPARTS-REQUEST-ID"
+  val PartIdHeader = "X-OCTOPARTS-PART-ID"
+
+  /**
+   * Required because for some reason java.net.URI does not accept double quotes in the query string
+   */
+  private val VeryConservativeUriConfig = UriConfig(PercentEncoder(PercentEncoder.DEFAULT_CHARS_TO_ENCODE + '"'), PercentDecoder)
+
+  /**
+   * A regex for matching "${...}" placeholders in strings
+   */
+  private val PlaceholderReplacer: Regex = """\$\{([^\}]+)\}""".r
 
   /**
    * Replace all instances of "${...}" placeholders in the given string
@@ -176,10 +173,18 @@ trait HttpPartRequestHandler extends Handler {
   private def interpolate(stringToInterpolate: String)(replacer: String => String) =
     PlaceholderReplacer.replaceAllIn(stringToInterpolate, { m => replacer(m.group(1)) })
 
-}
+  /**
+   * Turns a string into an escaped string for cookies
+   * @param c Cookie name or value
+   * @return escaped cookie string
+   */
+  private def escapeCookie(c: String) = URLEncoder.encode(c, "UTF-8")
 
-object HttpPartRequestHandler {
-  val AggregateRequestIdHeader = "X-OCTOPARTS-PARENT-REQUEST-ID"
-  val PartRequestIdHeader = "X-OCTOPARTS-REQUEST-ID"
-  val PartIdHeader = "X-OCTOPARTS-PART-ID"
+  private def buildTracingHeaders(partRequestInfo: PartRequestInfo): Seq[(String, String)] = {
+    Seq(
+      AggregateRequestIdHeader -> partRequestInfo.requestMeta.id,
+      PartRequestIdHeader -> partRequestInfo.partRequestId,
+      PartIdHeader -> partRequestInfo.partRequest.partId
+    )
+  }
 }
