@@ -3,12 +3,12 @@ COMMENT ON COLUMN http_part_config.http_pool_size IS 'size of the HTTP connectio
 UPDATE http_part_config SET http_pool_size = 20;
 ALTER TABLE http_part_config ALTER COLUMN http_pool_size SET NOT NULL;
 
-ALTER TABLE http_part_config ADD COLUMN http_connection_timeout BIGINT CHECK (http_pool_size >= 0);
+ALTER TABLE http_part_config ADD COLUMN http_connection_timeout BIGINT CHECK (http_connection_timeout >= 0);
 COMMENT ON COLUMN http_part_config.http_connection_timeout IS 'In milliseconds. 0 means none.';
 UPDATE http_part_config SET http_connection_timeout = 1000;
 ALTER TABLE http_part_config ALTER COLUMN http_connection_timeout SET NOT NULL;
 
-ALTER TABLE http_part_config ADD COLUMN http_socket_timeout BIGINT CHECK (http_pool_size >= 0);
+ALTER TABLE http_part_config ADD COLUMN http_socket_timeout BIGINT CHECK (http_socket_timeout >= 0);
 COMMENT ON COLUMN http_part_config.http_socket_timeout IS 'In milliseconds. 0 means none.';
 UPDATE http_part_config SET http_socket_timeout = 5000;
 ALTER TABLE http_part_config ALTER COLUMN http_socket_timeout SET NOT NULL;
