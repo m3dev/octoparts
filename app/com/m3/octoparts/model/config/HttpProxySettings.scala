@@ -10,6 +10,10 @@ case class HttpProxySettings(scheme: String, host: String, port: Int) {
 
   import com.m3.octoparts.model.config.HttpProxySettings._
 
+  /**
+   * inverse operation of [[HttpProxySettings.parse]]
+   * @return a string representation, omitting fiels with default values
+   */
   def serialize: String = {
     val schemePart = if (scheme == DefaultScheme) "" else s"$scheme://"
     val portPart = if (port == DefaultPort) "" else s":$port"
@@ -28,6 +32,9 @@ object HttpProxySettings {
    */
   def parse(ser: String): Try[HttpProxySettings] = new HttpProxySettingsParser(ser).proxyRule.run()
 
+  /**
+   * @return whether the input could be parsed. See [[parse]]
+   */
   def isValid(ser: String): Boolean = parse(ser).isSuccess
 
   private class HttpProxySettingsParser(input: ParserInput) extends DefaultUriParser(input, UriConfig.default) {
