@@ -83,7 +83,7 @@ object Dependencies {
   val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.5"
   val findbugs            = "com.google.code.findbugs"  % "jsr305"                        % "3.0.0"
 
-  val zipkinFutures       = "com.beachape"              %% "zipkin-futures-play"          % "0.0.6"
+  val zipkinFutures       = "com.beachape"              %% "zipkin-futures-play"          % "0.0.7"
 
   val withoutExcluded = { (m: ModuleID) =>
     m.excludeAll(

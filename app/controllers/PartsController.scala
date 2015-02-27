@@ -60,7 +60,7 @@ class PartsController(
         val noCache = readClientCacheHeaders && request.headers.get(HeaderConstants.CACHE_CONTROL) == Some(HeaderConstants.CACHE_CONTROL_NO_CACHE)
         logAggregateRequest(aggregateRequest, noCache)
         val fAggregateResponse = TracedFuture("aggregate-response-processing") { maybeSpan =>
-          implicit val tracingSpan = maybeSpan.getOrElse(req2span(request))
+          val tracingSpan = maybeSpan.getOrElse(req2span(request))
           partsService.processParts(aggregateRequest, noCache)(tracingSpan)
         }
         withRequestTimeout(fAggregateResponse).trace("aggregate-response-processing-with-timeout")

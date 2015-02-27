@@ -45,7 +45,7 @@ trait PartResponseCachingSupport extends PartRequestServiceBase {
       super.processWithConfig(ci, partRequestInfo, params)
     } else {
       val directive = CacheDirectiveGenerator.generateDirective(ci.partId, params, ci.cacheConfig)
-      val futureMaybeFromCache = TracedFuture("retrieve-part-response-from-cache-or-else") { maybeTrace =>
+      val futureMaybeFromCache = TracedFuture(s"retrieve-part-response-from-cache-or-else-${ci.partId}") { maybeTrace =>
         val span = maybeTrace.getOrElse(parentSpan)
         cacheOps.putIfAbsent(directive)(super.processWithConfig(ci, partRequestInfo, params)(span)).
           recoverWith(onCacheFailure(ci, partRequestInfo, params)(span))
