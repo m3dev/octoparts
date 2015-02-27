@@ -12,7 +12,7 @@ class AdminFormsSpec extends FunSpec with Matchers with ConfigDataMocks {
       partId = "  　~ wowzers ~　　", // note: a mix of single-byte and multi-byte spaces
       description = None,
       deprecatedTo = None,
-      httpSettings = HttpSettings(
+      httpSettings = HttpConfigData(
         uri = "",
         method = "get",
         additionalValidStatuses = None,

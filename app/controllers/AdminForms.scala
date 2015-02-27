@@ -24,7 +24,7 @@ object AdminForms {
       partId: String,
       description: Option[String],
       deprecatedTo: Option[String],
-      httpSettings: HttpSettings,
+      httpSettings: HttpConfigData,
       hystrixConfig: HystrixConfigData,
       ttl: Option[Int],
       cacheGroupNames: Seq[String],
@@ -110,7 +110,7 @@ object AdminForms {
       partId = part.partId,
       description = part.description,
       deprecatedTo = part.deprecatedInFavourOf,
-      httpSettings = HttpSettings(
+      httpSettings = HttpConfigData(
         uri = part.uriToInterpolate,
         method = part.method.toString,
         additionalValidStatuses = Some(part.additionalValidStatuses.mkString(",")).filterNot(_.isEmpty),
@@ -164,7 +164,7 @@ object AdminForms {
         "httpSocketTimeoutInMs" -> number(min = 0),
         "httpDefaultEncoding" -> text.verifying(string => Charset.isSupported(string)),
         "httpProxy" -> optional(text)
-      )(HttpSettings.apply)(HttpSettings.unapply),
+      )(HttpConfigData.apply)(HttpConfigData.unapply),
       "hystrixConfig" -> mapping(
         "commandKey" -> text,
         "commandGroupKey" -> text,
@@ -192,7 +192,7 @@ object AdminForms {
     enabled: Boolean,
     contents: Option[String])
 
-  case class HttpSettings(
+  case class HttpConfigData(
     uri: String,
     method: String,
     additionalValidStatuses: Option[String],
