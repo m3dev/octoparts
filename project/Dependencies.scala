@@ -28,26 +28,26 @@ object Dependencies {
   val julToSlf4j          = "org.slf4j"                 % "jul-to-slf4j"                  % slf4jVersion
   val ravenLogback        = "net.kencochrane.raven"     % "raven-logback"                 % "6.0.0"   % Runtime
   val janino              = "org.codehaus.janino"       % "janino"                        % "2.7.8"
-  val ltsvLogger          = "com.beachape"              %% "ltsv-logger"                  % "0.0.8"
+  val ltsvLogger          = "com.beachape"              %% "ltsv-logger"                  % "0.0.9"
 
   // Hystrix
   val hystrixCore         = "com.netflix.hystrix"       % "hystrix-core"                  % hystrixVersion
   val hystrixStream       = "com.netflix.hystrix"       % "hystrix-metrics-event-stream"  % hystrixVersion
-  val rxJavaScala         = "io.reactivex"              %% "rxscala"                      % "0.23.0" // matches the version rxjava used in hystrix-core
+  val rxJavaScala         = "io.reactivex"              %% "rxscala"                      % "0.23.1" // matches the version rxjava used in hystrix-core
 
   // HTTP clients
-  val asyncHttpClient     = "com.ning"                  % "async-http-client"             % "1.9.10"
+  val asyncHttpClient     = "com.ning"                  % "async-http-client"             % "1.9.11"
   val httpClient          = "org.apache.httpcomponents" % "httpclient"                    % httpClientVersion
   val httpClientCache     = "org.apache.httpcomponents" % "httpclient-cache"              % httpClientVersion
   val metricsHttpClient   = "io.dropwizard.metrics"     % "metrics-httpclient"            % "3.1.0"
 
   // DB
-  val postgres            = "org.postgresql"            % "postgresql"                    % "9.4-1200-jdbc41"   % Runtime
+  val postgres            = "org.postgresql"            % "postgresql"                    % "9.4-1201-jdbc41"   % Runtime
   val skinnyOrm           = "org.skinny-framework"      %% "skinny-orm"                   % "1.3.13"
   val scalikeJdbc         = "org.scalikejdbc"           %% "scalikejdbc"                  % scalikejdbcVersion
   val scalikeJdbcConfig   = "org.scalikejdbc"           %% "scalikejdbc-config"           % scalikejdbcVersion
   val scalikeJdbcPlay     = "org.scalikejdbc"           %% "scalikejdbc-play-plugin"      % "2.3.5"
-  val dbcp2               = "org.apache.commons"        % "commons-dbcp2"                 % "2.0.1"
+  val dbcp2               = "org.apache.commons"        % "commons-dbcp2"                 % "2.1"
 
   // Memcached
   val shade               = "com.bionicspirit"          %% "shade"                        % "1.6.0"
@@ -73,14 +73,14 @@ object Dependencies {
   val scalatest           = "org.scalatest"             %% "scalatest"                    % "2.2.4"             % Test
   val scalatestPlay       = "org.scalatestplus"         %% "play"                         % "1.2.0"             % Test
   val scalacheck          = "org.scalacheck"            %% "scalacheck"                   % "1.12.2"            % Test
-  val groovy              = "org.codehaus.groovy"       % "groovy"                        % "2.4.0"             % Test
+  val groovy              = "org.codehaus.groovy"       % "groovy"                        % "2.4.1"             % Test
   val scalikeJdbcTest     = "org.scalikejdbc"           %% "scalikejdbc-test"             % scalikejdbcVersion  % Test
 
   // Misc utils
   val commonsValidator    = "commons-validator"         % "commons-validator"             % "1.4.1"             % Runtime
   val guava               = "com.google.guava"          % "guava"                         % "18.0"
   val jta                 = "javax.transaction"         % "jta"                           % "1.1"
-  val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.5"
+  val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.6"
   val findbugs            = "com.google.code.findbugs"  % "jsr305"                        % "3.0.0"
 
   val withoutExcluded = { (m: ModuleID) =>
