@@ -83,6 +83,8 @@ object Dependencies {
   val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.5"
   val findbugs            = "com.google.code.findbugs"  % "jsr305"                        % "3.0.0"
 
+  val zipkinFutures       = "com.beachape"              %% "zipkin-futures-play"          % "0.0.6"
+
   val withoutExcluded = { (m: ModuleID) =>
     m.excludeAll(
       ExclusionRule(organization = "spy", name = "spymemcached"), // spymemcached's org changed from spy to net.spy
@@ -124,6 +126,9 @@ object Dependencies {
     // Memcached
     shade,
     spyMemcached,
+
+    // Zipkin
+    zipkinFutures,
 
     // Misc utils
     commonsValidator,
