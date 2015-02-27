@@ -10,6 +10,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ FlatSpec, Matchers }
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 
 class PartResponseLocalContentSupportSpec extends FlatSpec
@@ -61,7 +62,7 @@ class PartResponseLocalContentSupportSpec extends FlatSpec
     val fallbackConfig = mockHttpPartConfig.copy(
       localContentsEnabled = false,
       localContents = Some("""{ "hello": "lloyd" }"""),
-      hystrixConfig = Some(mockHystrixConfig.copy(localContentsAsFallback = true, timeoutInMs = 500L)))
+      hystrixConfig = Some(mockHystrixConfig.copy(localContentsAsFallback = true, timeout = 500.millis)))
     val partRequestInfo = mockPartRequestInfo
     val params = Map.empty[ShortPartParam, Seq[String]]
 

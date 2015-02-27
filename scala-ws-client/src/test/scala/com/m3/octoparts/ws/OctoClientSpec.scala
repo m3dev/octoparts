@@ -1,10 +1,12 @@
 package com.m3.octoparts.ws
 
+import java.nio.charset.StandardCharsets
+
 import com.m3.octoparts.json.format.ReqResp._
 import com.m3.octoparts.json.format.ConfigModel._
 import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.ParamType
-import com.m3.octoparts.model.config.json.{ PartParam, ThreadPoolConfig, HystrixConfig, HttpPartConfig }
+import com.m3.octoparts.model.config.json._
 import play.api.libs.json._
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
@@ -80,6 +82,10 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
         commandGroupKey = "GroupKey",
         false),
       additionalValidStatuses = Set(302),
+      httpPoolSize = 20,
+      httpConnectionTimeout = 1.second,
+      httpSocketTimeout = 5.seconds,
+      httpDefaultEncoding = StandardCharsets.UTF_8,
       parameters = Set(
         PartParam(
           required = true,
@@ -91,11 +97,13 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
         )),
       deprecatedInFavourOf = None,
       cacheTtl = Some(60 seconds),
-      alertMailsEnabled = true,
-      alertAbsoluteThreshold = Some(1000),
-      alertPercentThreshold = Some(33.0),
-      alertInterval = 10 minutes,
-      alertMailRecipients = Some("l-chan@m3.com"))
+      alertMailSettings = AlertMailSettings(
+        alertMailsEnabled = true,
+        alertAbsoluteThreshold = Some(1000),
+        alertPercentThreshold = Some(33.0),
+        alertInterval = 10 minutes,
+        alertMailRecipients = Some("l-chan@m3.com")
+      ))
 
     val mockWSRespPost = jsonAsWSResponse(Json.toJson(mockAggResp))
     val mockWSRespGet = jsonAsWSResponse(Json.toJson(Seq(mockListing)))
@@ -242,7 +250,7 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
           (1 until 400) foreach { status =>
             val mockWS = statusWSResponse(status)
             val subject = mockSubject(Future.successful(mockWS), respGet)
-            whenReady(subject.emptyPostOk("whatever")) { _ should be(true) }
+            whenReady(subject.emptyPostOk("whatever")) { _ shouldBe true }
           }
         }
       }
@@ -252,7 +260,7 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
           (400 to 500) foreach { status =>
             val mockWS = statusWSResponse(status)
             val subject = mockSubject(Future.successful(mockWS), respGet)
-            whenReady(subject.emptyPostOk("whatever")) { _ should be(false) }
+            whenReady(subject.emptyPostOk("whatever")) { _ shouldBe false }
           }
         }
       }
