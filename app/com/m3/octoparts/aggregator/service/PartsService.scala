@@ -29,9 +29,9 @@ class PartsService(partRequestService: PartRequestServiceBase,
    * underlying PartRequestService's responseFor method. This is also where we recover
    * from errors thrown in those individual futures.
    *
-   * In the event that an AggregateRequest has a RequestMeta that has its timeoutInMs field
-   * filled out as a Some[Int], the AggregateRequest is processed with a timeout that is the lesser
-   * of timeoutInMs and maximumAggReqTimeout.
+   * In the event that an AggregateRequest has a RequestMeta that has its [[RequestMeta.timeout]] field
+   * filled out as a Some[Int], the [[AggregateRequest]] is processed with a timeout that is the lesser
+   * of [[RequestMeta.timeout]] and [[maximumAggReqTimeout.]]
    *
    * @param aggregateRequest AggregateRequest
    * @return Future[AggregateResponse]

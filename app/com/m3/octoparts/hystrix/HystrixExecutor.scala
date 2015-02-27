@@ -21,7 +21,7 @@ case class HystrixExecutor(config: HttpPartConfig) extends HystrixSetterSupport 
    */
   def future[T](f: => T, fallbackTransform: Option[String] => T): Future[T] = {
     new HystrixCommand[T](setter(config.hystrixConfigItem)) with HystrixFutureSupport[T] {
-      override def run = f
+      def run = f
       override def getFallback: T = fallbackTransform(config.localContents)
     }.future
   }
