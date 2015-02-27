@@ -1,5 +1,7 @@
 package com.m3.octoparts.cache
 
+import com.beachape.zipkin.services.NoopZipkinService
+import com.twitter.zipkin.gen.Span
 import org.joda.time.DateTime
 import org.scalatest.{ Matchers, FunSpec }
 import com.m3.octoparts.cache.dummy.DummyCacheOps
@@ -12,6 +14,8 @@ import com.m3.octoparts.support.mocks.ConfigDataMocks
 import org.scalatest.concurrent.ScalaFutures
 
 class PartResponseCachingSupportSpec extends FunSpec with Matchers with ScalaFutures with ConfigDataMocks {
+
+  implicit val emptySpan = new Span()
 
   describe("PartResponseCachingSupport#selectLatest") {
     val stalePartResponse = PartResponse(partId = "XXX", id = "YYY", contents = Some("A"), cacheControl = CacheControl(etag = Some("123")))
@@ -95,10 +99,11 @@ class PartResponseCachingSupportSpec extends FunSpec with Matchers with ScalaFut
 
   describe("Custom part ID support") {
     trait MockPartRequestServiceBase extends PartRequestServiceBase {
-      override protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, Seq[String]]) =
+      override protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, Seq[String]])(implicit span: Span) =
         Future.successful(PartResponse(partId = "partId", id = "old custom ID", contents = Some("response body")))
     }
     val cachingSupport = new MockPartRequestServiceBase with PartResponseCachingSupport {
+      implicit val zipkinService = NoopZipkinService
       def executionContext = scala.concurrent.ExecutionContext.global
       def cacheOps = DummyCacheOps
       def handlerFactory = ???

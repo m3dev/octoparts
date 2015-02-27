@@ -2,6 +2,7 @@ package controllers
 
 import java.util.UUID
 
+import com.beachape.zipkin.services.{ NoopZipkinService, ZipkinServiceLike }
 import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.json.format.ReqResp._
 import com.m3.octoparts.aggregator.handler._
@@ -9,6 +10,7 @@ import com.m3.octoparts.aggregator.service._
 import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.HttpPartConfig
 import com.m3.octoparts.support.mocks.{ ConfigDataMocks, MockConfigRespository }
+import com.twitter.zipkin.gen.Span
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{ FlatSpec, Matchers }
 import org.scalatestplus.play.OneAppPerSuite
@@ -42,17 +44,20 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
   val voidHandler = new Handler {
     val partId = "something"
 
-    def process(pri: PartRequestInfo, args: HandlerArguments) = Future.successful(PartResponse(partId, partId))
+    def process(pri: PartRequestInfo, args: HandlerArguments)(implicit parentSpan: Span) = Future.successful(PartResponse(partId, partId))
   }
   val partsRequestService = new PartRequestService(configsRepository, new HttpHandlerFactory {
+
+    implicit val zipkinService: ZipkinServiceLike = NoopZipkinService
+
     override def makeHandler(ci: HttpPartConfig) = ci.partId match {
       case "void" => voidHandler
       case _ => throw new RuntimeException
     }
-  })
+  }, NoopZipkinService)
   val partsService = new PartsService(partsRequestService)
 
-  val controller = new PartsController(partsService, configsRepository, 10 seconds, true)
+  val controller = new PartsController(partsService, configsRepository, 10 seconds, true, NoopZipkinService)
 
   it should "return 400 to an unknown json" in {
     val json = Json.parse("""{"json":"unknown"}""")

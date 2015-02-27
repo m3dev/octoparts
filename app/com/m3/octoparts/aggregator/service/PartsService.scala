@@ -6,6 +6,7 @@ import com.m3.octoparts.future.RichFutureWithTiming._
 import com.m3.octoparts.logging.{ LogUtil, PartRequestLogger }
 import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.model.{ AggregateResponse, PartResponse, ResponseMeta, _ }
+import com.twitter.zipkin.gen.Span
 
 import scala.concurrent._
 import scala.concurrent.duration._
@@ -35,7 +36,7 @@ class PartsService(partRequestService: PartRequestServiceBase,
    * @param aggregateRequest AggregateRequest
    * @return Future[AggregateResponse]
    */
-  def processParts(aggregateRequest: AggregateRequest, noCache: Boolean = false): Future[AggregateResponse] = {
+  def processParts(aggregateRequest: AggregateRequest, noCache: Boolean = false)(implicit parentSpan: Span): Future[AggregateResponse] = {
     val requestMeta = aggregateRequest.requestMeta
     val aReqTimeout: FiniteDuration = requestMeta.timeout.getOrElse(maximumAggReqTimeout) min maximumAggReqTimeout
     val partsResponsesFutures = aggregateRequest.requests.map {

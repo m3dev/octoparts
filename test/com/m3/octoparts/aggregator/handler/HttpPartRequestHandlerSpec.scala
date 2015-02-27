@@ -2,6 +2,7 @@ package com.m3.octoparts.aggregator.handler
 
 import java.net.URLEncoder
 
+import com.beachape.zipkin.services.NoopZipkinService
 import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.http.{ HttpClientLike, HttpResponse }
 import com.m3.octoparts.hystrix.{ HystrixExecutor, MockHttpClientComponent }
@@ -9,6 +10,7 @@ import com.m3.octoparts.model.HttpMethod.Get
 import com.m3.octoparts.model.{ PartRequest, RequestMeta, PartResponse }
 import com.m3.octoparts.model.config.ParamType._
 import com.m3.octoparts.model.config._
+import com.twitter.zipkin.gen.Span
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpUriRequest
 import org.scalatest._
@@ -33,6 +35,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
   )
 
   private val handler = handlerWithHttpClient(MockHttpClientComponent.httpClient)
+  implicit val emptySpan = new Span()
 
   describe("#buildUri") {
 
@@ -97,7 +100,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
         val hArgs = Map(
           ShortPartParam("query1", Query) -> Seq("query1Value")
         )
-        handler.createBlockingHttpRetrieve(partRequestInfo, hArgs).maybeBody should be(None)
+        handler.createBlockingHttpRetrieve(partRequestInfo, hArgs, None).maybeBody should be(None)
       }
     }
     describe("when there is a body param") {
@@ -105,11 +108,11 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
         val hArgs = Map(
           ShortPartParam("jsonPayload", Body) -> Seq("""{"some":"json"}""")
         )
-        handler.createBlockingHttpRetrieve(partRequestInfo, hArgs).maybeBody should be(Some("""{"some":"json"}"""))
+        handler.createBlockingHttpRetrieve(partRequestInfo, hArgs, None).maybeBody should be(Some("""{"some":"json"}"""))
       }
     }
     it("should include custom HTTP headers for request tracing") {
-      val headers = handler.createBlockingHttpRetrieve(partRequestInfo, Map.empty).headers
+      val headers = handler.createBlockingHttpRetrieve(partRequestInfo, Map.empty, None).headers
       headers should contain("X-OCTOPARTS-PART-ID" -> "foob")
       headers should contain("X-OCTOPARTS-REQUEST-ID" -> "bande a part")
       headers should contain("X-OCTOPARTS-PARENT-REQUEST-ID" -> "hey man that's so meta")
@@ -145,6 +148,8 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
   def handlerWithHttpClient(client: HttpClientLike): HttpPartRequestHandler = {
     new HttpPartRequestHandler {
       def executionContext = scala.concurrent.ExecutionContext.global
+
+      implicit val zipkinService = NoopZipkinService
 
       def partId = mockPartId
 

@@ -4,6 +4,8 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 import _root_.controllers.ControllersModule
+import com.beachape.zipkin.ZipkinHeaderFilter
+import com.beachape.zipkin.services.ZipkinServiceLike
 import com.kenshoo.play.metrics.MetricsFilter
 import com.m3.octoparts.cache.CacheModule
 import com.m3.octoparts.http.HttpModule
@@ -26,7 +28,7 @@ import scala.collection.concurrent.TrieMap
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
-object Global extends WithFilters(MetricsFilter) with ScaldiSupport {
+object Global extends WithFilters(ZipkinHeaderFilter(ZipkinServiceHolder.ZipkinService), MetricsFilter) with ScaldiSupport {
 
   val info = ApiInfo(
     title = "Octoparts",
@@ -48,6 +50,7 @@ object Global extends WithFilters(MetricsFilter) with ScaldiSupport {
       new Module {
         // Random stuff that doesn't belong in other modules
         bind[PartRequestLogger] to PartRequestLogger
+        bind[ZipkinServiceLike] to ZipkinServiceHolder.ZipkinService
       }
 
   /**
