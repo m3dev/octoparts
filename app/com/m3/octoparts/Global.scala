@@ -28,7 +28,7 @@ import scala.collection.concurrent.TrieMap
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
-object Global extends WithFilters(ZipkinHeaderFilter(ZipkinServiceHolder.ZipkinService), MetricsFilter) with ScaldiSupport {
+object Global extends WithFilters(ZipkinHeaderFilter(ZipkinServiceHolder.ZipkinService, r => s"${r.method} - ${r.path}"), MetricsFilter) with ScaldiSupport {
 
   val info = ApiInfo(
     title = "Octoparts",

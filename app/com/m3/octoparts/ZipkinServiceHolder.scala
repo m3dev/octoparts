@@ -29,8 +29,7 @@ object ZipkinServiceHolder {
         zipkinSpanCollector,
         Seq(
           !_.startsWith("OPTION"),
-          !_.startsWith("POST - /eop"),
-          !_.startsWith("GET - /static")
+          !_.startsWith("GET - /assets")
         )
       )
     }
