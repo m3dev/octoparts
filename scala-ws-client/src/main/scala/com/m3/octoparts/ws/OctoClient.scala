@@ -113,30 +113,37 @@ trait OctoClientLike {
   /**
    * Returns a Future[[com.m3.octoparts.model.AggregateResponse]] received from asynchronously invoking Octoparts using
    * the provided [[com.m3.octoparts.model.AggregateRequest]]
+   *
+   * @param aggReq AggregateRequest
+   * @param headers Optional set of headers that you can send with this request, defaults to none.
    */
-  def invoke(aggReq: AggregateRequest)(implicit ec: ExecutionContext): Future[AggregateResponse] = {
+  def invoke(aggReq: AggregateRequest, headers: (String, String)*)(implicit ec: ExecutionContext): Future[AggregateResponse] = {
     if (aggReq.requests.isEmpty)
       Future.successful(emptyReqResponse)
     else {
       val jsonBody = Json.toJson(aggReq)
       val timeout = aggReq.requestMeta.timeout.map(_ max clientTimeout).getOrElse(clientTimeout)
       logger.debug(s"OctopartsId: ${aggReq.requestMeta.id}, RequestBody: $jsonBody")
-      wsPost(urlFor(Invoke), timeout, jsonBody)
+      wsPost(urlFor(Invoke), timeout, jsonBody, headers)
         .map(resp => resp.json.as[AggregateResponse])
         .recover(rescuer(rescueAggregateResponse))
     }
   }
 
   /**
-   *  Returns a Future[[com.m3.octoparts.model.AggregateResponse]] received from asynchronously invoking Octoparts using the
-   *  provided argument object, and [[com.m3.octoparts.model.PartRequest]] list.
+   * Returns a Future[[com.m3.octoparts.model.AggregateResponse]] received from asynchronously invoking Octoparts using the
+   * provided argument object, and [[com.m3.octoparts.model.PartRequest]] list.
    *
-   *  A [[RequestMetaBuilder]] type class instance for the first argument must be in scope at the call-site.
+   * A [[RequestMetaBuilder]] type class instance for the first argument must be in scope at the call-site.
+   *
+   * @param obj Object of type A to build a request meta with
+   * @param partReqs Part requests
+   * @param headers Optional set of headers that you can send with this request, defaults to none.
    */
-  def invoke[A](obj: A, partReqs: Seq[PartRequest])(implicit reqMetaBuilder: RequestMetaBuilder[A], ec: ExecutionContext): Future[AggregateResponse] = {
+  def invoke[A](obj: A, partReqs: Seq[PartRequest], headers: (String, String)*)(implicit reqMetaBuilder: RequestMetaBuilder[A], ec: ExecutionContext): Future[AggregateResponse] = {
     val reqMeta = reqMetaBuilder(obj)
     val aggReq = buildAggReq(reqMeta, partReqs)
-    invoke(aggReq)
+    invoke(aggReq, headers: _*)
   }
 
   /**
@@ -214,9 +221,13 @@ trait OctoClientLike {
    *
    * @param url URL to post to
    * @param timeout Timeout value for the request
+   * @param headers headers to send along with the request
    */
-  protected def wsPost[A](url: String, timeout: FiniteDuration, body: A)(implicit wrt: Writeable[A], ct: ContentTypeOf[A]): Future[WSResponse] =
-    wsHolderFor(url, timeout).post(body)
+  protected def wsPost[A](url: String, timeout: FiniteDuration, body: A, headers: Seq[(String, String)] = Seq.empty)(implicit wrt: Writeable[A], ct: ContentTypeOf[A]): Future[WSResponse] = {
+    wsHolderFor(url, timeout)
+      .withHeaders(headers: _*)
+      .post(body)
+  }
 
   /**
    * Generates a default dumb/empty [[com.m3.octoparts.model.AggregateResponse]].

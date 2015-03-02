@@ -4,6 +4,7 @@ import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.model.config.json
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.repository.config._
+import com.twitter.zipkin.gen.Span
 import scalikejdbc._
 
 import scala.concurrent.Future
@@ -13,7 +14,7 @@ trait ConfigImporter {
 
   import com.m3.octoparts.repository.DBContext._
 
-  def importConfigs(configs: Seq[json.HttpPartConfig]) = DB.futureLocalTx { implicit session => importConfigsWithSession(configs) }
+  def importConfigs(configs: Seq[json.HttpPartConfig])(implicit parentSpan: Span) = DB.futureLocalTx { implicit session => importConfigsWithSession(configs) }
 
   private[repository] object ImportAction {
 

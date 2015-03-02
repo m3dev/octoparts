@@ -1,8 +1,10 @@
 package com.m3.octoparts.cache
 
+import com.beachape.zipkin.services.NoopZipkinService
 import com.google.common.cache.CacheBuilder
 import com.m3.octoparts.cache.dummy.DummyRawCache
 import com.m3.octoparts.cache.memcached.InMemoryRawCache
+import com.twitter.zipkin.gen.Span
 import org.scalatest.{ FunSpec, Matchers }
 import play.api.Logger
 
@@ -12,6 +14,8 @@ import scala.concurrent.duration._
 class MemoryBufferingRawCacheSpec extends FunSpec with Matchers {
 
   import shade.memcached.Codec.StringBinaryCodec
+  implicit val emptySpan = new Span()
+  implicit val zipkinService = NoopZipkinService
 
   it("should store data for a while") {
     val mbrc = new StatsRecordingMemoryBufferingRawCache(DummyRawCache, 200.milliseconds)

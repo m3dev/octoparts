@@ -1,10 +1,11 @@
 package com.m3.octoparts.cache.versioning
 
 import com.m3.octoparts.cache.versioning.LatestVersionCache._
+import com.twitter.zipkin.gen.Span
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class VersionLookup[T](val versionCache: VersionCache[T])(implicit executionContext: ExecutionContext) {
+class VersionLookup[T](val versionCache: VersionCache[T])(implicit executionContext: ExecutionContext, parentSpan: Span) {
 
   import com.m3.octoparts.cache.versioning.FutureUtil._
 

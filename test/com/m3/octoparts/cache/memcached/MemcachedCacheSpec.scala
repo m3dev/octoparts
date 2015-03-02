@@ -2,9 +2,11 @@ package com.m3.octoparts.cache.memcached
 
 import java.util.concurrent.Executors
 
+import com.beachape.zipkin.services.NoopZipkinService
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.m3.octoparts.cache.RawCache
 import com.m3.octoparts.cache.key.{ CacheKey, MemcachedKeyGenerator, VersionCacheKey }
+import com.twitter.zipkin.gen.Span
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ FunSpec, Matchers }
 import shade.memcached.Codec
@@ -19,12 +21,14 @@ class MemcachedCacheSpec extends FunSpec with Matchers with ScalaFutures {
     val namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("cache-%d").build()
     ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor(namedThreadFactory))
   }
+  implicit val emptySpan = new Span()
+  implicit val zipkinService = NoopZipkinService
 
   describe("error handling") {
 
     object MessedUpAdapter extends RawCache {
-      override def set[T](key: String, value: T, exp: Duration)(implicit codec: Codec[T]): Future[Unit] = ???
-      override def get[T](key: String)(implicit codec: Codec[T]): Future[Option[T]] = ???
+      override def set[T](key: String, value: T, exp: Duration)(implicit codec: Codec[T], parentSpan: Span): Future[Unit] = ???
+      override def get[T](key: String)(implicit codec: Codec[T], parentSpan: Span): Future[Option[T]] = ???
       override def close(): Unit = ???
     }
 
@@ -52,11 +56,11 @@ class MemcachedCacheSpec extends FunSpec with Matchers with ScalaFutures {
     }
 
     class MockMemcached extends RawCache {
-      override def get[T](key: String)(implicit codec: Codec[T]): Future[Option[T]] = ???
+      override def get[T](key: String)(implicit codec: Codec[T], parentSpan: Span): Future[Option[T]] = ???
       override def close(): Unit = ???
 
       var insertedWithTtl: Option[Duration] = None
-      override def set[T](key: String, value: T, exp: Duration)(implicit codec: Codec[T]): Future[Unit] = {
+      override def set[T](key: String, value: T, exp: Duration)(implicit codec: Codec[T], parentSpan: Span): Future[Unit] = {
         insertedWithTtl = Some(exp)
         Future.successful(())
       }

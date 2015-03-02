@@ -4,6 +4,8 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 import _root_.controllers.ControllersModule
+import com.beachape.zipkin.ZipkinHeaderFilter
+import com.beachape.zipkin.services.ZipkinServiceLike
 import com.kenshoo.play.metrics.MetricsFilter
 import com.m3.octoparts.cache.CacheModule
 import com.m3.octoparts.http.HttpModule
@@ -12,6 +14,7 @@ import com.m3.octoparts.logging.PartRequestLogger
 import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.repository.{ ConfigsRepository, RepositoriesModule }
 import com.netflix.hystrix.strategy.HystrixPlugins
+import com.twitter.zipkin.gen.Span
 import com.typesafe.config.ConfigFactory
 import com.wordnik.swagger.config.{ ConfigFactory => SwaggerConfigFactory }
 import com.wordnik.swagger.model.ApiInfo
@@ -26,7 +29,7 @@ import scala.collection.concurrent.TrieMap
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
-object Global extends WithFilters(MetricsFilter) with ScaldiSupport {
+object Global extends WithFilters(ZipkinHeaderFilter(ZipkinServiceHolder.ZipkinService, r => s"${r.method} - ${r.path}"), MetricsFilter) with ScaldiSupport {
 
   val info = ApiInfo(
     title = "Octoparts",
@@ -48,6 +51,7 @@ object Global extends WithFilters(MetricsFilter) with ScaldiSupport {
       new Module {
         // Random stuff that doesn't belong in other modules
         bind[PartRequestLogger] to PartRequestLogger
+        bind[ZipkinServiceLike] to ZipkinServiceHolder.ZipkinService
       }
 
   /**
@@ -111,7 +115,7 @@ object Global extends WithFilters(MetricsFilter) with ScaldiSupport {
    */
   private def checkForDodgyPartIds(): Unit = {
     import play.api.libs.concurrent.Execution.Implicits.defaultContext
-
+    implicit val emptySpan = new Span() // empty span -> doesn't trace
     val configsRepo = inject[ConfigsRepository]
     for {
       configs <- configsRepo.findAllConfigs()
