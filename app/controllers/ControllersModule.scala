@@ -1,6 +1,7 @@
 package controllers
 
 import _root_.presentation.NavbarLinks
+import com.beachape.zipkin.services.ZipkinServiceLike
 import com.m3.octoparts.aggregator.service.PartsService
 import com.m3.octoparts.cache.CacheOps
 import com.m3.octoparts.repository.{ ConfigsRepository, MutableConfigsRepository }
@@ -21,7 +22,7 @@ class ControllersModule extends Module {
       val disableFlag = inject[Boolean](identified by "read-client-cache.disabled")
       !disableFlag
     }
-    new PartsController(partsService, configsRepository, requestTimeout, readClientCacheHeaders)
+    new PartsController(partsService, configsRepository, requestTimeout, readClientCacheHeaders, inject[ZipkinServiceLike])
   }
 
   bind[CacheController] to injected[CacheController]

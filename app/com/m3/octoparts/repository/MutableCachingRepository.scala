@@ -5,6 +5,7 @@ import com.m3.octoparts.cache.key.HttpPartConfigCacheKey
 import com.m3.octoparts.http.HttpClientPool
 import com.m3.octoparts.model.config.{ json, ConfigModel }
 import com.m3.octoparts.repository.config.ConfigMapper
+import com.twitter.zipkin.gen.Span
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -19,9 +20,9 @@ class MutableCachingRepository(
     extends CachingRepository
     with MutableConfigsRepository {
 
-  def save[A <: ConfigModel[A]: ConfigMapper](obj: A): Future[Long] = reloadCacheAfter(delegate.save(obj))
+  def save[A <: ConfigModel[A]: ConfigMapper](obj: A)(implicit parentSpan: Span): Future[Long] = reloadCacheAfter(delegate.save(obj))
 
-  def deleteAllConfigs(): Future[Int] = reloadCacheAfter {
+  def deleteAllConfigs()(implicit parentSpan: Span): Future[Int] = reloadCacheAfter {
     for {
       configs <- findAllConfigs()
       deletedCount <- deleteAllConfigs() //This runs after findAllConfigs
@@ -31,22 +32,22 @@ class MutableCachingRepository(
     }
   }
 
-  def deleteConfigByPartId(partId: String): Future[Int] = reloadCacheAfter {
+  def deleteConfigByPartId(partId: String)(implicit parentSpan: Span): Future[Int] = reloadCacheAfter {
     for {
       deletedCount <- delegate.deleteConfigByPartId(partId)
       _ <- put(HttpPartConfigCacheKey(partId), None)
     } yield deletedCount
   }
 
-  def deleteThreadPoolConfigById(id: Long): Future[Int] = reloadCacheAfter(delegate.deleteThreadPoolConfigById(id))
+  def deleteThreadPoolConfigById(id: Long)(implicit parentSpan: Span): Future[Int] = reloadCacheAfter(delegate.deleteThreadPoolConfigById(id))
 
-  def deletePartParamById(id: Long): Future[Int] = reloadCacheAfter(delegate.deletePartParamById(id))
+  def deletePartParamById(id: Long)(implicit parentSpan: Span): Future[Int] = reloadCacheAfter(delegate.deletePartParamById(id))
 
-  def deleteCacheGroupByName(name: String): Future[Int] = reloadCacheAfter(delegate.deleteCacheGroupByName(name))
+  def deleteCacheGroupByName(name: String)(implicit parentSpan: Span): Future[Int] = reloadCacheAfter(delegate.deleteCacheGroupByName(name))
 
-  def importConfigs(configs: Seq[json.HttpPartConfig]): Future[Seq[String]] = reloadCacheAfter(delegate.importConfigs(configs))
+  def importConfigs(configs: Seq[json.HttpPartConfig])(implicit parentSpan: Span): Future[Seq[String]] = reloadCacheAfter(delegate.importConfigs(configs))
 
-  private def reloadCacheAfter[A](f: => Future[A]) = {
+  private def reloadCacheAfter[A](f: => Future[A])(implicit parentSpan: Span) = {
     for {
       result <- f
       reloadR <- reloadCache() // Don't worry, this happens after result

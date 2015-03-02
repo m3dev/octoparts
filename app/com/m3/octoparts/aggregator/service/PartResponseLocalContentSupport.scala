@@ -3,6 +3,7 @@ package com.m3.octoparts.aggregator.service
 import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.model.PartResponse
 import com.m3.octoparts.model.config.{ HttpPartConfig, ShortPartParam }
+import com.twitter.zipkin.gen.Span
 
 import scala.concurrent.Future
 
@@ -10,7 +11,7 @@ trait PartResponseLocalContentSupport extends PartRequestServiceBase {
 
   override def processWithConfig(ci: HttpPartConfig,
                                  partRequestInfo: PartRequestInfo,
-                                 params: Map[ShortPartParam, Seq[String]]): Future[PartResponse] = {
+                                 params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): Future[PartResponse] = {
     if (ci.localContentsEnabled) {
       Future.successful(createPartResponse(ci, partRequestInfo))
     } else {

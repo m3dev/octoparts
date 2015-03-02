@@ -1,8 +1,10 @@
 package com.m3.octoparts.cache.memcached
 
+import com.beachape.zipkin.services.ZipkinServiceLike
 import com.m3.octoparts.cache.{ Cache, CacheException, RawCache }
 import com.m3.octoparts.cache.key._
 import com.beachape.logging.LTSVLogger
+import com.twitter.zipkin.gen.Span
 import shade.memcached.Codec
 
 import scala.concurrent.duration._
@@ -18,8 +20,10 @@ import scala.util.control.NonFatal
  * @param underlying the underlying raw cache
  * @param keyGen the key generator
  */
-class MemcachedCache(underlying: RawCache, keyGen: MemcachedKeyGenerator)(implicit executionContext: ExecutionContext)
+class MemcachedCache(underlying: RawCache, keyGen: MemcachedKeyGenerator)(implicit executionContext: ExecutionContext, zipkinService: ZipkinServiceLike)
     extends Cache {
+
+  import com.beachape.zipkin.FutureEnrichment._
 
   /**
    * This value is arbitrarily chosen.
@@ -30,17 +34,17 @@ class MemcachedCache(underlying: RawCache, keyGen: MemcachedKeyGenerator)(implic
 
   private def serializeKey(key: CacheKey) = keyGen.toMemcachedKey(key)
 
-  def get[T](key: CacheKey)(implicit codec: Codec[T]): Future[Option[T]] = {
+  def get[T](key: CacheKey)(implicit codec: Codec[T], parentSpan: Span): Future[Option[T]] = {
     try {
       underlying.get[T](serializeKey(key)).recoverWith {
         case NonFatal(err) => throw new CacheException(key, err)
-      }
+      }.trace(s"memcached-get-$key")
     } catch {
       case NonFatal(e) => Future.failed(e)
     }
   }
 
-  def put[T](key: CacheKey, v: T, ttl: Option[Duration])(implicit codec: Codec[T]): Future[Unit] = {
+  def put[T](key: CacheKey, v: T, ttl: Option[Duration])(implicit codec: Codec[T], parentSpan: Span): Future[Unit] = {
     try {
       ttl match {
         case Some(duration) if duration < 1.second =>
@@ -54,7 +58,7 @@ class MemcachedCache(underlying: RawCache, keyGen: MemcachedKeyGenerator)(implic
         case _ =>
           underlying.set[T](serializeKey(key), v, ttl.getOrElse(VERY_LONG_TTL)).recoverWith {
             case NonFatal(err) => throw new CacheException(key, err)
-          }
+          }.trace(s"memcached-set-$key")
       }
     } catch {
       case NonFatal(e) => Future.failed(e)
