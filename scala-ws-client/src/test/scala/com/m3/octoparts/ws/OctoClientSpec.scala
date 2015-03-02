@@ -9,7 +9,7 @@ import com.m3.octoparts.model.config.ParamType
 import com.m3.octoparts.model.config.json._
 import play.api.libs.json._
 import org.scalatest._
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{ IntegrationPatience, PatienceConfiguration, ScalaFutures }
 import org.scalatest.mock.MockitoSugar
 import play.api.libs.json.JsValue
 import play.api.libs.ws._
@@ -23,7 +23,13 @@ import scala.language.postfixOps
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with MockitoSugar {
+class OctoClientSpec
+    extends FunSpec
+    with Matchers
+    with ScalaFutures
+    with MockitoSugar
+    with PatienceConfiguration
+    with IntegrationPatience {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
