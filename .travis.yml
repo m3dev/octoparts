@@ -16,7 +16,7 @@ before_script:
 
 script: "sbt clean coverage test"
 
-after_success: "sbt coverageAggregate coveralls" && find $HOME/.sbt -name "*.lock" -type f -delete && find $HOME/.ivy2/cache -name "*[\[\]\(\)]*.properties" -type f -delete
+after_success: sbt coverageAggregate coveralls && find $HOME/.sbt -name "*.lock" -type f -delete && find $HOME/.ivy2/cache -name "*[\[\]\(\)]*.properties" -type f -delete
 
 sudo: false
 
