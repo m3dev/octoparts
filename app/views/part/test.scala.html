@@ -6,7 +6,10 @@
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/jquery.validationEngine.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/languages/jquery.validationEngine-@{lang.language}.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js"></script>
     <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/validationEngine.jquery.min.css"/>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/default.min.css">
+
     <script type="text/javascript">
         $(function(){
             var form = $("#tryItForm");
@@ -30,7 +33,7 @@
                     if (!form.find('input[name="dis_' + paramName + '"]').is(':checked')) {
                         params.push({
                             "key" : paramName,
-                            "value" : form.find ( 'input[name="in_' + paramName + '"]' ).val ( )
+                            "value" : form.find('input[name="in_' + paramName + '"]').val()
                         });
                     }
                 }
@@ -44,12 +47,22 @@
                     async: false,
                     data: postBody,
                     success: function (data, textStatus, jqXHR) {
-                    $("#response").val(JSON.stringify(data, null, "\t"))
+                        $("#response").text(JSON.stringify(data, null, "\t"));
+                        $("#response-contents").text(data.responses[0].contents);
+                        $('code').each(function(i, block) {
+                            hljs.highlightBlock(block);
+                        });
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
                         alert("Octoparts " + textStatus + ": " + errorThrown)
                     }
                 });
+            });
+        });
+        $(function(){
+            $('#clear').click(function() {
+              $('#response').empty();
+              $('#response-contents').empty();
             });
         });
     </script>
@@ -66,7 +79,7 @@
                         <div class="row">
                             <div class="col-sm-5">
                                 <input type="text" name="in_@param.param.inputName" id="in_@param.param.inputName" class="form-control@if(param.required) { validate[required] }" />
-                                @Messages("tryIt.disable") <input type="checkbox" name="dis_@param.param.inputName" />
+                                @Messages("tryIt.disable") <input type="checkbox" name="dis_@param.param.inputName" @if(!param.required){ checked="checked" } />
                             </div>
                         </div>
                     </div>
@@ -99,9 +112,11 @@
         </div>
     </div>
 
-    <h2>@Messages("tryIt.response")</h2>
-    <textarea id="response" style="width:100%; overflow: auto" rows="20"></textarea>
-    <br />
-    <button id="clear" onclick="$('#response').val('')" class="btn btn-default">@Messages("tryIt.clear")</button>
+    <h2>@Messages("tryIt.response-octoparts")</h2>
+    <pre><code class="json" id="response"></code></pre>
+
+    <h2>@Messages("tryIt.response-contents")</h2>
+    <pre><code id="response-contents"></code></pre>
+    <button id="clear" class="btn btn-default">@Messages("tryIt.clear")</button>
 
 }

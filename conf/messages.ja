@@ -95,7 +95,8 @@ tryIt.title={0}の送信テスト
 tryIt.disable=無効にする
 tryIt.meta=メタ
 tryIt.send=送信
-tryIt.response=応答
+tryIt.response-octoparts=Octoparts応答
+tryIt.response-contents=パーツコンテンツ
 tryIt.clear=クリア
 
 parameter.edit=パーツ「{0}」の「{1}」パラメータ編集

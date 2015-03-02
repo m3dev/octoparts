@@ -95,7 +95,8 @@ tryIt.title=Try {0} !
 tryIt.disable=Disable
 tryIt.meta=Meta
 tryIt.send=Send
-tryIt.response=Response
+tryIt.response-octoparts=Octoparts response
+tryIt.response-contents=Part response contents
 tryIt.clear=Clear
 
 parameter.edit=Edit parameter {1} of part {0}
