@@ -41,7 +41,7 @@ trait PartRequestServiceBase extends RequestParamSupport {
    * @return Future[PartResponse]
    */
   def responseFor(pReq: PartRequestInfo)(implicit parentSpan: Span): Future[PartResponse] = {
-    val fMaybeCi = repository.findConfigByPartId(pReq.partRequest.partId).trace(s"find-config-by-id-${pReq.partRequest.partId}")
+    val fMaybeCi = repository.findConfigByPartId(pReq.partRequest.partId)
     fMaybeCi.flatMap {
       case Some(ci) => {
         val params = combineParams(ci.parameters, pReq)
