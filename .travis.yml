@@ -14,9 +14,9 @@ before_script:
   - psql -c "CREATE USER octoparts_app WITH PASSWORD '';" -U postgres
   - psql -c "GRANT ALL PRIVILEGES ON DATABASE octoparts_test to octoparts_app;" -U postgres
 
-script: "sbt clean coverage test"
+script: sbt clean coverage test && find $HOME/.sbt -name "*.lock" -type f -delete && find $HOME/.ivy2/cache -name "*[\[\]\(\)]*.properties" -type f -delete
 
-after_success: sbt coverageAggregate coveralls && find $HOME/.sbt -name "*.lock" -type f -delete && find $HOME/.ivy2/cache -name "*[\[\]\(\)]*.properties" -type f -delete
+after_success: sbt coverageAggregate coveralls
 
 sudo: false
 
