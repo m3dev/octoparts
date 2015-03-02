@@ -2,6 +2,8 @@ package controllers
 
 import javax.ws.rs.QueryParam
 
+import com.beachape.zipkin.{ TracedFuture, ReqHeaderToSpanImplicit }
+import com.beachape.zipkin.services.ZipkinServiceLike
 import com.m3.octoparts.json.format.ConfigModel._
 import com.m3.octoparts.json.format.ReqResp._
 import com.m3.octoparts.aggregator.service.PartsService
@@ -28,9 +30,11 @@ class PartsController(
     partsService: PartsService,
     configsRepository: ConfigsRepository,
     requestTimeout: Duration,
-    readClientCacheHeaders: Boolean) extends Controller with LoggingSupport {
+    readClientCacheHeaders: Boolean,
+    implicit val zipkinService: ZipkinServiceLike) extends Controller with LoggingSupport with ReqHeaderToSpanImplicit {
 
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
+  import com.beachape.zipkin.FutureEnrichment._
 
   @ApiOperation(
     value = "Invoke registered endpoints",
@@ -55,9 +59,11 @@ class PartsController(
       aggregateRequest => {
         val noCache = readClientCacheHeaders && request.headers.get(HeaderConstants.CACHE_CONTROL) == Some(HeaderConstants.CACHE_CONTROL_NO_CACHE)
         logAggregateRequest(aggregateRequest, noCache)
-
-        val fAggregateResponse = partsService.processParts(aggregateRequest, noCache)
-        withRequestTimeout(fAggregateResponse)
+        val fAggregateResponse = TracedFuture("aggregate-response-processing") { maybeSpan =>
+          val tracingSpan = maybeSpan.getOrElse(req2span(request))
+          partsService.processParts(aggregateRequest, noCache)(tracingSpan)
+        }
+        withRequestTimeout(fAggregateResponse).trace("aggregate-response-processing-with-timeout")
       }
     )
   }
@@ -72,9 +78,9 @@ class PartsController(
   def list(@ApiParam(value = "Optional part ids to filter on. Note, this should be passed as multiple partIdParams=partId, e.g ?partIdParams=wut&partIdParams=wut3 ", allowMultiple = true)@QueryParam("partIdParams") partIdParams: List[String] = Nil) = Action.async { implicit request =>
     debugRc
     val fConfigs = partIdParams match {
-      case Nil => configsRepository.findAllConfigs()
+      case Nil => configsRepository.findAllConfigs().trace("find-all-configs")
       case partIds =>
-        val fParts = partIds.map(configsRepository.findConfigByPartId)
+        val fParts = partIds.map(id => configsRepository.findConfigByPartId(id).trace(s"find-config-by-part-ids: ${id}"))
         Future.sequence(fParts).map(_.flatten)
     }
 

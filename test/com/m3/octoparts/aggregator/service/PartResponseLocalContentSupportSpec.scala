@@ -1,11 +1,13 @@
 package com.m3.octoparts.aggregator.service
 
+import com.beachape.zipkin.services.NoopZipkinService
 import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.aggregator.handler.HttpHandlerFactory
 import com.m3.octoparts.model.PartResponse
 import com.m3.octoparts.model.config.{ HttpPartConfig, ShortPartParam }
 import com.m3.octoparts.repository.ConfigsRepository
 import com.m3.octoparts.support.mocks.ConfigDataMocks
+import com.twitter.zipkin.gen.Span
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ FlatSpec, Matchers }
 
@@ -21,15 +23,18 @@ class PartResponseLocalContentSupportSpec extends FlatSpec
   private val partResponseFromSuper = mockPartResponse
 
   private class Super extends PartRequestServiceBase {
+    implicit val zipkinService = NoopZipkinService
     override implicit def executionContext: ExecutionContext = global
     override def repository: ConfigsRepository = ???
     override def handlerFactory: HttpHandlerFactory = ???
     override def processWithConfig(ci: HttpPartConfig,
                                    partRequestInfo: PartRequestInfo,
-                                   params: Map[ShortPartParam, Seq[String]]): Future[PartResponse] = Future(partResponseFromSuper)
+                                   params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): Future[PartResponse] = Future(partResponseFromSuper)
   }
 
   private val sut = new Super with PartResponseLocalContentSupport
+
+  implicit val emptySpan = new Span()
 
   it should "forward to super if local contents is disabled" in {
     val httpPartConfig = mockHttpPartConfig.copy(localContentsEnabled = false)
@@ -67,7 +72,7 @@ class PartResponseLocalContentSupportSpec extends FlatSpec
     val params = Map.empty[ShortPartParam, Seq[String]]
 
     trait SuperFail extends Super {
-      override def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, Seq[String]]): Future[PartResponse] = {
+      override def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): Future[PartResponse] = {
         Future.successful(mockPartResponse.copy(statusCode = Some(503)))
       }
     }

@@ -46,6 +46,7 @@ class OctoClientSpec extends FunSpec with Matchers with ScalaFutures with Mockit
       val mockWS = mock[WSRequestHolder]
       when(mockWS.withQueryString(anyVararg())).thenReturn(mockWS)
       when(mockWS.get()).thenReturn(fWSRespGet)
+      when(mockWS.withHeaders(anyVararg())).thenReturn(mockWS)
       when(mockWS.post(anyObject[JsValue])(anyObject(), anyObject())).thenReturn(fWSRespPost)
       when(mockWS.post(anyObject[EmptyContent])(anyObject(), anyObject())).thenReturn(fWSRespPost)
       mockWS
