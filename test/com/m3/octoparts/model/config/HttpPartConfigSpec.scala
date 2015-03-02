@@ -1,6 +1,9 @@
 package com.m3.octoparts.model.config
 
+import java.nio.charset.StandardCharsets
+
 import com.m3.octoparts.model.HttpMethod
+import com.m3.octoparts.model.config.json.AlertMailSettings
 import scala.concurrent.duration._
 import com.m3.octoparts.support.mocks.ConfigDataMocks
 import scala.language.postfixOps
@@ -35,8 +38,14 @@ class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
             coreSize = 2,
             queueSize = 256),
           commandKey = "command",
-          commandGroupKey = "GroupKey"),
+          commandGroupKey = "GroupKey",
+          false),
         additionalValidStatuses = Set(302),
+        httpPoolSize = 5,
+        httpConnectionTimeout = 1.second,
+        httpSocketTimeout = 5.seconds,
+        httpDefaultEncoding = StandardCharsets.US_ASCII,
+        httpProxy = Some("localhost:666"),
         parameters = Set(
           json.PartParam(
             required = true,
@@ -49,11 +58,13 @@ class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
         deprecatedInFavourOf = None,
         cacheGroups = Set(mockCacheGroup).map(CacheGroup.toJsonModel),
         cacheTtl = Some(60 seconds),
-        alertMailsEnabled = true,
-        alertAbsoluteThreshold = Some(1000),
-        alertPercentThreshold = Some(33.0),
-        alertInterval = 10 minutes,
-        alertMailRecipients = Some("l-chan@m3.com"),
+        alertMailSettings = AlertMailSettings(
+          alertMailsEnabled = true,
+          alertAbsoluteThreshold = Some(1000),
+          alertPercentThreshold = Some(33.0),
+          alertInterval = 10 minutes,
+          alertMailRecipients = Some("l-chan@m3.com")
+        ),
         localContentsEnabled = true,
         localContents = Some("{}"))
       jsonModel should be(expectedModel)

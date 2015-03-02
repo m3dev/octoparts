@@ -47,8 +47,6 @@ object Octoparts extends Build {
   lazy val javaClient = nonPlayProject("java-client")()
     .settings(
       name := "octoparts-java-client",
-      javacOptions in compile ++= Seq("-source", "1.6", "-target", "1.6", "-Xlint"),
-      javacOptions in doc ++= Seq("-source", "1.6"),
       libraryDependencies ++= Dependencies.javaClientDependncies
     )
     .dependsOn(models)

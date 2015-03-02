@@ -1,5 +1,6 @@
 package com.m3.octoparts.repository
 
+import com.beachape.zipkin.services.ZipkinServiceLike
 import com.m3.octoparts.cache.key.MemcachedKeyGenerator
 import com.m3.octoparts.cache.memcached.MemcachedCache
 import com.m3.octoparts.http.HttpClientPool
@@ -15,6 +16,7 @@ class RepositoriesModule extends Module {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     val localBuffer = inject[Configuration].getInt("memcached.configLocalBuffer")
+    implicit val zipkinService = inject[ZipkinServiceLike]
 
     val cache = localBuffer match {
       case Some(localBufferDuration) if localBufferDuration > 0 => {
@@ -26,7 +28,7 @@ class RepositoriesModule extends Module {
     }
 
     new MutableCachingRepository(
-      DBConfigsRepository,
+      new DBConfigsRepository,
       cache,
       inject[HttpClientPool]
     )

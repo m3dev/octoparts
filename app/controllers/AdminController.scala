@@ -1,11 +1,17 @@
 package controllers
 
+import java.nio.charset.StandardCharsets
+
+import com.beachape.logging.LTSVLogger
+import com.beachape.zipkin.ReqHeaderToSpanImplicit
 import com.m3.octoparts.cache.CacheOps
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.model.config.json.{ HttpPartConfig => JsonHttpPartConfig }
 import com.m3.octoparts.repository.MutableConfigsRepository
+import com.twitter.zipkin.gen.Span
 import controllers.support.{ AuthSupport, LoggingSupport }
 import org.joda.time.DateTime
+import play.api.Logger
 import play.api.data._
 import play.api.data.validation.ValidationError
 import play.api.http.MediaType
@@ -22,7 +28,7 @@ import scala.util.{ Success, Failure, Try }
 import scala.util.control.NonFatal
 
 class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(implicit val navbarLinks: NavbarLinks = NavbarLinks(None, None, None, None))
-    extends Controller with AuthSupport with LoggingSupport {
+    extends Controller with AuthSupport with LoggingSupport with ReqHeaderToSpanImplicit {
 
   import controllers.AdminForms._
   import AdminController._
@@ -50,24 +56,27 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
 
   def newPart = AuthorizedAction.async { implicit req =>
     val formWithDefaults = partForm.bind(Map(
-      "timeoutInMs" -> "5000",
-      "alertInterval" -> "60",
-      "alertPercentThreshold" -> "0.5"
+      "hystrixConfig.timeoutInMs" -> "5000",
+      "httpSettings.httpConnectionTimeoutInMs" -> "1000",
+      "httpSettings.httpSocketTimeoutInMs" -> "5000",
+      "httpSettings.httpDefaultEncoding" -> StandardCharsets.UTF_8.name(),
+      "alertMail.interval" -> "60",
+      "alertMail.percentThreshold" -> "0.5"
     ))
-    showPartForm(formWithDefaults, maybePart = None, errorMsg = None)
+    showPartForm(formWithDefaults, maybePart = None)
   }
 
   def editPart(partId: String) = AuthorizedAction.async { implicit req =>
     findAndUsePart(partId) { part =>
       val data = PartData.fromHttpPartConfig(part)
-      showPartForm(partForm.fill(data), maybePart = Some(part), errorMsg = None)
+      showPartForm(partForm.fill(data), maybePart = Some(part))
     }
   }
 
   def createPart = AuthorizedAction.async { implicit req =>
     val form = partForm.bindFromRequest
     form.fold({ formWithErrors =>
-      showPartForm(formWithErrors, None, Some(Messages("form.hasErrors")))
+      showPartForm(formWithErrors, None, Messages("form.hasErrors"))
     }, { data =>
       repository.findAllCacheGroupsByName(data.cacheGroupNames: _*).flatMap { cacheGroups =>
         val part = data.toNewHttpPartConfig(owner = req.principal.nickname, cacheGroups = cacheGroups.toSet)
@@ -77,7 +86,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
           case NonFatal(e) =>
             // Problem with save: display form again with an error message
             errorRc(e)
-            showPartForm(form, None, Some(e.getMessage))
+            showPartForm(form, None, extractMessage(e))
         }
       }
     })
@@ -88,7 +97,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
     findAndUsePart(partId) { part =>
       val form = partForm.bindFromRequest
       form.fold({ formWithErrors =>
-        showPartForm(formWithErrors, Some(part), Some(Messages("form.hasErrors")))
+        showPartForm(formWithErrors, Some(part), Messages("form.hasErrors"))
       }, { data =>
         repository.findAllCacheGroupsByName(data.cacheGroupNames: _*).flatMap { cacheGroups =>
           loadParams(part).flatMap { params =>
@@ -101,7 +110,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
               case NonFatal(e) =>
                 // Problem with save: display form again with an error message
                 errorRc(e)
-                showPartForm(form, Some(part), Some(e.getMessage))
+                showPartForm(form, Some(part), extractMessage(e))
             }
           }
         }
@@ -449,7 +458,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
     }
   }
 
-  private def loadParams(part: HttpPartConfig): Future[Set[Option[PartParam]]] = {
+  private def loadParams(part: HttpPartConfig)(implicit parentSpan: Span): Future[Set[Option[PartParam]]] = {
     /*
     When updating a HttpPartConfig in the current UI, the CacheGroups for the child PartParams
     are left intact (this may change in the future).
@@ -519,7 +528,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
    * for each of the PartParams that it has, we can display the HttpPartParam it belongs to.
    * This is used in the 'show cache group' view.
    */
-  private def populateCacheGroup(cacheGroup: CacheGroup): Future[CacheGroup] = {
+  private def populateCacheGroup(cacheGroup: CacheGroup)(implicit parentSpan: Span): Future[CacheGroup] = {
     repository.findAllConfigs().map { allConfigs =>
       val allConfigsMap = allConfigs.map(c => c.id.get -> c).toMap
       cacheGroup.copy(partParams = cacheGroup.partParams.map { partParam =>
@@ -532,16 +541,25 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
    * Display the page for creating/editing a part.
    * @param form Play form object containing user's previously input data, if any
    * @param maybePart the part, if user is editing an existing part
-   * @param errorMsg An error message to show as a flash, if any
+   * @param errorMsgs Error messages to show as a flash, if any
    */
-  private def showPartForm(form: Form[PartData], maybePart: Option[HttpPartConfig], errorMsg: Option[String] = None)(implicit req: RequestHeader): Future[Result] = {
+  private def showPartForm(form: Form[PartData], maybePart: Option[HttpPartConfig], errorMsgs: String*)(implicit req: RequestHeader): Future[Result] = {
+    form.errors.foreach {
+      error => LTSVLogger.debug("key" -> error.key, "Form validation error" -> Messages(error.message, error.args: _*))
+    }
     val fTps = repository.findAllThreadPoolConfigs()
     val fCgs = repository.findAllCacheGroups()
     for {
       tps <- fTps
       cgs <- fCgs
     } yield {
-      val flash = errorMsg.fold(req.flash)(error => req.flash + (BootstrapFlashStyles.danger.toString -> error))
+      val allErrorMsgs = errorMsgs ++ form.globalErrors.map(_.message)
+      val flash = if (allErrorMsgs.isEmpty) {
+        req.flash
+      } else {
+        val dangerMsg = req.flash.get(BootstrapFlashStyles.danger.toString).toSeq ++ allErrorMsgs
+        Flash(req.flash.data + (BootstrapFlashStyles.danger.toString -> dangerMsg.mkString("\n")))
+      }
       Ok(views.html.part.edit(form, tps, cgs, maybePart)(flash, navbarLinks, implicitly[Lang]))
     }
   }
@@ -583,14 +601,14 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
 
   private def handleException(e: Throwable, redirectTo: Call)(implicit req: RequestHeader): Result = {
     errorRc(e)
-    flashError(redirectTo, Option(e.getMessage).getOrElse(e.getClass.getName))
+    flashError(redirectTo, extractMessage(e))
   }
 
   private def flashError(redirectTo: Call, errorMsg: String): Result = {
     Found(redirectTo.url).flashing(BootstrapFlashStyles.danger.toString -> errorMsg)
   }
 
-  private def saveParamAndClearPartResponseCache(partId: String, param: PartParam): Future[Long] = {
+  private def saveParamAndClearPartResponseCache(partId: String, param: PartParam)(implicit parentSpan: Span): Future[Long] = {
     val saveResult = repository.save(param)
     saveResult.onComplete(_ => if (shouldBustCache(param)) cacheOps.increasePartVersion(partId))
     saveResult
@@ -598,6 +616,8 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
 }
 
 object AdminController {
+
+  private def extractMessage(e: Throwable): String = Option(e.getMessage).getOrElse(e.getClass.getName)
 
   /**
    * Creates a unique name, by appending `suffix` until the result is not in `reservedNames`.

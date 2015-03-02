@@ -1,12 +1,13 @@
 package com.m3.octoparts.http
 
 import java.io.Closeable
-import java.nio.charset.{ Charset, StandardCharsets }
+import java.nio.charset.Charset
 
 import com.beachape.logging.LTSVLogger
 import com.codahale.metrics.{ Gauge, MetricRegistry }
 import com.m3.octoparts.OctopartsMetricsRegistry
-import org.apache.http.{ HttpClientConnection, HttpRequest }
+import com.m3.octoparts.model.config.HttpProxySettings
+import org.apache.http._
 import org.apache.http.client.HttpClient
 import org.apache.http.client.config.{ CookieSpecs, RequestConfig }
 import org.apache.http.client.methods.HttpUriRequest
@@ -26,28 +27,46 @@ import scala.concurrent.duration._
  * made in another thread/non-blocking, which most Scala libraries do.
  *
  * @param name is used to differentiate instances when printing statistics
+ * @param connectTimeout max time waiting for the host to respond
+ * @param socketTimeout max time spent receiving data from the host
+ * @param defaultEncoding to be used when the response does not specify an encoding. set to a no-fail encoding like ASCII to handle binary data.
  */
 class InstrumentedHttpClient(
   name: String,
-  connectionPoolSize: Int = 20,
-  connectTimeout: Duration = 1.seconds,
-  socketTimeout: Duration = 10.seconds,
-  defaultEncoding: Charset = StandardCharsets.UTF_8)
+  connectionPoolSize: Int,
+  connectTimeout: FiniteDuration,
+  socketTimeout: FiniteDuration,
+  defaultEncoding: Charset,
+  mbProxySettings: Option[HttpProxySettings])
     extends HttpClientLike
     with Closeable {
-  import InstrumentedHttpClient._
+  import com.m3.octoparts.http.InstrumentedHttpClient._
 
   private[http] val connectionManager = new InstrumentedHttpClientConnectionMgr
   private val requestExecutor = new InstrumentedHttpRequestExecutor
 
+  /**
+   * Max time waiting for the connection pool to yield a connection
+   */
+  protected def connectionRequestTimeout: FiniteDuration = connectTimeout
+
   // the underlying Apache HTTP client
   private val httpClient = {
+
+    val mbProxy = for {
+      proxySettings <- mbProxySettings
+    } yield {
+      new HttpHost(proxySettings.host, proxySettings.port, proxySettings.scheme)
+    }
+
     // Custom config that disables cookie handling so that we don't automatically
     // parse cookies into any shared cookie stores
     val clientConfig = RequestConfig.custom()
       .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
       .setConnectTimeout(connectTimeout.toMillis.toInt)
+      .setConnectionRequestTimeout(connectionRequestTimeout.toMillis.toInt)
       .setSocketTimeout(socketTimeout.toMillis.toInt)
+      .setProxy(mbProxy.orNull)
       .build()
 
     HttpClientBuilder

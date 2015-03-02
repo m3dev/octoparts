@@ -1,5 +1,6 @@
 package com.m3.octoparts.aggregator.service
 
+import com.beachape.zipkin.services.ZipkinServiceLike
 import com.m3.octoparts.aggregator.handler.HttpHandlerFactory
 import com.m3.octoparts.cache.{ CacheOps, PartResponseCachingSupport }
 import com.m3.octoparts.logging.PartRequestLogger
@@ -16,7 +17,8 @@ class AggregatorServicesModule extends Module {
 
   bind[PartRequestServiceBase] to new PartRequestService(
     inject[ConfigsRepository],
-    inject[HttpHandlerFactory]
+    inject[HttpHandlerFactory],
+    inject[ZipkinServiceLike]
   ) with PartResponseCachingSupport with PartResponseLocalContentSupport {
     val cacheOps = inject[CacheOps]
   }

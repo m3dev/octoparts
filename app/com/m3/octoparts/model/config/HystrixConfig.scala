@@ -7,7 +7,7 @@ import com.m3.octoparts.model.config.json.{ HystrixConfig => JsonHystrixConfig }
 import scala.language.postfixOps
 
 object HystrixConfig {
-  val defaultTimeout = (5 seconds).toMillis
+  val defaultTimeout = 5.seconds
 
   /**
    * Returns a [[JsonHystrixConfig]] for a given [[HystrixConfig]]
@@ -18,7 +18,8 @@ object HystrixConfig {
       threadPoolConfig = ThreadPoolConfig.toJsonModel(config.threadPoolConfig.get),
       commandKey = config.commandKey,
       commandGroupKey = config.commandGroupKey,
-      timeout = config.timeoutInMs.millis
+      localContentsAsFallback = config.localContentsAsFallback,
+      timeout = config.timeout
     )
   }
 
@@ -27,7 +28,8 @@ object HystrixConfig {
       threadPoolConfig = Some(ThreadPoolConfig.fromJsonModel(config.threadPoolConfig)),
       commandKey = config.commandKey,
       commandGroupKey = config.commandGroupKey,
-      timeoutInMs = config.timeout.toMillis,
+      timeout = config.timeout,
+      localContentsAsFallback = config.localContentsAsFallback,
       createdAt = DateTime.now,
       updatedAt = DateTime.now
     )
@@ -36,8 +38,6 @@ object HystrixConfig {
 
 /**
  * Holds the Hystrix Configuration data for a given dependency
- *
- * TODO: Link to a ThreadPoolConfig
  */
 case class HystrixConfig(
     id: Option[Long] = None, // None means the HystrixConfig is new (not inserted yet)
@@ -47,7 +47,8 @@ case class HystrixConfig(
     threadPoolConfig: Option[ThreadPoolConfig] = None,
     commandKey: String,
     commandGroupKey: String,
-    timeoutInMs: Long = HystrixConfig.defaultTimeout,
+    timeout: FiniteDuration = HystrixConfig.defaultTimeout,
+    localContentsAsFallback: Boolean,
     createdAt: DateTime,
     updatedAt: DateTime) extends ConfigModel[HystrixConfig] {
 

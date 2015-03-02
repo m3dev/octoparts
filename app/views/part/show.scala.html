@@ -59,10 +59,20 @@
             <dt>@Messages("parts.additionalValidStatuses")</dt>
             <dd>@Messages("parts.additionalValidStatuses.wrap", part.config.additionalValidStatuses.mkString(", "))</dd>
         }
+        <dt>@Messages("parts.httpPoolSize")</dt>
+        <dd>@part.config.httpPoolSize</dd>
+        <dt>@Messages("parts.httpConnectionTimeoutInMs")</dt>
+        <dd>@part.config.httpConnectionTimeout.toCoarsest</dd>
+        <dt>@Messages("parts.httpSocketTimeoutInMs")</dt>
+        <dd>@part.config.httpSocketTimeout.toCoarsest</dd>
+        <dt>@Messages("parts.httpDefaultEncoding")</dt>
+        <dd>@part.config.httpDefaultEncoding</dd>
+        <dt>@Messages("parts.httpProxy")</dt>
+        <dd>@part.config.httpProxy</dd>
         <dt>@Messages("parts.parameter")</dt>
         <dd>
             <a href="@part.addParamLink" class="btn btn-primary" style="margin: 5px 0;">@Messages("parts.parameter.create")</a>
-            <table class="dataTable">
+            <table class="dataTable stripe hover compact">
                 <thead>
                     <tr>
                         <th>@Messages("parts.parameter.outputName")</th>
@@ -106,7 +116,9 @@
                 <dt>@Messages("parts.hystrix.commandGroupKey")</dt>
                 <dd>@hystrixConfigItem.commandGroupKey</dd>
                 <dt>@Messages("parts.hystrix.timeoutInMs")</dt>
-                <dd>@hystrixConfigItem.timeoutInMs</dd>
+                <dd>@hystrixConfigItem.timeout.toCoarsest</dd>
+                <dt>@Messages("parts.hystrix.localContentsAsFallback")</dt>
+                <dd>@hystrixConfigItem.localContentsAsFallback</dd>
                 <dt>@Messages("threadPools.key")</dt>
                 <dd>@hystrixConfigItem.threadPoolConfigItem.threadPoolKey</dd>
             }
@@ -115,6 +127,12 @@
                 <dd>@Messages("parts.hystrix.none.body")</dd>
             }
         }
+        <h3>@Messages("parts.section.localContents")</h3>
+
+        <dt>@Messages("parts.localContents.always")</dt>
+        <dd>@part.config.localContentsEnabled</dd>
+        <dt>@Messages("parts.localContents.contents")</dt>
+        <dd>@part.config.localContents.getOrElse("")</dd>
     </dl>
 
     <hr/>
@@ -151,10 +169,4 @@
     }
 
     <hr/>
-    <h2>@Messages("parts.section.localContents")</h2>
-    @if(part.config.localContentsEnabled) {
-        <pre>@part.config.localContents.orNull</pre>
-    } else {
-        <p>@Messages("parts.localContents.disabled")</p>
-    }
 }

@@ -5,6 +5,7 @@ import com.m3.octoparts.cache.directive.CacheDirective
 import com.m3.octoparts.cache.key.{ PartCacheKey, VersionCacheKey }
 import com.m3.octoparts.cache.versioning._
 import com.m3.octoparts.model.PartResponse
+import com.twitter.zipkin.gen.Span
 import shade.memcached.Codec
 
 import scala.concurrent.duration.Duration
@@ -20,11 +21,11 @@ class MemcachedCacheOps(
 
   object PartCacheKeyFactory {
     // tries to make a part cache key using latest known version
-    def tryApply(directive: CacheDirective): Option[PartCacheKey] = {
+    def tryApply(directive: CacheDirective)(implicit parentSpan: Span): Option[PartCacheKey] = {
       tryApply(directive, CombinedVersionLookup.knownVersions(directive))
     }
 
-    def tryApply(directive: CacheDirective, internalVersions: Seq[Option[Version]]): Option[PartCacheKey] = {
+    def tryApply(directive: CacheDirective, internalVersions: Seq[Option[Version]])(implicit parentSpan: Span): Option[PartCacheKey] = {
       val aVersionIsUnknown = internalVersions.contains(None)
       if (aVersionIsUnknown) {
         None
@@ -39,29 +40,29 @@ class MemcachedCacheOps(
     import shade.memcached.MemcachedCodecs.StringBinaryCodec
     import com.m3.octoparts.json.format.ReqResp._
 
-    def pollPartResponse(cacheKey: PartCacheKey): Future[Option[PartResponse]] = {
+    def pollPartResponse(cacheKey: PartCacheKey)(implicit parentSpan: Span): Future[Option[PartResponse]] = {
       val fMaybeString = cache.get[String](cacheKey)
       fMaybeString.map(maybeString => maybeString.map(Json.parse(_).as[PartResponse]))
     }
 
-    def insertPartResponse(cacheKey: PartCacheKey, partResponse: PartResponse, ttl: Option[Duration]): Future[Unit] =
+    def insertPartResponse(cacheKey: PartCacheKey, partResponse: PartResponse, ttl: Option[Duration])(implicit parentSpan: Span): Future[Unit] =
       cache.put[String](cacheKey, Json.toJson(partResponse).toString(), calculateTtl(partResponse.cacheControl, ttl))
   }
 
   object CombinedVersionLookup {
-    def apply(directive: CacheDirective): CombinedVersionLookup =
+    def apply(directive: CacheDirective)(implicit parentSpan: Span): CombinedVersionLookup =
       CombinedVersionLookup(
         PartVersionCache(directive.partId).newLookup,
         directive.versionedParamKeys.map(ParamVersionCache(_).newLookup)
       )
 
-    def knownVersions(directive: CacheDirective): Seq[Option[Version]] = {
+    def knownVersions(directive: CacheDirective)(implicit parentSpan: Span): Seq[Option[Version]] = {
       latestVersionCache.getPartVersion(directive.partId) +: directive.versionedParamKeys.map(latestVersionCache.getParamVersion)
     }
   }
 
   case class CombinedVersionLookup(
-      partVersionLookup: VersionLookup[String], paramVersionLookups: Seq[VersionLookup[VersionedParamKey]]) {
+      partVersionLookup: VersionLookup[String], paramVersionLookups: Seq[VersionLookup[VersionedParamKey]])(implicit parentSpan: Span) {
 
     lazy val all: Seq[VersionLookup[_]] = partVersionLookup +: paramVersionLookups
 
@@ -108,24 +109,24 @@ class MemcachedCacheOps(
   sealed abstract class AbstractVersionCache[T <: java.io.Serializable](id: T) extends VersionCache[T](id) {
     private val versionCodec: Codec[Version] = Codec.LongBinaryCodec
 
-    override def pollVersion: Future[Option[Version]] = cache.get[Version](VersionCacheKey(id))(versionCodec)
+    override def pollVersion(implicit parentSpan: Span): Future[Option[Version]] = cache.get[Version](VersionCacheKey(id))(versionCodec, parentSpan)
 
-    override def doInsertExternal(version: Version) = cache.put[Version](VersionCacheKey(id), version, Some(Duration.Inf))(versionCodec)
+    override def doInsertExternal(version: Version)(implicit parentSpan: Span) = cache.put[Version](VersionCacheKey(id), version, Some(Duration.Inf))(versionCodec, parentSpan)
   }
 
   case class PartVersionCache(id: String) extends AbstractVersionCache(id) {
-    override def knownVersion = latestVersionCache.getPartVersion(id)
+    override def knownVersion(implicit parentSpan: Span) = latestVersionCache.getPartVersion(id)
 
-    override def updateVersion(version: Version) = latestVersionCache.updatePartVersion(id, version)
+    override def updateVersion(version: Version)(implicit parentSpan: Span) = latestVersionCache.updatePartVersion(id, version)
   }
 
   case class ParamVersionCache(id: VersionedParamKey) extends AbstractVersionCache(id) {
-    override def knownVersion = latestVersionCache.getParamVersion(id)
+    override def knownVersion(implicit parentSpan: Span) = latestVersionCache.getParamVersion(id)
 
-    override def updateVersion(version: Version) = latestVersionCache.updateParamVersion(id, version)
+    override def updateVersion(version: Version)(implicit parentSpan: Span) = latestVersionCache.updateParamVersion(id, version)
   }
 
-  override def putIfAbsent(directive: CacheDirective)(f: => Future[PartResponse]): Future[PartResponse] = {
+  override def putIfAbsent(directive: CacheDirective)(f: => Future[PartResponse])(implicit parentSpan: Span): Future[PartResponse] = {
 
     // this asks all the versions we may need from internal and external caches
     // note: this apply() kicks of several cache polls
@@ -162,13 +163,13 @@ class MemcachedCacheOps(
     }
   }
 
-  override def increasePartVersion(partId: String): Future[Unit] = PartVersionCache(partId).insertNewVersion()
+  override def increasePartVersion(partId: String)(implicit parentSpan: Span): Future[Unit] = PartVersionCache(partId).insertNewVersion()
 
-  override def increaseParamVersion(vpk: VersionedParamKey): Future[Unit] = ParamVersionCache(vpk).insertNewVersion()
+  override def increaseParamVersion(vpk: VersionedParamKey)(implicit parentSpan: Span): Future[Unit] = ParamVersionCache(vpk).insertNewVersion()
 
   // assumes hashes do not collide : only versions are verified
   private def checkAndReturn(
-    directive: CacheDirective, resp: PartResponse, versionLookups: CombinedVersionLookup): Future[Option[PartResponse]] = {
+    directive: CacheDirective, resp: PartResponse, versionLookups: CombinedVersionLookup)(implicit parentSpan: Span): Future[Option[PartResponse]] = {
     // really basic check to make sure we return a valid entry
     // e.g. has the right partId
     if (resp.partId == versionLookups.partId) {
@@ -203,7 +204,7 @@ class MemcachedCacheOps(
     }
   }
 
-  private def onNotFound(finishThisBefore: Future[_], directive: CacheDirective)(f: => Future[PartResponse]): Future[PartResponse] =
+  private def onNotFound(finishThisBefore: Future[_], directive: CacheDirective)(f: => Future[PartResponse])(implicit parentSpan: Span): Future[PartResponse] =
     finishThisBefore.flatMap {
       unused =>
         // not found. shall put it in when f succeeds (if ever)
@@ -217,7 +218,7 @@ class MemcachedCacheOps(
 
   private def mayCache(partResponse: PartResponse): Boolean = !partResponse.cacheControl.noStore
 
-  override def saveLater(partResponse: PartResponse, directive: CacheDirective): Future[Unit] = {
+  override def saveLater(partResponse: PartResponse, directive: CacheDirective)(implicit parentSpan: Span): Future[Unit] = {
     if (mayCache(partResponse)) {
       // renew the cache key
       // NOTE: At this point, the version futures have completed, so this is the latest known version data

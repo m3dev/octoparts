@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import com.beachape.logging.LTSVLogger
 import com.google.common.cache.{ CacheBuilder, Cache => GuavaCache }
+import com.twitter.zipkin.gen.Span
 import shade.memcached.Codec
 
 import scala.concurrent.duration._
@@ -27,7 +28,7 @@ class MemoryBufferingRawCache(networkCache: RawCache, localCacheDuration: Durati
     builder.expireAfterWrite(localCacheDuration.toMillis, TimeUnit.MILLISECONDS)
   }
 
-  def set[T](key: String, value: T, exp: Duration)(implicit codec: Codec[T]): Future[Unit] = {
+  def set[T](key: String, value: T, exp: Duration)(implicit codec: Codec[T], parentSpan: Span): Future[Unit] = {
     if (exp >= localCacheDuration) {
       storeInMemoryCache(key, value)
     } else {
@@ -37,7 +38,7 @@ class MemoryBufferingRawCache(networkCache: RawCache, localCacheDuration: Durati
     networkCache.set(key, value, exp)
   }
 
-  def get[T](key: String)(implicit codec: Codec[T]): Future[Option[T]] = {
+  def get[T](key: String)(implicit codec: Codec[T], parentSpan: Span): Future[Option[T]] = {
     val local = Option(memoryCache.getIfPresent(key))
     local match {
       case Some(value) => Future.successful(Some(value.asInstanceOf[T]))
