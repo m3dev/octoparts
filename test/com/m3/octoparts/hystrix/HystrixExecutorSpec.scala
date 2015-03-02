@@ -13,11 +13,11 @@ class HystrixExecutorSpec extends FunSpec with Matchers with ScalaFutures with C
 
   val noFallbackConfig = mockHttpPartConfig.copy(
     localContents = Some("9"),
-    hystrixConfig = Some(mockHystrixConfig.copy(timeout = 500.millis)))
+    hystrixConfig = Some(mockHystrixConfig.copy(timeout = 5.seconds)))
 
   val fallbackConfig = mockHttpPartConfig.copy(
     localContents = Some("9"),
-    hystrixConfig = Some(mockHystrixConfig.copy(localContentsAsFallback = true, timeout = 500.millis)))
+    hystrixConfig = Some(mockHystrixConfig.copy(localContentsAsFallback = true, timeout = 5.seconds)))
 
   implicit val p = PatienceConfig(timeout = 5.seconds)
 
