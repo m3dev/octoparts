@@ -53,7 +53,7 @@ class CacheModule extends Module {
       authentication = auth
     ), cacheExecutor)
 
-    new LoggingRawCache(new MemcachedRawCache(shade)(zipkinService))(cacheExecutor)
+    new LoggingRawCache(new MemcachedRawCache(shade))(cacheExecutor)
   }
 
   when(cachingEnabled) {

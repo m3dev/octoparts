@@ -12,15 +12,15 @@ import scala.concurrent.duration.Duration
 /**
  * A Memcached implementation of [[RawCache]] using the Shade library.
  */
-class MemcachedRawCache(memcached: Memcached)(implicit zipkinService: ZipkinServiceLike) extends RawCache {
+class MemcachedRawCache(memcached: Memcached) extends RawCache {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def get[T](key: String)(implicit codec: Codec[T], parentSpan: Span) = {
-    memcached.get(key).measure("CACHE_GET").trace(s"memcached-get-$key")
+    memcached.get(key).measure("CACHE_GET")
   }
 
   def set[T](key: String, value: T, ttl: Duration)(implicit codec: Codec[T], parentSpan: Span) = {
-    memcached.set(key, value, ttl).measure("CACHE_PUT").trace(s"memcached-get-$key")
+    memcached.set(key, value, ttl).measure("CACHE_PUT")
   }
 
   def close() = memcached.close()

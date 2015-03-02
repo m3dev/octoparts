@@ -2,6 +2,7 @@ package com.m3.octoparts.cache.memcached
 
 import java.util.concurrent.Executors
 
+import com.beachape.zipkin.services.NoopZipkinService
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.m3.octoparts.cache.RawCache
 import com.m3.octoparts.cache.key.{ CacheKey, MemcachedKeyGenerator, VersionCacheKey }
@@ -21,6 +22,7 @@ class MemcachedCacheSpec extends FunSpec with Matchers with ScalaFutures {
     ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor(namedThreadFactory))
   }
   implicit val emptySpan = new Span()
+  implicit val zipkinService = NoopZipkinService
 
   describe("error handling") {
 
