@@ -4,22 +4,26 @@ import java.util.concurrent.TimeoutException
 
 import com.m3.octoparts.support.mocks.ConfigDataMocks
 import com.netflix.hystrix.exception.HystrixRuntimeException
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{ PatienceConfiguration, IntegrationPatience, ScalaFutures }
 import org.scalatest.{ FunSpec, Matchers }
 
 import scala.concurrent.duration._
 
-class HystrixExecutorSpec extends FunSpec with Matchers with ScalaFutures with ConfigDataMocks {
+class HystrixExecutorSpec
+    extends FunSpec
+    with Matchers
+    with ScalaFutures
+    with ConfigDataMocks
+    with IntegrationPatience
+    with PatienceConfiguration {
 
   val noFallbackConfig = mockHttpPartConfig.copy(
     localContents = Some("9"),
-    hystrixConfig = Some(mockHystrixConfig.copy(timeout = 500.millis)))
+    hystrixConfig = Some(mockHystrixConfig.copy(timeout = 2.seconds)))
 
   val fallbackConfig = mockHttpPartConfig.copy(
     localContents = Some("9"),
-    hystrixConfig = Some(mockHystrixConfig.copy(localContentsAsFallback = true, timeout = 500.millis)))
-
-  implicit val p = PatienceConfig(timeout = 5.seconds)
+    hystrixConfig = Some(mockHystrixConfig.copy(localContentsAsFallback = true, timeout = 2.seconds)))
 
   describe("#future") {
     it("should return a Future[Result] that makes sense") {
