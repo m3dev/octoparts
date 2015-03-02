@@ -26,6 +26,8 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
+  implicit val emptySpan = new Span()
+
   def createConfig(partId: String): HttpPartConfig = mockHttpPartConfig.copy(
     partId = partId,
     uriToInterpolate = "http://www.example.com/" + partId,
@@ -35,11 +37,11 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
   val configsRepository = new MockConfigRespository {
     def keys = Seq("void", "error", "slow")
 
-    override def findConfigByPartId(partId: String): Future[Option[HttpPartConfig]] = Future.successful {
+    override def findConfigByPartId(partId: String)(implicit parentSpan: Span): Future[Option[HttpPartConfig]] = Future.successful {
       if (keys.contains(partId)) Some(createConfig(partId)) else None
     }
 
-    override def findAllConfigs(): Future[Seq[HttpPartConfig]] = Future.successful(keys.map(createConfig))
+    override def findAllConfigs()(implicit parentSpan: Span): Future[Seq[HttpPartConfig]] = Future.successful(keys.map(createConfig))
   }
   val voidHandler = new Handler {
     val partId = "something"

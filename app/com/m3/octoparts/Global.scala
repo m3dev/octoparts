@@ -14,6 +14,7 @@ import com.m3.octoparts.logging.PartRequestLogger
 import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.repository.{ ConfigsRepository, RepositoriesModule }
 import com.netflix.hystrix.strategy.HystrixPlugins
+import com.twitter.zipkin.gen.Span
 import com.typesafe.config.ConfigFactory
 import com.wordnik.swagger.config.{ ConfigFactory => SwaggerConfigFactory }
 import com.wordnik.swagger.model.ApiInfo
@@ -114,7 +115,7 @@ object Global extends WithFilters(ZipkinHeaderFilter(ZipkinServiceHolder.ZipkinS
    */
   private def checkForDodgyPartIds(): Unit = {
     import play.api.libs.concurrent.Execution.Implicits.defaultContext
-
+    implicit val emptySpan = new Span() // empty span -> doesn't trace
     val configsRepo = inject[ConfigsRepository]
     for {
       configs <- configsRepo.findAllConfigs()

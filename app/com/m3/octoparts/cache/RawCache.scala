@@ -1,5 +1,6 @@
 package com.m3.octoparts.cache
 
+import com.twitter.zipkin.gen.Span
 import shade.memcached.Codec
 
 import scala.concurrent.Future
@@ -21,14 +22,14 @@ trait RawCache {
    *
    * @return Some(value) in case the key is available, or None otherwise (doesn't throw exception on key missing)
    */
-  def get[T](key: String)(implicit codec: Codec[T]): Future[Option[T]]
+  def get[T](key: String)(implicit codec: Codec[T], parentSpan: Span): Future[Option[T]]
 
   /**
    * Sets a (key, value) in the cache store.
    *
    * The TTL can be Duration.Inf (infinite duration).
    */
-  def set[T](key: String, value: T, ttl: Duration)(implicit codec: Codec[T]): Future[Unit]
+  def set[T](key: String, value: T, ttl: Duration)(implicit codec: Codec[T], parentSpan: Span): Future[Unit]
 
   /**
    * Shutdown and clean up any resources.

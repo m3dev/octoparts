@@ -6,6 +6,7 @@ import com.m3.octoparts.cache.RawCache
 import com.m3.octoparts.hystrix.HystrixHealthReporter
 import com.m3.octoparts.model.config.HttpPartConfig
 import com.m3.octoparts.repository.ConfigsRepository
+import com.twitter.zipkin.gen.Span
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
@@ -13,8 +14,10 @@ import org.scalatestplus.play.OneAppPerSuite
 import play.api.libs.json.JsValue
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import shade.memcached.{ MemcachedCodecs, Codec }
+import shade.memcached.Codec
 import scala.concurrent.Future
+import org.mockito.Matchers._
+import org.mockito.Matchers.{ eq => mockitoEq }
 
 class HealthcheckControllerSpec
     extends FlatSpec
@@ -24,7 +27,7 @@ class HealthcheckControllerSpec
     with JsonCheckSupport
     with OneAppPerSuite {
 
-  import MemcachedCodecs.StringBinaryCodec
+  implicit val emptySpan = new Span()
   val mockConfigs = Seq(mock[HttpPartConfig], mock[HttpPartConfig], mock[HttpPartConfig])
   val configsRepo = mock[ConfigsRepository]
   val hystrixHealthReporter = mock[HystrixHealthReporter]
@@ -36,7 +39,7 @@ class HealthcheckControllerSpec
     // Return healthy-looking results by default
     when(configsRepo.findAllConfigs()).thenReturn(Future.successful(mockConfigs))
     when(hystrixHealthReporter.getCommandKeysWithOpenCircuitBreakers).thenReturn(Seq())
-    when(cache.get[String]("ping")(StringBinaryCodec))
+    when(cache.get[String](mockitoEq("ping"))(anyObject[Codec[String]], anyObject[Span]))
       .thenReturn(Future.successful(Some("pong")))
   }
 
@@ -57,7 +60,7 @@ class HealthcheckControllerSpec
     }
 
     it should "be YELLOW and show DB as not OK if there are no part configs" in {
-      when(configsRepo.findAllConfigs()).thenReturn(Future.successful(Seq.empty))
+      when(configsRepo.findAllConfigs()(anyObject[Span])).thenReturn(Future.successful(Seq.empty))
 
       checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
         colour should be("YELLOW")
@@ -66,7 +69,7 @@ class HealthcheckControllerSpec
     }
 
     it should "be YELLOW and show DB as not OK if DB query throws an exception" in {
-      when(configsRepo.findAllConfigs()).thenReturn(Future.failed(new RuntimeException("OH MY GOD!")))
+      when(configsRepo.findAllConfigs()(anyObject[Span])).thenReturn(Future.failed(new RuntimeException("OH MY GOD!")))
 
       checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
         colour should be("YELLOW")
@@ -85,7 +88,7 @@ class HealthcheckControllerSpec
     }
 
     it should "be YELLOW and show Memcached as not OK if the Memcached GET returned a failure" in {
-      when(cache.get[String]("ping")(StringBinaryCodec))
+      when(cache.get[String](mockitoEq("ping"))(anyObject[Codec[String]], anyObject[Span]))
         .thenReturn(Future.failed(new IOException("Memcached is down!")))
 
       checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
@@ -100,9 +103,9 @@ class HealthcheckControllerSpec
       })
 
       it should "be GREEN if DB is healthy, there are no open circuits and all Memcached checks succeeded" in {
-        when(cache.get[String]("1")(StringBinaryCodec)).thenReturn(Future.successful(None))
-        when(cache.get[String]("2")(StringBinaryCodec)).thenReturn(Future.successful(None))
-        when(cache.get[String]("3")(StringBinaryCodec)).thenReturn(Future.successful(None))
+        when(cache.get[String](mockitoEq("1"))(anyObject[Codec[String]], anyObject[Span])).thenReturn(Future.successful(None))
+        when(cache.get[String](mockitoEq("2"))(anyObject[Codec[String]], anyObject[Span])).thenReturn(Future.successful(None))
+        when(cache.get[String](mockitoEq("3"))(anyObject[Codec[String]], anyObject[Span])).thenReturn(Future.successful(None))
 
         checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
           colour should be("GREEN")
@@ -111,9 +114,9 @@ class HealthcheckControllerSpec
       }
 
       it should "be YELLOW and show Memcached as not OK when at least one Memcached GET returns a failure" in {
-        when(cache.get[String]("1")(StringBinaryCodec)).thenReturn(Future.successful(None))
-        when(cache.get[String]("2")(StringBinaryCodec)).thenReturn(Future.failed(new IOException("Memcached is down!")))
-        when(cache.get[String]("3")(StringBinaryCodec)).thenReturn(Future.successful(None))
+        when(cache.get[String](mockitoEq("1"))(anyObject[Codec[String]], anyObject[Span])).thenReturn(Future.successful(None))
+        when(cache.get[String](mockitoEq("2"))(anyObject[Codec[String]], anyObject[Span])).thenReturn(Future.failed(new IOException("Memcached is down!")))
+        when(cache.get[String](mockitoEq("3"))(anyObject[Codec[String]], anyObject[Span])).thenReturn(Future.successful(None))
 
         checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
           colour should be("YELLOW")

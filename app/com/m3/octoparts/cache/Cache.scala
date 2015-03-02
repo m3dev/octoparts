@@ -1,6 +1,7 @@
 package com.m3.octoparts.cache
 
 import com.m3.octoparts.cache.key._
+import com.twitter.zipkin.gen.Span
 import shade.memcached.Codec
 
 import scala.concurrent.Future
@@ -15,8 +16,8 @@ trait Cache {
 
   // TODO shade dependency decoupling
 
-  def get[T](key: CacheKey)(implicit codec: Codec[T]): Future[Option[T]]
+  def get[T](key: CacheKey)(implicit codec: Codec[T], parentSpan: Span): Future[Option[T]]
 
-  def put[T](key: CacheKey, v: T, ttl: Option[Duration])(implicit codec: Codec[T]): Future[Unit]
+  def put[T](key: CacheKey, v: T, ttl: Option[Duration])(implicit codec: Codec[T], parentSpan: Span): Future[Unit]
 
 }

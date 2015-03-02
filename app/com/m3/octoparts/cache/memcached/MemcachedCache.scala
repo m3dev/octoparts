@@ -3,6 +3,7 @@ package com.m3.octoparts.cache.memcached
 import com.m3.octoparts.cache.{ Cache, CacheException, RawCache }
 import com.m3.octoparts.cache.key._
 import com.beachape.logging.LTSVLogger
+import com.twitter.zipkin.gen.Span
 import shade.memcached.Codec
 
 import scala.concurrent.duration._
@@ -30,7 +31,7 @@ class MemcachedCache(underlying: RawCache, keyGen: MemcachedKeyGenerator)(implic
 
   private def serializeKey(key: CacheKey) = keyGen.toMemcachedKey(key)
 
-  def get[T](key: CacheKey)(implicit codec: Codec[T]): Future[Option[T]] = {
+  def get[T](key: CacheKey)(implicit codec: Codec[T], parentSpan: Span): Future[Option[T]] = {
     try {
       underlying.get[T](serializeKey(key)).recoverWith {
         case NonFatal(err) => throw new CacheException(key, err)
@@ -40,7 +41,7 @@ class MemcachedCache(underlying: RawCache, keyGen: MemcachedKeyGenerator)(implic
     }
   }
 
-  def put[T](key: CacheKey, v: T, ttl: Option[Duration])(implicit codec: Codec[T]): Future[Unit] = {
+  def put[T](key: CacheKey, v: T, ttl: Option[Duration])(implicit codec: Codec[T], parentSpan: Span): Future[Unit] = {
     try {
       ttl match {
         case Some(duration) if duration < 1.second =>
