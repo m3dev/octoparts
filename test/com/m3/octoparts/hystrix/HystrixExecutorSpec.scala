@@ -25,7 +25,6 @@ class HystrixExecutorSpec
     localContents = Some("9"),
     hystrixConfig = Some(mockHystrixConfig.copy(localContentsAsFallback = true, timeout = 2.seconds)))
 
-
   describe("#future") {
     it("should return a Future[Result] that makes sense") {
       val executor = HystrixExecutor(noFallbackConfig)
