@@ -235,6 +235,7 @@ class OctoClientSpec
           protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
           protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Seq.empty
         }
+        block(subject)
         eventually(verify(wsHolderCreator, times(howManyTimes)).apply(url))
       }
 
