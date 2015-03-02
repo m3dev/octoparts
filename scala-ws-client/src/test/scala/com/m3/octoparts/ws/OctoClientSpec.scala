@@ -9,7 +9,7 @@ import com.m3.octoparts.model.config.ParamType
 import com.m3.octoparts.model.config.json._
 import play.api.libs.json._
 import org.scalatest._
-import org.scalatest.concurrent.{ IntegrationPatience, PatienceConfiguration, ScalaFutures }
+import org.scalatest.concurrent.{ Eventually, IntegrationPatience, PatienceConfiguration, ScalaFutures }
 import org.scalatest.mock.MockitoSugar
 import play.api.libs.json.JsValue
 import play.api.libs.ws._
@@ -29,7 +29,8 @@ class OctoClientSpec
     with ScalaFutures
     with MockitoSugar
     with PatienceConfiguration
-    with IntegrationPatience {
+    with IntegrationPatience
+    with Eventually {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -117,13 +118,21 @@ class OctoClientSpec
     val respPost = Future.successful(mockWSRespPost)
     val respGet = Future.successful(mockWSRespGet)
 
-    def mockSubject(respPost: Future[WSResponse], respGet: Future[WSResponse], baseURL: String = "http://bobby.com/") = new OctoClientLike {
-      val baseUrl = baseURL
-      protected val clientTimeout = 10 seconds
-      def wsHolderFor(url: String, timeout: FiniteDuration): WSRequestHolder = mockWSHolder(respPost, respGet)
-      def rescuer[A](obj: => A) = PartialFunction.empty
-      protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
-      protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Seq.empty
+    def mockSubject(respPost: Future[WSResponse], respGet: Future[WSResponse], baseURL: String = "http://bobby.com/") = {
+      mockSubjectWithHolder(respPost, respGet, baseURL)._2
+    }
+
+    def mockSubjectWithHolder(respPost: Future[WSResponse], respGet: Future[WSResponse], baseURL: String = "http://bobby.com/"): (WSRequestHolder, OctoClientLike) = {
+      val holder = mockWSHolder(respPost, respGet)
+      val client = new OctoClientLike {
+        val baseUrl = "http://bobby.com/"
+        protected val clientTimeout = 10 seconds
+        def wsHolderFor(url: String, timeout: FiniteDuration): WSRequestHolder = holder
+        def rescuer[A](obj: => A) = PartialFunction.empty
+        protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
+        protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Seq.empty
+      }
+      (holder, client)
     }
 
     describe("#urlFor") {
@@ -170,6 +179,12 @@ class OctoClientSpec
         }
       }
 
+      it("should send the headers properly") {
+        val (holder, client) = mockSubjectWithHolder(respPost, respGet)
+        client.invoke(mockAggReq, "hello" -> "world")
+        eventually(verify(holder).withHeaders("hello" -> "world"))
+      }
+
     }
 
     describe("#invoke[A]") {
@@ -193,6 +208,12 @@ class OctoClientSpec
           r.responseMeta.id should be("mock")
         }
       }
+
+      it("should send the headers properly") {
+        val (holder, client) = mockSubjectWithHolder(respPost, respGet)
+        client.invoke((User(Some("hello")), FakeRequest()), Seq(PartRequest("hi")), "hello" -> "world")
+        eventually(verify(holder).withHeaders("hello" -> "world"))
+      }
     }
 
     describe("URL passed to wsHolderFor") {
@@ -214,9 +235,7 @@ class OctoClientSpec
           protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
           protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Seq.empty
         }
-        whenReady(block(subject)) { _ =>
-          verify(wsHolderCreator, times(howManyTimes)).apply(url)
-        }
+        eventually(verify(wsHolderCreator, times(howManyTimes)).apply(url))
       }
 
       it("should be correct for #list") {

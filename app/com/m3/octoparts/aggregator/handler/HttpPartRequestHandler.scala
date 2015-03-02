@@ -60,7 +60,7 @@ trait HttpPartRequestHandler extends Handler {
   def process(partRequestInfo: PartRequestInfo, hArgs: HandlerArguments)(implicit parentSpan: Span): Future[PartResponse] = {
     TracedFuture(s"Http request for - ${partRequestInfo.partRequest.partId}") { maybeSpan =>
       hystrixExecutor.future(
-        createBlockingHttpRetrieve(partRequestInfo, hArgs, maybeSpan).retrieve().copy(),
+        createBlockingHttpRetrieve(partRequestInfo, hArgs, maybeSpan).retrieve(),
         maybeContents => HttpResponse(
           status = 203, // 203 -> Non-authoritative info
           body = maybeContents,
