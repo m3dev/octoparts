@@ -7,11 +7,11 @@
 <script type="text/javascript">
 $(document).ready(function() {
 	$('table.dataTable').dataTable({
-        "oLanguage": {"sUrl": '//cdn.datatables.net/plug-ins/f2c75b7247b/i18n/@{lang.toLocale.getDisplayLanguage(java.util.Locale.ENGLISH)}.json'},
-        "bJQueryUI": true,
+        "language": {"url": '//cdn.datatables.net/plug-ins/f2c75b7247b/i18n/@{lang.toLocale.getDisplayLanguage(java.util.Locale.ENGLISH)}.json'},
+        "jQueryUI": true,
         "stateSave": true,
-        "sPaginationType": "full_numbers",
-        "iDisplayLength": 50
+        "pagingType": "full_numbers",
+        "pageLength": 50
 	});
 });
 </script>
