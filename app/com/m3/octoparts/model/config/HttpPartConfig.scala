@@ -1,7 +1,5 @@
 package com.m3.octoparts.model.config
 
-import java.nio.charset.Charset
-
 import com.m3.octoparts.cache.config.CacheConfig
 import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config.json.{ HttpPartConfig => JsonHttpPartConfig, AlertMailSettings }
@@ -87,7 +85,7 @@ object HttpPartConfig {
       httpPoolSize = config.httpPoolSize,
       httpConnectionTimeout = config.httpConnectionTimeout,
       httpSocketTimeout = config.httpSocketTimeout,
-      httpDefaultEncoding = config.httpDefaultEncoding,
+      httpDefaultEncoding = config.httpDefaultEncoding.underlying,
       httpProxy = config.httpProxy,
       parameters = config.parameters.map(PartParam.toJsonModel),
       deprecatedInFavourOf = config.deprecatedInFavourOf,
@@ -115,7 +113,7 @@ object HttpPartConfig {
       httpPoolSize = config.httpPoolSize,
       httpConnectionTimeout = config.httpConnectionTimeout,
       httpSocketTimeout = config.httpSocketTimeout,
-      httpDefaultEncoding = config.httpDefaultEncoding,
+      httpDefaultEncoding = Charset.forName(config.httpDefaultEncoding.name),
       httpProxy = config.httpProxy,
       parameters = config.parameters.map(PartParam.fromJsonModel),
       deprecatedInFavourOf = config.deprecatedInFavourOf,

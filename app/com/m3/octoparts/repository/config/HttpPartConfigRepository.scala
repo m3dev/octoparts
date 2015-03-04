@@ -1,7 +1,5 @@
 package com.m3.octoparts.repository.config
 
-import java.nio.charset.Charset
-
 import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config._
