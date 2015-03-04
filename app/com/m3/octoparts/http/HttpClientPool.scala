@@ -20,7 +20,7 @@ class HttpClientPool extends KeyedResourcePool[HttpPartConfigClientKey, HttpClie
     connectionPoolSize = key.httpPoolSize,
     connectTimeout = key.httpConnectionTimeout,
     socketTimeout = key.httpSocketTimeout,
-    defaultEncoding = key.httpDefaultEncoding,
+    defaultCharset = Charset.forName(key.httpDefaultEncoding),
     mbProxySettings = key.httpProxySettings)
 
   protected def onRemove(value: HttpClientLike) = value match {
@@ -31,7 +31,8 @@ class HttpClientPool extends KeyedResourcePool[HttpPartConfigClientKey, HttpClie
 }
 
 object HttpClientPool {
-  case class HttpPartConfigClientKey(partId: String, httpPoolSize: Int, httpConnectionTimeout: FiniteDuration, httpSocketTimeout: FiniteDuration, httpDefaultEncoding: Charset, httpProxySettings: Option[HttpProxySettings])
+
+  case class HttpPartConfigClientKey(partId: String, httpPoolSize: Int, httpConnectionTimeout: FiniteDuration, httpSocketTimeout: FiniteDuration, httpDefaultEncoding: String, httpProxySettings: Option[HttpProxySettings])
 
   object HttpPartConfigClientKey {
     def apply(part: HttpPartConfig): HttpPartConfigClientKey = HttpPartConfigClientKey(
@@ -39,7 +40,7 @@ object HttpClientPool {
       httpPoolSize = part.httpPoolSize,
       httpConnectionTimeout = part.httpConnectionTimeout,
       httpSocketTimeout = part.httpSocketTimeout,
-      httpDefaultEncoding = part.httpDefaultEncoding.underlying,
+      httpDefaultEncoding = part.httpDefaultEncoding,
       httpProxySettings = part.httpProxySettings)
   }
 }

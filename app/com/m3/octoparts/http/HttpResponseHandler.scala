@@ -17,7 +17,7 @@ import scala.util.Try
 /**
  * Custom HttpResponseHandler that returns a [[com.m3.octoparts.http.HttpResponse]] case class
  */
-class HttpResponseHandler(defaultEncoding: Charset) extends ResponseHandler[HttpResponse] {
+class HttpResponseHandler(defaultCharset: Charset) extends ResponseHandler[HttpResponse] {
   /**
    * Given a HttpResponse from the Apache HttpClient lib, returns our nice
    * HttpResponse case class
@@ -37,7 +37,7 @@ class HttpResponseHandler(defaultEncoding: Charset) extends ResponseHandler[Http
     val contentType = entity.map(ContentType.getOrDefault)
     val mimeType = contentType.map(_.getMimeType)
     val charset = contentType.flatMap(cType => Option(cType.getCharset)).map(_.displayName)
-    val content = entity.map(EntityUtils.toString(_, defaultEncoding))
+    val content = entity.map(EntityUtils.toString(_, defaultCharset))
     val cacheControl = readCacheControl(apacheResp)
 
     HttpResponse(

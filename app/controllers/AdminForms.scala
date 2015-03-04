@@ -1,6 +1,7 @@
 package controllers
 
-import java.nio.charset.{ Charset => JavaCharset }
+import java.nio.charset.Charset
+
 import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config._
@@ -42,7 +43,7 @@ object AdminForms {
       httpPoolSize = data.httpSettings.httpPoolSize,
       httpConnectionTimeout = data.httpSettings.httpConnectionTimeoutInMs.milliseconds,
       httpSocketTimeout = data.httpSettings.httpSocketTimeoutInMs.milliseconds,
-      httpDefaultEncoding = Charset.forName(data.httpSettings.httpDefaultEncoding),
+      httpDefaultEncoding = data.httpSettings.httpDefaultEncoding,
       httpProxy = data.httpSettings.httpProxy,
       hystrixConfig = Some(HystrixConfig(
         commandKey = data.hystrixConfig.commandKey,
@@ -78,7 +79,7 @@ object AdminForms {
       httpPoolSize = data.httpSettings.httpPoolSize,
       httpConnectionTimeout = data.httpSettings.httpConnectionTimeoutInMs.milliseconds,
       httpSocketTimeout = data.httpSettings.httpSocketTimeoutInMs.milliseconds,
-      httpDefaultEncoding = Charset.forName(data.httpSettings.httpDefaultEncoding),
+      httpDefaultEncoding = data.httpSettings.httpDefaultEncoding,
       httpProxy = data.httpSettings.httpProxy,
       hystrixConfig = Some(originalPart.hystrixConfigItem.copy(
         commandKey = data.hystrixConfig.commandKey,
@@ -116,7 +117,7 @@ object AdminForms {
         httpPoolSize = part.httpPoolSize,
         httpConnectionTimeoutInMs = part.httpConnectionTimeout.toMillis.toInt,
         httpSocketTimeoutInMs = part.httpSocketTimeout.toMillis.toInt,
-        httpDefaultEncoding = part.httpDefaultEncoding.name,
+        httpDefaultEncoding = part.httpDefaultEncoding,
         httpProxy = part.httpProxy),
       hystrixConfig = HystrixConfigData(
         commandKey = part.hystrixConfigItem.commandKey,
@@ -161,7 +162,7 @@ object AdminForms {
         "httpPoolSize" -> number(min = 1),
         "httpConnectionTimeoutInMs" -> number(min = 0),
         "httpSocketTimeoutInMs" -> number(min = 0),
-        "httpDefaultEncoding" -> text.verifying(string => JavaCharset.isSupported(string)),
+        "httpDefaultEncoding" -> text.verifying(string => Charset.isSupported(string)),
         "httpProxy" -> optional(text)
       )(HttpConfigData.apply)(HttpConfigData.unapply),
       "hystrixConfig" -> mapping(
