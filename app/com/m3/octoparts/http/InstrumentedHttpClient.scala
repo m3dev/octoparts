@@ -29,14 +29,14 @@ import scala.concurrent.duration._
  * @param name is used to differentiate instances when printing statistics
  * @param connectTimeout max time waiting for the host to respond
  * @param socketTimeout max time spent receiving data from the host
- * @param defaultEncoding to be used when the response does not specify an encoding. set to a no-fail encoding like ASCII to handle binary data.
+ * @param defaultCharset to be used when the response does not specify an encoding. set to a no-fail encoding like ASCII to handle binary data.
  */
 class InstrumentedHttpClient(
   name: String,
   connectionPoolSize: Int,
   connectTimeout: FiniteDuration,
   socketTimeout: FiniteDuration,
-  defaultEncoding: Charset,
+  defaultCharset: Charset,
   mbProxySettings: Option[HttpProxySettings])
     extends HttpClientLike
     with Closeable {
@@ -78,7 +78,7 @@ class InstrumentedHttpClient(
   }
 
   // our custom HttpResponseHandler
-  private val responseHandler = new HttpResponseHandler(defaultEncoding)
+  private val responseHandler = new HttpResponseHandler(defaultCharset)
 
   /**
    * Given a [[HttpUriRequest]], fetches the HttpResponse for it

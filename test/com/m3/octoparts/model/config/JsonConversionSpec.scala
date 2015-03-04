@@ -1,6 +1,6 @@
 package com.m3.octoparts.model.config
 
-import java.nio.charset.{ Charset => JavaCharset }
+import java.nio.charset.Charset
 import java.util.concurrent.TimeUnit
 
 import com.m3.octoparts.model.HttpMethod
@@ -98,7 +98,7 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
       httpPoolSize <- Gen.chooseNum(1, Int.MaxValue)
       httpConnectionTimeout <- genShortDuration
       httpSocketTimeout <- genShortDuration
-      httpDefaultEncoding <- Gen.oneOf(JCollectionWrapper(JavaCharset.availableCharsets().values()).toSeq)
+      httpDefaultEncoding <- Gen.oneOf(JSetWrapper(Charset.availableCharsets().keySet()).toSeq)
       parameters <- Gen.containerOf[Set, json.PartParam](arbPartParam.arbitrary)
       deprecatedInFavourOf <- Gen.option(Arbitrary.arbString.arbitrary)
       cacheGroups <- Gen.containerOf[Set, json.CacheGroup](arbCacheGroup.arbitrary)

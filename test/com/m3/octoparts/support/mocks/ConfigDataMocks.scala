@@ -36,7 +36,7 @@ trait ConfigDataMocks {
     httpPoolSize = 5,
     httpConnectionTimeout = 1.second,
     httpSocketTimeout = 5.seconds,
-    httpDefaultEncoding = Charset.forName(StandardCharsets.US_ASCII.name),
+    httpDefaultEncoding = StandardCharsets.US_ASCII.name,
     httpProxy = Some("localhost:666"),
     parameters = Set(mockPartParam),
     cacheTtl = Some(60.seconds),

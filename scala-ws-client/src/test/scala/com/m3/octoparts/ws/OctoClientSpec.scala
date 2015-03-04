@@ -93,7 +93,7 @@ class OctoClientSpec
       httpPoolSize = 20,
       httpConnectionTimeout = 1.second,
       httpSocketTimeout = 5.seconds,
-      httpDefaultEncoding = StandardCharsets.UTF_8,
+      httpDefaultEncoding = StandardCharsets.UTF_8.name(),
       parameters = Set(
         PartParam(
           required = true,

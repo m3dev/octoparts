@@ -1,7 +1,5 @@
 package com.m3.octoparts.model.config.json
 
-import java.nio.charset.Charset
-
 import com.fasterxml.jackson.module.scala.JsonScalaEnumeration
 import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.jackson.HttpMethodType
@@ -21,7 +19,7 @@ case class HttpPartConfig(
   @(ApiModelProperty @field)(required = true, dataType = "integer", allowableValues = "range[1, Infinity]") httpPoolSize: Int,
   @(ApiModelProperty @field)(required = true, dataType = "integer", allowableValues = "range[0, Infinity]") httpConnectionTimeout: FiniteDuration,
   @(ApiModelProperty @field)(required = true, dataType = "integer", allowableValues = "range[0, Infinity]") httpSocketTimeout: FiniteDuration,
-  @(ApiModelProperty @field)(required = true, dataType = "string") httpDefaultEncoding: Charset,
+  @(ApiModelProperty @field)(required = true, dataType = "string") httpDefaultEncoding: String,
   @(ApiModelProperty @field)(required = false, dataType = "string") httpProxy: Option[String] = None,
   parameters: Set[PartParam] = Set.empty,
   @(ApiModelProperty @field)(dataType = "string", required = false) deprecatedInFavourOf: Option[String] = None,

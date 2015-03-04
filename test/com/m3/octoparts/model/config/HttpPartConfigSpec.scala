@@ -45,7 +45,7 @@ class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
         httpPoolSize = 5,
         httpConnectionTimeout = 1.second,
         httpSocketTimeout = 5.seconds,
-        httpDefaultEncoding = StandardCharsets.US_ASCII,
+        httpDefaultEncoding = StandardCharsets.US_ASCII.name(),
         httpProxy = Some("localhost:666"),
         parameters = Set(
           json.PartParam(

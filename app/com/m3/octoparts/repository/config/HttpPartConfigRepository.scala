@@ -149,7 +149,7 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
     httpPoolSize = rs.int(n.httpPoolSize),
     httpConnectionTimeout = rs.long(n.httpConnectionTimeout).milliseconds,
     httpSocketTimeout = rs.long(n.httpSocketTimeout).milliseconds,
-    httpDefaultEncoding = Charset.forName(rs.string(n.httpDefaultEncoding)),
+    httpDefaultEncoding = rs.string(n.httpDefaultEncoding),
     deprecatedInFavourOf = rs.get(n.deprecatedInFavourOf),
     cacheTtl = rs.longOpt(n.cacheTtl).map(_.seconds),
     alertMailsEnabled = rs.get(n.alertMailsEnabled),
