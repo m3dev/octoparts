@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets
 
 import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config.json.AlertMailSettings
+import org.apache.commons.lang3.SerializationUtils
 import scala.concurrent.duration._
 import com.m3.octoparts.support.mocks.ConfigDataMocks
 import scala.language.postfixOps
@@ -68,6 +69,21 @@ class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
         localContentsEnabled = true,
         localContents = Some("{}"))
       jsonModel should be(expectedModel)
+    }
+
+  }
+
+  describe("Java serdes (for caching)") {
+
+    it("should serialise and deserialise without problems") {
+      val original = mockHttpPartConfig.copy(
+        hystrixConfig = Some(mockHystrixConfig),
+        additionalValidStatuses = Set(302),
+        cacheGroups = Set(mockCacheGroup)
+      )
+      val serialised = SerializationUtils.serialize(original)
+      val deserialised = SerializationUtils.deserialize[HttpPartConfig](serialised)
+      deserialised shouldBe original
     }
 
   }
