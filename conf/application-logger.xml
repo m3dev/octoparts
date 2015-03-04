@@ -70,7 +70,7 @@
     </if>
 
     <!-- Make this info in production -->
-    <logger name="com.m3.octoparts" level="${LOG_LEVEL:-DEBUG}"/>
+    <logger name="application" level="${LOG_LEVEL:-DEBUG}"/>
 
     <!-- Hystrix metrics -->
     <logger name="HystrixMetrics" level="info" additivity="false">
