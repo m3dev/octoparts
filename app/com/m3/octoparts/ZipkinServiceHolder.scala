@@ -38,7 +38,10 @@ object ZipkinServiceHolder {
               val name = s.getName
               !(name.startsWith("OPTION") || name.startsWith("GET - /assets"))
             },
-            { s => s.isSetParent_id || (zipkinRate > scala.util.Random.nextDouble()) }
+            { s =>
+              s.isSetParent_id ||
+              s.isSetAnnotations || // means that we've set sent/received annotations already, so send it.
+              (zipkinRate > scala.util.Random.nextDouble()) }
           )
         )
       }
