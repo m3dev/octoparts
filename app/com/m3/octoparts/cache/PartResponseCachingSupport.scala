@@ -7,6 +7,7 @@ import com.m3.octoparts.aggregator.service.PartRequestServiceBase
 import com.m3.octoparts.cache.directive.{ CacheDirective, CacheDirectiveGenerator }
 import com.m3.octoparts.model.PartResponse
 import com.m3.octoparts.model.config._
+import com.netflix.hystrix.exception.HystrixRuntimeException
 import com.twitter.zipkin.gen.Span
 import org.apache.http.HttpStatus
 import com.m3.octoparts.cache.RichCacheControl._
@@ -76,9 +77,13 @@ trait PartResponseCachingSupport extends PartRequestServiceBase {
       }
       super.processWithConfig(ci, partRequestInfo, params)
     }
+    case e: HystrixRuntimeException => {
+      LTSVLogger.warn(e)
+      Future.failed(e) // Don't retry on HystrixRuntime exception
+    }
     case NonFatal(e) => {
-      LTSVLogger.error(e, "Memcached error" -> e.getClass.getSimpleName)
-      super.processWithConfig(ci, partRequestInfo, params)
+      LTSVLogger.error(e)
+      super.processWithConfig(ci, partRequestInfo, params) // Unknown error, retry
     }
   }
 
