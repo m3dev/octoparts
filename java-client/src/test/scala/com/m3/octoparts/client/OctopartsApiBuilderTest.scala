@@ -23,6 +23,14 @@ class OctopartsApiBuilderTest extends FunSpec with BeforeAndAfterAll with Matche
     ningrequest.getUrl should startWith("http://octoparts/")
   }
 
+  it("should pass headers") {
+
+    val request = apiBuilder.newRequest("123", "cafebabe", null, "/index.jsp", 456L)
+    val agr = request.build
+    val ningrequest = apiBuilder.toHttp(agr, "a" -> "b")
+    ningrequest.getHeaders.get("a") shouldBe "b"
+  }
+
   it("should escape var arguments, handling nulls") {
     OctopartsApiBuilder.formatWithUriEscape("%s", " ") should be("%20")
     OctopartsApiBuilder.formatWithUriEscape("%s%s", " ", " ") should be("%20%20")

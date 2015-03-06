@@ -57,22 +57,25 @@ class OctopartsApiBuilder(@Nonnull apiRootUrl: String, @Nullable serviceId: Stri
     new RequestBuilder(requestMeta)
   }
 
-  private[client] def toHttp(aggregateRequest: AggregateRequest) = {
+  private[client] def toHttp(aggregateRequest: AggregateRequest, additionalHeaders: (String, String)*) = {
     Log.debug(s"${aggregateRequest.requests.size} octoparts")
     val jsonContent = Mapper.writeValueAsBytes(aggregateRequest)
-    asyncHttpClient.
+    var requestBuilder = asyncHttpClient.
       preparePost(octopartsApiEndpointUrl).
-      setHeader("Content-Type", "application/json;charset=UTF-8").
-      setHeader("Content-Length", jsonContent.length.toString).
-      setBody(jsonContent).
-      build
+      addHeader("Content-Type", "application/json;charset=UTF-8").
+      addHeader("Content-Length", jsonContent.length.toString).
+      setBody(jsonContent)
+    additionalHeaders.foreach {
+      case (k, v) => requestBuilder = requestBuilder.addHeader(k, v)
+    }
+    requestBuilder.build
   }
 
   /**
    * Sends a request to the Octoparts server.
    */
-  def submit(@Nonnull aggregateRequest: AggregateRequest): ListenableFuture[ResponseWrapper] = {
-    asyncHttpClient.executeRequest(toHttp(aggregateRequest), new AggregateResponseExtractor(aggregateRequest))
+  def submit(@Nonnull aggregateRequest: AggregateRequest, additionalHeaders: (String, String)*): ListenableFuture[ResponseWrapper] = {
+    asyncHttpClient.executeRequest(toHttp(aggregateRequest, additionalHeaders: _*), new AggregateResponseExtractor(aggregateRequest))
   }
 
   /**
