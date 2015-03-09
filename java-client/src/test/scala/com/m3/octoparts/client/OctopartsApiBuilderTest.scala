@@ -8,11 +8,13 @@ import com.m3.octoparts.model.{ HttpMethod, AggregateRequest }
 import com.m3.octoparts.model.config.json.HttpPartConfig
 import org.scalatest.{ BeforeAndAfterAll, FunSpec, Matchers }
 
+import scala.collection.convert.Wrappers.JListWrapper
+
 class OctopartsApiBuilderTest extends FunSpec with BeforeAndAfterAll with Matchers {
 
   val apiBuilder = new OctopartsApiBuilder("http://octoparts/", "m3.com")
-  it("should prepare a POST") {
 
+  it("should prepare a POST") {
     val request = apiBuilder.newRequest("123", "cafebabe", null, "/index.jsp", 456L)
     request.newPart("part1", null).addParam("q", "lookForThis").build()
     val agr = request.build
@@ -24,11 +26,10 @@ class OctopartsApiBuilderTest extends FunSpec with BeforeAndAfterAll with Matche
   }
 
   it("should pass headers") {
-
     val request = apiBuilder.newRequest("123", "cafebabe", null, "/index.jsp", 456L)
     val agr = request.build
     val ningrequest = apiBuilder.toHttp(agr, "a" -> "b")
-    ningrequest.getHeaders.get("a") shouldBe "b"
+    JListWrapper(ningrequest.getHeaders.get("a")).toSeq shouldBe Seq("b")
   }
 
   it("should escape var arguments, handling nulls") {
@@ -36,6 +37,7 @@ class OctopartsApiBuilderTest extends FunSpec with BeforeAndAfterAll with Matche
     OctopartsApiBuilder.formatWithUriEscape("%s%s", " ", " ") should be("%20%20")
     OctopartsApiBuilder.formatWithUriEscape("%s%s", null, " ") should be("null%20")
   }
+
   it("should decode enums with Jackson") {
     val source = """{
                |    "partId": "test",
