@@ -150,7 +150,7 @@ trait MutableDBRepository extends MutableConfigsRepository {
   private val zipkinSpanNameBase = "db-repo-mutation"
 
   def save[A <: ConfigModel[A]: ConfigMapper](obj: A)(implicit parentSpan: Span): Future[Long] = {
-    DB.futureLocalTx { implicit session => saveWithSession(implicitly[ConfigMapper[A]], obj) }.trace(s"$zipkinSpanNameBase-save:$obj")
+    DB.futureLocalTx { implicit session => saveWithSession(implicitly[ConfigMapper[A]], obj) }.trace(s"$zipkinSpanNameBase-save", "object" -> obj.toString)
   }
 
   def deleteAllConfigs()(implicit parentSpan: Span): Future[Int] = {

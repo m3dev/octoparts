@@ -58,7 +58,7 @@ trait HttpPartRequestHandler extends Handler {
    * @return Future[PartResponse]
    */
   def process(partRequestInfo: PartRequestInfo, hArgs: HandlerArguments)(implicit parentSpan: Span): Future[PartResponse] = {
-    TracedFuture(s"Http request for - ${partRequestInfo.partRequest.partId}") { maybeSpan =>
+    TracedFuture(s"Http request", "partId" -> partRequestInfo.partRequest.partId) { maybeSpan =>
       hystrixExecutor.future(
         createBlockingHttpRetrieve(partRequestInfo, hArgs, maybeSpan).retrieve(),
         maybeContents => HttpResponse(
