@@ -5,6 +5,7 @@ import com.m3.octoparts.cache.{ Cache, CacheException, RawCache }
 import com.m3.octoparts.cache.key._
 import com.beachape.logging.LTSVLogger
 import com.twitter.zipkin.gen.Span
+import org.apache.commons.lang3.StringUtils
 import shade.memcached.Codec
 
 import scala.concurrent.duration._
@@ -38,7 +39,7 @@ class MemcachedCache(underlying: RawCache, keyGen: MemcachedKeyGenerator)(implic
     try {
       underlying.get[T](serializeKey(key)).recoverWith {
         case NonFatal(err) => throw new CacheException(key, err)
-      }.trace(s"memcached-get-$key")
+      }.trace("memcached-get", "key" -> StringUtils.abbreviate(key.toString, 150))
     } catch {
       case NonFatal(e) => Future.failed(e)
     }
@@ -58,7 +59,7 @@ class MemcachedCache(underlying: RawCache, keyGen: MemcachedKeyGenerator)(implic
         case _ =>
           underlying.set[T](serializeKey(key), v, ttl.getOrElse(VERY_LONG_TTL)).recoverWith {
             case NonFatal(err) => throw new CacheException(key, err)
-          }.trace(s"memcached-set-$key")
+          }.trace("memcached-set", "key" -> StringUtils.abbreviate(key.toString, 150), "value" -> StringUtils.abbreviate(v.toString, 150))
       }
     } catch {
       case NonFatal(e) => Future.failed(e)
