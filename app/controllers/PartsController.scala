@@ -77,7 +77,7 @@ class PartsController(
     val fConfigs = partIdParams match {
       case Nil => configsRepository.findAllConfigs().trace("find-all-configs")
       case partIds =>
-        val fParts = partIds.map(id => configsRepository.findConfigByPartId(id).trace(s"find-config-by-part-ids: ${id}"))
+        val fParts = partIds.map(id => configsRepository.findConfigByPartId(id).trace(s"find-config-by-part-ids", "ids" -> id.toString))
         Future.sequence(fParts).map(_.flatten)
     }
 
