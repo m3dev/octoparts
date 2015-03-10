@@ -1,13 +1,11 @@
 package com.m3.octoparts.cache
 
 import com.beachape.logging.LTSVLogger
-import com.beachape.zipkin.TracedFuture
 import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.aggregator.service.PartRequestServiceBase
 import com.m3.octoparts.cache.directive.{ CacheDirective, CacheDirectiveGenerator }
 import com.m3.octoparts.model.PartResponse
 import com.m3.octoparts.model.config._
-import com.netflix.hystrix.exception.HystrixRuntimeException
 import com.twitter.zipkin.gen.Span
 import org.apache.http.HttpStatus
 import com.m3.octoparts.cache.RichCacheControl._
@@ -49,7 +47,7 @@ trait PartResponseCachingSupport extends PartRequestServiceBase {
       val futureMaybeFromCache =
         cacheOps.putIfAbsent(directive)(super.processWithConfig(ci, partRequestInfo, params))
           .recoverWith(onCacheFailure(ci, partRequestInfo, params))
-          .trace(s"retrieve-part-response-from-cache-or-else", "partId" -> ci.partId)
+          .trace("retrieve-part-response-from-cache-or-else", "partId" -> ci.partId)
       futureMaybeFromCache.flatMap {
         partResponse =>
           // at this point, the response may come from cache and be stale.

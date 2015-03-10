@@ -2,7 +2,7 @@ package controllers
 
 import javax.ws.rs.QueryParam
 
-import com.beachape.zipkin.{ TracedFuture, ReqHeaderToSpanImplicit }
+import com.beachape.zipkin.ReqHeaderToSpanImplicit
 import com.beachape.zipkin.services.ZipkinServiceLike
 import com.m3.octoparts.json.format.ConfigModel._
 import com.m3.octoparts.json.format.ReqResp._
@@ -77,7 +77,7 @@ class PartsController(
     val fConfigs = partIdParams match {
       case Nil => configsRepository.findAllConfigs().trace("find-all-configs")
       case partIds =>
-        val fParts = partIds.map(id => configsRepository.findConfigByPartId(id).trace(s"find-config-by-part-ids", "ids" -> id.toString))
+        val fParts = partIds.map(id => configsRepository.findConfigByPartId(id).trace("find-config-by-part-ids", "ids" -> id.toString))
         Future.sequence(fParts).map(_.flatten)
     }
 
