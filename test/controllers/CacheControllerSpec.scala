@@ -10,19 +10,17 @@ import play.api.test.Helpers._
 import scala.concurrent.Future
 import scala.language.postfixOps
 
-import com.m3.octoparts.support.mocks.{ MockConfigRespository, ConfigDataMocks }
+import com.m3.octoparts.support.mocks.{ MockConfigRepository, ConfigDataMocks }
 import com.m3.octoparts.model.config.{ PartParam, CacheGroup, HttpPartConfig }
 import org.scalatest.mock.MockitoSugar
 import org.mockito.Mockito._
 import org.mockito.Matchers._
 import com.m3.octoparts.cache.versioning.VersionedParamKey
-
 class CacheControllerSpec extends FlatSpec with Matchers with MockitoSugar with ConfigDataMocks with ScalaFutures {
-
   implicit val emptySpan = new Span()
 
   val futureUnit = Future.successful(())
-  val mockRepository = new MockConfigRespository {
+  val mockRepository = new MockConfigRepository {
     val configNames = Seq("part1", "part2")
     val paramIds = Seq(1, 2)
     val cacheGroupKeyNames = Seq("group1")

@@ -530,7 +530,7 @@ class AdminControllerSpec extends FunSpec
     val repository = mock[MutableConfigsRepository]
     val adminController = new AdminController(cacheOps = DummyCacheOps, repository = repository)
     doReturn(Future.successful(76L)).when(repository).save(anyObject[ThreadPoolConfig]())(anyObject[ConfigMapper[ThreadPoolConfig]], anyObject[Span])
-    val tpc = mockThreadConfig.copy(id = Some(123))
+    val tpc = mockThreadConfig.copy(id = Some(123L))
     doReturn(Future.successful(Some(tpc))).when(repository).findThreadPoolConfigById(anyLong())(anyObject[Span])
 
     val updateThreadPool = adminController.updateThreadPool(123L)(FakeRequest().withFormUrlEncodedBody("threadPoolKey" -> "myNewThreadPool", "coreSize" -> "99"))
