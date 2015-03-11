@@ -144,7 +144,7 @@
 
     <dl>
         <dt>@Messages("parts.cache.ttl")</dt>
-        <dd>@part.cacheTtlStr @if(part.config.cacheTtl != Some(scala.concurrent.duration.Duration.Zero)) {
+        <dd>@part.cacheTtlStr @if(!part.config.cacheTtl.contains(scala.concurrent.duration.Duration.Zero)) {
             @helper.form(action = controllers.routes.CacheController.invalidatePart(part.partId), 'method -> "post") {
                 <input type="submit" value="@Messages("parts.cache.flush")" class="btn btn-danger" />
             }
