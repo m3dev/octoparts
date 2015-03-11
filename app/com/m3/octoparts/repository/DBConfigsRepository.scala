@@ -61,8 +61,19 @@ trait ImmutableDBRepository extends ConfigsRepository {
   }
 
   def findAllConfigs()(implicit parentSpan: Span): Future[Seq[HttpPartConfig]] = {
-    getAllWithSession(HttpPartConfigRepository, includes = Seq(HttpPartConfigRepository.hystrixConfigRef))
-      .trace(s"$zipkinSpanNameBase-findAllConfigs")
+    // a hack to set the part parameter cache groups
+    for {
+      allCacheGroups <- findAllCacheGroups()
+      configs <- getAllWithSession(HttpPartConfigRepository, includes = Seq(HttpPartConfigRepository.hystrixConfigRef))
+        .trace(s"$zipkinSpanNameBase-findAllConfigs")
+    } yield {
+      configs.map {
+        config =>
+          config.copy(parameters = config.parameters.toSeq.map {
+            param => param.copy(cacheGroups = allCacheGroups.filter(_.partParams.exists(_.id == param.id)).toSet)
+          }.toSet)
+      }
+    }
   }
 
   def findParamById(id: Long)(implicit parentSpan: Span): Future[Option[PartParam]] = {
