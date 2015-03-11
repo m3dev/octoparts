@@ -64,6 +64,7 @@ parts.cache.ttl.label=キャッシュ有効期限（秒）
 parts.cache.ttl.help=指定なし＝無期限、0＝キャッシュしません
 parts.cache.unlimited=無期限
 parts.cache.none=キャッシュしません
+parts.cache.flush=キャッシュフラッシュ
 parts.section.cacheGroup=キャッシュグループ
 parts.cacheGroup.none=まだありません
 parts.section.alertMail=アラートメール設定
@@ -126,6 +127,7 @@ cacheGroups.numParts=パーツ数
 cacheGroups.parameters=所属パラメータ
 cacheGroups.numParameters=パーツのパラメータ数
 cacheGroups.none=まだ作られていません。
+cacheGroups.flush=クイックフラッシュ（パーツのみ）
 
 menu.links=リンク
 menu.monitoring=モニタリング

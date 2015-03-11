@@ -80,6 +80,7 @@
                         <th>@Messages("parts.parameter.required")</th>
                         <th>@Messages("parts.parameter.description")</th>
                         <th>@Messages("parts.parameter.versioned")</th>
+                        <th>@Messages("parts.parameter.cacheGroups")</th>
                         <th>@Messages("action")</th>
                     </tr>
                 </thead>
@@ -92,6 +93,9 @@
                         <td>@paramView.required</td>
                         <td style="white-space: pre">@paramView.description</td>
                         <td>@paramView.versioned</td>
+                        <td><ul>@for(cacheGroup <- paramView.param.cacheGroups) {
+                            <li>@cacheGroup.name</li>
+                        }</ul></td>
                         <td><a href="@controllers.routes.AdminController.editParam(part.partId, paramView.param.id.get)" class="btn btn-primary">@Messages("edit")</a>
                             <form action="@controllers.routes.AdminController.copyParam(part.partId, paramView.param.id.get)" method="post">
                                 <input type="submit" value="@Messages("duplicate")" class="btn btn-info" />
@@ -139,7 +143,11 @@
 
     <dl>
         <dt>@Messages("parts.cache.ttl")</dt>
-        <dd>@part.cacheTtlStr</dd>
+        <dd>@part.cacheTtlStr @if(!part.config.cacheTtl.contains(scala.concurrent.duration.Duration.Zero)) {
+            @helper.form(action = controllers.routes.CacheController.invalidatePart(part.partId), 'method -> "post") {
+                <input type="submit" value="@Messages("parts.cache.flush")" class="btn btn-danger" />
+            }
+        }</dd>
     </dl>
 
     <hr/>

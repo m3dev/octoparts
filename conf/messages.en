@@ -50,6 +50,7 @@ parts.parameter.description=Description
 parts.parameter.type=Output type
 parts.parameter.required=Required
 parts.parameter.versioned=Can triggers cache flushes
+parts.parameter.cacheGroups=Associated cache groups
 parts.section.hystrix=Hystrix settings
 parts.hystrix.commandKey=Command key
 parts.hystrix.commandGroupKey=Command group
@@ -64,6 +65,7 @@ parts.cache.ttl.label=Time to live (seconds)
 parts.cache.ttl.help=Not set = Eternal; 0 = Do not cache
 parts.cache.unlimited=No limit
 parts.cache.none=Cache disabled
+parts.cache.flush=Flush cache
 parts.section.cacheGroup=Cache groups
 parts.cacheGroup.none=None yet
 parts.section.alertMail=Alert mail settings
@@ -125,6 +127,7 @@ cacheGroups.parts=Member parts
 cacheGroups.numParts=Member parts count
 cacheGroups.parameters=Member parameters
 cacheGroups.numParameters=Member parameters count
+cacheGroups.flush=Quick flush (parts only)
 
 menu.links=Links
 menu.monitoring=Monitoring
