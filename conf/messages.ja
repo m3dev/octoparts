@@ -104,11 +104,14 @@ parameter.ifDifferent=（異なる場合）
 parameter.cacheGroups.none=まだありません
 
 threadPools.this=スレッドプール
+threadPools.detail=スレッドプール詳細
 threadPools.list=スレッドプール設定一覧
 threadPools.create=スレッドプール設定登録
 threadPools.edit=「{0}」スレッドプール設定編集
 threadPools.key=スレッドプールキー
 threadPools.coreSize=コア数
+threadPools.queueSize=キュー数
+threadPools.members=メンバーパーツ
 
 cacheGroups.this=キャッシュグループ
 cacheGroups.list=キャッシュグループ一覧

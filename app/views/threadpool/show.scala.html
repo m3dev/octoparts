@@ -1,0 +1,39 @@
+@(tpc: com.m3.octoparts.model.config.ThreadPoolConfig)(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
+
+@views.html.adminlayout(Messages("threadPools.detail")) {
+    <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.css" />
+    @views.html.datatables()
+
+} {
+
+    <h1>@Messages("threadPools.detail")</h1>
+
+    <h4><a href="@controllers.routes.AdminController.editThreadPool(tpc.id.get)" class="btn btn-primary">@Messages("edit")</a>
+        <a href="@controllers.routes.AdminController.confirmDeleteThreadPool(tpc.id.get)" class="btn btn-danger">@Messages("delete")</a>
+    </h4>
+
+    <dl>
+        <dt>@Messages("threadPools.key")</dt>
+        <dd>@tpc.threadPoolKey</dd>
+        <dt>@Messages("threadPools.coreSize")</dt>
+        <dd>@tpc.coreSize</dd>
+        <dt>@Messages("threadPools.queueSize")</dt>
+        <dd>@tpc.queueSize</dd>
+    </dl>
+
+    <h2>@Messages("threadPools.members")</h2>
+    <table class="dataTable stripe hover compact">
+        <thead>
+            <tr>
+                <th>@Messages("parts.partId")</th>
+            </tr>
+        </thead>
+        <tbody>
+        @for(part <- tpc.hystrixConfigs.flatMap(_.httpPartConfig)) {
+            <tr>
+                <td><a href="@{controllers.routes.AdminController.showPart(part.partId).url}">@part.partId</a></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
