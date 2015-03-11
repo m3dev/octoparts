@@ -39,6 +39,9 @@
                 <td>@group.partParams.size</td>
                 <td width="150px">
                     <a href="@controllers.routes.AdminController.editCacheGroup(group.name)" class="btn btn-primary">@Messages("edit")</a>
+                    @helper.form(action = controllers.routes.CacheController.invalidateCacheGroupParts(group.name), 'method -> "post") {
+                        <input type="submit" value="@Messages("cacheGroups.flush")" class="btn btn-danger" />
+                    }
                     <a href="@controllers.routes.AdminController.confirmDeleteCacheGroup(group.name)" class="btn btn-danger">@Messages("delete")</a>
                 </td>
             </tr>

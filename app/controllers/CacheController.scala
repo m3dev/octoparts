@@ -104,7 +104,13 @@ class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
     fu.map(_ => Ok("OK")).recover(logAndRenderError("ERROR: " + _.toString))
   }
 
-  private def renderInvalidated[A](invalidatedThings: Seq[A]) = Ok(s"OK: invalidated the following: $invalidatedThings")
+  private def renderInvalidated[A](invalidatedThings: Seq[A]) = Ok {
+    if (invalidatedThings.isEmpty) {
+      "OK"
+    } else {
+      s"OK: invalidated the following:\n${invalidatedThings.mkString("\n")}"
+    }
+  }
 
   private def logAndRenderError(render: Throwable => String)(implicit request: RequestHeader): PartialFunction[Throwable, Result] = {
     case NonFatal(err) =>

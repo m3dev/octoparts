@@ -81,19 +81,10 @@ class PartsController(
         Future.sequence(fParts).map(_.flatten)
     }
 
-    val fCacheGroups = configsRepository.findAllCacheGroups()
-
     for {
       configs <- fConfigs
-      allCacheGroups <- fCacheGroups
     } yield {
-      val configsWithPartParamCacheGroups = configs.map {
-        config =>
-          config.copy(parameters = config.parameters.toSeq.map {
-            param => param.copy(cacheGroups = allCacheGroups.filter(_.partParams.exists(_.id == param.id)).toSet)
-          }.toSet)
-      }
-      Ok(Json.toJson(configsWithPartParamCacheGroups.map(HttpPartConfig.toJsonModel)))
+      Ok(Json.toJson(configs.map(HttpPartConfig.toJsonModel)))
     }
   }
 
