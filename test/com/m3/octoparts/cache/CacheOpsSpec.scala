@@ -3,12 +3,14 @@ package com.m3.octoparts.cache
 import java.io.IOException
 import java.util.concurrent.Executors
 
+import com.beachape.zipkin.services.NoopZipkinService
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.m3.octoparts.cache.directive.CacheDirective
 import com.m3.octoparts.cache.key.{ MemcachedKeyGenerator, PartCacheKey }
 import com.m3.octoparts.cache.memcached.{ InMemoryRawCache, MemcachedCache, MemcachedCacheOps }
 import com.m3.octoparts.cache.versioning.{ InMemoryLatestVersionCache, LatestVersionCache }
 import com.m3.octoparts.model.{ CacheControl, PartResponse }
+import com.twitter.zipkin.gen.Span
 import org.joda.time.DateTimeUtils
 import org.scalatest._
 import org.scalatest.concurrent.{ Eventually, ScalaFutures }
@@ -28,6 +30,9 @@ class CacheOpsSpec extends FunSpec with Matchers with ScalaFutures with Eventual
     val namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("cache-%d").build()
     ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor(namedThreadFactory))
   }
+
+  implicit val zipkinService = NoopZipkinService
+  implicit val emptySpan = new Span()
 
   case class CacheStuff(cache: RawCache, latestVersionCache: LatestVersionCache, client: MemcachedCacheOps)
 
@@ -147,7 +152,7 @@ class CacheOpsSpec extends FunSpec with Matchers with ScalaFutures with Eventual
   it("should show a CacheException when the cache is down") {
     val cacheStuff = createCacheStuff
     val rawCache = new InMemoryRawCache() {
-      override def get[T](key: String)(implicit codec: Codec[T]): Future[Option[T]] = Future.failed(new IOException)
+      override def get[T](key: String)(implicit codec: Codec[T], parentSpan: Span): Future[Option[T]] = Future.failed(new IOException)
     }
     val cache = new MemcachedCache(rawCache, MemcachedKeyGenerator)
     val testee = new MemcachedCacheOps(cache, cacheStuff.latestVersionCache)

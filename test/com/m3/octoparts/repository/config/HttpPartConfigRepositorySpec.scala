@@ -54,7 +54,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
         config.httpPoolSize should be(5)
         config.httpConnectionTimeout should be(1.second)
         config.httpSocketTimeout should be(5.seconds)
-        config.httpDefaultEncoding should be(StandardCharsets.UTF_8)
+        config.httpDefaultEncoding.underlying should be(StandardCharsets.UTF_8)
     }
 
     it("should work when passing Option values") {
@@ -266,7 +266,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
             httpPoolSize = 5,
             httpConnectionTimeout = 1.second,
             httpSocketTimeout = 5.seconds,
-            httpDefaultEncoding = StandardCharsets.US_ASCII,
+            httpDefaultEncoding = Charset.forName(StandardCharsets.US_ASCII.name),
             parameters = parameters.toSet,
             hystrixConfig = Some(insertedHystrixConfig),
             cacheTtl = Some(30.seconds),
@@ -301,7 +301,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
           httpPoolSize = 5,
           httpConnectionTimeout = 1.second,
           httpSocketTimeout = 5.seconds,
-          httpDefaultEncoding = StandardCharsets.US_ASCII,
+          httpDefaultEncoding = Charset.forName(StandardCharsets.US_ASCII.name),
           parameters = parameters.toSet,
           hystrixConfig = Some(insertedHystrixConfig),
           cacheTtl = Some(10.minutes),

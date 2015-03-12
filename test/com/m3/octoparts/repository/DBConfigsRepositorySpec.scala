@@ -1,6 +1,8 @@
 package com.m3.octoparts.repository
 
+import com.beachape.zipkin.services.NoopZipkinService
 import com.m3.octoparts.repository.config._
+import com.twitter.zipkin.gen.Span
 import org.scalatest._
 import com.m3.octoparts.support.db._
 import com.m3.octoparts.support.mocks.ConfigDataMocks
@@ -12,26 +14,29 @@ import scala.language.postfixOps
 class DBConfigsRepositorySpec extends fixture.FlatSpec with DBSuite with Matchers with ConfigDataMocks with ScalaFutures {
 
   implicit val p = PatienceConfig(timeout = 5 seconds)
+  implicit val zipkinService = NoopZipkinService
+  implicit val emptySpan = new Span()
+  lazy val dbConfigRepo = new DBConfigsRepository()
 
   behavior of "DBConfigsRepository"
 
   it should "not contain the test ConfigItem at first" in {
     implicit session =>
-      whenReady(DBConfigsRepository.getAllWithSession(HttpPartConfigRepository)) {
+      whenReady(dbConfigRepo.getAllWithSession(HttpPartConfigRepository)) {
         _.find(_.partId == mockHttpPartConfig.partId) should not be 'defined
       }
   }
 
   it should "contain the test ConfigItem after insertion" in {
     implicit session =>
-      whenReady(DBConfigsRepository.saveWithSession(HttpPartConfigRepository, mockHttpPartConfig)) {
+      whenReady(dbConfigRepo.saveWithSession(HttpPartConfigRepository, mockHttpPartConfig)) {
         saved =>
           // Get ALL should work
-          whenReady(DBConfigsRepository.getAllWithSession(HttpPartConfigRepository)) {
+          whenReady(dbConfigRepo.getAllWithSession(HttpPartConfigRepository)) {
             _.find(_.partId == mockHttpPartConfig.partId) should be('defined)
           }
           // Get to find 1 item should work
-          whenReady(DBConfigsRepository.getWithSession(HttpPartConfigRepository, sqls.eq(HttpPartConfigRepository.defaultAlias.partId, mockHttpPartConfig.partId))) {
+          whenReady(dbConfigRepo.getWithSession(HttpPartConfigRepository, sqls.eq(HttpPartConfigRepository.defaultAlias.partId, mockHttpPartConfig.partId))) {
             _ should not be 'empty
           }
       }
@@ -39,11 +44,11 @@ class DBConfigsRepositorySpec extends fixture.FlatSpec with DBSuite with Matcher
 
   it should "not contain the test ConfigItem after insertion followed by deletion by its partId" in {
     implicit session =>
-      whenReady(DBConfigsRepository.saveWithSession(HttpPartConfigRepository, mockHttpPartConfig)) {
+      whenReady(dbConfigRepo.saveWithSession(HttpPartConfigRepository, mockHttpPartConfig)) {
         saved =>
-          whenReady(DBConfigsRepository.deleteWithSession(HttpPartConfigRepository, sqls.eq(HttpPartConfigRepository.defaultAlias.partId, mockHttpPartConfig.partId))) {
+          whenReady(dbConfigRepo.deleteWithSession(HttpPartConfigRepository, sqls.eq(HttpPartConfigRepository.defaultAlias.partId, mockHttpPartConfig.partId))) {
             deleted =>
-              whenReady(DBConfigsRepository.getAllWithSession(HttpPartConfigRepository)) {
+              whenReady(dbConfigRepo.getAllWithSession(HttpPartConfigRepository)) {
                 _.find(_.partId == mockHttpPartConfig.partId) should not be 'defined
               }
           }
@@ -52,11 +57,11 @@ class DBConfigsRepositorySpec extends fixture.FlatSpec with DBSuite with Matcher
 
   it should "not contain the test ConfigItem after insertion followed by deletion of all items" in {
     implicit session =>
-      whenReady(DBConfigsRepository.saveWithSession(HttpPartConfigRepository, mockHttpPartConfig)) {
+      whenReady(dbConfigRepo.saveWithSession(HttpPartConfigRepository, mockHttpPartConfig)) {
         saved =>
-          whenReady(DBConfigsRepository.deleteAllWithSession(HttpPartConfigRepository)) {
+          whenReady(dbConfigRepo.deleteAllWithSession(HttpPartConfigRepository)) {
             deleted =>
-              whenReady(DBConfigsRepository.getAllWithSession(HttpPartConfigRepository)) {
+              whenReady(dbConfigRepo.getAllWithSession(HttpPartConfigRepository)) {
                 _ should be('empty)
               }
           }
@@ -65,14 +70,14 @@ class DBConfigsRepositorySpec extends fixture.FlatSpec with DBSuite with Matcher
 
   it should "have a working findAllCacheGroupsByName" in {
     implicit session =>
-      whenReady(DBConfigsRepository.save(mockCacheGroup)) {
+      whenReady(dbConfigRepo.save(mockCacheGroup)) {
         savedId =>
-          whenReady(DBConfigsRepository.findAllCacheGroupsByName(mockCacheGroup.name)) {
+          whenReady(dbConfigRepo.findAllCacheGroupsByName(mockCacheGroup.name)) {
             seqCacheGroups =>
               val group = seqCacheGroups.head
               group.name should be(mockCacheGroup.name)
           }
-          whenReady(DBConfigsRepository.findAllCacheGroupsByName()) {
+          whenReady(dbConfigRepo.findAllCacheGroupsByName()) {
             _ should be('empty)
           }
       }

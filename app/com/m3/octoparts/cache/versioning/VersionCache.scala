@@ -1,6 +1,7 @@
 package com.m3.octoparts.cache.versioning
 
 import com.m3.octoparts.cache.versioning.LatestVersionCache._
+import com.twitter.zipkin.gen.Span
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -9,17 +10,17 @@ abstract class VersionCache[T](id: T)(implicit executionContext: ExecutionContex
 
   def getId = id
 
-  def pollVersion: Future[Option[Version]]
+  def pollVersion(implicit parentSpan: Span): Future[Option[Version]]
 
-  def doInsertExternal(version: Version): Future[Unit]
+  def doInsertExternal(version: Version)(implicit parentSpan: Span): Future[Unit]
 
-  def knownVersion: Option[Version]
+  def knownVersion(implicit parentSpan: Span): Option[Version]
 
-  def updateVersion(version: Version): Unit
+  def updateVersion(version: Version)(implicit parentSpan: Span): Unit
 
-  def newLookup = new VersionLookup(this)
+  def newLookup(implicit parentSpan: Span) = new VersionLookup(this)
 
-  def insertNewVersion(): Future[Unit] = {
+  def insertNewVersion()(implicit parentSpan: Span): Future[Unit] = {
     val newVersion = LatestVersionCache.makeNewVersion
     updateVersion(newVersion)
     doInsertExternal(newVersion)

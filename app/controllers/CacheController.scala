@@ -1,10 +1,12 @@
 package controllers
 
 import javax.ws.rs.PathParam
+import com.beachape.zipkin.ReqHeaderToSpanImplicit
 import com.m3.octoparts.cache.CacheOps
 import com.m3.octoparts.cache.versioning.VersionedParamKey
 import com.m3.octoparts.model.config.CacheGroup
 import com.m3.octoparts.repository.ConfigsRepository
+import com.twitter.zipkin.gen.Span
 import com.wordnik.swagger.annotations._
 import controllers.support.LoggingSupport
 import play.api.mvc.{ Action, Controller, RequestHeader, Result }
@@ -20,7 +22,8 @@ import scala.util.control.NonFatal
 )
 class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
     extends Controller
-    with LoggingSupport {
+    with LoggingSupport
+    with ReqHeaderToSpanImplicit {
 
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
@@ -101,7 +104,13 @@ class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
     fu.map(_ => Ok("OK")).recover(logAndRenderError("ERROR: " + _.toString))
   }
 
-  private def renderInvalidated[A](invalidatedThings: Seq[A]) = Ok(s"OK: invalidated the following: $invalidatedThings")
+  private def renderInvalidated[A](invalidatedThings: Seq[A]) = Ok {
+    if (invalidatedThings.isEmpty) {
+      "OK"
+    } else {
+      s"OK: invalidated the following:\n${invalidatedThings.mkString("\n")}"
+    }
+  }
 
   private def logAndRenderError(render: Throwable => String)(implicit request: RequestHeader): PartialFunction[Throwable, Result] = {
     case NonFatal(err) =>
@@ -119,7 +128,7 @@ class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
    *
    * @return Future sequence of partParam names that were invalidated
    */
-  private def invalidateGroupPartParams(group: CacheGroup, paramValue: String): Future[Seq[String]] = {
+  private def invalidateGroupPartParams(group: CacheGroup, paramValue: String)(implicit parentSpan: Span): Future[Seq[String]] = {
     val futureMaybeParamSeq = Future.sequence(group.partParams.map(_.id).flatten.map(repository.findParamById))
     futureMaybeParamSeq.flatMap { maybeParamSeq =>
       Future.sequence(for {
@@ -139,7 +148,7 @@ class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
    * Invalidates the given group's parts
    * @return Future sequence of Part names that were invalidated
    */
-  private def invalidateGroupParts(group: CacheGroup): Future[Seq[String]] = Future.sequence(for {
+  private def invalidateGroupParts(group: CacheGroup)(implicit parentSpan: Span): Future[Seq[String]] = Future.sequence(for {
     part <- group.httpPartConfigs
   } yield {
     cacheOps.increasePartVersion(part.partId).map(done => part.partId)

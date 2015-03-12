@@ -16,13 +16,13 @@ object ThreadPoolConfigRepository extends ConfigMapper[ThreadPoolConfig] with Ti
     "coreSize" -> SkinnyParamType.Int
   )
 
-  lazy val hystrixCommandRef = hasMany[HystrixConfig](
+  lazy val hystrixConfigRef = hasMany[HystrixConfig](
     many = HystrixConfigRepository -> HystrixConfigRepository.defaultAlias,
     // defines join condition by using aliases
     on = (t, h) => sqls.eq(t.id, h.threadPoolConfigId),
     // function to merge associations to main entity
     merge = (t, h) => t.copy(hystrixConfigs = h)
-  )
+  ).includes[HystrixConfig]((ts, hs) => ts.map(t => t.copy(hystrixConfigs = hs.filter(_.threadPoolConfigId == t.id))))
 
   def extract(rs: WrappedResultSet, n: ResultName[ThreadPoolConfig]) = ThreadPoolConfig(
     id = rs.get(n.id),

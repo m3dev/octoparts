@@ -3,6 +3,7 @@ package com.m3.octoparts.aggregator.handler
 import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.model.PartResponse
 import com.m3.octoparts.model.config.ShortPartParam
+import com.twitter.zipkin.gen.Span
 
 import scala.concurrent.Future
 
@@ -22,6 +23,6 @@ trait Handler {
   // Used primarily for creating a PartResponse, but also for logging purposes
   def partId: String
 
-  def process(partRequestInfo: PartRequestInfo, arguments: HandlerArguments): Future[PartResponse]
+  def process(partRequestInfo: PartRequestInfo, arguments: HandlerArguments)(implicit parentSpan: Span): Future[PartResponse]
 
 }

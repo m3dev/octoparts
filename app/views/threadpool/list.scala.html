@@ -12,7 +12,6 @@
     }
     -->
     </style>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     @views.html.datatables()
 } {
 
@@ -23,14 +22,16 @@
             <tr>
                 <th>@Messages("threadPools.key")</th>
                 <th>@Messages("threadPools.coreSize")</th>
+                <th>@Messages("threadPools.members")</th>
                 <th>@Messages("action")</th>
             </tr>
         </thead>
         <tbody>
         @for(tpc <- threadPoolConfigs) {
             <tr>
-                <td>@tpc.threadPoolKey</td>
+                <td><a href="@controllers.routes.AdminController.showThreadPool(tpc.id.get)">@tpc.threadPoolKey</a></td>
                 <td>@tpc.coreSize</td>
+                <td>@tpc.hystrixConfigs.size</td>
                 <td width="150px">
                     <a href="@controllers.routes.AdminController.editThreadPool(tpc.id.get)" class="btn btn-primary">@Messages("edit")</a>
                     <a href="@controllers.routes.AdminController.confirmDeleteThreadPool(tpc.id.get)" class="btn btn-danger">@Messages("delete")</a>

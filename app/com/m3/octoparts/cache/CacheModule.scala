@@ -2,6 +2,7 @@ package com.m3.octoparts.cache
 
 import java.util.concurrent.{ TimeUnit, _ }
 
+import com.beachape.zipkin.services.ZipkinServiceLike
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.m3.octoparts.cache.memcached._
 import com.m3.octoparts.cache.dummy.{ DummyCache, DummyRawCache, DummyCacheOps, DummyLatestVersionCache }
@@ -27,6 +28,8 @@ class CacheModule extends Module {
     ExecutionContext.fromExecutor(
       new ThreadPoolExecutor(0, poolSize, 1L, TimeUnit.MINUTES, queue, namedThreadFactory))
   }
+
+  private implicit lazy val zipkinService = inject[ZipkinServiceLike]
 
   bind[ExecutionContext] to cacheExecutor
 
@@ -57,7 +60,7 @@ class CacheModule extends Module {
     lazy val maxInMemoryLVCKeys = inject[Configuration].getLong("caching.versionCachingSize").getOrElse(100000L)
     bind[LatestVersionCache] to new InMemoryLatestVersionCache(maxInMemoryLVCKeys)
     when(useInMemoryCache) {
-      bind[RawCache] to new InMemoryRawCache()(cacheExecutor) destroyWith (_.close())
+      bind[RawCache] to new InMemoryRawCache()(cacheExecutor, zipkinService) destroyWith (_.close())
     }
     when(useMemcached) {
       bind[RawCache] to buildMemcachedRawCache() destroyWith (_.close())

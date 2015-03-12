@@ -64,6 +64,7 @@ parts.cache.ttl.label=キャッシュ有効期限（秒）
 parts.cache.ttl.help=指定なし＝無期限、0＝キャッシュしません
 parts.cache.unlimited=無期限
 parts.cache.none=キャッシュしません
+parts.cache.flush=キャッシュフラッシュ
 parts.section.cacheGroup=キャッシュグループ
 parts.cacheGroup.none=まだありません
 parts.section.alertMail=アラートメール設定
@@ -105,15 +106,19 @@ parameter.ifDifferent=（異なる場合）
 parameter.cacheGroups.none=まだありません
 
 threadPools.this=スレッドプール
+threadPools.detail=スレッドプール詳細
 threadPools.list=スレッドプール設定一覧
 threadPools.create=スレッドプール設定登録
 threadPools.edit=「{0}」スレッドプール設定編集
 threadPools.key=スレッドプールキー
 threadPools.coreSize=コア数
+threadPools.queueSize=キュー数
+threadPools.members=メンバーパーツ
 
 cacheGroups.this=キャッシュグループ
 cacheGroups.list=キャッシュグループ一覧
 cacheGroups.create=キャッシュグループ登録
+cacheGroups.detail=キャッシュグループ詳細
 cacheGroups.edit=「{0}」キャッシュグループ編集
 cacheGroups.name=名前
 cacheGroups.description=説明
@@ -124,6 +129,7 @@ cacheGroups.numParts=パーツ数
 cacheGroups.parameters=所属パラメータ
 cacheGroups.numParameters=パーツのパラメータ数
 cacheGroups.none=まだ作られていません。
+cacheGroups.flush=クイックフラッシュ（パーツのみ）
 
 menu.links=リンク
 menu.monitoring=モニタリング

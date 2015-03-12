@@ -1,14 +1,18 @@
 package com.m3.octoparts.repository
 
 import com.beachape.logging.LTSVLogger
+import com.beachape.zipkin.services.ZipkinServiceLike
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.repository.config._
+import com.twitter.zipkin.gen.Span
 import play.api.Play
 import play.api.libs.concurrent.Akka
 import scalikejdbc._
 import skinny.orm.SkinnyCRUDMapper
+import skinny.orm.feature.CRUDFeatureWithId
 import skinny.orm.feature.associations.Association
 import com.m3.octoparts.future.RichFutureWithTiming._
+import com.beachape.zipkin.FutureEnrichment._
 
 import scala.concurrent.{ Future, blocking }
 
@@ -35,7 +39,7 @@ import scala.concurrent.{ Future, blocking }
  * In the first case, the session is the globally implicit session
  * The second allows to be explicit (for tests)
  */
-object DBConfigsRepository extends ImmutableDBRepository with MutableDBRepository with ConfigImporter
+class DBConfigsRepository(implicit val zipkinService: ZipkinServiceLike) extends ImmutableDBRepository with MutableDBRepository with ConfigImporter
 
 object DBContext {
 
@@ -47,36 +51,73 @@ object DBContext {
 trait ImmutableDBRepository extends ConfigsRepository {
   import DBContext._
 
+  implicit def zipkinService: ZipkinServiceLike
+
+  private val zipkinSpanNameBase = "db-repo-read"
+
   // Configs
-  def findConfigByPartId(partId: String): Future[Option[HttpPartConfig]] = getWithSession(HttpPartConfigRepository, sqls.eq(HttpPartConfigRepository.defaultAlias.partId, partId), includes = Seq(HttpPartConfigRepository.hystrixConfigRef))
-
-  def findAllConfigs(): Future[Seq[HttpPartConfig]] = getAllWithSession(HttpPartConfigRepository, includes = Seq(HttpPartConfigRepository.hystrixConfigRef))
-
-  def findParamById(id: Long): Future[Option[PartParam]] = getWithSession(PartParamRepository, sqls.eq(PartParamRepository.defaultAlias.id, id), joins = Seq(PartParamRepository.httpPartConfigRef))
-
-  // For ThreadPoolConfigs
-  def findThreadPoolConfigById(id: Long): Future[Option[ThreadPoolConfig]] = getWithSession(ThreadPoolConfigRepository, sqls.eq(ThreadPoolConfigRepository.defaultAlias.id, id))
-
-  def findAllThreadPoolConfigs(): Future[Seq[ThreadPoolConfig]] = getAllWithSession(ThreadPoolConfigRepository)
-
-  // For CacheGroups
-  def findCacheGroupByName(name: String): Future[Option[CacheGroup]] = getWithSession(CacheGroupRepository, sqls.eq(CacheGroupRepository.defaultAlias.name, name), joins = Seq(CacheGroupRepository.httpPartConfigsRef, CacheGroupRepository.partParamsRef))
-
-  def findAllCacheGroupsByName(names: String*): Future[Seq[CacheGroup]] = if (names.isEmpty) {
-    Future.successful(Nil)
-  } else {
-    getAllByWithSession(CacheGroupRepository, sqls.in(CacheGroupRepository.defaultAlias.name, names), joins = Seq(CacheGroupRepository.httpPartConfigsRef, CacheGroupRepository.partParamsRef))
+  def findConfigByPartId(partId: String)(implicit parentSpan: Span): Future[Option[HttpPartConfig]] = {
+    getWithSession(HttpPartConfigRepository, sqls.eq(HttpPartConfigRepository.defaultAlias.partId, partId), includes = Seq(HttpPartConfigRepository.hystrixConfigRef))
+      .trace(s"$zipkinSpanNameBase-findConfigByPartId", "partId" -> partId)
   }
 
-  def findAllCacheGroups(): Future[Seq[CacheGroup]] = getAllWithSession(CacheGroupRepository, joins = Seq(CacheGroupRepository.httpPartConfigsRef, CacheGroupRepository.partParamsRef))
+  def findAllConfigs()(implicit parentSpan: Span): Future[Seq[HttpPartConfig]] = {
+    // a hack to set the part parameter cache groups
+    for {
+      allCacheGroups <- findAllCacheGroups()
+      configs <- getAllWithSession(HttpPartConfigRepository, includes = Seq(HttpPartConfigRepository.hystrixConfigRef))
+        .trace(s"$zipkinSpanNameBase-findAllConfigs")
+    } yield {
+      configs.map {
+        config =>
+          config.copy(parameters = config.parameters.toSeq.map {
+            param => param.copy(cacheGroups = allCacheGroups.filter(_.partParams.exists(_.id == param.id)).toSet)
+          }.toSet)
+      }
+    }
+  }
+
+  def findParamById(id: Long)(implicit parentSpan: Span): Future[Option[PartParam]] = {
+    getWithSession(PartParamRepository, sqls.eq(PartParamRepository.defaultAlias.id, id), joins = Seq(PartParamRepository.httpPartConfigRef))
+      .trace(s"$zipkinSpanNameBase-findParamById", "id" -> id.toString)
+  }
+
+  // For ThreadPoolConfigs
+  def findThreadPoolConfigById(id: Long)(implicit parentSpan: Span): Future[Option[ThreadPoolConfig]] = {
+    getWithSession(ThreadPoolConfigRepository, sqls.eq(ThreadPoolConfigRepository.defaultAlias.id, id), includes = Seq(ThreadPoolConfigRepository.hystrixConfigRef))
+      .trace(s"$zipkinSpanNameBase-findThreadPoolConfigById", "id" -> id.toString)
+  }
+
+  def findAllThreadPoolConfigs()(implicit parentSpan: Span): Future[Seq[ThreadPoolConfig]] = {
+    getAllWithSession(ThreadPoolConfigRepository, includes = Seq(ThreadPoolConfigRepository.hystrixConfigRef))
+      .trace(s"$zipkinSpanNameBase-findAllThreadPoolConfigs")
+  }
+
+  // For CacheGroups
+  def findCacheGroupByName(name: String)(implicit parentSpan: Span): Future[Option[CacheGroup]] = {
+    getWithSession(CacheGroupRepository.withChildren, sqls.eq(CacheGroupRepository.defaultAlias.name, name))
+      .trace(s"$zipkinSpanNameBase-findCacheGroupByName", "name" -> name)
+  }
+
+  def findAllCacheGroupsByName(names: String*)(implicit parentSpan: Span): Future[Seq[CacheGroup]] = if (names.isEmpty) {
+    Future.successful(Nil)
+  } else {
+    getAllByWithSession(CacheGroupRepository.withChildren, sqls.in(CacheGroupRepository.defaultAlias.name, names))
+      .trace(s"$zipkinSpanNameBase-findAllCacheGroupsByName", "names" -> names.toString)
+  }
+
+  def findAllCacheGroups()(implicit parentSpan: Span): Future[Seq[CacheGroup]] = {
+    getAllWithSession(CacheGroupRepository.withChildren)
+      .trace(s"$zipkinSpanNameBase-findAllCacheGroups")
+  }
 
   /**
    * Gets a single model from a table according to a where clause and logs the where clause used
    */
-  private[repository] def getWithSession[A](mapper: SkinnyCRUDMapper[A],
+  private[repository] def getWithSession[A](mapper: CRUDFeatureWithId[Long, A],
                                             where: SQLSyntax,
-                                            joins: Seq[Association[A]] = Nil,
-                                            includes: Seq[Association[A]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[Option[A]] = Future {
+                                            joins: Seq[Association[_]] = Nil,
+                                            includes: Seq[Association[_]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[Option[A]] = Future {
     blocking {
       val ret = mapper.joins(joins: _*).includes(includes: _*).findBy(where)
       ret.foreach {
@@ -89,9 +130,9 @@ trait ImmutableDBRepository extends ConfigsRepository {
   /**
    * Gets all the records from a table and logs the number of records retrieved
    */
-  private[repository] def getAllWithSession[A](mapper: SkinnyCRUDMapper[A],
-                                               joins: Seq[Association[A]] = Nil,
-                                               includes: Seq[Association[A]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[Seq[A]] = Future {
+  private[repository] def getAllWithSession[A](mapper: CRUDFeatureWithId[Long, A],
+                                               joins: Seq[Association[_]] = Nil,
+                                               includes: Seq[Association[_]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[Seq[A]] = Future {
     blocking {
       val ret = mapper.joins(joins: _*).includes(includes: _*).findAll()
       LTSVLogger.debug("Table" -> mapper.tableName, "Retrieved records" -> ret.length.toString)
@@ -102,10 +143,10 @@ trait ImmutableDBRepository extends ConfigsRepository {
   /**
    * Gets all the records from a table according to a where clause and logs the number of records retrieved
    */
-  private[repository] def getAllByWithSession[A](mapper: SkinnyCRUDMapper[A],
+  private[repository] def getAllByWithSession[A](mapper: CRUDFeatureWithId[Long, A],
                                                  where: SQLSyntax,
-                                                 joins: Seq[Association[A]] = Nil,
-                                                 includes: Seq[Association[A]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[Seq[A]] = Future {
+                                                 joins: Seq[Association[_]] = Nil,
+                                                 includes: Seq[Association[_]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[Seq[A]] = Future {
     blocking {
       val ret = mapper.joins(joins: _*).includes(includes: _*).findAllBy(where)
       LTSVLogger.debug("Table" -> mapper.tableName, "Retrieved records" -> ret.length.toString)
@@ -117,17 +158,36 @@ trait ImmutableDBRepository extends ConfigsRepository {
 trait MutableDBRepository extends MutableConfigsRepository {
   import DBContext._
 
-  def save[A <: ConfigModel[A]: ConfigMapper](obj: A): Future[Long] = DB.futureLocalTx { implicit session => saveWithSession(implicitly[ConfigMapper[A]], obj) }
+  implicit def zipkinService: ZipkinServiceLike
+  private val zipkinSpanNameBase = "db-repo-mutation"
 
-  def deleteAllConfigs(): Future[Int] = deleteAllWithSession(HttpPartConfigRepository)
+  def save[A <: ConfigModel[A]: ConfigMapper](obj: A)(implicit parentSpan: Span): Future[Long] = {
+    DB.futureLocalTx { implicit session => saveWithSession(implicitly[ConfigMapper[A]], obj) }.trace(s"$zipkinSpanNameBase-save", "object" -> obj.toString)
+  }
 
-  def deleteConfigByPartId(partId: String): Future[Int] = deleteWithSession(HttpPartConfigRepository, sqls.eq(HttpPartConfigRepository.defaultAlias.partId, partId))
+  def deleteAllConfigs()(implicit parentSpan: Span): Future[Int] = {
+    deleteAllWithSession(HttpPartConfigRepository).trace(s"$zipkinSpanNameBase-deleteAllConfigs")
+  }
 
-  def deletePartParamById(id: Long) = deleteWithSession(PartParamRepository, sqls.eq(PartParamRepository.defaultAlias.id, id))
+  def deleteConfigByPartId(partId: String)(implicit parentSpan: Span): Future[Int] = {
+    deleteWithSession(HttpPartConfigRepository, sqls.eq(HttpPartConfigRepository.defaultAlias.partId, partId))
+      .trace(s"$zipkinSpanNameBase-deleteConfigByPartId", "partId" -> partId)
+  }
 
-  def deleteThreadPoolConfigById(id: Long) = deleteWithSession(ThreadPoolConfigRepository, sqls.eq(ThreadPoolConfigRepository.defaultAlias.id, id))
+  def deletePartParamById(id: Long)(implicit parentSpan: Span) = {
+    deleteWithSession(PartParamRepository, sqls.eq(PartParamRepository.defaultAlias.id, id))
+      .trace(s"$zipkinSpanNameBase-deletePartParamById", "id" -> id.toString)
+  }
 
-  def deleteCacheGroupByName(name: String): Future[Int] = deleteWithSession(CacheGroupRepository, sqls.eq(CacheGroupRepository.defaultAlias.name, name))
+  def deleteThreadPoolConfigById(id: Long)(implicit parentSpan: Span) = {
+    deleteWithSession(ThreadPoolConfigRepository, sqls.eq(ThreadPoolConfigRepository.defaultAlias.id, id))
+      .trace(s"$zipkinSpanNameBase-deleteThreadPoolConfigById", "id" -> id.toString)
+  }
+
+  def deleteCacheGroupByName(name: String)(implicit parentSpan: Span): Future[Int] = {
+    deleteWithSession(CacheGroupRepository, sqls.eq(CacheGroupRepository.defaultAlias.name, name))
+      .trace(s"$zipkinSpanNameBase-deleteCacheGroupByName", "name" -> name)
+  }
 
   /**
    * Saves a model using the mapper passed in, and logs the data that was saved

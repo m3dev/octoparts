@@ -1,11 +1,13 @@
 package com.m3.octoparts.aggregator.service
 
 import com.beachape.logging.LTSVLogger
+import com.beachape.zipkin.services.ZipkinServiceLike
 import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.aggregator.handler.HttpHandlerFactory
 import com.m3.octoparts.model.PartResponse
 import com.m3.octoparts.model.config.{ HttpPartConfig, ShortPartParam }
 import com.m3.octoparts.repository.ConfigsRepository
+import com.twitter.zipkin.gen.Span
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -16,7 +18,12 @@ import scala.concurrent.{ ExecutionContext, Future }
  * children classes / decorators
  */
 trait PartRequestServiceBase extends RequestParamSupport {
+
+  import com.beachape.zipkin.FutureEnrichment._
+
   implicit def executionContext: ExecutionContext
+
+  protected implicit def zipkinService: ZipkinServiceLike
 
   def repository: ConfigsRepository
 
@@ -33,7 +40,7 @@ trait PartRequestServiceBase extends RequestParamSupport {
    * @param pReq Part Request
    * @return Future[PartResponse]
    */
-  def responseFor(pReq: PartRequestInfo): Future[PartResponse] = {
+  def responseFor(pReq: PartRequestInfo)(implicit parentSpan: Span): Future[PartResponse] = {
     val fMaybeCi = repository.findConfigByPartId(pReq.partRequest.partId)
     fMaybeCi.flatMap {
       case Some(ci) => {
@@ -79,7 +86,7 @@ trait PartRequestServiceBase extends RequestParamSupport {
    *           trait, but may be used for decorator purposes in Stackable traits.
    * @return Future[PartResponse], which includes adding deprecation notices
    */
-  protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, Seq[String]]): Future[PartResponse] = {
+  protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): Future[PartResponse] = {
     val handler = handlerFactory.makeHandler(ci)
     val fResp = handler.process(partRequestInfo, params)
     fResp.map {

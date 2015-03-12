@@ -15,7 +15,9 @@ object Dependencies {
   val thePlayVersion = play.core.PlayVersion.current
   val slf4jVersion = "1.7.10"
   val hystrixVersion = "1.3.20"
-  val httpClientVersion = "4.4"
+  // http-client 4.4 has an unsolved issue which affects us critically: https://issues.apache.org/jira/browse/HTTPCLIENT-1609
+  // Stay on 4.3.x until this is fixed.
+  val httpClientVersion = "4.3.6"
   val scalikejdbcVersion = "2.2.3"
   val swaggerVersion = "1.3.12"
   val jacksonVersion = "2.5.1"
@@ -83,6 +85,8 @@ object Dependencies {
   val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.6"
   val findbugs            = "com.google.code.findbugs"  % "jsr305"                        % "3.0.0"
 
+  val zipkinFutures       = "com.beachape"              %% "zipkin-futures-play"          % "0.1.0"
+
   val withoutExcluded = { (m: ModuleID) =>
     m.excludeAll(
       ExclusionRule(organization = "spy", name = "spymemcached"), // spymemcached's org changed from spy to net.spy
@@ -124,6 +128,9 @@ object Dependencies {
     // Memcached
     shade,
     spyMemcached,
+
+    // Zipkin
+    zipkinFutures,
 
     // Misc utils
     commonsValidator,

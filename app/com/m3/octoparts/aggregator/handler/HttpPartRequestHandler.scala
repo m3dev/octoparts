@@ -2,6 +2,8 @@ package com.m3.octoparts.aggregator.handler
 
 import java.net.{ URI, URLEncoder }
 
+import com.beachape.zipkin.TracedFuture
+import com.beachape.zipkin.services.ZipkinServiceLike
 import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.http._
 import com.m3.octoparts.hystrix._
@@ -9,6 +11,7 @@ import com.m3.octoparts.model.{ HttpMethod, PartResponse }
 import com.m3.octoparts.model.config._
 import com.netaporter.uri.Uri
 import com.netaporter.uri.dsl._
+import com.twitter.zipkin.gen.Span
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.matching.Regex
@@ -21,6 +24,8 @@ trait HttpPartRequestHandler extends Handler {
   handler =>
 
   implicit def executionContext: ExecutionContext
+
+  implicit def zipkinService: ZipkinServiceLike
 
   def httpClient: HttpClientLike
 
@@ -52,27 +57,31 @@ trait HttpPartRequestHandler extends Handler {
    * @param hArgs Preparsed HystrixArguments
    * @return Future[PartResponse]
    */
-  def process(partRequestInfo: PartRequestInfo, hArgs: HandlerArguments): Future[PartResponse] = {
-    hystrixExecutor.future(
-      createBlockingHttpRetrieve(partRequestInfo, hArgs).retrieve().copy(),
-      maybeContents => HttpResponse(
-        status = 203, // 203 -> Non-authoritative info
-        body = maybeContents,
-        fromFallback = true,
-        message = "From fallback"
-      )
-    ).map {
-        createPartResponse
-      }
+  def process(partRequestInfo: PartRequestInfo, hArgs: HandlerArguments)(implicit parentSpan: Span): Future[PartResponse] = {
+    TracedFuture("Http request", "partId" -> partRequestInfo.partRequest.partId) { maybeSpan =>
+      hystrixExecutor.future(
+        createBlockingHttpRetrieve(partRequestInfo, hArgs, maybeSpan).retrieve(),
+        maybeContents => HttpResponse(
+          status = 203, // 203 -> Non-authoritative info
+          body = maybeContents,
+          fromFallback = true,
+          message = "From fallback"
+        )
+      ).map {
+          createPartResponse
+        }
+    }
   }
 
   /**
    * Returns a BlockingHttpRetrieve command
    *
+   * @param partRequestInfo the part request that spawned this HttpRetrieve
    * @param hArgs Handler arguments
+   * @param tracingSpan [[Span]] generated for tracing; the details of this will be forwarded as headers
    * @return a command object that will perform an HTTP request on demand
    */
-  def createBlockingHttpRetrieve(partRequestInfo: PartRequestInfo, hArgs: HandlerArguments): BlockingHttpRetrieve = {
+  def createBlockingHttpRetrieve(partRequestInfo: PartRequestInfo, hArgs: HandlerArguments, tracingSpan: Option[Span]): BlockingHttpRetrieve = {
     new BlockingHttpRetrieve {
       val httpClient = handler.httpClient
       def method = httpMethod
@@ -80,7 +89,11 @@ trait HttpPartRequestHandler extends Handler {
       val maybeBody = hArgs.collectFirst {
         case (p, values) if p.paramType == ParamType.Body && values.nonEmpty => values.head
       }
-      val headers = collectHeaders(hArgs) ++ buildTracingHeaders(partRequestInfo)
+      val headers = {
+        collectHeaders(hArgs) ++
+          buildTracingHeaders(partRequestInfo) ++
+          tracingSpan.fold(Map.empty[String, String])(zipkinService.spanToIdsMap)
+      }
     }
   }
 

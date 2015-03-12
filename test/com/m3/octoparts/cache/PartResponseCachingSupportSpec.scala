@@ -1,5 +1,13 @@
 package com.m3.octoparts.cache
 
+import com.beachape.zipkin.services.{ ZipkinServiceLike, NoopZipkinService }
+import com.m3.octoparts.aggregator.handler.HttpHandlerFactory
+import com.m3.octoparts.cache.key.HttpPartConfigCacheKey
+import com.m3.octoparts.repository.ConfigsRepository
+import com.netflix.hystrix.HystrixCommand
+import com.netflix.hystrix.exception.HystrixRuntimeException
+import com.netflix.hystrix.exception.HystrixRuntimeException.FailureType
+import com.twitter.zipkin.gen.Span
 import org.joda.time.DateTime
 import org.scalatest.{ Matchers, FunSpec }
 import com.m3.octoparts.cache.dummy.DummyCacheOps
@@ -7,11 +15,69 @@ import com.m3.octoparts.model.{ PartRequest, RequestMeta, CacheControl, PartResp
 import com.m3.octoparts.aggregator.service.PartRequestServiceBase
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.aggregator.PartRequestInfo
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 import com.m3.octoparts.support.mocks.ConfigDataMocks
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 
-class PartResponseCachingSupportSpec extends FunSpec with Matchers with ScalaFutures with ConfigDataMocks {
+class PartResponseCachingSupportSpec extends FunSpec with Matchers with ScalaFutures with ConfigDataMocks with Eventually {
+
+  implicit val emptySpan = new Span()
+
+  describe("#processWithConfig") {
+
+    class Super(processOverride: => Future[PartResponse]) extends PartRequestServiceBase {
+      def handlerFactory: HttpHandlerFactory = ???
+      def repository: ConfigsRepository = ???
+
+      implicit val executionContext: ExecutionContext = scala.concurrent.ExecutionContext.global
+
+      override protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): Future[PartResponse] = {
+        processOverride
+      }
+      protected implicit val zipkinService: ZipkinServiceLike = NoopZipkinService
+    }
+
+    def newSubject(process: => Future[PartResponse]) = new Super(process) with PartResponseCachingSupport {
+      val cacheOps: CacheOps = DummyCacheOps
+    }
+
+    it("should retry on a generic exception") {
+      var timesRun = 0
+      val subject = newSubject(Future.failed {
+        timesRun = timesRun + 1
+        new IllegalArgumentException
+      })
+      whenReady(subject.processWithConfig(mockHttpPartConfig, mockPartRequestInfo, Map.empty).failed) { _ =>
+        eventually(timesRun shouldBe 2)
+      }
+
+    }
+
+    it("should retry on CacheException") {
+      var timesRun = 0
+      val subject = newSubject(Future.failed {
+        timesRun = timesRun + 1
+        new CacheException(HttpPartConfigCacheKey("random"), new IllegalAccessError)
+      })
+      whenReady(subject.processWithConfig(mockHttpPartConfig, mockPartRequestInfo, Map.empty).failed) { _ =>
+        eventually(timesRun shouldBe 2)
+      }
+
+    }
+
+    it("should not retry on a HystrixRuntimeException") {
+      var timesRun = 0
+      val subject = newSubject(Future.failed {
+        timesRun = timesRun + 1
+        val ex = new HystrixRuntimeException(null, null, null, null, null)
+        ex
+      })
+      whenReady(subject.processWithConfig(mockHttpPartConfig, mockPartRequestInfo, Map.empty).failed) { _ =>
+        eventually(timesRun shouldBe 1)
+      }
+
+    }
+  }
 
   describe("PartResponseCachingSupport#selectLatest") {
     val stalePartResponse = PartResponse(partId = "XXX", id = "YYY", contents = Some("A"), cacheControl = CacheControl(etag = Some("123")))
@@ -95,10 +161,11 @@ class PartResponseCachingSupportSpec extends FunSpec with Matchers with ScalaFut
 
   describe("Custom part ID support") {
     trait MockPartRequestServiceBase extends PartRequestServiceBase {
-      override protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, Seq[String]]) =
+      override protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, Seq[String]])(implicit span: Span) =
         Future.successful(PartResponse(partId = "partId", id = "old custom ID", contents = Some("response body")))
     }
     val cachingSupport = new MockPartRequestServiceBase with PartResponseCachingSupport {
+      implicit val zipkinService = NoopZipkinService
       def executionContext = scala.concurrent.ExecutionContext.global
       def cacheOps = DummyCacheOps
       def handlerFactory = ???

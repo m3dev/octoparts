@@ -12,7 +12,6 @@
     }
     -->
     </style>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     @views.html.datatables()
 } {
 
@@ -32,12 +31,17 @@
         <tbody>
         @for(group <- cacheGroups) {
             <tr>
-                <td>@group.name</td>
+                <td><a href="@controllers.routes.AdminController.showCacheGroup(group.name)">@group.name</a></td>
                 <td>@group.description</td>
                 <td>@group.owner</td>
                 <td>@group.httpPartConfigs.size</td>
                 <td>@group.partParams.size</td>
                 <td width="150px">
+                    @if(group.httpPartConfigs.nonEmpty) {
+                        @helper.form(action = controllers.routes.CacheController.invalidateCacheGroupParts(group.name), 'method -> "post") {
+                            <input type="submit" value="@Messages("cacheGroups.flush")" class="btn btn-danger" />
+                        }
+                    }
                     <a href="@controllers.routes.AdminController.editCacheGroup(group.name)" class="btn btn-primary">@Messages("edit")</a>
                     <a href="@controllers.routes.AdminController.confirmDeleteCacheGroup(group.name)" class="btn btn-danger">@Messages("delete")</a>
                 </td>
