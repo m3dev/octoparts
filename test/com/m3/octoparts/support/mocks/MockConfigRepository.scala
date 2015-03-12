@@ -1,16 +1,16 @@
 package com.m3.octoparts.support.mocks
 
-import com.beachape.zipkin.services.NoopZipkinService
-import com.m3.octoparts.repository.config.ConfigMapper
-import com.m3.octoparts.repository.{ MutableConfigsRepository, ConfigsRepository }
 import com.m3.octoparts.model.config._
+import com.m3.octoparts.repository.config.ConfigMapper
+import com.m3.octoparts.repository.{ ConfigsRepository, MutableConfigsRepository }
 import com.twitter.zipkin.gen.Span
+
 import scala.concurrent.Future
 
 /**
  * Reusable mock implementation of a ConfigsRepository
  */
-trait MockConfigRespository extends ConfigsRepository with ConfigDataMocks {
+trait MockConfigRepository extends ConfigsRepository with ConfigDataMocks {
 
   def findConfigByPartId(partId: String)(implicit parentSpan: Span): Future[Option[HttpPartConfig]] = Future.successful(Some(mockHttpPartConfig))
 
@@ -32,7 +32,7 @@ trait MockConfigRespository extends ConfigsRepository with ConfigDataMocks {
 /**
  * Reusable mock mutable repository
  */
-trait MockMutableRepository extends MockConfigRespository with MutableConfigsRepository {
+trait MockMutableRepository extends MockConfigRepository with MutableConfigsRepository {
 
   def deleteConfigByPartId(partId: String)(implicit parentSpan: Span) = Future.successful(1)
 

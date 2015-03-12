@@ -32,6 +32,8 @@ trait ConfigsRepository {
 
   /**
    * Return all the thread pool configs
+   *
+   * All retrieved items are populated with their [[HystrixConfig]]
    */
   def findAllThreadPoolConfigs()(implicit parentSpan: Span): Future[Seq[ThreadPoolConfig]]
 

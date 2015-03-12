@@ -9,7 +9,7 @@ import com.m3.octoparts.aggregator.handler._
 import com.m3.octoparts.aggregator.service._
 import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.HttpPartConfig
-import com.m3.octoparts.support.mocks.{ ConfigDataMocks, MockConfigRespository }
+import com.m3.octoparts.support.mocks.{ ConfigDataMocks, MockConfigRepository }
 import com.twitter.zipkin.gen.Span
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{ FlatSpec, Matchers }
@@ -25,7 +25,6 @@ import scala.language.postfixOps
 class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with ConfigDataMocks with OneAppPerSuite {
 
   import scala.concurrent.ExecutionContext.Implicits.global
-
   implicit val emptySpan = new Span()
 
   def createConfig(partId: String): HttpPartConfig = mockHttpPartConfig.copy(
@@ -34,7 +33,7 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
     hystrixConfig = Some(mockHystrixConfig)
   )
 
-  val configsRepository = new MockConfigRespository {
+  val configsRepository = new MockConfigRepository {
     def keys = Seq("void", "error", "slow")
 
     override def findConfigByPartId(partId: String)(implicit parentSpan: Span): Future[Option[HttpPartConfig]] = Future.successful {
@@ -49,9 +48,7 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
     def process(pri: PartRequestInfo, args: HandlerArguments)(implicit parentSpan: Span) = Future.successful(PartResponse(partId, partId))
   }
   val partsRequestService = new PartRequestService(configsRepository, new HttpHandlerFactory {
-
     implicit val zipkinService: ZipkinServiceLike = NoopZipkinService
-
     override def makeHandler(ci: HttpPartConfig) = ci.partId match {
       case "void" => voidHandler
       case _ => throw new RuntimeException

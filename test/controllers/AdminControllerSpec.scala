@@ -510,6 +510,19 @@ class AdminControllerSpec extends FunSpec
     }
   }
 
+  it("should display a ThreadPoolConfig") {
+    val repository = mock[MutableConfigsRepository]
+    val adminController = new AdminController(cacheOps = DummyCacheOps, repository = repository)
+    val tpc = mockThreadConfig.copy(id = Some(123L))
+    doReturn(Future.successful(Some(tpc))).when(repository).findThreadPoolConfigById(mockitoEq(123L))(anyObject[Span])
+
+    val showThreadPool = adminController.showThreadPool(123L)(FakeRequest())
+    whenReady(showThreadPool) { result =>
+      verify(repository).findThreadPoolConfigById(mockitoEq(123L))(anyObject[Span])
+      result.header.status shouldBe OK
+    }
+  }
+
   it("should add a new Thread Pool Config") {
     val repository = mock[MutableConfigsRepository]
     val adminController = new AdminController(cacheOps = DummyCacheOps, repository = repository)
@@ -529,9 +542,9 @@ class AdminControllerSpec extends FunSpec
   it("should update a thread pool config") {
     val repository = mock[MutableConfigsRepository]
     val adminController = new AdminController(cacheOps = DummyCacheOps, repository = repository)
-    doReturn(Future.successful(76L)).when(repository).save(anyObject[ThreadPoolConfig]())(anyObject[ConfigMapper[ThreadPoolConfig]], anyObject[Span])
-    val tpc = mockThreadConfig.copy(id = Some(123))
+    val tpc = mockThreadConfig.copy(id = Some(123L))
     doReturn(Future.successful(Some(tpc))).when(repository).findThreadPoolConfigById(anyLong())(anyObject[Span])
+    doReturn(Future.successful(123L)).when(repository).save(anyObject[ThreadPoolConfig]())(anyObject[ConfigMapper[ThreadPoolConfig]], anyObject[Span])
 
     val updateThreadPool = adminController.updateThreadPool(123L)(FakeRequest().withFormUrlEncodedBody("threadPoolKey" -> "myNewThreadPool", "coreSize" -> "99"))
     whenReady(updateThreadPool) { result =>

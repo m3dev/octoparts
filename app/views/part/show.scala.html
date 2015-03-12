@@ -12,7 +12,6 @@
     }
     -->
     </style>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     @views.html.datatables()
 } {
 
@@ -124,7 +123,7 @@
                 <dt>@Messages("parts.hystrix.localContentsAsFallback")</dt>
                 <dd>@hystrixConfigItem.localContentsAsFallback</dd>
                 <dt>@Messages("threadPools.key")</dt>
-                <dd>@hystrixConfigItem.threadPoolConfigItem.threadPoolKey</dd>
+                <dd><a href="@controllers.routes.AdminController.showThreadPool(hystrixConfigItem.threadPoolConfigItem.id.get)">@hystrixConfigItem.threadPoolConfigItem.threadPoolKey</a></dd>
             }
             case None => {
                 <dt>@Messages("parts.hystrix.none.title")</dt>

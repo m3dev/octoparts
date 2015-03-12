@@ -337,6 +337,10 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
     Ok(views.html.threadpool.edit(None))
   }
 
+  def showThreadPool(id: Long) = AuthorizedAction.async { implicit req =>
+    findAndUseThreadPool(id) { tpc => Future.successful(Ok(views.html.threadpool.show(tpc))) }
+  }
+
   def editThreadPool(id: Long) = AuthorizedAction.async { implicit req =>
     findAndUseThreadPool(id) { tpc => Future.successful(Ok(views.html.threadpool.edit(Some(tpc)))) }
   }
@@ -351,7 +355,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
       val tpc = ThreadPoolConfig(threadPoolKey = data.threadPoolKey, coreSize = data.coreSize, createdAt = DateTime.now, updatedAt = DateTime.now)
       saveAndRedirect {
         repository.save(tpc)
-      }(routes.AdminController.listThreadPools, id => routes.AdminController.editThreadPool(id))
+      }(routes.AdminController.listThreadPools, id => routes.AdminController.showThreadPool(id))
     })
   }
 
@@ -366,7 +370,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
         val updatedTpc = tpc.copy(threadPoolKey = data.threadPoolKey, coreSize = data.coreSize, updatedAt = DateTime.now)
         saveAndRedirect {
           repository.save(updatedTpc)
-        }(routes.AdminController.listThreadPools, _ => routes.AdminController.editThreadPool(id))
+        }(routes.AdminController.editThreadPool(id), _ => routes.AdminController.showThreadPool(id))
       })
     }
   }

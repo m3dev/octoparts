@@ -44,6 +44,7 @@ POST        /admin/parts/:partId/params/:paramId/delete                         
 GET         /admin/thread-pools                                                    @controllers.AdminController.listThreadPools
 GET         /admin/thread-pools/new                                                @controllers.AdminController.newThreadPool
 POST        /admin/thread-pools/create                                             @controllers.AdminController.createThreadPool
+GET         /admin/thread-pools/:threadPoolId/show                                 @controllers.AdminController.showThreadPool(threadPoolId: Long)
 GET         /admin/thread-pools/:threadPoolId/edit                                 @controllers.AdminController.editThreadPool(threadPoolId: Long)
 POST        /admin/thread-pools/:threadPoolId/update                               @controllers.AdminController.updateThreadPool(threadPoolId: Long)
 GET         /admin/thread-pools/:threadPoolId/delete                               @controllers.AdminController.confirmDeleteThreadPool(threadPoolId: Long)

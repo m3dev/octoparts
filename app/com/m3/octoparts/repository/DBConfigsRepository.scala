@@ -49,7 +49,6 @@ object DBContext {
 
 trait ImmutableDBRepository extends ConfigsRepository {
   import DBContext._
-
   implicit def zipkinService: ZipkinServiceLike
 
   private val zipkinSpanNameBase = "db-repo-read"
@@ -83,12 +82,12 @@ trait ImmutableDBRepository extends ConfigsRepository {
 
   // For ThreadPoolConfigs
   def findThreadPoolConfigById(id: Long)(implicit parentSpan: Span): Future[Option[ThreadPoolConfig]] = {
-    getWithSession(ThreadPoolConfigRepository, sqls.eq(ThreadPoolConfigRepository.defaultAlias.id, id))
+    getWithSession(ThreadPoolConfigRepository, sqls.eq(ThreadPoolConfigRepository.defaultAlias.id, id), includes = Seq(ThreadPoolConfigRepository.hystrixConfigRef))
       .trace(s"$zipkinSpanNameBase-findThreadPoolConfigById", "id" -> id.toString)
   }
 
   def findAllThreadPoolConfigs()(implicit parentSpan: Span): Future[Seq[ThreadPoolConfig]] = {
-    getAllWithSession(ThreadPoolConfigRepository)
+    getAllWithSession(ThreadPoolConfigRepository, includes = Seq(ThreadPoolConfigRepository.hystrixConfigRef))
       .trace(s"$zipkinSpanNameBase-findAllThreadPoolConfigs")
   }
 
@@ -115,8 +114,8 @@ trait ImmutableDBRepository extends ConfigsRepository {
    */
   private[repository] def getWithSession[A](mapper: SkinnyCRUDMapper[A],
                                             where: SQLSyntax,
-                                            joins: Seq[Association[A]] = Nil,
-                                            includes: Seq[Association[A]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[Option[A]] = Future {
+                                            joins: Seq[Association[_]] = Nil,
+                                            includes: Seq[Association[_]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[Option[A]] = Future {
     blocking {
       val ret = mapper.joins(joins: _*).includes(includes: _*).findBy(where)
       ret.foreach {
@@ -130,8 +129,8 @@ trait ImmutableDBRepository extends ConfigsRepository {
    * Gets all the records from a table and logs the number of records retrieved
    */
   private[repository] def getAllWithSession[A](mapper: SkinnyCRUDMapper[A],
-                                               joins: Seq[Association[A]] = Nil,
-                                               includes: Seq[Association[A]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[Seq[A]] = Future {
+                                               joins: Seq[Association[_]] = Nil,
+                                               includes: Seq[Association[_]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[Seq[A]] = Future {
     blocking {
       val ret = mapper.joins(joins: _*).includes(includes: _*).findAll()
       LTSVLogger.debug("Table" -> mapper.tableName, "Retrieved records" -> ret.length.toString)
