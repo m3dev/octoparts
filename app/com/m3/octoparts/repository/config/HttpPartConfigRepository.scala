@@ -6,7 +6,7 @@ import com.m3.octoparts.model.config._
 import scalikejdbc._
 import skinny.orm._
 import skinny.orm.feature.TimestampsFeature
-import skinny.orm.feature.associations.{HasOneAssociation, HasManyAssociation}
+import skinny.orm.feature.associations.{ HasOneAssociation, HasManyAssociation }
 import skinny.{ ParamType => SkinnyParamType }
 
 import scala.concurrent.duration._
