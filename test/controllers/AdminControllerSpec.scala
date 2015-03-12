@@ -558,6 +558,19 @@ class AdminControllerSpec extends FunSpec
     }
   }
 
+  it("should display a CacheGroup") {
+    val repository = mock[MutableConfigsRepository]
+    val adminController = new AdminController(cacheOps = DummyCacheOps, repository = repository)
+    val cacheGroup = mockCacheGroup.copy(id = Some(123))
+    doReturn(Future.successful(Some(cacheGroup))).when(repository).findCacheGroupByName(mockitoEq(mockCacheGroup.name))(anyObject[Span])
+
+    val showCacheGroup = adminController.showCacheGroup(cacheGroup.name)(FakeRequest())
+    whenReady(showCacheGroup) { result =>
+      verify(repository).findCacheGroupByName(mockitoEq(mockCacheGroup.name))(anyObject[Span])
+      result.header.status shouldBe OK
+    }
+  }
+
   it("should add a new CacheGroup") {
     val repository = mock[MutableConfigsRepository]
     val adminController = new AdminController(cacheOps = DummyCacheOps, repository = repository)
@@ -575,14 +588,13 @@ class AdminControllerSpec extends FunSpec
   it("should update a CacheGroup") {
     val repository = mock[MutableConfigsRepository]
     val adminController = new AdminController(cacheOps = DummyCacheOps, repository = repository)
-    doReturn(Future.successful(76L)).when(repository).save(anyObject[CacheGroup]())(anyObject[ConfigMapper[CacheGroup]], anyObject[Span])
-    doReturn(Future.successful(Seq(part))).when(repository).findAllConfigs()(anyObject[Span])
-    val cacheGroup = mockCacheGroup.copy(id = Some(123))
-    doReturn(Future.successful(Some(cacheGroup))).when(repository).findCacheGroupByName(anyString())(anyObject[Span])
+    val cacheGroup = mockCacheGroup.copy(id = Some(123L))
+    doReturn(Future.successful(Some(cacheGroup))).when(repository).findCacheGroupByName(mockitoEq(cacheGroup.name))(anyObject[Span])
+    doReturn(Future.successful(123L)).when(repository).save(anyObject[CacheGroup]())(anyObject[ConfigMapper[CacheGroup]], anyObject[Span])
 
-    val saveCacheGroup = adminController.updateCacheGroup("123")(FakeRequest().withFormUrlEncodedBody("name" -> "myEditedThreadPool", "description" -> "harooo"))
+    val saveCacheGroup = adminController.updateCacheGroup(cacheGroup.name)(FakeRequest().withFormUrlEncodedBody("name" -> "myEditedThreadPool", "description" -> "harooo"))
     whenReady(saveCacheGroup) { result =>
-      verify(repository).findCacheGroupByName("123")
+      verify(repository).findCacheGroupByName(mockitoEq(cacheGroup.name))(anyObject[Span])
 
       val newCiCaptor = ArgumentCaptor.forClass(classOf[CacheGroup])
       verify(repository).save(newCiCaptor.capture())(anyObject[ConfigMapper[CacheGroup]], anyObject[Span])

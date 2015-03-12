@@ -94,7 +94,7 @@
                         <td style="white-space: pre">@paramView.description</td>
                         <td>@paramView.versioned</td>
                         <td><ul>@for(cacheGroup <- paramView.param.cacheGroups) {
-                            <li>@cacheGroup.name</li>
+                            <li><a href="@controllers.routes.AdminController.showCacheGroup(cacheGroup.name)">@cacheGroup.name</a></li>
                         }</ul></td>
                         <td><a href="@controllers.routes.AdminController.editParam(part.partId, paramView.param.id.get)" class="btn btn-primary">@Messages("edit")</a>
                             <form action="@controllers.routes.AdminController.copyParam(part.partId, paramView.param.id.get)" method="post">
@@ -157,7 +157,7 @@
             @Messages("parts.cacheGroup.none")
         } else {
             @for(group <- part.config.cacheGroups) {
-                <li>@group.name</li>
+                <li><a href="@controllers.routes.AdminController.showCacheGroup(group.name)">@group.name</a></li>
             }
         }
     </ul>

@@ -401,6 +401,10 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
     Ok(views.html.cachegroup.edit(None))
   }
 
+  def showCacheGroup(name: String) = AuthorizedAction.async { implicit req =>
+    findAndUseCacheGroup(name) { cg => Future.successful(Ok(views.html.cachegroup.show(cg))) }
+  }
+
   def editCacheGroup(name: String) = AuthorizedAction.async { implicit req =>
     findAndUseCacheGroup(name) { cg => Future.successful(Ok(views.html.cachegroup.edit(Some(cg)))) }
   }
@@ -416,7 +420,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
       val cacheGroup = CacheGroup(name = data.name, description = data.description, owner = owner, createdAt = DateTime.now, updatedAt = DateTime.now)
       saveAndRedirect {
         repository.save(cacheGroup)
-      }(routes.AdminController.listCacheGroups, id => routes.AdminController.editCacheGroup(cacheGroup.name))
+      }(routes.AdminController.newCacheGroup, id => routes.AdminController.showCacheGroup(cacheGroup.name))
     })
   }
 
@@ -431,7 +435,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
         val updatedCacheGroup = cg.copy(name = data.name, description = data.description, updatedAt = DateTime.now)
         saveAndRedirect {
           repository.save(updatedCacheGroup)
-        }(routes.AdminController.listCacheGroups, _ => routes.AdminController.editCacheGroup(updatedCacheGroup.name))
+        }(routes.AdminController.editCacheGroup(name), _ => routes.AdminController.showCacheGroup(updatedCacheGroup.name))
       })
     }
   }
@@ -510,34 +514,42 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
   }
 
   private def findAndUseCacheGroup(name: String)(f: (CacheGroup) => Future[Result])(implicit req: RequestHeader): Future[Result] = {
-    // Type-twiddling to turn an Option[Future[_]] into a Future[Option[_]]
-    def populate(maybeCacheGroup: Option[CacheGroup]): Future[Option[CacheGroup]] = {
-      val maybeF: Option[Future[CacheGroup]] = maybeCacheGroup.map[Future[CacheGroup]](populateCacheGroup)
-      maybeF.fold[Future[Option[CacheGroup]]](Future.successful(None)) { fCacheGroup => fCacheGroup.map(Some(_)) }
-    }
+    /**
+     * AFAIK the ORM could not be twisted to fetch cacheGroup.partParam.httpPartConfig.
+     * This might make 1 request per member, but [[MutableConfigsRepository.findParamById]] is cached.
+     */
+    def maybePopulate(maybeCacheGroup: Option[CacheGroup]): Future[Option[CacheGroup]] = {
+      maybeCacheGroup match {
+        case None => Future.successful(None)
+        case Some(cacheGroup) => {
+          val fOptParams = for {
+            partParam <- cacheGroup.partParams
+            paramId <- partParam.id
+          } yield {
+            repository.findParamById(paramId)
+          }
 
-    val fMaybeCacheGroup: Future[Option[CacheGroup]] =
-      repository.findCacheGroupByName(name).flatMap(populate)
-
-    fMaybeCacheGroup.flatMap { maybeCacheGroup =>
-      maybeCacheGroup.map(f).getOrElse {
-        warnRc("Cache group name" -> name, "Error" -> "not found")
-        Future.successful(flashError(routes.AdminController.listCacheGroups, Messages("admin.cacheGroupNotFound", name)))
+          for {
+            optParams <- Future.sequence(fOptParams)
+          } yield {
+            Some(cacheGroup.copy(partParams = optParams.flatten))
+          }
+        }
       }
     }
-  }
 
-  /**
-   * Must populate PartParam.httpPartConfig, so that for a given CacheGroup,
-   * for each of the PartParams that it has, we can display the HttpPartParam it belongs to.
-   * This is used in the 'show cache group' view.
-   */
-  private def populateCacheGroup(cacheGroup: CacheGroup)(implicit parentSpan: Span): Future[CacheGroup] = {
-    repository.findAllConfigs().map { allConfigs =>
-      val allConfigsMap = allConfigs.map(c => c.id.get -> c).toMap
-      cacheGroup.copy(partParams = cacheGroup.partParams.map { partParam =>
-        partParam.copy(httpPartConfig = partParam.httpPartConfigId.flatMap(id => allConfigsMap.get(id)))
-      })
+    for {
+      mbRawCacheGroup <- repository.findCacheGroupByName(name)
+      mbCacheGroup <- maybePopulate(mbRawCacheGroup)
+      result <- mbCacheGroup match {
+        case None => {
+          warnRc("Cache group name" -> name, "Error" -> "not found")
+          Future.successful(flashError(routes.AdminController.listCacheGroups, Messages("admin.cacheGroupNotFound", name)))
+        }
+        case Some(cacheGroup) => f(cacheGroup)
+      }
+    } yield {
+      result
     }
   }
 

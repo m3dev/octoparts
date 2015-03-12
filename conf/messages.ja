@@ -117,6 +117,7 @@ threadPools.members=メンバーパーツ
 cacheGroups.this=キャッシュグループ
 cacheGroups.list=キャッシュグループ一覧
 cacheGroups.create=キャッシュグループ登録
+cacheGroups.detail=キャッシュグループ詳細
 cacheGroups.edit=「{0}」キャッシュグループ編集
 cacheGroups.name=名前
 cacheGroups.description=説明

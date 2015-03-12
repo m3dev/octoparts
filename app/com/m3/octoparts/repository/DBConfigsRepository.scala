@@ -9,6 +9,7 @@ import play.api.Play
 import play.api.libs.concurrent.Akka
 import scalikejdbc._
 import skinny.orm.SkinnyCRUDMapper
+import skinny.orm.feature.CRUDFeatureWithId
 import skinny.orm.feature.associations.Association
 import com.m3.octoparts.future.RichFutureWithTiming._
 import com.beachape.zipkin.FutureEnrichment._
@@ -49,6 +50,7 @@ object DBContext {
 
 trait ImmutableDBRepository extends ConfigsRepository {
   import DBContext._
+
   implicit def zipkinService: ZipkinServiceLike
 
   private val zipkinSpanNameBase = "db-repo-read"
@@ -93,26 +95,26 @@ trait ImmutableDBRepository extends ConfigsRepository {
 
   // For CacheGroups
   def findCacheGroupByName(name: String)(implicit parentSpan: Span): Future[Option[CacheGroup]] = {
-    getWithSession(CacheGroupRepository, sqls.eq(CacheGroupRepository.defaultAlias.name, name), joins = Seq(CacheGroupRepository.httpPartConfigsRef, CacheGroupRepository.partParamsRef))
+    getWithSession(CacheGroupRepository.withChildren, sqls.eq(CacheGroupRepository.defaultAlias.name, name))
       .trace(s"$zipkinSpanNameBase-findCacheGroupByName", "name" -> name)
   }
 
   def findAllCacheGroupsByName(names: String*)(implicit parentSpan: Span): Future[Seq[CacheGroup]] = if (names.isEmpty) {
     Future.successful(Nil)
   } else {
-    getAllByWithSession(CacheGroupRepository, sqls.in(CacheGroupRepository.defaultAlias.name, names), joins = Seq(CacheGroupRepository.httpPartConfigsRef, CacheGroupRepository.partParamsRef))
+    getAllByWithSession(CacheGroupRepository.withChildren, sqls.in(CacheGroupRepository.defaultAlias.name, names))
       .trace(s"$zipkinSpanNameBase-findAllCacheGroupsByName", "names" -> names.toString)
   }
 
   def findAllCacheGroups()(implicit parentSpan: Span): Future[Seq[CacheGroup]] = {
-    getAllWithSession(CacheGroupRepository, joins = Seq(CacheGroupRepository.httpPartConfigsRef, CacheGroupRepository.partParamsRef))
+    getAllWithSession(CacheGroupRepository.withChildren)
       .trace(s"$zipkinSpanNameBase-findAllCacheGroups")
   }
 
   /**
    * Gets a single model from a table according to a where clause and logs the where clause used
    */
-  private[repository] def getWithSession[A](mapper: SkinnyCRUDMapper[A],
+  private[repository] def getWithSession[A](mapper: CRUDFeatureWithId[Long, A],
                                             where: SQLSyntax,
                                             joins: Seq[Association[_]] = Nil,
                                             includes: Seq[Association[_]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[Option[A]] = Future {
@@ -128,7 +130,7 @@ trait ImmutableDBRepository extends ConfigsRepository {
   /**
    * Gets all the records from a table and logs the number of records retrieved
    */
-  private[repository] def getAllWithSession[A](mapper: SkinnyCRUDMapper[A],
+  private[repository] def getAllWithSession[A](mapper: CRUDFeatureWithId[Long, A],
                                                joins: Seq[Association[_]] = Nil,
                                                includes: Seq[Association[_]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[Seq[A]] = Future {
     blocking {
@@ -141,10 +143,10 @@ trait ImmutableDBRepository extends ConfigsRepository {
   /**
    * Gets all the records from a table according to a where clause and logs the number of records retrieved
    */
-  private[repository] def getAllByWithSession[A](mapper: SkinnyCRUDMapper[A],
+  private[repository] def getAllByWithSession[A](mapper: CRUDFeatureWithId[Long, A],
                                                  where: SQLSyntax,
-                                                 joins: Seq[Association[A]] = Nil,
-                                                 includes: Seq[Association[A]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[Seq[A]] = Future {
+                                                 joins: Seq[Association[_]] = Nil,
+                                                 includes: Seq[Association[_]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[Seq[A]] = Future {
     blocking {
       val ret = mapper.joins(joins: _*).includes(includes: _*).findAllBy(where)
       LTSVLogger.debug("Table" -> mapper.tableName, "Retrieved records" -> ret.length.toString)
