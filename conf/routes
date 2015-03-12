@@ -53,6 +53,7 @@ POST        /admin/thread-pools/:threadPoolId/delete                            
 GET         /admin/cache-groups                                                    @controllers.AdminController.listCacheGroups
 GET         /admin/cache-groups/new                                                @controllers.AdminController.newCacheGroup
 POST        /admin/cache-groups/create                                             @controllers.AdminController.createCacheGroup
+GET         /admin/cache-groups/:cacheGroupName/show                               @controllers.AdminController.showCacheGroup(cacheGroupName)
 GET         /admin/cache-groups/:cacheGroupName/edit                               @controllers.AdminController.editCacheGroup(cacheGroupName)
 POST        /admin/cache-groups/:cacheGroupName/update                             @controllers.AdminController.updateCacheGroup(cacheGroupName)
 GET         /admin/cache-groups/:cacheGroupName/delete                             @controllers.AdminController.confirmDeleteCacheGroup(cacheGroupName)

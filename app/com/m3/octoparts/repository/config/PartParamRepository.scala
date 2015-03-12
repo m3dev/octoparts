@@ -3,13 +3,14 @@ package com.m3.octoparts.repository.config
 import com.m3.octoparts.model.config._
 import scalikejdbc._
 import skinny.orm.feature.TimestampsFeature
+import skinny.orm.feature.associations.{ BelongsToAssociation, HasManyAssociation }
 import skinny.{ ParamType => SkinnyParamType }
 
 object PartParamRepository extends ConfigMapper[PartParam] with TimestampsFeature[PartParam] {
 
-  override lazy val defaultAlias = createAlias("part_param")
+  lazy val defaultAlias = createAlias("part_param")
 
-  override lazy val tableName = "part_param"
+  override val tableName = "part_param"
 
   /**
    * Overridden to allow us to persist the CacheGroups associated with a PartParam
@@ -37,7 +38,7 @@ object PartParamRepository extends ConfigMapper[PartParam] with TimestampsFeatur
     "cacheGroupId" -> SkinnyParamType.Long
   )
 
-  lazy val httpPartConfigRef = belongsToWithFk[HttpPartConfig](
+  lazy val httpPartConfigRef: BelongsToAssociation[PartParam] = belongsToWithFk[HttpPartConfig](
     right = HttpPartConfigRepository,
     fk = "httpPartConfigId",
     merge = (p, c) => p.copy(httpPartConfig = c)
@@ -47,7 +48,7 @@ object PartParamRepository extends ConfigMapper[PartParam] with TimestampsFeatur
     Note that you cannot actually tack on .includes to do nested eager loading because it seems to be
     broken with hasManyThrough (e.g. trying to eager load a HttpPartConfig's PartParams' CacheGroups does not work)
    */
-  lazy val cacheGroupsRef = hasManyThroughWithFk[CacheGroup](
+  lazy val cacheGroupsRef: HasManyAssociation[PartParam] = hasManyThroughWithFk[CacheGroup](
     through = PartParamCacheGroupRepository,
     many = CacheGroupRepository,
     throughFk = "partParamId",

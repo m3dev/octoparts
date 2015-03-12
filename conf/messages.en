@@ -118,6 +118,7 @@ threadPools.members=Members
 cacheGroups.this=Cache group
 cacheGroups.list=Cache groups
 cacheGroups.create=Create a new cache group
+cacheGroups.detail=Cache group details
 cacheGroups.edit=Edit cache group {0}
 cacheGroups.name=Name
 cacheGroups.description=Description
