@@ -2,7 +2,7 @@ package com.m3.octoparts.support.mocks
 
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.repository.config.ConfigMapper
-import com.m3.octoparts.repository.{ConfigsRepository, MutableConfigsRepository}
+import com.m3.octoparts.repository.{ ConfigsRepository, MutableConfigsRepository }
 import com.twitter.zipkin.gen.Span
 
 import scala.concurrent.Future
