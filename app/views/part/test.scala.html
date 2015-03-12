@@ -13,8 +13,9 @@
     <script type="text/javascript">
         $(function(){
             var form = $("#tryItForm");
-            $("#goButton").click(function(e) {
-
+            var goButton = $("#goButton");
+            goButton.click(function(e) {
+                e.preventDefault();
                 var ts = Date.now();
                 var aggjson = {
                     "requestMeta": {
@@ -41,13 +42,13 @@
                     }
                 }
                 var postBody = JSON.stringify(aggjson);
+                goButton.attr('disabled','disabled');
                 $.ajax({
                     type: "POST",
                     url: "@controllers.routes.PartsController.retrieveParts",
                     contentType : 'application/json',
                     dataType: 'json',
                     cache: true,
-                    async: false,
                     data: postBody,
                     success: function (data, textStatus, jqXHR) {
                         $("#response").text(JSON.stringify(data, null, "\t"));
@@ -55,9 +56,11 @@
                         $('code').each(function(i, block) {
                             hljs.highlightBlock(block);
                         });
+                        goButton.removeAttr("disabled");
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
-                        alert("Octoparts " + textStatus + ": " + errorThrown)
+                        goButton.removeAttr("disabled");
+                        alert("Octoparts " + textStatus + ": " + errorThrown);
                     }
                 });
             });
