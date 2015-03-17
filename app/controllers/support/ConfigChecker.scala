@@ -6,7 +6,7 @@ import com.m3.octoparts.aggregator.handler.HttpPartRequestHandler
 import com.m3.octoparts.model.config.{ HttpPartConfig, ParamType, PartParam }
 import com.netaporter.uri.Parameters.Param
 import com.netaporter.uri.dsl._
-import play.api.Play
+import play.api.{ Mode, Play }
 import play.api.i18n.{ Lang, Messages }
 
 trait ConfigChecker[T] {
@@ -14,7 +14,7 @@ trait ConfigChecker[T] {
 }
 
 object ConfigChecker {
-  val httpPartConfigChecks: Seq[ConfigChecker[HttpPartConfig]] = Seq(QueryParamInterpolation, MissingPathParam, PathParamNoInterp, PathParamOption, WhitespaceInUri, AlertEmailOff)
+  lazy val httpPartConfigChecks: Seq[ConfigChecker[HttpPartConfig]] = Seq(QueryParamInterpolation, MissingPathParam, PathParamNoInterp, PathParamOption, WhitespaceInUri, AlertEmailOff(Play.current.mode))
 
   def apply(httpPartConfig: HttpPartConfig)(implicit lang: Lang): Seq[String] = httpPartConfigChecks.flatMap(_.warnings(httpPartConfig))
 }
@@ -60,7 +60,7 @@ object MissingPathParam extends ConfigChecker[HttpPartConfig] {
 object PathParamNoInterp extends ConfigChecker[HttpPartConfig] {
   def warnings(hpc: HttpPartConfig)(implicit lang: Lang): Seq[String] = {
     hpc.parameters.toSeq.collect {
-      case pp: PartParam if pp.paramType == ParamType.Path && hpc.uriToInterpolate.containsSlice(s"$${${pp.outputName}}") => pp.outputName
+      case pp: PartParam if pp.paramType == ParamType.Path && !hpc.uriToInterpolate.containsSlice(s"$${${pp.outputName}}") => pp.outputName
     }.map(Messages("admin.warnings.PathParamNoInterp", _))
   }
 }
@@ -89,9 +89,9 @@ object WhitespaceInUri extends ConfigChecker[HttpPartConfig] {
 /**
  * Prints a warning when email alerts are disabled in production
  */
-object AlertEmailOff extends ConfigChecker[HttpPartConfig] {
+case class AlertEmailOff(mode: Mode.Mode) extends ConfigChecker[HttpPartConfig] {
   def warnings(hpc: HttpPartConfig)(implicit lang: Lang): Seq[String] = {
-    if (Play.isProd(Play.current) && !hpc.alertMailsEnabled) Seq(Messages("admin.warnings.AlertEmailOff"))
+    if (mode == Mode.Prod && !hpc.alertMailsEnabled) Seq(Messages("admin.warnings.AlertEmailOff"))
     else Nil
   }
 }
