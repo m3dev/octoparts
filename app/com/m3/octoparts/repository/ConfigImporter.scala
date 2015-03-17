@@ -7,6 +7,7 @@ import com.m3.octoparts.repository.config._
 import com.twitter.zipkin.gen.Span
 import scalikejdbc._
 
+import scala.collection.SortedSet
 import scala.concurrent.Future
 
 trait ConfigImporter {
@@ -70,7 +71,7 @@ trait ConfigImporter {
         }
       }
 
-      val cacheGroups = distinctBy(uniqueConfigs.flatMap(_.cacheGroups.toSeq) ++ uniqueConfigs.flatMap(_.parameters).flatMap(_.cacheGroups))(_.name)
+      val cacheGroups = distinctBy(uniqueConfigs.flatMap(_.cacheGroups) ++ uniqueConfigs.flatMap(_.parameters).flatMap(_.cacheGroups))(_.name)
       Future.sequence(cacheGroups.map(insertCacheGroupIfMissing)).map(_.toMap)
     }
 
@@ -107,7 +108,8 @@ trait ConfigImporter {
         val nakedPartParam = PartParam.fromJsonModel(partParam).copy(
           httpPartConfigId = Some(configId),
           httpPartConfig = None,
-          cacheGroups = partParam.cacheGroups.map(_.name).flatMap(cacheGroups.get).toSet)
+          cacheGroups = partParam.cacheGroups.map(_.name).flatMap(cacheGroups.get).to[SortedSet]
+        )
         saveWithSession(PartParamRepository, nakedPartParam)
       }
     }
@@ -124,9 +126,10 @@ trait ConfigImporter {
         mbConfigWasThere.fold {
           fCacheGroups.flatMap { cacheGroups =>
             val nakedConfig = HttpPartConfig.fromJsonModel(jpart).copy(
-              parameters = Set.empty,
+              parameters = SortedSet.empty,
               hystrixConfig = None,
-              cacheGroups = jpart.cacheGroups.map(_.name).flatMap(cacheGroups.get).toSet)
+              cacheGroups = jpart.cacheGroups.map(_.name).flatMap(cacheGroups.get).to[SortedSet]
+            )
             saveAndReturnId(jpart, nakedConfig)
           }
         } {
@@ -138,7 +141,7 @@ trait ConfigImporter {
     /**
      * save and immediately retrieve the new config to get its ID
      */
-    private[repository] def saveAndReturnId(jpart: json.HttpPartConfig, nakedConfig: HttpPartConfig)(implicit session: DBSession) = {
+    private[repository] def saveAndReturnId(jpart: json.HttpPartConfig, nakedConfig: HttpPartConfig)(implicit session: DBSession): Future[Option[String]] = {
       saveWithSession(HttpPartConfigRepository, nakedConfig).flatMap {
         id => getWithSession(HttpPartConfigRepository, sqls.eq(HttpPartConfigRepository.defaultAlias.id, id))
       }.flatMap { mbInserted =>
@@ -146,10 +149,10 @@ trait ConfigImporter {
           insertedConfig =>
             // insert dependencies
             val configId = insertedConfig.id.get
-            val fInsertParameters = jpart.parameters.map { partParam => insertPartParam(configId, partParam) }
+            val fInsertParameters = jpart.parameters.toSeq.map { partParam => insertPartParam(configId, partParam) }
             // must have a hystrix config
             val fInsertHystrixConfig = insertHystrixConfig(configId, jpart.hystrixConfig)
-            Future.sequence(fInsertParameters + fInsertHystrixConfig).map { _ => Option(insertedConfig.partId) }
+            Future.sequence(fInsertParameters :+ fInsertHystrixConfig).map { _ => Option(insertedConfig.partId) }
         }.getOrElse {
           Future.failed(new IllegalStateException(s"Just inserted a new config ${jpart.partId} but it was not saved!"))
         }

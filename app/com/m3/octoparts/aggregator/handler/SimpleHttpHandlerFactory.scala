@@ -20,7 +20,6 @@ class SimpleHttpHandlerFactory(httpClientPool: HttpClientPool, implicit val zipk
       uriToInterpolate = config.uriToInterpolate,
       httpMethod = config.method,
       additionalValidStatuses = config.additionalValidStatuses,
-      registeredParams = config.parameters,
       hystrixExecutor = HystrixExecutor(config)
     )
   }

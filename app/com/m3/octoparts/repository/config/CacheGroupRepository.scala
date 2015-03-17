@@ -7,6 +7,8 @@ import skinny.orm.feature.associations.HasManyAssociation
 import skinny.orm.feature.{ CRUDFeatureWithId, TimestampsFeature }
 import skinny.{ ParamType => SkinnyParamType }
 
+import scala.collection.SortedSet
+
 object CacheGroupRepository extends ConfigMapper[CacheGroup] with TimestampsFeature[CacheGroup] {
 
   protected val permittedFields = Seq(
@@ -33,12 +35,12 @@ object CacheGroupRepository extends ConfigMapper[CacheGroup] with TimestampsFeat
     many = HttpPartConfigRepository,
     throughFk = "cacheGroupId",
     manyFk = "httpPartConfigId",
-    merge = (group, partConfigs) => group.copy(httpPartConfigs = partConfigs)
+    merge = (group, partConfigs) => group.copy(httpPartConfigs = partConfigs.to[SortedSet])
   ).includes[HttpPartConfig] {
       (cacheGroups, partConfigs) =>
         cacheGroups.map {
           cacheGroup =>
-            cacheGroup.copy(httpPartConfigs = partConfigs.filter(_.cacheGroups.map(_.id).contains(cacheGroup.id)))
+            cacheGroup.copy(httpPartConfigs = partConfigs.filter(_.cacheGroups.map(_.id).contains(cacheGroup.id)).to[SortedSet])
         }
     } // DO NOT tack on .byDefault here
 
@@ -48,12 +50,12 @@ object CacheGroupRepository extends ConfigMapper[CacheGroup] with TimestampsFeat
     throughOn = (m1: Alias[CacheGroup], m2: Alias[PartParamCacheGroup]) => sqls.eq(m1.id, m2.cacheGroupId),
     many = PartParamRepository -> PartParamRepository.createAlias("partParamJoin2"),
     on = (m1: Alias[PartParamCacheGroup], m2: Alias[PartParam]) => sqls.eq(m1.partParamId, m2.id),
-    merge = (cacheGroup, params) => cacheGroup.copy(partParams = params)
+    merge = (cacheGroup, params) => cacheGroup.copy(partParams = params.to[SortedSet])
   ).includes[PartParam] {
       (cacheGroups, partParams) =>
         cacheGroups.map {
           cacheGroup =>
-            cacheGroup.copy(partParams = partParams.filter(_.cacheGroups.map(_.id).contains(cacheGroup.id)))
+            cacheGroup.copy(partParams = partParams.filter(_.cacheGroups.map(_.id).contains(cacheGroup.id)).to[SortedSet])
         }
     }
 
@@ -62,6 +64,8 @@ object CacheGroupRepository extends ConfigMapper[CacheGroup] with TimestampsFeat
    *
    * Makes our lives a little easier even though models linked by hasManyThrough don't work
    * with byDefault activated on both ends of the relationship
+   *
+   * Beware: The resulting object loses our custom [[defaultOrdering]]
    */
   lazy val withChildren: CRUDFeatureWithId[Long, CacheGroup] = joins[Long](httpPartConfigsRef, partParamsRef)
 

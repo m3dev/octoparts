@@ -13,5 +13,5 @@ case class AlertMailSettings(
   @(ApiModelProperty @field)(dataType = "string", required = false) alertMailRecipients: Option[String] = None)
 
 object AlertMailSettings {
-  val Off = AlertMailSettings(alertInterval = 0.second)
+  val Off = AlertMailSettings(alertInterval = Duration.Zero)
 }

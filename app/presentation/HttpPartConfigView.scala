@@ -1,11 +1,12 @@
 package presentation
 
-import com.m3.octoparts.model.config.HttpPartConfig
+import com.m3.octoparts.model.config.{ CacheGroup, HttpPartConfig }
 import org.apache.commons.lang.StringEscapeUtils
 import org.joda.time.DateTime
 import play.api.i18n.{ Lang, Messages }
 import play.twirl.api.Html
 
+import scala.collection.SortedSet
 import scala.concurrent.duration.Duration
 
 /**
@@ -39,11 +40,9 @@ case class HttpPartConfigView(config: HttpPartConfig) {
 
   def threadPoolKey: String = config.hystrixConfig.flatMap(_.threadPoolConfig).fold("")(_.threadPoolKey)
 
-  def registeredParamsView: Set[ParamView] = config.parameters.map { p => ParamView(p) }
+  def registeredParamsView: SortedSet[ParamView] = config.parameters.map(ParamView.apply)
 
-  def editableParamsView: Set[ParamView] = config.parameters.collect {
-    case p if !p.inputName.startsWith("meta.") => ParamView(p)
-  }
+  def editableParamsView: SortedSet[ParamView] = registeredParamsView.filterNot(_.name.startsWith("meta."))
 
   def description: Option[String] = config.description
 
@@ -74,8 +73,14 @@ case class HttpPartConfigView(config: HttpPartConfig) {
 
   def alertMailRecipients(implicit lang: Lang): String = config.alertMailRecipients.getOrElse(Messages("parts.alertMail.recipients.none"))
 
+  def additionalValidStatuses: String = config.additionalValidStatuses.mkString(", ")
+
   private def formatTs(ts: DateTime)(implicit lang: Lang) = Option(ts).fold(Messages("na")) {
     _.toString(Messages("ymdFormat"))
   }
 
+}
+
+object HttpPartConfigView {
+  implicit val order: Ordering[HttpPartConfigView] = Ordering.by(_.config)
 }

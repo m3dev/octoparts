@@ -29,7 +29,7 @@
             </tr>
         </thead>
         <tbody>
-        @for(part <- tpc.hystrixConfigs.flatMap(_.httpPartConfig)) {
+        @for(part <- tpc.httpPartConfigs) {
             <tr>
                 <td><a href="@{controllers.routes.AdminController.showPart(part.partId).url}">@part.partId</a></td>
             </tr>
