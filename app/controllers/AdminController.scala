@@ -46,7 +46,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
    */
 
   def listParts = AuthorizedAction.async { implicit req =>
-    val partsView = repository.findAllConfigs().map { configs => configs.map(HttpPartConfigView) }
+    val partsView = repository.findAllConfigs().map { _.map(HttpPartConfigView(_)) }
     partsView.map(ps => Ok(views.html.part.list(ps)))
   }
 

@@ -31,7 +31,10 @@
         @for(partView <- parts) {
             <tr>
                 <td>
-                    <a id="@partView.partId"></a> <span title="@Messages("parts.updated"): @partView.lastUpdate">@partView.partId</span>
+                    <a href="@controllers.routes.AdminController.showPart(partView.partId)"><span title="@Messages("parts.updated"): @partView.lastUpdate">@partView.partId</span></a>
+                    @if(partView.warnings.nonEmpty) {
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true" title="@partView.warnings.mkString("\n")"></span>
+                    }
                 </td>
                 <td>@partView.uriToInterpolate</td>
                 <td>@partView.config.owner</td>

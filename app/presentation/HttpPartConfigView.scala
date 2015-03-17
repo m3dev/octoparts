@@ -1,6 +1,7 @@
 package presentation
 
 import com.m3.octoparts.model.config.HttpPartConfig
+import controllers.support.ConfigChecker
 import org.apache.commons.lang.StringEscapeUtils
 import org.joda.time.DateTime
 import play.api.i18n.{ Lang, Messages }
@@ -11,7 +12,7 @@ import scala.concurrent.duration.Duration
 /**
  * View adapter for an HttpPartConfig.
  */
-case class HttpPartConfigView(config: HttpPartConfig) {
+case class HttpPartConfigView(config: HttpPartConfig)(implicit lang: Lang) {
 
   def addParamLink: String = controllers.routes.AdminController.newParam(config.partId).url
 
@@ -24,6 +25,8 @@ case class HttpPartConfigView(config: HttpPartConfig) {
   def exportLink: String = controllers.routes.PartsController.list(List(partId)).url
 
   def commandGroup: String = config.hystrixConfig.fold("")(_.commandGroupKey)
+
+  lazy val warnings: Seq[String] = ConfigChecker(config)
 
   def timeoutInMs: Int = config.hystrixConfig.fold(5000)(_.timeout.toMillis.toInt)
 
@@ -47,7 +50,7 @@ case class HttpPartConfigView(config: HttpPartConfig) {
 
   def description: Option[String] = config.description
 
-  def deprecation(implicit lang: Lang): Html = config.deprecatedInFavourOf match {
+  def deprecation: Html = config.deprecatedInFavourOf match {
     case Some(s) if s.length() > 0 =>
       Html(Messages("parts.deprecation.seeOther", s"""<a href="${controllers.routes.AdminController.showPart(s).url}">$s</a>"""))
     case _ => Html(Messages("parts.deprecation.none"))
@@ -57,14 +60,14 @@ case class HttpPartConfigView(config: HttpPartConfig) {
 
   def created: String = formatTs(config.createdAt)
 
-  def cacheTtlStr(implicit lang: Lang): String = {
+  def cacheTtlStr: String = {
     config.cacheTtl.fold(Messages("parts.cache.unlimited")) {
       case Duration.Zero => Messages("parts.cache.none")
       case dd => dd.toString() // not worth localizing yet
     }
   }
 
-  def alertMailCondition(implicit lang: Lang): Html = {
+  def alertMailCondition: Html = {
     val thresholdCondition = (
       config.alertAbsoluteThreshold.map(Messages("parts.alertMail.condition.absolute", _)) ++
       config.alertPercentThreshold.map(Messages("parts.alertMail.condition.relative", _))
@@ -72,9 +75,9 @@ case class HttpPartConfigView(config: HttpPartConfig) {
     Html(Messages("parts.alertMail.condition.summary", config.alertInterval.toString(), thresholdCondition))
   }
 
-  def alertMailRecipients(implicit lang: Lang): String = config.alertMailRecipients.getOrElse(Messages("parts.alertMail.recipients.none"))
+  def alertMailRecipients: String = config.alertMailRecipients.getOrElse(Messages("parts.alertMail.recipients.none"))
 
-  private def formatTs(ts: DateTime)(implicit lang: Lang) = Option(ts).fold(Messages("na")) {
+  private def formatTs(ts: DateTime) = Option(ts).fold(Messages("na")) {
     _.toString(Messages("ymdFormat"))
   }
 

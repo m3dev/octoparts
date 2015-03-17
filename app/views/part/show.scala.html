@@ -26,6 +26,10 @@
         <a href="@controllers.routes.AdminController.confirmDeletePart(part.partId)" class="btn btn-danger">@Messages("delete")</a>
     </h4>
 
+    @for(warnMsg <- part.warnings) {
+        <div class="alert alert-warning">@warnMsg</div>
+    }
+
     <h2>@Messages("parts.section.basic")</h2>
     <dl>
         <dt>@Messages("parts.partId")</dt>

@@ -23,6 +23,8 @@ import scala.util.matching.Regex
 trait HttpPartRequestHandler extends Handler {
   handler =>
 
+  import HttpPartRequestHandler._
+
   implicit def executionContext: ExecutionContext
 
   implicit def zipkinService: ZipkinServiceLike
@@ -36,11 +38,6 @@ trait HttpPartRequestHandler extends Handler {
   def additionalValidStatuses: Set[Int]
 
   def hystrixExecutor: HystrixExecutor
-
-  /**
-   * A regex for matching "${...}" placeholders in strings
-   */
-  private val PlaceholderReplacer: Regex = """\$\{([^\}]+)\}""".r
 
   // def registeredParams: Set[PartParam]
 
@@ -179,6 +176,18 @@ trait HttpPartRequestHandler extends Handler {
     baseUri.addParams(kvs.toSeq)
   }
 
+}
+
+object HttpPartRequestHandler {
+  val AggregateRequestIdHeader = "X-OCTOPARTS-PARENT-REQUEST-ID"
+  val PartRequestIdHeader = "X-OCTOPARTS-REQUEST-ID"
+  val PartIdHeader = "X-OCTOPARTS-PART-ID"
+
+  /**
+   * A regex for matching "${...}" placeholders in strings
+   */
+  private val PlaceholderReplacer: Regex = """\$\{([^\}]+)\}""".r
+
   /**
    * Replace all instances of "${...}" placeholders in the given string
    *
@@ -186,13 +195,6 @@ trait HttpPartRequestHandler extends Handler {
    * @param replacer a function that replaces the contents of the placeholder (excluding braces) with a string
    * @return the interpolated string
    */
-  private def interpolate(stringToInterpolate: String)(replacer: String => String) =
+  def interpolate(stringToInterpolate: String)(replacer: String => String): String =
     PlaceholderReplacer.replaceAllIn(stringToInterpolate, { m => replacer(m.group(1)) })
-
-}
-
-object HttpPartRequestHandler {
-  val AggregateRequestIdHeader = "X-OCTOPARTS-PARENT-REQUEST-ID"
-  val PartRequestIdHeader = "X-OCTOPARTS-REQUEST-ID"
-  val PartIdHeader = "X-OCTOPARTS-PART-ID"
 }
