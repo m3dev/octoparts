@@ -56,8 +56,7 @@ trait ConfigMapper[A <: ConfigModel[A]] extends SkinnyCRUDMapper[A] {
   def save(model: A)(implicit s: DBSession = autoSession): Long = {
     model.id.fold(createWithPermittedAttributes(permitted(model))) { id =>
       val updatedCount = updateById(id).withPermittedAttributes(permitted(model))
-      if (updatedCount != 1)
-        throw new IllegalStateException(s"Save for $model did not update 1 row")
+      if (updatedCount != 1) throw new IllegalStateException(s"Save for $model did not update 1 row")
       id
     }
   }

@@ -38,9 +38,8 @@ class HealthcheckControllerSpec
 
     // Return healthy-looking results by default
     when(configsRepo.findAllConfigs()).thenReturn(Future.successful(mockConfigs))
-    when(hystrixHealthReporter.getCommandKeysWithOpenCircuitBreakers).thenReturn(Seq())
-    when(cache.get[String](mockitoEq("ping"))(anyObject[Codec[String]], anyObject[Span]))
-      .thenReturn(Future.successful(Some("pong")))
+    when(hystrixHealthReporter.getCommandKeysWithOpenCircuitBreakers).thenReturn(Nil)
+    when(cache.get[String](mockitoEq("ping"))(anyObject[Codec[String]], anyObject[Span])).thenReturn(Future.successful(Some("pong")))
   }
 
   {

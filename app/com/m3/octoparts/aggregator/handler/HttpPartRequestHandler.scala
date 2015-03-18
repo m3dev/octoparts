@@ -87,7 +87,7 @@ trait HttpPartRequestHandler extends Handler {
       def method = httpMethod
       val uri = new URI(buildUri(hArgs))
       val maybeBody = hArgs.collectFirst {
-        case (p, values) if p.paramType == ParamType.Body && values.nonEmpty => values.head
+        case (p, headValue :: _) if p.paramType == ParamType.Body => headValue
       }
       val headers = {
         collectHeaders(hArgs) ++
@@ -167,7 +167,7 @@ trait HttpPartRequestHandler extends Handler {
     val baseUri = interpolate(uriToInterpolate) { key =>
       val ThePathParam = ShortPartParam(key, ParamType.Path)
       val maybeParamsVal: Option[String] = hArgs.collectFirst {
-        case (ThePathParam, v) if v.nonEmpty => v.head
+        case (ThePathParam, headValue :: _) => headValue
       }
       maybeParamsVal.getOrElse("")
     }
@@ -176,7 +176,7 @@ trait HttpPartRequestHandler extends Handler {
       (p, values) <- hArgs.toSeq if p.paramType == ParamType.Query
       v <- values
     } yield p.outputName -> v
-    baseUri.addParams(kvs.toSeq)
+    baseUri.addParams(kvs)
   }
 
   /**

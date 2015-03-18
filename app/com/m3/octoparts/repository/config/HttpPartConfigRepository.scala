@@ -54,8 +54,8 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
    */
   override def save(c: HttpPartConfig)(implicit s: DBSession = autoSession): Long = c.id.fold {
     val newId = createWithPermittedAttributes(permitted(c))
-    c.parameters.foreach(p => PartParamRepository.save(p.copy(httpPartConfigId = Some(newId.toLong))))
-    c.hystrixConfig.foreach(h => HystrixConfigRepository.save(h.copy(httpPartConfigId = Some(newId.toLong))))
+    c.parameters.foreach(p => PartParamRepository.save(p.copy(httpPartConfigId = Some(newId))))
+    c.hystrixConfig.foreach(h => HystrixConfigRepository.save(h.copy(httpPartConfigId = Some(newId))))
     saveCacheGroups(c.copy(id = Some(newId)))
     LTSVLogger.info(
       "Part" -> c.partId,

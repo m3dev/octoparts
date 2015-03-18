@@ -25,7 +25,6 @@ import play.api.mvc._
 import scaldi.Module
 import scaldi.play.ScaldiSupport
 
-import scala.collection.concurrent.TrieMap
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
@@ -54,23 +53,6 @@ object Global extends WithFilters(ZipkinHeaderFilter(ZipkinServiceHolder.ZipkinS
         bind[ZipkinServiceLike] to ZipkinServiceHolder.ZipkinService
       }
 
-  /**
-   * For each entry, V.getClass == K
-   */
-  private val controllerCache = TrieMap[Class[_], Any]()
-
-  /**
-   * Caches controller instantiation which was shown to be expensive because of ScalDI.
-   */
-  override def getControllerInstance[A](clazz: Class[A]): A = {
-    controllerCache.getOrElseUpdate(clazz, super.getControllerInstance(clazz)).asInstanceOf[A]
-  }
-
-  override def onStop(app: Application) = {
-    controllerCache.clear()
-    super.onStop(app)
-  }
-
   // Load environment-specific application.${env}.conf, merged with the generic application.conf
   override def onLoadConfig(config: Configuration, path: File, classloader: ClassLoader, mode: Mode.Mode): Configuration = {
     val playEnv = config.getString("application.env").fold(mode.toString) { parsedEnv =>
@@ -88,7 +70,7 @@ object Global extends WithFilters(ZipkinHeaderFilter(ZipkinServiceHolder.ZipkinS
 
   override def onStart(app: Application) = {
     // Need to do this as early as possible, before Hystrix gets instantiated
-    setHystrixPropertiesStrategy(app)
+    setHystrixPropertiesStrategy()
 
     super.onStart(app)
 
@@ -134,7 +116,7 @@ object Global extends WithFilters(ZipkinHeaderFilter(ZipkinServiceHolder.ZipkinS
    * Resist the temptation to do a HystrixPlugins.getInstance().getPropertiesStrategy first to do
    * checking, as that actually also sets the strategy if it isn't already set.
    */
-  private def setHystrixPropertiesStrategy(app: Application): Unit = {
+  private def setHystrixPropertiesStrategy(): Unit = {
     // If it's defined, we don't need to set anything
     if (sys.props.get("hystrix.plugin.HystrixPropertiesStrategy.implementation").isEmpty) {
       LTSVLogger.info("-Dhystrix.plugin.HystrixPropertiesStrategy.implementation is not set. Defaulting to" -> "com.m3.octoparts.hystrix.KeyAndBuilderValuesHystrixPropertiesStrategy")

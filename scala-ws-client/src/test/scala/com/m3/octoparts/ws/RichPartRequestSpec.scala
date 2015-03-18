@@ -23,7 +23,7 @@ class RichPartRequestSpec extends FunSpec with Matchers {
     it("should ensure that there is only 1 'body' param in the part request; the one it adds") {
       val pr = PartRequest("hello", params = Seq(PartRequestParam("body", "booo")))
       val prWithBody = pr.withBody((9, 10, 11))
-      prWithBody.params.filter(_.key == "body").size shouldBe 1
+      prWithBody.params.count(_.key == "body") shouldBe 1
       prWithBody.params.find(_.key == "body").head.value shouldBe ("30")
     }
 

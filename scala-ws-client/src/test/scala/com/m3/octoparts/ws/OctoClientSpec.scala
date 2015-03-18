@@ -118,11 +118,11 @@ class OctoClientSpec
     val respPost = Future.successful(mockWSRespPost)
     val respGet = Future.successful(mockWSRespGet)
 
-    def mockSubject(respPost: Future[WSResponse], respGet: Future[WSResponse], baseURL: String = "http://bobby.com/") = {
-      mockSubjectWithHolder(respPost, respGet, baseURL)._2
+    def mockSubject(respPost: Future[WSResponse], respGet: Future[WSResponse]) = {
+      mockSubjectWithHolder(respPost, respGet)._2
     }
 
-    def mockSubjectWithHolder(respPost: Future[WSResponse], respGet: Future[WSResponse], baseURL: String = "http://bobby.com/"): (WSRequestHolder, OctoClientLike) = {
+    def mockSubjectWithHolder(respPost: Future[WSResponse], respGet: Future[WSResponse]): (WSRequestHolder, OctoClientLike) = {
       val holder = mockWSHolder(respPost, respGet)
       val client = new OctoClientLike {
         val baseUrl = "http://bobby.com/"
@@ -153,12 +153,12 @@ class OctoClientSpec
       }
 
       it("should return correct URLs for trailing-slashed baseUrls") {
-        val subject = mockSubject(respPost, respGet, "http://bobby.com/")
+        val subject = mockSubject(respPost, respGet)
         verifyUrls(subject, "http://bobby.com")
       }
 
       it("should return correct URLs for non-trailing-slashed baseUrls") {
-        val subject = mockSubject(respPost, respGet, "http://bobby.com")
+        val subject = mockSubject(respPost, respGet)
         verifyUrls(subject, "http://bobby.com")
       }
     }

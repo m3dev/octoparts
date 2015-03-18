@@ -25,7 +25,7 @@ class MemcachedCacheOps(
       tryApply(directive, CombinedVersionLookup.knownVersions(directive))
     }
 
-    def tryApply(directive: CacheDirective, internalVersions: Seq[Option[Version]])(implicit parentSpan: Span): Option[PartCacheKey] = {
+    def tryApply(directive: CacheDirective, internalVersions: Seq[Option[Version]]): Option[PartCacheKey] = {
       val aVersionIsUnknown = internalVersions.contains(None)
       if (aVersionIsUnknown) {
         None
@@ -56,7 +56,7 @@ class MemcachedCacheOps(
         directive.versionedParamKeys.map(ParamVersionCache(_).newLookup)
       )
 
-    def knownVersions(directive: CacheDirective)(implicit parentSpan: Span): Seq[Option[Version]] = {
+    def knownVersions(directive: CacheDirective): Seq[Option[Version]] = {
       latestVersionCache.getPartVersion(directive.partId) +: directive.versionedParamKeys.map(latestVersionCache.getParamVersion)
     }
   }

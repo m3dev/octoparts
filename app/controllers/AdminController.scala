@@ -182,7 +182,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
       charset
     }
     val fileData = java.nio.file.Files.readAllBytes(jsonFile.ref.file.toPath)
-    val jsonData = new String(fileData, fileContentType.headOption.orElse(req.charset).getOrElse("UTF-8"))
+    val jsonData = new String(fileData, fileContentType.orElse(req.charset).getOrElse("UTF-8"))
     val tryExtract = for {
       json <- Try(Json.parse(jsonData))
       a <- mapJson[Seq[JsonHttpPartConfig]](json)
@@ -234,7 +234,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
     findAndUseParam(partId, paramId) { param =>
       repository.findAllCacheGroups().map { cgs =>
         Ok(views.html.param.edit(
-          partId = partId, cacheGroups = cgs, selectedCacheGroupIds = param.cacheGroups.map(_.id.get).toSet, maybeParam = Some(ParamView(param))))
+          partId = partId, cacheGroups = cgs, selectedCacheGroupIds = param.cacheGroups.flatMap(_.id), maybeParam = Some(ParamView(param))))
       }
     }
   }
