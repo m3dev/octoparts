@@ -1,9 +1,10 @@
 package presentation
 
 import com.m3.octoparts.model.config.HttpPartConfig
-import controllers.support.ConfigChecker
+import controllers.support.HttpPartConfigChecker
 import org.apache.commons.lang.StringEscapeUtils
 import org.joda.time.DateTime
+import play.api.{ Play, Application }
 import play.api.i18n.{ Lang, Messages }
 import play.twirl.api.Html
 
@@ -26,7 +27,10 @@ case class HttpPartConfigView(config: HttpPartConfig)(implicit lang: Lang) {
 
   def commandGroup: String = config.hystrixConfig.fold("")(_.commandGroupKey)
 
-  lazy val warnings: Seq[String] = ConfigChecker(config)
+  lazy val warnings: Seq[String] = {
+    import Play.current
+    HttpPartConfigChecker(config)
+  }
 
   def timeoutInMs: Int = config.hystrixConfig.fold(5000)(_.timeout.toMillis.toInt)
 

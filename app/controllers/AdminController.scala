@@ -11,7 +11,6 @@ import com.m3.octoparts.repository.MutableConfigsRepository
 import com.twitter.zipkin.gen.Span
 import controllers.support.{ AuthSupport, LoggingSupport }
 import org.joda.time.DateTime
-import play.api.Logger
 import play.api.data._
 import play.api.data.validation.ValidationError
 import play.api.http.MediaType

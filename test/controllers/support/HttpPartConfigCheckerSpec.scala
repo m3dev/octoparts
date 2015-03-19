@@ -7,7 +7,7 @@ import org.scalatestplus.play.OneAppPerSuite
 import play.api.Mode
 import play.api.i18n.Lang
 
-class ConfigCheckerSpec extends FunSpec with Matchers with ConfigDataMocks with OneAppPerSuite {
+class HttpPartConfigCheckerSpec extends FunSpec with Matchers with ConfigDataMocks with OneAppPerSuite {
 
   private implicit val lang = Lang("en")
 
