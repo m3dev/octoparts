@@ -18,9 +18,6 @@ import scala.concurrent.{ ExecutionContext, Future }
  * children classes / decorators
  */
 trait PartRequestServiceBase extends RequestParamSupport {
-
-  import com.beachape.zipkin.FutureEnrichment._
-
   implicit def executionContext: ExecutionContext
 
   protected implicit def zipkinService: ZipkinServiceLike

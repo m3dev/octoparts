@@ -38,7 +38,7 @@ class PartRequestServiceSpec
     describe("when given a PartRequest with a partId that is not supported") {
       it("should return a Future[PartResponse] with an error that mentions that the part Id is not supported") {
         val service = new PartRequestService(repository, mockVoidHttpHandlerFactory, NoopZipkinService)
-        doReturn(Future.successful(None)).when(repository).findConfigByPartId(anyObject())(anyObject[Span])
+        doReturn(Future.successful(None)).when(repository).findConfigByPartId(anyObject[String]())(anyObject[Span])
         whenReady(service.responseFor(pReq("randomstuff"))) { r =>
           r.errors should be(Seq(service.unsupportedMsg("randomstuff")))
           r.contents should be(None)

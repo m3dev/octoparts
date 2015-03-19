@@ -181,7 +181,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
       charset
     }
     val fileData = java.nio.file.Files.readAllBytes(jsonFile.ref.file.toPath)
-    val jsonData = new String(fileData, fileContentType.headOption.orElse(req.charset).getOrElse("UTF-8"))
+    val jsonData = new String(fileData, fileContentType.orElse(req.charset).getOrElse("UTF-8"))
     val tryExtract = for {
       json <- Try(Json.parse(jsonData))
       a <- mapJson[Seq[JsonHttpPartConfig]](json)

@@ -9,8 +9,6 @@ import com.m3.octoparts.repository.ConfigsRepository
 import com.m3.octoparts.support.mocks.ConfigDataMocks
 import com.twitter.zipkin.gen.Span
 import org.mockito.Mockito._
-import org.mockito.internal.stubbing.defaultanswers.ReturnsSmartNulls
-import org.mockito.stubbing.Answer
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
 import org.scalatestplus.play.OneAppPerSuite
@@ -37,7 +35,7 @@ class HealthcheckControllerSpec
   private val hystrixHealthReporter = mock[HystrixHealthReporter](RETURNS_SMART_NULLS)
   private val cache = mock[RawCache](RETURNS_SMART_NULLS)
 
-  override def beforeEach() {
+  override def beforeEach() = {
     reset(configsRepo, hystrixHealthReporter, cache)
 
     // Return healthy-looking results by default

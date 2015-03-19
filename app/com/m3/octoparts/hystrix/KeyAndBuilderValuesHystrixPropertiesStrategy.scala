@@ -12,7 +12,7 @@ class KeyAndBuilderValuesHystrixPropertiesStrategy extends HystrixPropertiesStra
   private val mapper = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
 
   /**
-   * Overriden to return a [[String]] that is a combination of the commandKey name and a JSON string
+   * Overridden to return a [[String]] that is a combination of the commandKey name and a JSON string
    * of the builder values
    */
   override def getCommandPropertiesCacheKey(commandKey: HystrixCommandKey, builder: HystrixCommandProperties.Setter): String =

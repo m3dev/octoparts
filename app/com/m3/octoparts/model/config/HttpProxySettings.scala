@@ -12,7 +12,7 @@ case class HttpProxySettings(scheme: String, host: String, port: Int) {
 
   /**
    * inverse operation of [[HttpProxySettings.parse]]
-   * @return a string representation, omitting fiels with default values
+   * @return a string representation, omitting fields with default values
    */
   def serialize: String = {
     val schemePart = if (scheme == DefaultScheme) "" else s"$scheme://"

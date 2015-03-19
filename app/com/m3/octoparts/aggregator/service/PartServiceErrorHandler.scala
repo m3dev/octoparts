@@ -38,7 +38,7 @@ trait PartServiceErrorHandler extends LogUtil {
     PartResponse(partId, partRequestInfo.partRequestId, errors = Seq(message))
   }
 
-  private def logInvalid(partRequestInfo: PartRequestInfo, duration: Duration, message: String): PartResponse = {
+  private def logInvalid(partRequestInfo: PartRequestInfo, message: String): PartResponse = {
     val partId = partRequestInfo.partRequest.partId
     val requestMeta = partRequestInfo.requestMeta
     LTSVLogger.warn("Part" -> partId, "Invalid" -> message)
@@ -46,7 +46,7 @@ trait PartServiceErrorHandler extends LogUtil {
     PartResponse(partId, partRequestInfo.partRequestId, errors = Seq(message))
   }
 
-  private def logShortCircuit(partRequestInfo: PartRequestInfo, duration: Duration, message: String): PartResponse = {
+  private def logShortCircuit(partRequestInfo: PartRequestInfo, message: String): PartResponse = {
     val partId = partRequestInfo.partRequest.partId
     val requestMeta = partRequestInfo.requestMeta
     LTSVLogger.warn("Part" -> partId, "Hystrix" -> message)
@@ -54,7 +54,7 @@ trait PartServiceErrorHandler extends LogUtil {
     PartResponse(partId, partRequestInfo.partRequestId, errors = Seq(message))
   }
 
-  private def logIOException(partRequestInfo: PartRequestInfo, duration: Duration, io: Throwable) = {
+  private def logIOException(partRequestInfo: PartRequestInfo, io: Throwable) = {
     val partId = partRequestInfo.partRequest.partId
     val requestMeta = partRequestInfo.requestMeta
     LTSVLogger.warn(io, "Part" -> partId)
@@ -62,7 +62,7 @@ trait PartServiceErrorHandler extends LogUtil {
     PartResponse(partId, partRequestInfo.partRequestId, errors = Seq(io.toString))
   }
 
-  private def logOtherException(partRequestInfo: PartRequestInfo, duration: Duration, err: Throwable) = {
+  private def logOtherException(partRequestInfo: PartRequestInfo, err: Throwable) = {
     val partId = partRequestInfo.partRequest.partId
     val requestMeta = partRequestInfo.requestMeta
     LTSVLogger.error(err, "Part" -> partId)
@@ -73,7 +73,7 @@ trait PartServiceErrorHandler extends LogUtil {
   protected def recoverChain(partRequestInfo: PartRequestInfo, aReqTimeout: Duration, f: Future[PartResponse]): Future[PartResponse] = {
     f.recoverWith {
       // unpile command exception
-      case hre: HystrixRuntimeException if hre.getCause != null && hre.getCause != hre && hre.getFailureType == FailureType.COMMAND_EXCEPTION =>
+      case hre: HystrixRuntimeException if Option(hre.getCause).exists(_ != hre) && hre.getFailureType == FailureType.COMMAND_EXCEPTION =>
         Future.failed(hre.getCause)
 
     }.recover {
@@ -90,28 +90,24 @@ trait PartServiceErrorHandler extends LogUtil {
         logRejection(partRequestInfo, aReqTimeout, hre.toString)
 
       case hre: HystrixRuntimeException if hre.getFailureType == FailureType.SHORTCIRCUIT =>
-        logShortCircuit(partRequestInfo, aReqTimeout, hre.toString)
+        logShortCircuit(partRequestInfo, hre.toString)
 
       case iae: IllegalArgumentException =>
-        logInvalid(partRequestInfo, aReqTimeout, iae.toString)
+        logInvalid(partRequestInfo, iae.toString)
 
       case io: IOException =>
-        logIOException(partRequestInfo, aReqTimeout, io)
+        logIOException(partRequestInfo, io)
 
       case err if NonFatal(err) =>
-        logOtherException(partRequestInfo, aReqTimeout, err)
+        logOtherException(partRequestInfo, err)
     }
   }
 
   private object IsTimeout {
-    def apply(t: Throwable): Boolean = {
-      t != null && (t match {
-        case _: TimeoutException | _: ConnectTimeoutException | _: SocketTimeoutException => true
-        case _ => false
-      })
+    def unapply(t: Throwable): Option[Throwable] = t match {
+      case _: TimeoutException | _: ConnectTimeoutException | _: SocketTimeoutException => Some(t)
+      case _ => None
     }
-
-    def unapply(t: Throwable): Option[Throwable] = if (apply(t)) Some(t) else None
   }
 
 }

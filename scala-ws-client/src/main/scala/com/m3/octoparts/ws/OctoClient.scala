@@ -45,7 +45,7 @@ class OctoClient(val baseUrl: String, protected val clientTimeout: FiniteDuratio
 
   protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
 
-  protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Seq.empty
+  protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Nil
 }
 
 /**
@@ -118,11 +118,10 @@ trait OctoClientLike {
    * @param headers Optional set of headers that you can send with this request, defaults to none.
    */
   def invoke(aggReq: AggregateRequest, headers: (String, String)*)(implicit ec: ExecutionContext): Future[AggregateResponse] = {
-    if (aggReq.requests.isEmpty)
-      Future.successful(emptyReqResponse)
+    if (aggReq.requests.isEmpty) Future.successful(emptyReqResponse)
     else {
       val jsonBody = Json.toJson(aggReq)
-      val timeout = aggReq.requestMeta.timeout.map(_ max clientTimeout).getOrElse(clientTimeout)
+      val timeout = aggReq.requestMeta.timeout.fold(clientTimeout)(_ max clientTimeout)
       logger.debug(s"OctopartsId: ${aggReq.requestMeta.id}, RequestBody: $jsonBody")
       wsPost(urlFor(Invoke), timeout, jsonBody, headers)
         .map(resp => resp.json.as[AggregateResponse])
@@ -223,7 +222,7 @@ trait OctoClientLike {
    * @param timeout Timeout value for the request
    * @param headers headers to send along with the request
    */
-  protected def wsPost[A](url: String, timeout: FiniteDuration, body: A, headers: Seq[(String, String)] = Seq.empty)(implicit wrt: Writeable[A], ct: ContentTypeOf[A]): Future[WSResponse] = {
+  protected def wsPost[A](url: String, timeout: FiniteDuration, body: A, headers: Seq[(String, String)] = Nil)(implicit wrt: Writeable[A], ct: ContentTypeOf[A]): Future[WSResponse] = {
     wsHolderFor(url, timeout)
       .withHeaders(headers: _*)
       .post(body)
@@ -232,18 +231,17 @@ trait OctoClientLike {
   /**
    * Generates a default dumb/empty [[com.m3.octoparts.model.AggregateResponse]].
    */
-  protected def emptyReqResponse = AggregateResponse(ResponseMeta(id = UUID.randomUUID().toString, processTime = Duration.Zero), responses = Nil)
+  protected def emptyReqResponse: AggregateResponse = AggregateResponse(ResponseMeta(id = UUID.randomUUID().toString, processTime = Duration.Zero), responses = Nil)
 
   /**
    * Drops the final forward slash from a string if it exists.
    *
    * As far as I can see, this does not use any Regexp..
    */
-  protected def dropTrailingSlash(s: String) =
-    if (s.endsWith("/"))
-      s.substring(0, s.length - 1)
-    else
-      s
+  protected def dropTrailingSlash(s: String): String = {
+    if (s.endsWith("/")) s.substring(0, s.length - 1)
+    else s
+  }
 
   /**
    * Returns a base URL for the Endpoint APIs

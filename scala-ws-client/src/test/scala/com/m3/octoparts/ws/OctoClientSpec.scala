@@ -2,26 +2,26 @@ package com.m3.octoparts.ws
 
 import java.nio.charset.StandardCharsets
 
-import com.m3.octoparts.json.format.ConfigModel._
 import com.m3.octoparts.json.format.ReqResp._
+import com.m3.octoparts.json.format.ConfigModel._
 import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.ParamType
 import com.m3.octoparts.model.config.json._
-import org.mockito.Matchers._
-import org.mockito.Mockito._
+import play.api.libs.json._
 import org.scalatest._
-import org.scalatest.concurrent._
+import org.scalatest.concurrent.{ Eventually, IntegrationPatience, PatienceConfiguration, ScalaFutures }
 import org.scalatest.mock.MockitoSugar
-import play.api.libs.json.{ JsValue, _ }
+import play.api.libs.json.JsValue
 import play.api.libs.ws._
+import org.mockito.Mockito._
+import org.mockito.Matchers._
 import play.api.mvc.RequestHeader
 import play.api.mvc.Results.EmptyContent
 import play.api.test.FakeRequest
 
-import scala.collection.SortedSet
+import scala.language.postfixOps
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.language.postfixOps
 
 class OctoClientSpec
     extends FunSpec
@@ -120,15 +120,15 @@ class OctoClientSpec
     val respPost = Future.successful(mockWSRespPost)
     val respGet = Future.successful(mockWSRespGet)
 
-    def mockSubject(respPost: Future[WSResponse], respGet: Future[WSResponse], baseURL: String = "http://bobby.com/") = {
-      mockSubjectWithHolder(respPost, respGet, baseURL)._2
+    def mockSubject(respPost: Future[WSResponse], respGet: Future[WSResponse]) = {
+      mockSubjectWithHolder(respPost, respGet)._2
     }
 
-    def mockSubjectWithHolder(respPost: Future[WSResponse], respGet: Future[WSResponse], baseURL: String = "http://bobby.com/"): (WSRequestHolder, OctoClientLike) = {
+    def mockSubjectWithHolder(respPost: Future[WSResponse], respGet: Future[WSResponse]): (WSRequestHolder, OctoClientLike) = {
       val holder = mockWSHolder(respPost, respGet)
       val client = new OctoClientLike {
         val baseUrl = "http://bobby.com/"
-        protected val clientTimeout = 10 seconds
+        protected val clientTimeout = 10.seconds
         def wsHolderFor(url: String, timeout: FiniteDuration): WSRequestHolder = holder
         def rescuer[A](obj: => A) = PartialFunction.empty
         protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
@@ -155,12 +155,12 @@ class OctoClientSpec
       }
 
       it("should return correct URLs for trailing-slashed baseUrls") {
-        val subject = mockSubject(respPost, respGet, "http://bobby.com/")
+        val subject = mockSubject(respPost, respGet)
         verifyUrls(subject, "http://bobby.com")
       }
 
       it("should return correct URLs for non-trailing-slashed baseUrls") {
-        val subject = mockSubject(respPost, respGet, "http://bobby.com")
+        val subject = mockSubject(respPost, respGet)
         verifyUrls(subject, "http://bobby.com")
       }
     }
@@ -233,7 +233,7 @@ class OctoClientSpec
           val baseUrl = "http://bobby.com"
           def wsHolderFor(url: String, timeout: FiniteDuration): WSRequestHolder = wsHolderCreator.apply(url)
           protected def rescuer[A](obj: => A): PartialFunction[Throwable, A] = PartialFunction.empty
-          protected val clientTimeout = 10 seconds
+          protected val clientTimeout = 10.seconds
           protected def rescueAggregateResponse = emptyReqResponse
           protected def rescueHttpPartConfigs = Nil
         }

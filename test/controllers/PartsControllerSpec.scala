@@ -75,7 +75,7 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
     val result = controller.retrieveParts(FakeRequest().withBody(postData))
 
     status(result) should be(200)
-    contentAsJson(result).validate[AggregateResponse] shouldBe a[JsSuccess[_]]
+    contentAsJson(result).validate[AggregateResponse].isSuccess shouldBe true
   }
 
   it should "show a list of octoparts" in {

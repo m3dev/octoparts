@@ -23,7 +23,7 @@ private[client] class AggregateResponseExtractor(aggregateRequest: AggregateRequ
 
   import com.m3.octoparts.client.AggregateResponseExtractor._
 
-  def onCompleted(response: Response): ResponseWrapper = {
+  def onCompleted(response: Response) = {
     if (response.getStatusCode < 400) {
       deserialize(response.getResponseBodyAsStream)
     } else {
@@ -32,7 +32,7 @@ private[client] class AggregateResponseExtractor(aggregateRequest: AggregateRequ
     }
   }
 
-  override def onThrowable(t: Throwable) {
+  override def onThrowable(t: Throwable) = {
     Log.warn(s"For request: ${aggregateRequest.requestMeta.id}", t)
   }
 }

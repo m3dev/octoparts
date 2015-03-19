@@ -22,7 +22,7 @@ trait AuthSupport
       LTSVLogger.info("Using auth plugin" -> plugin.getClass.getName)
       Some(plugin)
     case Some(disabledPlugin) =>
-      LTSVLogger.info(s"Skipping auth for admin UI because auth plugin disabled" -> disabledPlugin.getClass.getName)
+      LTSVLogger.info("Skipping auth for admin UI because auth plugin disabled" -> disabledPlugin.getClass.getName)
       None
     case None =>
       LTSVLogger.info("Msg" -> "No auth plugin found. Authentication/authorization for admin UI will be skipped.")

@@ -219,9 +219,11 @@ class AdminControllerSpec extends FunSpec
         val (controller, cacheOps, repository, part) = setupController
         doReturn(Future.successful(124L)).when(repository).save(anyObject[HttpPartConfig]())(anyObject[ConfigMapper[HttpPartConfig]], anyObject[Span])
         val result = controller.updatePart(part.partId).apply(FakeRequest().withFormUrlEncodedBody(validPartEditFormParams: _*))
-        status(result) should be(FOUND)
-        redirectLocation(result).get should include(routes.AdminController.showPart("aNewName").url)
-        verify(cacheOps, Mockito.timeout(1000)).increasePartVersion(part.partId)
+        whenReady(result) { _ =>
+          status(result) should be(FOUND)
+          redirectLocation(result).get should include(routes.AdminController.showPart("aNewName").url)
+          verify(cacheOps, Mockito.timeout(1000)).increasePartVersion(part.partId)
+        }
       }
     }
 
@@ -321,7 +323,7 @@ class AdminControllerSpec extends FunSpec
         doReturn(Future.successful(Some(part))).when(repository).findConfigByPartId(mockitoEq(part.partId))(anyObject[Span])
         doReturn(Future.successful(1)).when(repository).deleteConfigByPartId(mockitoEq(part.partId))(anyObject[Span])
         val deletePart = adminController.deletePart(part.partId)(FakeRequest())
-        whenReady(deletePart) { result =>
+        whenReady(deletePart) { _ =>
           status(deletePart) should be(FOUND)
           redirectLocation(deletePart).fold(fail())(_ should include(routes.AdminController.listParts().url))
 
@@ -339,7 +341,7 @@ class AdminControllerSpec extends FunSpec
         doReturn(Future.successful(None)).when(repository).findConfigByPartId(mockitoEq("someOther"))(anyObject[Span])
 
         val deletePart = adminController.deletePart("someOther")(FakeRequest())
-        whenReady(deletePart) { result =>
+        whenReady(deletePart) { _ =>
           status(deletePart) should be(FOUND)
           redirectLocation(deletePart).fold(fail())(_ should include(routes.AdminController.listParts.url))
           flash(deletePart).get(BootstrapFlashStyles.danger.toString) should be('defined)
@@ -373,7 +375,7 @@ class AdminControllerSpec extends FunSpec
         doReturn(Future.successful(None)).when(repository).findConfigByPartId(mockitoEq("someOther"))(anyObject[Span])
 
         val deletePart = adminController.copyPart("someOther")(FakeRequest())
-        whenReady(deletePart) { result =>
+        whenReady(deletePart) { _ =>
           status(deletePart) should be(FOUND)
           redirectLocation(deletePart).fold(fail())(_ should include(routes.AdminController.listParts.url))
           flash(deletePart).get(BootstrapFlashStyles.danger.toString) should be('defined)
@@ -421,7 +423,7 @@ class AdminControllerSpec extends FunSpec
         doReturn(Future.successful(None)).when(repository).findParamById(anyLong())(anyObject[Span])
 
         val copyParam = adminController.copyParam(part.partId, 12345L)(FakeRequest())
-        whenReady(copyParam) { result =>
+        whenReady(copyParam) { _ =>
           status(copyParam) should equal(FOUND)
           redirectLocation(copyParam).fold(fail())(_ should include(routes.AdminController.showPart(part.partId).url))
 

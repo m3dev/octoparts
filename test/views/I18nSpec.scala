@@ -22,7 +22,7 @@ class I18nSpec extends FlatSpec with Matchers {
       if (pathMatcher.matches(file)) {
         Source.fromFile(file.toFile).getLines().zipWithIndex.foreach {
           case (line, lineNum) =>
-            if (line.getBytes(StandardCharsets.UTF_8).length != line.size) {
+            if (line.getBytes(StandardCharsets.UTF_8).length != line.length) {
               violations += Violation(file, lineNum, line)
             }
         }

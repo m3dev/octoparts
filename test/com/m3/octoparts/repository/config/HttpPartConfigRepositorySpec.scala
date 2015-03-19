@@ -29,7 +29,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
   val httpPartConfigMapWithDeprecation = httpPartConfigMap :+ ('deprecatedInFavourOf -> Some("theNewHotness"))
 
   // ---- Helper functions ----
-  private def createCacheGroup(howMany: Int = 1)(implicit session: DBSession): SortedSet[CacheGroup] = {
+  private def createCacheGroup(howMany: Int)(implicit session: DBSession): SortedSet[CacheGroup] = {
     val cacheGroups = for (i <- 0 until howMany) yield {
       val id = CacheGroupRepository.createWithAttributes('name -> s"myLittleGroup $i")
       CacheGroupRepository.findById(id).get
