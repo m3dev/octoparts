@@ -9,6 +9,7 @@ import org.joda.time.DateTime
 import play.api.data.Forms._
 import play.api.data._
 
+import scala.collection.SortedSet
 import scala.concurrent.duration._
 
 object AdminForms {
@@ -32,13 +33,13 @@ object AdminForms {
     data =>
 
     /** Create a brand new HttpPartConfig using the data input into the form */
-    def toNewHttpPartConfig(owner: String, cacheGroups: Set[CacheGroup]): HttpPartConfig = HttpPartConfig(
+    def toNewHttpPartConfig(owner: String, cacheGroups: SortedSet[CacheGroup]): HttpPartConfig = HttpPartConfig(
       partId = PartData.trimPartId(data.partId),
       owner = owner,
       description = data.description,
       uriToInterpolate = data.httpSettings.uri,
       method = HttpMethod.withName(data.httpSettings.method),
-      additionalValidStatuses = HttpPartConfig.parseValidStatuses(data.httpSettings.additionalValidStatuses.filterNot(_.isEmpty)),
+      additionalValidStatuses = HttpPartConfig.parseValidStatuses(data.httpSettings.additionalValidStatuses),
       httpPoolSize = data.httpSettings.httpPoolSize,
       httpConnectionTimeout = data.httpSettings.httpConnectionTimeoutInMs.milliseconds,
       httpSocketTimeout = data.httpSettings.httpSocketTimeoutInMs.milliseconds,
@@ -68,13 +69,12 @@ object AdminForms {
     )
 
     /** Update an existing HttpPartConfig using the data input into the form */
-    def toUpdatedHttpPartConfig(originalPart: HttpPartConfig, params: Set[PartParam], cacheGroups: Set[CacheGroup]): HttpPartConfig = originalPart.copy(
+    def toUpdatedHttpPartConfig(originalPart: HttpPartConfig, cacheGroups: SortedSet[CacheGroup]): HttpPartConfig = originalPart.copy(
       partId = PartData.trimPartId(data.partId),
-      parameters = params,
       description = data.description,
       uriToInterpolate = data.httpSettings.uri,
       method = HttpMethod.withName(data.httpSettings.method),
-      additionalValidStatuses = HttpPartConfig.parseValidStatuses(data.httpSettings.additionalValidStatuses.filterNot(_.isEmpty)),
+      additionalValidStatuses = HttpPartConfig.parseValidStatuses(data.httpSettings.additionalValidStatuses),
       httpPoolSize = data.httpSettings.httpPoolSize,
       httpConnectionTimeout = data.httpSettings.httpConnectionTimeoutInMs.milliseconds,
       httpSocketTimeout = data.httpSettings.httpSocketTimeoutInMs.milliseconds,
@@ -126,7 +126,7 @@ object AdminForms {
         localContentsAsFallback = part.hystrixConfigItem.localContentsAsFallback
       ),
       ttl = part.cacheTtl.map(_.toSeconds.toInt),
-      cacheGroupNames = part.cacheGroups.map(_.name).toSeq,
+      cacheGroupNames = part.cacheGroups.toSeq.map(_.name),
       alertMailData = AlertMailData(
         enabled = part.alertMailsEnabled,
         interval = Some(part.alertInterval.toSeconds.toInt),

@@ -11,7 +11,9 @@ case class ParamView(param: PartParam) {
 
   def requiredCls: String = if (required) "required" else "optional"
 
-  def name: String = param.outputName
+  def name: String = param.inputNameOverride.getOrElse(param.outputName)
+
+  def outputName: String = param.outputName
 
   def paramType = param.paramType.toString
 
@@ -22,4 +24,8 @@ case class ParamView(param: PartParam) {
   def description = param.description
 
   def inputNameJs = StringEscapeUtils.escapeJavaScript(param.inputName)
+}
+
+object ParamView {
+  implicit val order: Ordering[ParamView] = Ordering.by(_.param)
 }

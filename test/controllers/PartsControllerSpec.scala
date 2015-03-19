@@ -18,6 +18,7 @@ import play.api.libs.json.{ JsSuccess, Json }
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
+import scala.collection.SortedSet
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -25,38 +26,38 @@ import scala.language.postfixOps
 class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with ConfigDataMocks with OneAppPerSuite {
 
   import scala.concurrent.ExecutionContext.Implicits.global
-  implicit val emptySpan = new Span()
+  private implicit val emptySpan = new Span()
 
-  def createConfig(partId: String): HttpPartConfig = mockHttpPartConfig.copy(
+  private def createConfig(partId: String): HttpPartConfig = mockHttpPartConfig.copy(
     partId = partId,
     uriToInterpolate = "http://www.example.com/" + partId,
     hystrixConfig = Some(mockHystrixConfig)
   )
 
-  val configsRepository = new MockConfigRepository {
+  private val configsRepository = new MockConfigRepository {
     def keys = Seq("void", "error", "slow")
 
     override def findConfigByPartId(partId: String)(implicit parentSpan: Span): Future[Option[HttpPartConfig]] = Future.successful {
       if (keys.contains(partId)) Some(createConfig(partId)) else None
     }
 
-    override def findAllConfigs()(implicit parentSpan: Span): Future[Seq[HttpPartConfig]] = Future.successful(keys.map(createConfig))
+    override def findAllConfigs()(implicit parentSpan: Span): Future[SortedSet[HttpPartConfig]] = Future.successful(keys.map(createConfig).to[SortedSet])
   }
-  val voidHandler = new Handler {
+  private val voidHandler = new Handler {
     val partId = "something"
 
     def process(pri: PartRequestInfo, args: HandlerArguments)(implicit parentSpan: Span) = Future.successful(PartResponse(partId, partId))
   }
-  val partsRequestService = new PartRequestService(configsRepository, new HttpHandlerFactory {
+  private val partsRequestService = new PartRequestService(configsRepository, new HttpHandlerFactory {
     implicit val zipkinService: ZipkinServiceLike = NoopZipkinService
     override def makeHandler(ci: HttpPartConfig) = ci.partId match {
       case "void" => voidHandler
       case _ => throw new RuntimeException
     }
   }, NoopZipkinService)
-  val partsService = new PartsService(partsRequestService)
+  private val partsService = new PartsService(partsRequestService)
 
-  val controller = new PartsController(partsService, configsRepository, 10 seconds, true, NoopZipkinService)
+  private val controller = new PartsController(partsService, configsRepository, 10 seconds, true, NoopZipkinService)
 
   it should "return 400 to an unknown json" in {
     val json = Json.parse("""{"json":"unknown"}""")

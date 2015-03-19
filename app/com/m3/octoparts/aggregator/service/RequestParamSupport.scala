@@ -4,6 +4,8 @@ import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.model.{ PartRequestParam, RequestMeta }
 
+import scala.collection.SortedSet
+
 /**
  * Trait to support generic operations on PartRequestInfo components like
  * RequestMeta and PartRequest
@@ -21,7 +23,7 @@ trait RequestParamSupport {
    *
    * @param partRequestInfo Part request info
    */
-  def combineParams(registeredParams: Set[PartParam], partRequestInfo: PartRequestInfo): Map[ShortPartParam, Seq[String]] = {
+  def combineParams(registeredParams: SortedSet[PartParam], partRequestInfo: PartRequestInfo): Map[ShortPartParam, Seq[String]] = {
     val combinedParams = {
       val allParams = processMeta(partRequestInfo.requestMeta) ++ partRequestInfo.partRequest.params
       allParams.groupBy(_.key).mapValues(_.map(_.value))
@@ -35,7 +37,7 @@ trait RequestParamSupport {
     }
 
     // will throw an IllegalArgumentException if a required parameter is missing.
-    validateParams(registeredParams, mappedParams.map(_._1).toSet)
+    validateParams(registeredParams.toSet, mappedParams.map(_._1).toSet)
 
     (for {
       (partParam, values) <- mappedParams

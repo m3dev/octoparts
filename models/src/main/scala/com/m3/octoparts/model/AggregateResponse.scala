@@ -58,7 +58,7 @@ case class ResponseMeta(@(ApiModelProperty @field)(required = true)@BeanProperty
  */
 case class PartResponse(@(ApiModelProperty @field)(required = true)@BeanProperty partId: String,
                         @(ApiModelProperty @field)(required = true)@BeanProperty id: String,
-                        @BeanProperty cookies: Seq[Cookie] = Seq.empty,
+                        @BeanProperty cookies: Seq[Cookie] = Nil,
                         @(ApiModelProperty @field)(required = false, dataType = "integer")@BeanProperty statusCode: Option[Int] = None,
                         @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty mimeType: Option[String] = None,
                         @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty charset: Option[String] = None,
