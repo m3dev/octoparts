@@ -26,7 +26,8 @@ object Common {
     ideSettings ++
     testSettings ++
     Scalariform.settings ++
-    Scoverage.settings
+    Scoverage.settings ++
+    LintConfig.lintStuff
 
   /**
    * Settings that are common for every project _except_ the Play app
@@ -39,7 +40,7 @@ object Common {
     commonSettings ++
     Publishing.settings ++
     Seq(
-      crossScalaVersions := Seq("2.10.4", Version.theScalaVersion),
+      crossScalaVersions := Seq("2.10.5", Version.theScalaVersion),
       crossVersion := CrossVersion.binary
     )
 
@@ -90,7 +91,7 @@ object Common {
     // the name-hashing algorithm for the incremental compiler.
     incOptions := incOptions.value.withNameHashing(nameHashing = true),
 
-    scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xlint")
+    scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
   )
 
   private lazy val testSettings = inConfig(Test){
