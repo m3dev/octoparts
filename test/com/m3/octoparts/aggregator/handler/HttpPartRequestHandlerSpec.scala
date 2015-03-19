@@ -117,6 +117,12 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
       headers should contain("X-OCTOPARTS-REQUEST-ID" -> "bande a part")
       headers should contain("X-OCTOPARTS-PARENT-REQUEST-ID" -> "hey man that's so meta")
     }
+    it("should be able to pass exotic query params") {
+      val hArgs = Map(
+        ShortPartParam("query1", Query) -> Seq("\"'&=")
+      )
+      handler.createBlockingHttpRetrieve(partRequestInfo, hArgs, None).uri.getQuery shouldBe "query1=\"'&="
+    }
   }
 
   describe("#collectHeaders") {
