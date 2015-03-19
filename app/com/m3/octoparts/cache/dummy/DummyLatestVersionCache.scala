@@ -9,12 +9,12 @@ object DummyLatestVersionCache extends LatestVersionCache {
   /**
    * Update the latest known cache version for a given part
    */
-  override def updatePartVersion(partId: PartId, version: Version) = Unit
+  override def updatePartVersion(partId: PartId, version: Version) = {}
 
   override def getParamVersion(versionedParamKeys: VersionedParamKey): Option[Version] = None
 
   /**
    * Update the latest known cache version for a given param value
    */
-  override def updateParamVersion(versionedParamKey: VersionedParamKey, version: Version) = Unit
+  override def updateParamVersion(versionedParamKey: VersionedParamKey, version: Version) = {}
 }

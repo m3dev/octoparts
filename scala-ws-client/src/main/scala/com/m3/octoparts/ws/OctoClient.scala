@@ -121,7 +121,7 @@ trait OctoClientLike {
     if (aggReq.requests.isEmpty) Future.successful(emptyReqResponse)
     else {
       val jsonBody = Json.toJson(aggReq)
-      val timeout = aggReq.requestMeta.timeout.map(_ max clientTimeout).getOrElse(clientTimeout)
+      val timeout = aggReq.requestMeta.timeout.fold(clientTimeout)(_ max clientTimeout)
       logger.debug(s"OctopartsId: ${aggReq.requestMeta.id}, RequestBody: $jsonBody")
       wsPost(urlFor(Invoke), timeout, jsonBody, headers)
         .map(resp => resp.json.as[AggregateResponse])

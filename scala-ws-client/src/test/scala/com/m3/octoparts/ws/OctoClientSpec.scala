@@ -126,7 +126,7 @@ class OctoClientSpec
       val holder = mockWSHolder(respPost, respGet)
       val client = new OctoClientLike {
         val baseUrl = "http://bobby.com/"
-        protected val clientTimeout = 10 seconds
+        protected val clientTimeout = 10.seconds
         def wsHolderFor(url: String, timeout: FiniteDuration): WSRequestHolder = holder
         def rescuer[A](obj: => A) = PartialFunction.empty
         protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
@@ -231,7 +231,7 @@ class OctoClientSpec
           val baseUrl = "http://bobby.com"
           def wsHolderFor(url: String, timeout: FiniteDuration): WSRequestHolder = wsHolderCreator.apply(url)
           def rescuer[A](obj: => A): PartialFunction[Throwable, A] = PartialFunction.empty
-          protected val clientTimeout = 10 seconds
+          protected val clientTimeout = 10.seconds
           protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
           protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Seq.empty
         }

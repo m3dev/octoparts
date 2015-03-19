@@ -109,8 +109,6 @@ trait HttpPartRequestHandler extends Handler {
 
   /**
    * Transforms a HttpResponse case class into a PartResponse
-   * @param httpResp HttpResponse
-   * @return PartREsponse
    */
   def createPartResponse(httpResp: HttpResponse) = PartResponse(
     partId,

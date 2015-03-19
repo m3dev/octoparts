@@ -77,7 +77,7 @@ class OctopartsApiBuilderTest extends FunSpec with BeforeAndAfterAll with Matche
     partConfig.parameters.head.paramType should be(ParamType.Header)
   }
 
-  override def afterAll() {
+  override def afterAll() = {
     apiBuilder.close()
   }
 }

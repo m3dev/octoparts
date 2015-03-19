@@ -17,14 +17,14 @@ class RichPartRequestSpec extends FunSpec with Matchers {
     it("should add a PartRequestParam with a key of 'body' and a value of whatever the implicit Writeable.transform returns as a string") {
       val pr = PartRequest("hello")
       val prWithBody = pr.withBody((1, 2, 3))
-      prWithBody.params.find(_.key == "body").head.value shouldBe ("6")
+      prWithBody.params.find(_.key == "body").head.value shouldBe "6"
     }
 
     it("should ensure that there is only 1 'body' param in the part request; the one it adds") {
       val pr = PartRequest("hello", params = Seq(PartRequestParam("body", "booo")))
       val prWithBody = pr.withBody((9, 10, 11))
       prWithBody.params.count(_.key == "body") shouldBe 1
-      prWithBody.params.find(_.key == "body").head.value shouldBe ("30")
+      prWithBody.params.find(_.key == "body").head.value shouldBe "30"
     }
 
   }

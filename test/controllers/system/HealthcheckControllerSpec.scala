@@ -33,7 +33,7 @@ class HealthcheckControllerSpec
   val hystrixHealthReporter = mock[HystrixHealthReporter]
   val cache = mock[RawCache]
 
-  override def beforeEach() {
+  override def beforeEach() = {
     reset(configsRepo, hystrixHealthReporter, cache)
 
     // Return healthy-looking results by default

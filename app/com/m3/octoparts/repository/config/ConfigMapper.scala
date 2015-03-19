@@ -45,7 +45,7 @@ trait ConfigMapper[A <: ConfigModel[A]] extends SkinnyCRUDMapper[A] {
    * By default, simply matches on the Option[Long] id field, and if it is defined,
    * calls updateById using the sanitised version of the models' fields. If it is NOT
    * defined, then calls createWithPermittedAttributes, passing in the same sanitised
-   * verison of the fields.
+   * version of the fields.
    *
    * Should be overridden to handle more complicated use-cases (such as creating/updating
    * child objects)

@@ -107,7 +107,7 @@ trait ConfigImporter {
         val nakedPartParam = PartParam.fromJsonModel(partParam).copy(
           httpPartConfigId = Some(configId),
           httpPartConfig = None,
-          cacheGroups = partParam.cacheGroups.map(_.name).flatMap(cacheGroups.get).toSet)
+          cacheGroups = partParam.cacheGroups.map(_.name).flatMap(cacheGroups.get))
         saveWithSession(PartParamRepository, nakedPartParam)
       }
     }
@@ -126,7 +126,7 @@ trait ConfigImporter {
             val nakedConfig = HttpPartConfig.fromJsonModel(jpart).copy(
               parameters = Set.empty,
               hystrixConfig = None,
-              cacheGroups = jpart.cacheGroups.map(_.name).flatMap(cacheGroups.get).toSet)
+              cacheGroups = jpart.cacheGroups.map(_.name).flatMap(cacheGroups.get))
             saveAndReturnId(jpart, nakedConfig)
           }
         } {
