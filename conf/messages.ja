@@ -142,6 +142,12 @@ admin.threadPoolNotFound=スレッドプールID「{0}」不明
 admin.partNotFound=パーツ「{0}」不明
 admin.cacheGroupNotFound=キャッシュグループ「{0}」不明
 admin.validationErrors=検証エラー：{0}
+admin.warnings.QueryParamInterpolation=クエリーパラメータ「{0}」がURIの置換に使われてます。
+admin.warnings.MissingPathParam=URIの置換トークン「{0}」と合致するパースパラメータがありません。
+admin.warnings.PathParamNoInterp=パースパラメータ「{0}」と合致するURIの置換トークンがありません。
+admin.warnings.PathParamOption=パースパラメータ「{0}」が必須になっていません。
+admin.warnings.WhitespaceInUri=URIに空欄が入っています。
+admin.warnings.AlertEmailOff=メールアラートが無効になっています。
 
 admin.export=エクスポート
 admin.export.all=全てのパーツをエクスポート

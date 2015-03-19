@@ -136,12 +136,18 @@ menu.monitoring=Monitoring
 menu.info=Information
 menu.logout=Log out
 
-admin.partParameterMismatch=The parameter with ID {0} does not belog to part {1}
+admin.partParameterMismatch=The parameter with ID {0} does not belong to part {1}
 admin.parameterNotFound=There was no parameter with ID {0}
 admin.threadPoolNotFound=There was no thread pool with ID {0}
 admin.partNotFound=Part not found: {0}
 admin.cacheGroupNotFound=Cache group not found: {0}
 admin.validationErrors=Validation errors: {0}
+admin.warnings.QueryParamInterpolation=Interpolation should not be used for query parameters ({0}).
+admin.warnings.MissingPathParam=The interpolation token ''{0}'' had no corresponding path parameter.
+admin.warnings.PathParamNoInterp=The path parameter ''{0}'' had no corresponding interpolation token.
+admin.warnings.PathParamOption=The path parameter ''{0}'' should be required.
+admin.warnings.WhitespaceInUri=There is a whitespace in the URI.
+admin.warnings.AlertEmailOff=Alert emails should be enabled in production mode.
 
 admin.export=Export
 admin.import=Import configuration

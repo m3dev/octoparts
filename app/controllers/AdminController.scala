@@ -11,7 +11,6 @@ import com.m3.octoparts.repository.MutableConfigsRepository
 import com.twitter.zipkin.gen.Span
 import controllers.support.{ AuthSupport, LoggingSupport }
 import org.joda.time.DateTime
-import play.api.Logger
 import play.api.data._
 import play.api.data.validation.ValidationError
 import play.api.http.MediaType
@@ -23,7 +22,9 @@ import play.api.mvc._
 import presentation.{ HttpPartConfigView, NavbarLinks, ParamView }
 
 import scala.annotation.tailrec
+import scala.collection
 import scala.collection.SortedSet
+import scala.collection.immutable.TreeSet
 import scala.concurrent.Future
 import scala.util.{ Success, Failure, Try }
 import scala.util.control.NonFatal
@@ -47,7 +48,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
    */
 
   def listParts = AuthorizedAction.async { implicit req =>
-    val partsView = repository.findAllConfigs().map { configs => configs.map(HttpPartConfigView.apply) }
+    val partsView: Future[SortedSet[HttpPartConfigView]] = repository.findAllConfigs().map { _.map(HttpPartConfigView(_)) }
     partsView.map(ps => Ok(views.html.part.list(ps)))
   }
 

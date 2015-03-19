@@ -24,6 +24,8 @@ import scala.util.matching.Regex
 trait HttpPartRequestHandler extends Handler {
   handler =>
 
+  import HttpPartRequestHandler._
+
   implicit def executionContext: ExecutionContext
 
   implicit def zipkinService: ZipkinServiceLike
@@ -37,11 +39,6 @@ trait HttpPartRequestHandler extends Handler {
   protected def additionalValidStatuses: Int => Boolean
 
   def hystrixExecutor: HystrixExecutor
-
-  /**
-   * A regex for matching "${...}" placeholders in strings
-   */
-  private val PlaceholderReplacer: Regex = """\$\{([^\}]+)\}""".r
 
   /**
    * Given arguments for this handler, builds a blocking HTTP request with the proper
@@ -97,7 +94,6 @@ trait HttpPartRequestHandler extends Handler {
   }
 
   private def buildTracingHeaders(partRequestInfo: PartRequestInfo): Seq[(String, String)] = {
-    import HttpPartRequestHandler._
     Seq(
       AggregateRequestIdHeader -> partRequestInfo.requestMeta.id,
       PartRequestIdHeader -> partRequestInfo.partRequestId,
@@ -176,6 +172,18 @@ trait HttpPartRequestHandler extends Handler {
     baseUri.addParams(kvs)
   }
 
+}
+
+object HttpPartRequestHandler {
+  val AggregateRequestIdHeader = "X-OCTOPARTS-PARENT-REQUEST-ID"
+  val PartRequestIdHeader = "X-OCTOPARTS-REQUEST-ID"
+  val PartIdHeader = "X-OCTOPARTS-PART-ID"
+
+  /**
+   * A regex for matching "${...}" placeholders in strings
+   */
+  private val PlaceholderReplacer: Regex = """\$\{([^\}]+)\}""".r
+
   /**
    * Replace all instances of "${...}" placeholders in the given string
    *
@@ -183,13 +191,6 @@ trait HttpPartRequestHandler extends Handler {
    * @param replacer a function that replaces the contents of the placeholder (excluding braces) with a string
    * @return the interpolated string
    */
-  private def interpolate(stringToInterpolate: String)(replacer: String => String) =
+  def interpolate(stringToInterpolate: String)(replacer: String => String): String =
     PlaceholderReplacer.replaceAllIn(stringToInterpolate, { m => replacer(m.group(1)) })
-
-}
-
-object HttpPartRequestHandler {
-  val AggregateRequestIdHeader = "X-OCTOPARTS-PARENT-REQUEST-ID"
-  val PartRequestIdHeader = "X-OCTOPARTS-REQUEST-ID"
-  val PartIdHeader = "X-OCTOPARTS-PART-ID"
 }
