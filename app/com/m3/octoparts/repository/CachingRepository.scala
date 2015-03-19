@@ -7,6 +7,7 @@ import com.beachape.logging.LTSVLogger
 import com.twitter.zipkin.gen.Span
 import shade.memcached.MemcachedCodecs._
 
+import scala.collection.SortedSet
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.postfixOps
@@ -44,24 +45,24 @@ trait CachingRepository extends ConfigsRepository {
    *
    * If we eventually add more objects that need to be cached, simply follow the pattern
    */
-  protected def reloadCache()(implicit parentSpan: Span): Future[Seq[Unit]] = {
+  protected def reloadCache()(implicit parentSpan: Span): Future[Unit] = {
     LTSVLogger.info("Reloading configs cache")
     val reloadFSeqs = Seq(
       findAllAndCache(findAllConfigs())(c => HttpPartConfigCacheKey(c.partId)),
       findAllAndCache(findAllCacheGroups())(cG => CacheGroupCacheKey(cG.name))
     )
-    Future.sequence(reloadFSeqs).map(_.flatten)
+    Future.sequence(reloadFSeqs).map(_ => {})
   }
 
   /**
    * Given a function that returns a Future Sequence of A and a function that turns
    * each A into a CacheKey, performs a find-and-cache
    */
-  private def findAllAndCache[A](findAll: => Future[Seq[A]])(cacheKey: A => CacheKey)(implicit parentSpan: Span): Future[Seq[Unit]] = {
+  private def findAllAndCache[A](findAll: => Future[SortedSet[A]])(cacheKey: A => CacheKey)(implicit parentSpan: Span): Future[Unit] = {
     for {
-      seq <- findAll
-      seqFPut <- Future.sequence(seq.map(obj => put(cacheKey(obj), Some(obj))))
-    } yield seqFPut
+      all <- findAll
+      _ <- Future.sequence(all.toSeq.map(obj => put(cacheKey(obj), Some(obj))))
+    } yield {}
   }
 
   def findConfigByPartId(partId: String)(implicit parentSpan: Span) = fetchFromCacheOrElse(partId)(delegate.findConfigByPartId, HttpPartConfigCacheKey(_))
@@ -114,7 +115,7 @@ trait CachingRepository extends ConfigsRepository {
   // it forces the cache puts to happen before completion to avoid discrepancies between screens
   def findAllConfigs()(implicit parentSpan: Span) = delegate.findAllConfigs().flatMap {
     cSeq =>
-      val futures = Future.sequence(cSeq.map { config =>
+      val futures = Future.sequence(cSeq.toSeq.map { config =>
         {
           put(HttpPartConfigCacheKey(config.partId), Some(config)).map {
             finished => config
@@ -122,8 +123,8 @@ trait CachingRepository extends ConfigsRepository {
         }
       })
       // Shutdown any HTTP clients for parts that no longer exist or require a renewal of the HTTP client
-      httpClientPool.cleanObsolete(cSeq.map(HttpClientPool.HttpPartConfigClientKey.apply).toSet)
-      futures
+      httpClientPool.cleanObsolete(cSeq.map(HttpClientPool.HttpPartConfigClientKey.apply))
+      futures.map(_.to[SortedSet])
   }
 
   // not cached

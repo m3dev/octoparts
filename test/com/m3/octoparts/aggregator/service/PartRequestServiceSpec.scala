@@ -1,20 +1,20 @@
 package com.m3.octoparts.aggregator.service
 
 import com.beachape.zipkin.services.NoopZipkinService
+import com.m3.octoparts.aggregator.PartRequestInfo
+import com.m3.octoparts.model._
+import com.m3.octoparts.model.config.{ HttpPartConfig, PartParam }
+import com.m3.octoparts.repository.ConfigsRepository
+import com.m3.octoparts.support.mocks.HandlerMocks
 import com.twitter.zipkin.gen.Span
-import org.mockito.Matchers._
-import org.mockito.Matchers.{ eq => mockitoEq }
+import org.mockito.Matchers.{ eq => mockitoEq, _ }
 import org.mockito.Mockito._
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 
-import com.m3.octoparts.model._
-import com.m3.octoparts.repository.ConfigsRepository
-import com.m3.octoparts.support.mocks.HandlerMocks
-import com.m3.octoparts.model.config.HttpPartConfig
+import scala.collection.SortedSet
 import scala.concurrent.Future
-import com.m3.octoparts.aggregator.PartRequestInfo
 
 class PartRequestServiceSpec
     extends FunSpec
@@ -27,7 +27,7 @@ class PartRequestServiceSpec
   implicit val emptySpan = new Span()
   val repository = mock[ConfigsRepository]
   val config = mock[HttpPartConfig]
-  doReturn(Set.empty).when(config).parameters
+  doReturn(SortedSet.empty[PartParam]).when(config).parameters
   doReturn(None).when(config).deprecatedInFavourOf
   doReturn("123").when(config).partId
 

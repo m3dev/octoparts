@@ -9,6 +9,7 @@ import skinny.orm.feature.TimestampsFeature
 import skinny.orm.feature.associations.{ HasOneAssociation, HasManyAssociation }
 import skinny.{ ParamType => SkinnyParamType }
 
+import scala.collection.SortedSet
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
@@ -24,7 +25,7 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
     "uriToInterpolate" -> SkinnyParamType.String,
     "description" -> SkinnyParamType.String,
     "method" -> SkinnyParamType.String,
-    "additionalValidStatuses" -> ExtraParamType.IntSetParamType,
+    "additionalValidStatuses" -> ExtraParamType.IntSortedSetParamType,
     "httpPoolSize" -> SkinnyParamType.Int,
     "httpConnectionTimeout" -> ExtraParamType.FineDurationParamType,
     "httpSocketTimeout" -> ExtraParamType.FineDurationParamType,
@@ -89,8 +90,8 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
     // defines join condition by using aliases
     on = (c, p) => sqls.eq(c.id, p.httpPartConfigId),
     // function to merge associations to main entity
-    merge = (c, params) => c.copy(parameters = params.toSet)
-  ).includes[PartParam]((hs, params) => hs.map(h => h.copy(parameters = params.filter(_.httpPartConfigId == h.id).toSet)))
+    merge = (c, params) => c.copy(parameters = params.to[SortedSet])
+  ).includes[PartParam]((hs, params) => hs.map(h => h.copy(parameters = params.filter(_.httpPartConfigId == h.id).to[SortedSet])))
 
   /*
     References the collection of CacheGroups that each HttpPartConfig has; note that you cannot
@@ -104,7 +105,7 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
     throughOn = (m1: Alias[HttpPartConfig], m2: Alias[HttpPartConfigCacheGroup]) => sqls.eq(m1.id, m2.httpPartConfigId),
     many = CacheGroupRepository -> CacheGroupRepository.createAlias("cacheGroupJoin"),
     on = (m1: Alias[HttpPartConfigCacheGroup], m2: Alias[CacheGroup]) => sqls.eq(m1.cacheGroupId, m2.id),
-    merge = (part, cacheGroups) => part.copy(cacheGroups = cacheGroups.toSet)
+    merge = (part, cacheGroups) => part.copy(cacheGroups = cacheGroups.to[SortedSet])
   )
 
   /*

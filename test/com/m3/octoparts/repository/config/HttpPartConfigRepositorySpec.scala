@@ -10,6 +10,7 @@ import org.joda.time.DateTime
 import org.scalatest.{ Matchers, fixture }
 import scalikejdbc.DBSession
 
+import scala.collection.SortedSet
 import scala.concurrent.duration._
 
 class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Matchers with ConfigDataMocks {
@@ -28,11 +29,12 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
   val httpPartConfigMapWithDeprecation = httpPartConfigMap :+ ('deprecatedInFavourOf -> Some("theNewHotness"))
 
   // ---- Helper functions ----
-  private def createCacheGroup(howMany: Int)(implicit session: DBSession): Seq[CacheGroup] = {
-    for (i <- 0 until howMany) yield {
+  private def createCacheGroup(howMany: Int)(implicit session: DBSession): SortedSet[CacheGroup] = {
+    val cacheGroups = for (i <- 0 until howMany) yield {
       val id = CacheGroupRepository.createWithAttributes('name -> s"myLittleGroup $i")
       CacheGroupRepository.findById(id).get
     }
+    cacheGroups.to[SortedSet]
   }
 
   private def createPartConfig(implicit session: DBSession): HttpPartConfig = {
@@ -98,19 +100,19 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
          */
         it("should allow me retrieve the PartParam and get back the CacheGroups") { implicit session =>
           val cacheGroups = createCacheGroup(3)
-          val partParam = mockPartParam.copy(id = None, cacheGroups = cacheGroups.toSet)
-          val partId = HttpPartConfigRepository.save(mockHttpPartConfig.copy(parameters = Set(partParam)))
+          val partParam = mockPartParam.copy(id = None, cacheGroups = cacheGroups)
+          val partId = HttpPartConfigRepository.save(mockHttpPartConfig.copy(parameters = SortedSet(partParam)))
           val partParamCacheGroupIdsRetrieved = for {
             param <- PartParamRepository.findByPartId(partId)
-            cacheGroup <- param.cacheGroups.toSeq
+            cacheGroup <- param.cacheGroups
           } yield cacheGroup.id
           partParamCacheGroupIdsRetrieved should be(cacheGroups.map(_.id))
         }
 
         it("should add the PartParam to the list of partParams on the CacheGroups") { implicit session =>
           val cacheGroups = createCacheGroup(3)
-          val partParam = mockPartParam.copy(id = None, cacheGroups = cacheGroups.toSet)
-          HttpPartConfigRepository.save(mockHttpPartConfig.copy(parameters = Set(partParam)))
+          val partParam = mockPartParam.copy(id = None, cacheGroups = cacheGroups)
+          HttpPartConfigRepository.save(mockHttpPartConfig.copy(parameters = SortedSet(partParam)))
           val retrievedCacheGroups = cacheGroups.map(cG => CacheGroupRepository.withChildren.findById(cG.id.get).get)
           retrievedCacheGroups.foreach(_.partParams.map(_.outputName) should contain(partParam.outputName))
         }
@@ -122,8 +124,8 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
         it("should allow me retrieve the HttpPartConfig and get back the CacheGroup within each PartParam") { implicit session =>
           val cacheGroups = createCacheGroup(3)
           val part = createPartConfig
-          val partParam = mockPartParam.copy(id = None, outputName = "param1", cacheGroups = cacheGroups.toSet, httpPartConfigId = part.id)
-          HttpPartConfigRepository.save(part.copy(parameters = Set(partParam)))
+          val partParam = mockPartParam.copy(id = None, outputName = "param1", cacheGroups = cacheGroups, httpPartConfigId = part.id)
+          HttpPartConfigRepository.save(part.copy(parameters = SortedSet(partParam)))
           val partParamCacheGroupIdsRetrieved = for {
             param <- PartParamRepository.findByPartId(part.id.get)
             cacheGroup <- param.cacheGroups
@@ -134,8 +136,8 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
         it("should add the PartParam to the list of partParams on the CacheGroup") { implicit session =>
           val cacheGroups = createCacheGroup(3)
           val part = createPartConfig
-          val partParam = mockPartParam.copy(id = None, outputName = "param2", cacheGroups = cacheGroups.toSet, httpPartConfigId = part.id)
-          HttpPartConfigRepository.save(part.copy(parameters = Set(partParam)))
+          val partParam = mockPartParam.copy(id = None, outputName = "param2", cacheGroups = cacheGroups, httpPartConfigId = part.id)
+          HttpPartConfigRepository.save(part.copy(parameters = SortedSet(partParam)))
           val retrievedCacheGroups = cacheGroups.map(cG => CacheGroupRepository.withChildren.findById(cG.id.get).get)
           retrievedCacheGroups.foreach(_.partParams.map(_.outputName) should contain(partParam.outputName))
         }
@@ -193,7 +195,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
 
   describe(".save") {
 
-    lazy val parameters = Seq(
+    lazy val parameters = SortedSet(
       PartParam(required = true, versioned = false, paramType = ParamType.Cookie, outputName = "myCookie", createdAt = DateTime.now, updatedAt = DateTime.now),
       PartParam(required = false, versioned = false, paramType = ParamType.Header, outputName = "myHeader", createdAt = DateTime.now, updatedAt = DateTime.now)
     )
@@ -224,12 +226,12 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
     def compare(expected: HttpPartConfig, observed: HttpPartConfig) = {
       val observedHystrixConfig = observed.hystrixConfigItem
       val observedThreadPoolConfig = observedHystrixConfig.threadPoolConfigItem
-      val observedConfigParams = observed.parameters.toSeq.sortWith(_.outputName < _.outputName)
+      val observedConfigParams = observed.parameters
 
       val expectedHystrixConfig = expected.hystrixConfigItem
 
       for {
-        (observed, expected) <- observedConfigParams.sortBy(_.inputName).zip(expected.parameters.toSeq.sortBy(_.inputName))
+        (observed, expected) <- observedConfigParams.zip(expected.parameters)
       } {
         observed.required should be(expected.required)
         observed.paramType should be(expected.paramType)
@@ -267,7 +269,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
             httpConnectionTimeout = 1.second,
             httpSocketTimeout = 5.seconds,
             httpDefaultEncoding = Charset.forName(StandardCharsets.US_ASCII.name),
-            parameters = parameters.toSet,
+            parameters = parameters,
             hystrixConfig = Some(insertedHystrixConfig),
             cacheTtl = Some(30.seconds),
             alertMailsEnabled = true,
@@ -302,7 +304,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
           httpConnectionTimeout = 1.second,
           httpSocketTimeout = 5.seconds,
           httpDefaultEncoding = Charset.forName(StandardCharsets.US_ASCII.name),
-          parameters = parameters.toSet,
+          parameters = parameters,
           hystrixConfig = Some(insertedHystrixConfig),
           cacheTtl = Some(10.minutes),
           alertMailsEnabled = true,
@@ -364,7 +366,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
 
       it("should allow me retrieve the HttpPartConfig and get back the CacheGroup") { implicit session =>
         val cacheGroups = createCacheGroup(3)
-        val partId = HttpPartConfigRepository.save(mockHttpPartConfig.copy(cacheGroups = cacheGroups.toSet))
+        val partId = HttpPartConfigRepository.save(mockHttpPartConfig.copy(cacheGroups = cacheGroups))
         val retrievedPart = HttpPartConfigRepository.findById(partId).get
         /*
          $1 billion question: Why does the above (using .byDefault) work, but the below, using .includes
@@ -376,12 +378,12 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
            HttpPartConfig.cacheGroupsRef, HttpPartConfig.hystrixConfigRef, HttpPartConfig.paramsRef
          ).findById(partId).get
          */
-        retrievedPart.cacheGroups.map(_.id) should be(cacheGroups.map(_.id).toSet)
+        retrievedPart.cacheGroups.map(_.id) should be(cacheGroups.map(_.id))
       }
 
       it("should add the HttpPartConfig to the list of httpPartConfigs on the CacheGroup") { implicit session =>
         val cacheGroups = createCacheGroup(2)
-        val partId = HttpPartConfigRepository.save(mockHttpPartConfig.copy(cacheGroups = cacheGroups.toSet))
+        val partId = HttpPartConfigRepository.save(mockHttpPartConfig.copy(cacheGroups = cacheGroups))
         val retrievedCacheGroups = cacheGroups.map(cG => CacheGroupRepository.withChildren.findById(cG.id.get).get)
         retrievedCacheGroups.foreach(_.httpPartConfigs.map(_.id) should contain(Some(partId)))
       }
@@ -393,15 +395,15 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
       it("should allow me retrieve the HttpPartConfig and get back the CacheGroup") { implicit session =>
         val cacheGroups = createCacheGroup(3)
         val part = createPartConfig
-        HttpPartConfigRepository.save(part.copy(cacheGroups = cacheGroups.toSet))
+        HttpPartConfigRepository.save(part.copy(cacheGroups = cacheGroups))
         val retrievedPart = HttpPartConfigRepository.findById(part.id.get)
-        retrievedPart.get.cacheGroups.map(_.id) should be(cacheGroups.map(_.id).toSet)
+        retrievedPart.get.cacheGroups.map(_.id) should be(cacheGroups.map(_.id))
       }
 
       it("should add the HttpPartConfig to the list of httpPartConfigs on the CacheGroup") { implicit session =>
         val cacheGroups = createCacheGroup(3)
         val part = createPartConfig
-        HttpPartConfigRepository.save(part.copy(cacheGroups = cacheGroups.toSet))
+        HttpPartConfigRepository.save(part.copy(cacheGroups = cacheGroups))
         val retrievedCacheGroups = cacheGroups.map(cG => CacheGroupRepository.withChildren.findById(cG.id.get).get)
         retrievedCacheGroups.foreach(_.httpPartConfigs.map(_.id) should contain(Some(part.id.get)))
       }

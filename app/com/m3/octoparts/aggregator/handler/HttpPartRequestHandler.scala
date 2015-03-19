@@ -34,7 +34,7 @@ trait HttpPartRequestHandler extends Handler {
 
   def httpMethod: HttpMethod.Value
 
-  def additionalValidStatuses: Set[Int]
+  protected def additionalValidStatuses: Int => Boolean
 
   def hystrixExecutor: HystrixExecutor
 
@@ -42,8 +42,6 @@ trait HttpPartRequestHandler extends Handler {
    * A regex for matching "${...}" placeholders in strings
    */
   private val PlaceholderReplacer: Regex = """\$\{([^\}]+)\}""".r
-
-  // def registeredParams: Set[PartParam]
 
   /**
    * Given arguments for this handler, builds a blocking HTTP request with the proper
@@ -120,7 +118,7 @@ trait HttpPartRequestHandler extends Handler {
     cacheControl = httpResp.cacheControl,
     contents = httpResp.body,
     retrievedFromLocalContents = httpResp.fromFallback,
-    errors = if (httpResp.status < 400 || additionalValidStatuses.contains(httpResp.status)) Nil else Seq(httpResp.message)
+    errors = if (httpResp.status < 400 || additionalValidStatuses(httpResp.status)) Nil else Seq(httpResp.message)
   )
 
   /**

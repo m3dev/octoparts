@@ -88,7 +88,7 @@ class OctoClientSpec
           queueSize = 256),
         commandKey = "command",
         commandGroupKey = "GroupKey",
-        false),
+        localContentsAsFallback = false),
       additionalValidStatuses = Set(302),
       httpPoolSize = 20,
       httpConnectionTimeout = 1.second,
@@ -98,12 +98,14 @@ class OctoClientSpec
         PartParam(
           required = true,
           versioned = false,
+          description = Some("!!"),
           paramType = ParamType.Header,
           outputName = "userId",
           inputNameOverride = None,
           cacheGroups = Set.empty
         )),
       deprecatedInFavourOf = None,
+      cacheGroups = Set.empty,
       cacheTtl = Some(60 seconds),
       alertMailSettings = AlertMailSettings(
         alertMailsEnabled = true,
@@ -230,10 +232,10 @@ class OctoClientSpec
         val subject = new OctoClientLike {
           val baseUrl = "http://bobby.com"
           def wsHolderFor(url: String, timeout: FiniteDuration): WSRequestHolder = wsHolderCreator.apply(url)
-          def rescuer[A](obj: => A): PartialFunction[Throwable, A] = PartialFunction.empty
+          protected def rescuer[A](obj: => A): PartialFunction[Throwable, A] = PartialFunction.empty
           protected val clientTimeout = 10.seconds
-          protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
-          protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Seq.empty
+          protected def rescueAggregateResponse = emptyReqResponse
+          protected def rescueHttpPartConfigs = Nil
         }
         block(subject)
         eventually(verify(wsHolderCreator, times(howManyTimes)).apply(url))

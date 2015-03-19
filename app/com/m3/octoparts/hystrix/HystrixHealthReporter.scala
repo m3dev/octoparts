@@ -16,7 +16,7 @@ object HystrixHealthReporter extends HystrixHealthReporter with HystrixCommandMe
    * Get a list of all command keys whose circuit breakers are currently open
    * (i.e. the command is unhealthy)
    */
-  override def getCommandKeysWithOpenCircuitBreakers: Seq[String] = {
+  def getCommandKeysWithOpenCircuitBreakers: Seq[String] = {
     (for {
       m <- getAllMetrics
       ck = m.getCommandKey

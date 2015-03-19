@@ -8,6 +8,7 @@ import com.m3.octoparts.model.config.ParamType._
 import com.m3.octoparts.model.config._
 import org.joda.time.DateTime
 
+import scala.collection.SortedSet
 import scala.concurrent.duration._
 
 /**
@@ -38,7 +39,7 @@ trait ConfigDataMocks {
     httpSocketTimeout = 5.seconds,
     httpDefaultEncoding = Charset.forName(StandardCharsets.US_ASCII.name),
     httpProxy = Some("localhost:666"),
-    parameters = Set(mockPartParam),
+    parameters = SortedSet(mockPartParam),
     cacheTtl = Some(60.seconds),
     alertMailsEnabled = true,
     alertAbsoluteThreshold = Some(1000),

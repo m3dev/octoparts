@@ -24,7 +24,7 @@ class RepositoriesModule extends Module {
         val bufferingCache = new MemoryBufferingRawCache(networkCache, localBufferDuration.millis)
         new MemcachedCache(bufferingCache, MemcachedKeyGenerator)
       }
-      case None => inject[Cache]
+      case _ => inject[Cache]
     }
 
     new MutableCachingRepository(

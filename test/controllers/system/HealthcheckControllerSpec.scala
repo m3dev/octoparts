@@ -6,6 +6,7 @@ import com.m3.octoparts.cache.RawCache
 import com.m3.octoparts.hystrix.HystrixHealthReporter
 import com.m3.octoparts.model.config.HttpPartConfig
 import com.m3.octoparts.repository.ConfigsRepository
+import com.m3.octoparts.support.mocks.ConfigDataMocks
 import com.twitter.zipkin.gen.Span
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
@@ -15,6 +16,7 @@ import play.api.libs.json.JsValue
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import shade.memcached.Codec
+import scala.collection.SortedSet
 import scala.concurrent.Future
 import org.mockito.Matchers._
 import org.mockito.Matchers.{ eq => mockitoEq }
@@ -25,19 +27,20 @@ class HealthcheckControllerSpec
     with MockitoSugar
     with BeforeAndAfterEach
     with JsonCheckSupport
-    with OneAppPerSuite {
+    with OneAppPerSuite
+    with ConfigDataMocks {
 
-  implicit val emptySpan = new Span()
-  val mockConfigs = Seq(mock[HttpPartConfig], mock[HttpPartConfig], mock[HttpPartConfig])
-  val configsRepo = mock[ConfigsRepository]
-  val hystrixHealthReporter = mock[HystrixHealthReporter]
-  val cache = mock[RawCache]
+  private implicit val emptySpan = new Span()
+  private val configsRepo = mock[ConfigsRepository](RETURNS_SMART_NULLS)
+  private val hystrixHealthReporter = mock[HystrixHealthReporter](RETURNS_SMART_NULLS)
+  private val cache = mock[RawCache](RETURNS_SMART_NULLS)
 
   override def beforeEach() = {
     reset(configsRepo, hystrixHealthReporter, cache)
 
     // Return healthy-looking results by default
-    when(configsRepo.findAllConfigs()).thenReturn(Future.successful(mockConfigs))
+    val mockConfigs = SortedSet(mockHttpPartConfig, mockHttpPartConfig.copy(partId = "another"), mockHttpPartConfig.copy(partId = "yet another"))
+    doReturn(Future.successful(mockConfigs)).when(configsRepo).findAllConfigs()(anyObject[Span])
     when(hystrixHealthReporter.getCommandKeysWithOpenCircuitBreakers).thenReturn(Nil)
     when(cache.get[String](mockitoEq("ping"))(anyObject[Codec[String]], anyObject[Span])).thenReturn(Future.successful(Some("pong")))
   }
@@ -52,18 +55,18 @@ class HealthcheckControllerSpec
     it should "be GREEN if DB is healthy, there are no open circuits and Memcached is healthy" in {
       checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
         colour should be("GREEN")
-        dbOk should be(true)
-        hystrixOk should be(true)
-        cacheOk should be(true)
+        dbOk shouldBe true
+        hystrixOk shouldBe true
+        cacheOk shouldBe true
       }
     }
 
     it should "be YELLOW and show DB as not OK if there are no part configs" in {
-      when(configsRepo.findAllConfigs()(anyObject[Span])).thenReturn(Future.successful(Seq.empty))
+      when(configsRepo.findAllConfigs()(anyObject[Span])).thenReturn(Future.successful(SortedSet.empty[HttpPartConfig]))
 
       checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
         colour should be("YELLOW")
-        dbOk should be(false)
+        dbOk shouldBe false
       }
     }
 
@@ -72,7 +75,7 @@ class HealthcheckControllerSpec
 
       checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
         colour should be("YELLOW")
-        dbOk should be(false)
+        dbOk shouldBe false
         (json \ "statuses" \ "db" \ "message").as[String] should include("OH MY GOD!")
       }
     }
@@ -82,7 +85,7 @@ class HealthcheckControllerSpec
 
       checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
         colour should be("YELLOW")
-        hystrixOk should be(false)
+        hystrixOk shouldBe false
       }
     }
 
@@ -92,7 +95,7 @@ class HealthcheckControllerSpec
 
       checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
         colour should be("YELLOW")
-        cacheOk should be(false)
+        cacheOk shouldBe false
       }
     }
 
@@ -108,7 +111,7 @@ class HealthcheckControllerSpec
 
         checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
           colour should be("GREEN")
-          cacheOk should be(true)
+          cacheOk shouldBe true
         }
       }
 
@@ -119,7 +122,7 @@ class HealthcheckControllerSpec
 
         checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
           colour should be("YELLOW")
-          cacheOk should be(false)
+          cacheOk shouldBe false
         }
       }
     }

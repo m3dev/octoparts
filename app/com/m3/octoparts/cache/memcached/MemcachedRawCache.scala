@@ -3,7 +3,7 @@ package com.m3.octoparts.cache.memcached
 import com.m3.octoparts.cache.RawCache
 import com.m3.octoparts.future.RichFutureWithTiming._
 import com.twitter.zipkin.gen.Span
-import shade.memcached.{Codec, Memcached}
+import shade.memcached.{ Codec, Memcached }
 
 import scala.concurrent.duration.Duration
 

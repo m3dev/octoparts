@@ -5,6 +5,8 @@ import com.m3.octoparts.support.mocks.ConfigDataMocks
 import controllers.AdminForms._
 import org.scalatest.{ FunSpec, Matchers }
 
+import scala.collection.SortedSet
+
 class AdminFormsSpec extends FunSpec with Matchers with ConfigDataMocks {
 
   describe("PartData") {
@@ -45,7 +47,7 @@ class AdminFormsSpec extends FunSpec with Matchers with ConfigDataMocks {
 
     describe("#toNewHttpPartConfig") {
       it("should trim leading and trailing spaces from the partId") {
-        val partConfig = partDataWithTrimableName.toNewHttpPartConfig("chris", Set.empty[CacheGroup])
+        val partConfig = partDataWithTrimableName.toNewHttpPartConfig("chris", SortedSet.empty)
         partConfig.partId should be("~ wowzers ~")
       }
     }
@@ -53,7 +55,7 @@ class AdminFormsSpec extends FunSpec with Matchers with ConfigDataMocks {
     describe("#toUpdatedHttpPartConfig") {
       it("should trim leading and trailing spaces from the partId") {
         val originalPart = mockHttpPartConfig.copy(hystrixConfig = Some(mockHystrixConfig))
-        val updatedPart = partDataWithTrimableName.toUpdatedHttpPartConfig(originalPart, Set.empty[PartParam], Set.empty[CacheGroup])
+        val updatedPart = partDataWithTrimableName.toUpdatedHttpPartConfig(originalPart, SortedSet.empty)
         updatedPart.partId should be("~ wowzers ~")
       }
     }
