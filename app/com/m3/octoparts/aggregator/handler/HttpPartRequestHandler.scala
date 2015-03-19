@@ -10,6 +10,7 @@ import com.m3.octoparts.hystrix._
 import com.m3.octoparts.model.{ HttpMethod, PartResponse }
 import com.m3.octoparts.model.config._
 import com.netaporter.uri.Uri
+import com.netaporter.uri.config.UriConfig
 import com.netaporter.uri.dsl._
 import com.twitter.zipkin.gen.Span
 
@@ -85,7 +86,7 @@ trait HttpPartRequestHandler extends Handler {
     new BlockingHttpRetrieve {
       val httpClient = handler.httpClient
       def method = httpMethod
-      val uri = new URI(buildUri(hArgs))
+      val uri = new URI(buildUri(hArgs).toString(UriConfig.conservative))
       val maybeBody = hArgs.collectFirst {
         case (p, headValue +: _) if p.paramType == ParamType.Body => headValue
       }
