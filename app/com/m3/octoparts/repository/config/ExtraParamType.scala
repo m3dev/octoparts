@@ -2,6 +2,7 @@ package com.m3.octoparts.repository.config
 
 import skinny.AbstractParamType
 
+import scala.collection.SortedSet
 import scala.concurrent.duration.FiniteDuration
 
 object ExtraParamType {
@@ -14,9 +15,9 @@ object ExtraParamType {
     case d: FiniteDuration => d.toMillis
   })
 
-  case object IntSetParamType extends AbstractParamType({
-    // this will actually be a Set[Int] but the compiler complains about it.
-    case s: Set[_] => s.mkString(",")
+  case object IntSortedSetParamType extends AbstractParamType({
+    // this will actually be a Seq[Int] but the compiler complains about it.
+    case s: SortedSet[_] => s.mkString(",")
   })
 
 }

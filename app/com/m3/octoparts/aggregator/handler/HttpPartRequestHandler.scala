@@ -10,6 +10,7 @@ import com.m3.octoparts.hystrix._
 import com.m3.octoparts.model.{ HttpMethod, PartResponse }
 import com.m3.octoparts.model.config._
 import com.netaporter.uri.Uri
+import com.netaporter.uri.config.UriConfig
 import com.netaporter.uri.dsl._
 import com.twitter.zipkin.gen.Span
 
@@ -35,11 +36,9 @@ trait HttpPartRequestHandler extends Handler {
 
   def httpMethod: HttpMethod.Value
 
-  def additionalValidStatuses: Set[Int]
+  protected def additionalValidStatuses: Int => Boolean
 
   def hystrixExecutor: HystrixExecutor
-
-  // def registeredParams: Set[PartParam]
 
   /**
    * Given arguments for this handler, builds a blocking HTTP request with the proper
@@ -82,7 +81,7 @@ trait HttpPartRequestHandler extends Handler {
     new BlockingHttpRetrieve {
       val httpClient = handler.httpClient
       def method = httpMethod
-      val uri = new URI(buildUri(hArgs))
+      val uri = new URI(buildUri(hArgs).toString(UriConfig.conservative))
       val maybeBody = hArgs.collectFirst {
         case (p, values) if p.paramType == ParamType.Body && values.nonEmpty => values.head
       }
@@ -95,7 +94,6 @@ trait HttpPartRequestHandler extends Handler {
   }
 
   private def buildTracingHeaders(partRequestInfo: PartRequestInfo): Seq[(String, String)] = {
-    import HttpPartRequestHandler._
     Seq(
       AggregateRequestIdHeader -> partRequestInfo.requestMeta.id,
       PartRequestIdHeader -> partRequestInfo.partRequestId,
@@ -118,7 +116,7 @@ trait HttpPartRequestHandler extends Handler {
     cacheControl = httpResp.cacheControl,
     contents = httpResp.body,
     retrievedFromLocalContents = httpResp.fromFallback,
-    errors = if (httpResp.status < 400 || additionalValidStatuses.contains(httpResp.status)) Nil else Seq(httpResp.message)
+    errors = if (httpResp.status < 400 || additionalValidStatuses(httpResp.status)) Nil else Seq(httpResp.message)
   )
 
   /**

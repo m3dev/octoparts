@@ -7,6 +7,8 @@ import org.scalatestplus.play.OneAppPerSuite
 import play.api.Mode
 import play.api.i18n.Lang
 
+import scala.collection.SortedSet
+
 class HttpPartConfigCheckerSpec extends FunSpec with Matchers with ConfigDataMocks with OneAppPerSuite {
 
   private implicit val lang = Lang("en")
@@ -22,10 +24,10 @@ class HttpPartConfigCheckerSpec extends FunSpec with Matchers with ConfigDataMoc
 
   describe("MissingPathParam") {
     it("Should be ok") {
-      MissingPathParam.warnings(mockHttpPartConfig.copy(uriToInterpolate = "http://test/${test}", parameters = Set(mockPartParam.copy(paramType = ParamType.Path, outputName = "test")))) shouldBe 'empty
+      MissingPathParam.warnings(mockHttpPartConfig.copy(uriToInterpolate = "http://test/${test}", parameters = SortedSet(mockPartParam.copy(paramType = ParamType.Path, outputName = "test")))) shouldBe 'empty
     }
     it("Should have warnings") {
-      val w = MissingPathParam.warnings(mockHttpPartConfig.copy(uriToInterpolate = "http://test/${test}", parameters = Set.empty))
+      val w = MissingPathParam.warnings(mockHttpPartConfig.copy(uriToInterpolate = "http://test/${test}", parameters = SortedSet.empty))
       w should have size 1
       w.head should include("'test'")
     }
@@ -33,10 +35,10 @@ class HttpPartConfigCheckerSpec extends FunSpec with Matchers with ConfigDataMoc
 
   describe("PathParamNoInterp") {
     it("Should be ok") {
-      PathParamNoInterp.warnings(mockHttpPartConfig.copy(uriToInterpolate = "http://test/${test}", parameters = Set(mockPartParam.copy(paramType = ParamType.Path, outputName = "test")))) shouldBe 'empty
+      PathParamNoInterp.warnings(mockHttpPartConfig.copy(uriToInterpolate = "http://test/${test}", parameters = SortedSet(mockPartParam.copy(paramType = ParamType.Path, outputName = "test")))) shouldBe 'empty
     }
     it("Should have warnings") {
-      val w = PathParamNoInterp.warnings(mockHttpPartConfig.copy(uriToInterpolate = "http://test/", parameters = Set(mockPartParam.copy(paramType = ParamType.Path, outputName = "test"))))
+      val w = PathParamNoInterp.warnings(mockHttpPartConfig.copy(uriToInterpolate = "http://test/", parameters = SortedSet(mockPartParam.copy(paramType = ParamType.Path, outputName = "test"))))
       w should have size 1
       w.head should include("'test'")
     }
@@ -44,10 +46,10 @@ class HttpPartConfigCheckerSpec extends FunSpec with Matchers with ConfigDataMoc
 
   describe("PathParamOption") {
     it("Should be ok") {
-      PathParamOption.warnings(mockHttpPartConfig.copy(parameters = Set(mockPartParam.copy(paramType = ParamType.Path, required = true)))) shouldBe 'empty
+      PathParamOption.warnings(mockHttpPartConfig.copy(parameters = SortedSet(mockPartParam.copy(paramType = ParamType.Path, required = true)))) shouldBe 'empty
     }
     it("Should have warnings") {
-      val w = PathParamOption.warnings(mockHttpPartConfig.copy(parameters = Set(mockPartParam.copy(paramType = ParamType.Path, required = false, outputName = "test"))))
+      val w = PathParamOption.warnings(mockHttpPartConfig.copy(parameters = SortedSet(mockPartParam.copy(paramType = ParamType.Path, required = false, outputName = "test"))))
       w should have size 1
       w.head should include("'test'")
     }

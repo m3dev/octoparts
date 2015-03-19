@@ -57,7 +57,7 @@ class HealthcheckController(configsRepo: ConfigsRepository,
    * Check that the DB connection is alive and there is at least one part registered in the system
    */
   private def checkDb()(implicit parentSpan: Span): Future[DbStatus] = {
-    val fCount = configsRepo.findAllConfigs().map(_.length)
+    val fCount = configsRepo.findAllConfigs().map(_.size)
     fCount.map { count =>
       if (count > 0) DbStatus(ok = true, message = "DB looks fine")
       else DbStatus(ok = false, message = "parts_config table is empty!")

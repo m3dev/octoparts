@@ -56,12 +56,12 @@ trait KeyedResourcePool[K, V] {
    *
    * @param validKeys all keys that you want to keep
    */
-  final def cleanObsolete(validKeys: Set[K]): Unit = {
+  final def cleanObsolete(validKeys: K => Boolean): Unit = {
     wlock.lock()
     try {
       holder.foreach {
         case (key, value) =>
-          if (!validKeys.contains(key)) {
+          if (!validKeys(key)) {
             holder = holder - key
             onRemove(value)
           }

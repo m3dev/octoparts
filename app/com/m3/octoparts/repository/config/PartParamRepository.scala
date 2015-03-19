@@ -6,6 +6,8 @@ import skinny.orm.feature.TimestampsFeature
 import skinny.orm.feature.associations.{ BelongsToAssociation, HasManyAssociation }
 import skinny.{ ParamType => SkinnyParamType }
 
+import scala.collection.SortedSet
+
 object PartParamRepository extends ConfigMapper[PartParam] with TimestampsFeature[PartParam] {
 
   lazy val defaultAlias = createAlias("part_param")
@@ -41,7 +43,7 @@ object PartParamRepository extends ConfigMapper[PartParam] with TimestampsFeatur
   lazy val httpPartConfigRef: BelongsToAssociation[PartParam] = belongsToWithFk[HttpPartConfig](
     right = HttpPartConfigRepository,
     fk = "httpPartConfigId",
-    merge = (p, c) => p.copy(httpPartConfig = c)
+    merge = (pp, mbHpc) => pp.copy(httpPartConfig = mbHpc)
   )
 
   /*
@@ -53,10 +55,10 @@ object PartParamRepository extends ConfigMapper[PartParam] with TimestampsFeatur
     many = CacheGroupRepository,
     throughFk = "partParamId",
     manyFk = "cacheGroupId",
-    merge = (param, cacheGroups) => param.copy(cacheGroups = cacheGroups.toSet)
+    merge = (param, cacheGroups) => param.copy(cacheGroups = cacheGroups.to[SortedSet])
   ).includes[CacheGroup](
       (params, cacheGroups) => params.map { param =>
-        param.copy(cacheGroups = cacheGroups.filter(_.partParams.exists(_.id == param.id)).toSet)
+        param.copy(cacheGroups = cacheGroups.filter(_.partParams.exists(_.id == param.id)).to[SortedSet])
       }
     )
 
@@ -94,8 +96,8 @@ object PartParamRepository extends ConfigMapper[PartParam] with TimestampsFeatur
   /**
    * Returns a collection of params that belong to a part
    */
-  def findByPartId(partId: Long)(implicit dbSession: DBSession): Seq[PartParam] = {
-    findAllBy(sqls.eq(defaultAlias.httpPartConfigId, partId))
+  def findByPartId(partId: Long)(implicit dbSession: DBSession): SortedSet[PartParam] = {
+    findAllBy(sqls.eq(defaultAlias.httpPartConfigId, partId)).to[SortedSet]
   }
 
 }

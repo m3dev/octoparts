@@ -60,7 +60,7 @@
         <dd>@part.httpMethod</dd>
         @if(part.config.additionalValidStatuses.nonEmpty) {
             <dt>@Messages("parts.additionalValidStatuses")</dt>
-            <dd>@Messages("parts.additionalValidStatuses.wrap", part.config.additionalValidStatuses.mkString(", "))</dd>
+            <dd>@Messages("parts.additionalValidStatuses.wrap", part.additionalValidStatuses)</dd>
         }
         <dt>@Messages("parts.httpPoolSize")</dt>
         <dd>@part.config.httpPoolSize</dd>
@@ -89,10 +89,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                @for(paramView <- part.registeredParamsView) {
+                @for(paramView <- part.registeredParamsView; paramId <- paramView.param.id) {
                     <tr>
+                        <td>@paramView.outputName</td>
                         <td>@paramView.name</td>
-                        <td>@paramView.param.inputName</td>
                         <td>@paramView.paramType</td>
                         <td>@paramView.required</td>
                         <td style="white-space: pre">@paramView.description</td>
@@ -100,11 +100,11 @@
                         <td><ul>@for(cacheGroup <- paramView.param.cacheGroups) {
                             <li><a href="@controllers.routes.AdminController.showCacheGroup(cacheGroup.name)">@cacheGroup.name</a></li>
                         }</ul></td>
-                        <td><a href="@controllers.routes.AdminController.editParam(part.partId, paramView.param.id.get)" class="btn btn-primary">@Messages("edit")</a>
-                            <form action="@controllers.routes.AdminController.copyParam(part.partId, paramView.param.id.get)" method="post">
+                        <td><a href="@controllers.routes.AdminController.editParam(part.partId, paramId)" class="btn btn-primary">@Messages("edit")</a>
+                            <form action="@controllers.routes.AdminController.copyParam(part.partId, paramId)" method="post">
                                 <input type="submit" value="@Messages("duplicate")" class="btn btn-info" />
                             </form>
-                            <a href="@controllers.routes.AdminController.confirmDeleteParam(part.partId, paramView.param.id.get)" class="btn btn-danger">@Messages("delete")</a>
+                            <a href="@controllers.routes.AdminController.confirmDeleteParam(part.partId, paramId)" class="btn btn-danger">@Messages("delete")</a>
                         </td>
                     </tr>
                 }

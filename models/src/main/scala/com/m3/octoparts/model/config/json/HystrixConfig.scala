@@ -10,3 +10,7 @@ case class HystrixConfig(@(ApiModelProperty @field)(required = true, dataType = 
                          @(ApiModelProperty @field)(required = true) commandKey: String,
                          @(ApiModelProperty @field)(required = true) commandGroupKey: String,
                          @(ApiModelProperty @field)(required = true) localContentsAsFallback: Boolean)
+
+object HystrixConfig {
+  implicit val order: Ordering[HystrixConfig] = Ordering.by(_.commandKey)
+}

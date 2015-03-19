@@ -8,6 +8,7 @@ import scala.language.postfixOps
 
 object HystrixConfig {
   val defaultTimeout = 5.seconds
+  implicit val order: Ordering[HystrixConfig] = Ordering.by(_.commandKey)
 
   /**
    * Returns a [[JsonHystrixConfig]] for a given [[HystrixConfig]]

@@ -8,6 +8,7 @@ import org.scalacheck.{ Arbitrary, Gen }
 import org.scalatest._
 import org.scalatest.prop.{ Checkers, GeneratorDrivenPropertyChecks }
 
+import scala.collection.SortedSet
 import scala.collection.convert.Wrappers._
 import scala.concurrent.duration.FiniteDuration
 
@@ -19,7 +20,7 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
       owner <- Arbitrary.arbString.arbitrary
       description <- Arbitrary.arbString.arbitrary
     } yield {
-      json.CacheGroup(name, owner, description)
+      json.CacheGroup(name = name, owner = owner, description = description)
     }
   }
 
@@ -29,7 +30,7 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
       coreSize <- Gen.chooseNum(0, Int.MaxValue)
       queueSize <- Gen.chooseNum(0, Int.MaxValue)
     } yield {
-      json.ThreadPoolConfig(threadPoolKey, coreSize, queueSize)
+      json.ThreadPoolConfig(threadPoolKey = threadPoolKey, coreSize = coreSize, queueSize = queueSize)
     }
   }
 
@@ -49,7 +50,13 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
       commandGroupKey <- Arbitrary.arbString.arbitrary
       localContentsAsFallback <- Arbitrary.arbBool.arbitrary
     } yield {
-      json.HystrixConfig(timeout, threadPoolConfig, commandKey, commandGroupKey, localContentsAsFallback)
+      json.HystrixConfig(
+        timeout = timeout,
+        threadPoolConfig = threadPoolConfig,
+        commandKey = commandKey,
+        commandGroupKey = commandGroupKey,
+        localContentsAsFallback = localContentsAsFallback
+      )
     }
   }
 
@@ -61,9 +68,16 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
       outputName <- Arbitrary.arbString.arbitrary
       inputNameOverride <- Gen.option(Arbitrary.arbString.arbitrary)
       description <- Gen.option(Arbitrary.arbString.arbitrary)
-      cacheGroups <- Gen.containerOf[Set, json.CacheGroup](arbCacheGroup.arbitrary)
+      cacheGroups <- Gen.containerOf[SortedSet, json.CacheGroup](arbCacheGroup.arbitrary)
     } yield {
-      json.PartParam(required, versioned, paramType, outputName, inputNameOverride, description, cacheGroups)
+      json.PartParam(
+        required = required,
+        versioned = versioned,
+        paramType = paramType,
+        outputName = outputName,
+        description = description,
+        inputNameOverride = inputNameOverride,
+        cacheGroups = cacheGroups.toSet)
     }
   }
 
@@ -99,9 +113,9 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
       httpConnectionTimeout <- genShortDuration
       httpSocketTimeout <- genShortDuration
       httpDefaultEncoding <- Gen.oneOf(JCollectionWrapper(JavaCharset.availableCharsets().values()).toSeq)
-      parameters <- Gen.containerOf[Set, json.PartParam](arbPartParam.arbitrary)
+      parameters <- Gen.containerOf[SortedSet, json.PartParam](arbPartParam.arbitrary)
       deprecatedInFavourOf <- Gen.option(Arbitrary.arbString.arbitrary)
-      cacheGroups <- Gen.containerOf[Set, json.CacheGroup](arbCacheGroup.arbitrary)
+      cacheGroups <- Gen.containerOf[SortedSet, json.CacheGroup](arbCacheGroup.arbitrary)
       cacheTtl <- Gen.option(genShortDuration)
       alertMailSettings <- arbAlertMailSettings.arbitrary
       httpProxy <- Gen.option(Arbitrary.arbString.arbitrary)
@@ -110,8 +124,8 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
       json.HttpPartConfig(
         partId = partId,
         owner = owner,
-        description = description,
         uriToInterpolate = uriToInterpolate,
+        description = description,
         method = method,
         hystrixConfig = hystrixConfig,
         additionalValidStatuses = additionalValidStatuses,
@@ -120,9 +134,9 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
         httpSocketTimeout = httpSocketTimeout,
         httpDefaultEncoding = httpDefaultEncoding,
         httpProxy = httpProxy,
-        parameters = parameters,
+        parameters = parameters.toSet,
         deprecatedInFavourOf = deprecatedInFavourOf,
-        cacheGroups = cacheGroups,
+        cacheGroups = cacheGroups.toSet,
         cacheTtl = cacheTtl,
         alertMailSettings = alertMailSettings
       )
@@ -174,7 +188,7 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
         pp.paramType should be(jpp.paramType)
         pp.outputName should be(jpp.outputName)
         pp.inputNameOverride should be(jpp.inputNameOverride)
-        pp.cacheGroups.map(CacheGroup.toJsonModel) should be(jpp.cacheGroups)
+        pp.cacheGroups.map(CacheGroup.toJsonModel) should be(jpp.cacheGroups.to[SortedSet])
         PartParam.toJsonModel(pp) should be(jpp)
     }
   }
@@ -190,10 +204,10 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
         hpc.method should be(jhpc.method)
         val ejhc = jhpc.hystrixConfig.copy(threadPoolConfig = jhpc.hystrixConfig.threadPoolConfig.copy(queueSize = ThreadPoolConfig.defaultQueueSize))
         hpc.hystrixConfig.map(HystrixConfig.toJsonModel) should be(Some(ejhc))
-        hpc.additionalValidStatuses should equal(jhpc.additionalValidStatuses)
-        hpc.parameters.map(PartParam.toJsonModel) should be(jhpc.parameters)
+        hpc.additionalValidStatuses should equal(jhpc.additionalValidStatuses.to[SortedSet])
+        hpc.parameters.map(PartParam.toJsonModel) should be(jhpc.parameters.to[SortedSet])
         hpc.deprecatedInFavourOf should be(jhpc.deprecatedInFavourOf)
-        hpc.cacheGroups.map(CacheGroup.toJsonModel) should be(jhpc.cacheGroups)
+        hpc.cacheGroups.map(CacheGroup.toJsonModel) should be(jhpc.cacheGroups.to[SortedSet])
         hpc.cacheTtl should be(jhpc.cacheTtl)
         hpc.alertMailsEnabled should be(jhpc.alertMailSettings.alertMailsEnabled)
         hpc.alertAbsoluteThreshold should be(jhpc.alertMailSettings.alertAbsoluteThreshold)

@@ -2,26 +2,26 @@ package com.m3.octoparts.ws
 
 import java.nio.charset.StandardCharsets
 
-import com.m3.octoparts.json.format.ReqResp._
 import com.m3.octoparts.json.format.ConfigModel._
+import com.m3.octoparts.json.format.ReqResp._
 import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.ParamType
 import com.m3.octoparts.model.config.json._
-import play.api.libs.json._
-import org.scalatest._
-import org.scalatest.concurrent.{ Eventually, IntegrationPatience, PatienceConfiguration, ScalaFutures }
-import org.scalatest.mock.MockitoSugar
-import play.api.libs.json.JsValue
-import play.api.libs.ws._
-import org.mockito.Mockito._
 import org.mockito.Matchers._
+import org.mockito.Mockito._
+import org.scalatest._
+import org.scalatest.concurrent._
+import org.scalatest.mock.MockitoSugar
+import play.api.libs.json.{ JsValue, _ }
+import play.api.libs.ws._
 import play.api.mvc.RequestHeader
 import play.api.mvc.Results.EmptyContent
 import play.api.test.FakeRequest
 
-import scala.language.postfixOps
+import scala.collection.SortedSet
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
 class OctoClientSpec
     extends FunSpec
@@ -88,7 +88,7 @@ class OctoClientSpec
           queueSize = 256),
         commandKey = "command",
         commandGroupKey = "GroupKey",
-        false),
+        localContentsAsFallback = false),
       additionalValidStatuses = Set(302),
       httpPoolSize = 20,
       httpConnectionTimeout = 1.second,
@@ -98,12 +98,14 @@ class OctoClientSpec
         PartParam(
           required = true,
           versioned = false,
+          description = Some("!!"),
           paramType = ParamType.Header,
           outputName = "userId",
           inputNameOverride = None,
           cacheGroups = Set.empty
         )),
       deprecatedInFavourOf = None,
+      cacheGroups = Set.empty,
       cacheTtl = Some(60 seconds),
       alertMailSettings = AlertMailSettings(
         alertMailsEnabled = true,
@@ -230,10 +232,10 @@ class OctoClientSpec
         val subject = new OctoClientLike {
           val baseUrl = "http://bobby.com"
           def wsHolderFor(url: String, timeout: FiniteDuration): WSRequestHolder = wsHolderCreator.apply(url)
-          def rescuer[A](obj: => A): PartialFunction[Throwable, A] = PartialFunction.empty
+          protected def rescuer[A](obj: => A): PartialFunction[Throwable, A] = PartialFunction.empty
           protected val clientTimeout = 10 seconds
-          protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
-          protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Seq.empty
+          protected def rescueAggregateResponse = emptyReqResponse
+          protected def rescueHttpPartConfigs = Nil
         }
         block(subject)
         eventually(verify(wsHolderCreator, times(howManyTimes)).apply(url))
