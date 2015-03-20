@@ -28,10 +28,7 @@ case class HttpPartConfigView(config: HttpPartConfig)(implicit lang: Lang) {
 
   def commandGroup: String = config.hystrixConfig.fold("")(_.commandGroupKey)
 
-  lazy val warnings: Seq[String] = {
-    import Play.current
-    HttpPartConfigChecker(config)
-  }
+  lazy val warnings: Seq[String] = HttpPartConfigChecker(config)
 
   def timeoutInMs: Int = config.hystrixConfig.fold(5000)(_.timeout.toMillis.toInt)
 
