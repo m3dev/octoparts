@@ -92,7 +92,7 @@ object WhitespaceInUri extends HttpPartConfigChecker {
  */
 case object AlertEmailOff extends HttpPartConfigChecker {
   def warnings(hpc: HttpPartConfig)(implicit lang: Lang): Seq[String] = {
-    Seq(Messages("admin.warnings.AlertEmailOff"))
+    if (hpc.alertMailsEnabled) Nil else Seq(Messages("admin.warnings.AlertEmailOff"))
   }
 }
 
