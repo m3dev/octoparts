@@ -26,7 +26,7 @@ case class HttpPartConfigView(config: HttpPartConfig)(implicit lang: Lang) {
 
   def exportLink: String = controllers.routes.PartsController.list(List(partId)).url
 
-  def commandGroup: String = config.hystrixConfig.fold("")(_.commandGroupKey)
+  def commandGroup: Option[String] = config.hystrixConfig.map(_.commandGroupKey)
 
   lazy val warnings: Seq[String] = {
     import Play.current
@@ -35,7 +35,7 @@ case class HttpPartConfigView(config: HttpPartConfig)(implicit lang: Lang) {
 
   def timeoutInMs: Int = config.hystrixConfig.fold(5000)(_.timeout.toMillis.toInt)
 
-  def commandKey: String = config.hystrixConfig.fold("")(_.commandKey)
+  def commandKey: Option[String] = config.hystrixConfig.map(_.commandKey)
 
   def uriToInterpolate: String = config.uriToInterpolate
 
@@ -45,7 +45,7 @@ case class HttpPartConfigView(config: HttpPartConfig)(implicit lang: Lang) {
 
   def httpMethod: String = config.method.toString
 
-  def threadPoolKey: String = config.hystrixConfig.flatMap(_.threadPoolConfig).fold("")(_.threadPoolKey)
+  def threadPoolKey: Option[String] = config.hystrixConfig.flatMap(_.threadPoolConfig).map(_.threadPoolKey)
 
   def registeredParamsView: SortedSet[ParamView] = config.parameters.map(ParamView.apply)
 

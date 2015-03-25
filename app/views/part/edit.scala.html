@@ -85,7 +85,7 @@
                     <div class="col-sm-5">
                         @helper.inputText(form("partId"),
                             'class -> "form-control validate[required]",
-                            Symbol("data-orig-value") -> form("partId").value.getOrElse(""))
+                            Symbol("data-orig-value") -> form("partId").value)
                     </div>
                 </div>
             </div>

@@ -39,7 +39,7 @@
            <label for="outputName" class="col-sm-2 control-label">@Messages("parts.parameter.outputName")</label>
             <div class="row">
                 <div class="col-sm-5">
-                    <input name="outputName" type="text" value="@maybeParam.fold("")(_.outputName)" class="form-control validate[required]" />
+                    <input name="outputName" type="text" value="@maybeParam.map(_.outputName)" class="form-control validate[required]" />
                </div>
             </div>
         </div>
@@ -77,7 +77,7 @@
             <label for="inputNameOverride" class="col-sm-2 control-label">@Messages("parts.parameter.inputName") @Messages("parameter.ifDifferent")</label>
             <div class="row">
                 <div class="col-sm-5">
-                    <input name="inputNameOverride" type="text" class="form-control" value="@maybeParam.flatMap(_.param.inputNameOverride).getOrElse("")"/>
+                    <input name="inputNameOverride" type="text" class="form-control" value="@maybeParam.flatMap(_.param.inputNameOverride)"/>
                 </div>
             </div>
         </div>
