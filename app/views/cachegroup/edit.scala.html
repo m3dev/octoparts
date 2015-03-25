@@ -35,7 +35,7 @@
         <label for="url" class="col-sm-2 control-label">@Messages("cacheGroups.name")</label>
         <div class="row">
             <div class="col-sm-5">
-                <input name="name" type="text" class="form-control validate[required]" value="@maybeCacheGroup.map(_.name).getOrElse("")"/>
+                <input name="name" type="text" class="form-control validate[required]" value="@maybeCacheGroup.map(_.name)"/>
             </div>
         </div>
     </div>
@@ -44,7 +44,7 @@
         <label for="method" class="col-sm-2 control-label">@Messages("cacheGroups.description")</label>
         <div class="row">
             <div class="col-sm-5">
-                <input name="description" type="text" class="form-control validate[required]" value="@maybeCacheGroup.map(_.description).getOrElse("")"/>
+                <input name="description" type="text" class="form-control validate[required]" value="@maybeCacheGroup.map(_.description)"/>
             </div>
         </div>
     </div>
