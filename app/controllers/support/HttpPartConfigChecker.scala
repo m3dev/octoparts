@@ -5,15 +5,19 @@ import java.util.UUID
 import com.m3.octoparts.aggregator.handler.HttpPartRequestHandler
 import com.m3.octoparts.model.config.{ HttpPartConfig, ParamType, PartParam }
 import com.netaporter.uri.dsl._
+import play.api.Play
 import play.api.i18n.{ Lang, Messages }
-import play.api.{ Application, Mode }
 
 trait HttpPartConfigChecker {
   def warnings(t: HttpPartConfig)(implicit lang: Lang): Seq[String]
 }
 
 object HttpPartConfigChecker {
-  def apply(httpPartConfig: HttpPartConfig)(implicit lang: Lang, app: Application): Seq[String] = Seq(QueryParamInterpolation, MissingPathParam, PathParamNoInterp, PathParamOption, WhitespaceInUri, AlertEmailOff(app.mode)).flatMap(_.warnings(httpPartConfig))
+  lazy val checks = Seq(QueryParamInterpolation, MissingPathParam, PathParamNoInterp, PathParamOption, WhitespaceInUri) ++
+    (if (Play.current.configuration.getString("application.env").contains("production")) Seq(AlertEmailOff) else Nil)
+  def apply(httpPartConfig: HttpPartConfig)(implicit lang: Lang): Seq[String] = {
+    checks.flatMap(_.warnings(httpPartConfig))
+  }
 }
 
 object QueryParamInterpolation extends HttpPartConfigChecker {
@@ -86,10 +90,9 @@ object WhitespaceInUri extends HttpPartConfigChecker {
 /**
  * Prints a warning when email alerts are disabled in production
  */
-case class AlertEmailOff(mode: Mode.Mode) extends HttpPartConfigChecker {
+case object AlertEmailOff extends HttpPartConfigChecker {
   def warnings(hpc: HttpPartConfig)(implicit lang: Lang): Seq[String] = {
-    if (mode == Mode.Prod && !hpc.alertMailsEnabled) Seq(Messages("admin.warnings.AlertEmailOff"))
-    else Nil
+    if (hpc.alertMailsEnabled) Nil else Seq(Messages("admin.warnings.AlertEmailOff"))
   }
 }
 

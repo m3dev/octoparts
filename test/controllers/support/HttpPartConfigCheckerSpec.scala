@@ -67,11 +67,10 @@ class HttpPartConfigCheckerSpec extends FunSpec with Matchers with ConfigDataMoc
 
   describe("AlertEmailOff") {
     it("Should be ok") {
-      AlertEmailOff(Mode.Dev).warnings(mockHttpPartConfig.copy(alertMailsEnabled = false)) shouldBe 'empty
-      AlertEmailOff(Mode.Prod).warnings(mockHttpPartConfig.copy(alertMailsEnabled = true)) shouldBe 'empty
+      AlertEmailOff.warnings(mockHttpPartConfig.copy(alertMailsEnabled = true)) shouldBe 'empty
     }
     it("Should have warnings") {
-      AlertEmailOff(Mode.Prod).warnings(mockHttpPartConfig.copy(alertMailsEnabled = false)) should have size 1
+      AlertEmailOff.warnings(mockHttpPartConfig.copy(alertMailsEnabled = false)) should have size 1
     }
   }
 }
