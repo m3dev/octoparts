@@ -116,7 +116,7 @@ object Global extends WithFilters(ZipkinHeaderFilter(ZipkinServiceHolder.ZipkinS
    * Resist the temptation to do a HystrixPlugins.getInstance().getPropertiesStrategy first to do
    * checking, as that actually also sets the strategy if it isn't already set.
    */
-  private def setHystrixPropertiesStrategy(): Unit = {
+  def setHystrixPropertiesStrategy(): Unit = {
     // If it's defined, we don't need to set anything
     if (sys.props.get("hystrix.plugin.HystrixPropertiesStrategy.implementation").isEmpty) {
       LTSVLogger.info("-Dhystrix.plugin.HystrixPropertiesStrategy.implementation is not set. Defaulting to" -> "com.m3.octoparts.hystrix.KeyAndBuilderValuesHystrixPropertiesStrategy")
