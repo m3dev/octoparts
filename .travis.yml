@@ -4,7 +4,10 @@ jdk:
   - oraclejdk8
 
 scala:
-  - 2.11.5
+  - 2.11.6
+
+env:
+  - SBT_OPTS="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:PermSize=1024m -XX:MaxPermSize=1024m"
 
 addons:
   postgresql: "9.3"
