@@ -6,8 +6,8 @@ jdk:
 scala:
   - 2.11.6
 env:
-  - SBT_OPTS="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:PermSize=256m -XX:MaxPermSize=512m"
-  - JAVA_OPTS="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:PermSize=2048m -XX:MaxPermSize=2048m"
+  - SBT_OPTS="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:PermSize=256m -XX:MaxPermSize=512m -Xms128m -Xmx512m"
+  - JAVA_OPTS="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:PermSize=256m -XX:MaxPermSize=512m -Xms1024m -Xmx1024m"
 
 addons:
   postgresql: "9.3"
