@@ -30,7 +30,7 @@
             @if(cacheGroup.partParams.nonEmpty) {
                 <h3>@Messages("cacheGroups.parameters")</h3>
                 <ul>
-                @for(param <- cacheGroup.partParams; httpPartConfig <- param.httpPartConfig; paramId <- param.id) {
+                @for(param <- cacheGroup.partParams.toSeq; httpPartConfig <- param.httpPartConfig; paramId <- param.id) {
                     <li><a href="@controllers.routes.AdminController.showPart(httpPartConfig.partId)">@httpPartConfig.partId</a>
                         \ <a href="@controllers.routes.AdminController.editParam(httpPartConfig.partId, paramId)">@param.outputName</a>
                     </li>

@@ -89,7 +89,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                @for(paramView <- part.registeredParamsView; paramId <- paramView.param.id) {
+                @for(paramView <- part.registeredParamsView.toSeq; paramId <- paramView.param.id) {
                     <tr>
                         <td>@paramView.outputName</td>
                         <td>@paramView.name</td>
