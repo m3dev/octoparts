@@ -225,17 +225,17 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
   def newParam(partId: String) = AuthorizedAction.async { implicit req =>
     findAndUsePart(partId) { part =>
       repository.findAllCacheGroups().map { cgs =>
-        Ok(views.html.param.edit(partId = part.partId, cacheGroups = cgs, selectedCacheGroupIds = Set.empty, maybeParam = None))
+        Ok(views.html.param.edit(AdminForms.paramForm, partId = part.partId, cacheGroups = cgs, maybeParam = None))
       }
     }
   }
 
   def editParam(partId: String, paramId: Long) = AuthorizedAction.async { implicit req =>
     findAndUseParam(partId, paramId) { param =>
-      repository.findAllCacheGroups().map { cgs =>
-        val selectedCacheGroupIds = param.cacheGroups.flatMap(_.id)
-        Ok(views.html.param.edit(
-          partId = partId, cacheGroups = cgs, selectedCacheGroupIds = selectedCacheGroupIds, maybeParam = Some(ParamView(param))))
+      repository.findAllCacheGroups().map { allCacheGroups =>
+        val paramData = ParamData(param.outputName, param.inputNameOverride, param.description, param.paramType.toString, param.required, param.versioned, param.cacheGroups.toSeq.map(_.name))
+        val paramFormWithDefaults = AdminForms.paramForm.fill(paramData)
+        Ok(views.html.param.edit(form = paramFormWithDefaults, partId = partId, cacheGroups = allCacheGroups, maybeParam = Some(ParamView(param))))
       }
     }
   }

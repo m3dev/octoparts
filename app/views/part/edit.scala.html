@@ -127,7 +127,7 @@
                     <div class="col-sm-5">
                         @helper.select(
                             field = form("httpSettings.method"),
-                            options = com.m3.octoparts.model.HttpMethod.values.toSeq.map(method => (method.toString, method.toString)),
+                            options = com.m3.octoparts.model.HttpMethod.values.toSeq.sorted.map(method => (method.toString, method.toString)),
                             args = 'class -> "form-control"
                         )
                     </div>
