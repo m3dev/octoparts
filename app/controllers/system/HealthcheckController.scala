@@ -45,7 +45,7 @@ class HealthcheckController(configsRepo: ConfigsRepository,
           "hystrix" -> hystrixStatus,
           "memcached" -> memcachedStatus
         )
-        val colour = calculateColour(statuses.values)
+        val colour = calculateColour(statuses.filterKeys(_ != "hystrix").values)
         val health = ServiceHealth(colour, statuses)
         logIfUnhealthy(health)
         health

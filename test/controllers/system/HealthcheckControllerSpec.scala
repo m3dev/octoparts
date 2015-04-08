@@ -80,11 +80,12 @@ class HealthcheckControllerSpec
       }
     }
 
-    it should "be YELLOW and show Hystrix as not OK if there are any open Hystrix circuits" in {
+    it should "be GREEN and show Hystrix as not OK if there are any open Hystrix circuits" in {
       when(hystrixHealthReporter.getCommandKeysWithOpenCircuitBreakers).thenReturn(Seq("mrkun", "career"))
 
       checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
-        colour should be("YELLOW")
+        // https://github.com/m3dev/octoparts/pull/150
+        colour should be("GREEN")
         hystrixOk shouldBe false
       }
     }
