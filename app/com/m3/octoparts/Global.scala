@@ -28,7 +28,7 @@ import scaldi.play.ScaldiSupport
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
-object Global extends WithFilters(ZipkinHeaderFilter(ZipkinServiceHolder.ZipkinService, r => s"${r.method} - ${r.path}"), MetricsFilter) with ScaldiSupport {
+object Global extends WithFilters(ZipkinHeaderFilter(ZipkinServiceHolder.ZipkinService, ZipkinServiceHolder.spanNamer), MetricsFilter) with ScaldiSupport {
 
   val info = ApiInfo(
     title = "Octoparts",
