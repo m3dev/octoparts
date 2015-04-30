@@ -4,6 +4,8 @@ import java.nio.charset.StandardCharsets
 
 import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config.json.AlertMailSettings
+import org.apache.commons.lang3.SerializationUtils
+import scala.collection.SortedSet
 import scala.concurrent.duration._
 import com.m3.octoparts.support.mocks.ConfigDataMocks
 import scala.language.postfixOps
@@ -22,8 +24,8 @@ class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
     it("should not throw when given a config with a HystrixConfig") {
       val jsonModel = HttpPartConfig.toJsonModel(mockHttpPartConfig.copy(
         hystrixConfig = Some(mockHystrixConfig),
-        additionalValidStatuses = Set(302),
-        cacheGroups = Set(mockCacheGroup)
+        additionalValidStatuses = SortedSet(302),
+        cacheGroups = SortedSet(mockCacheGroup)
       ))
       val expectedModel = json.HttpPartConfig(
         partId = "something",
@@ -39,7 +41,7 @@ class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
             queueSize = 256),
           commandKey = "command",
           commandGroupKey = "GroupKey",
-          false),
+          localContentsAsFallback = false),
         additionalValidStatuses = Set(302),
         httpPoolSize = 5,
         httpConnectionTimeout = 1.second,
@@ -50,6 +52,7 @@ class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
           json.PartParam(
             required = true,
             versioned = false,
+            description = None,
             paramType = ParamType.Header,
             outputName = "userId",
             inputNameOverride = None,
@@ -68,6 +71,21 @@ class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
         localContentsEnabled = true,
         localContents = Some("{}"))
       jsonModel should be(expectedModel)
+    }
+
+  }
+
+  describe("Java serdes (for caching)") {
+
+    it("should serialise and deserialise without problems") {
+      val original = mockHttpPartConfig.copy(
+        hystrixConfig = Some(mockHystrixConfig),
+        additionalValidStatuses = SortedSet(302),
+        cacheGroups = SortedSet(mockCacheGroup)
+      )
+      val serialised = SerializationUtils.serialize(original)
+      val deserialised = SerializationUtils.deserialize[HttpPartConfig](serialised)
+      deserialised shouldBe original
     }
 
   }

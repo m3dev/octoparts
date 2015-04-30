@@ -5,8 +5,8 @@ import skinny.orm.SkinnyJoinTable
 
 object HttpPartConfigCacheGroupRepository extends SkinnyJoinTable[HttpPartConfigCacheGroup] {
 
-  override lazy val defaultAlias = createAlias("http_part_config_cache_group")
+  lazy val defaultAlias = createAlias("http_part_config_cache_group")
 
-  override lazy val tableName = "http_part_config_cache_group"
+  override val tableName = "http_part_config_cache_group"
 
 }

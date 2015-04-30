@@ -21,28 +21,41 @@ import scala.util.control.NonFatal
 trait RequiresDB extends Suite with OneAppPerSuite {
 
   lazy val flyway = {
-    val poolName = ConnectionPool.DEFAULT_NAME.name
-    val pool = ConnectionPool.get(Symbol(poolName))
     val flyway = new Flyway
     flyway.setCallbacks(new FlywayCallback {
-      def beforeInit(conn: Connection) = { conn.setReadOnly(false) }
-      def beforeRepair(conn: Connection) = { conn.setReadOnly(false) }
-      def beforeValidate(conn: Connection) = { conn.setReadOnly(false) }
-      def beforeInfo(conn: Connection) = { conn.setReadOnly(false) }
-      def beforeClean(conn: Connection) = { conn.setReadOnly(false) }
-      def beforeMigrate(conn: Connection) = { conn.setReadOnly(false) }
-      def beforeBaseline(conn: Connection) = { conn.setReadOnly(false) }
+      def beforeInit(conn: Connection) = conn.setReadOnly(false)
+
+      def beforeRepair(conn: Connection) = conn.setReadOnly(false)
+
+      def beforeValidate(conn: Connection) = conn.setReadOnly(false)
+
+      def beforeInfo(conn: Connection) = conn.setReadOnly(false)
+
+      def beforeClean(conn: Connection) = conn.setReadOnly(false)
+
+      def beforeMigrate(conn: Connection) = conn.setReadOnly(false)
+
+      def beforeBaseline(conn: Connection) = conn.setReadOnly(false)
+
+      def beforeEachMigrate(conn: Connection, p2: MigrationInfo) = conn.setReadOnly(false)
+
       def afterInfo(conn: Connection) = {}
+
       def afterInit(conn: Connection) = {}
+
       def afterRepair(conn: Connection) = {}
+
       def afterValidate(conn: Connection) = {}
-      def beforeEachMigrate(conn: Connection, p2: MigrationInfo) = {}
+
       def afterEachMigrate(conn: Connection, p2: MigrationInfo) = {}
+
       def afterMigrate(conn: Connection) = {}
+
       def afterClean(conn: Connection) = {}
+
       def afterBaseline(conn: Connection) = {}
     })
-    flyway.setDataSource(pool.dataSource)
+    flyway.setDataSource(ConnectionPool().dataSource)
     flyway.setPlaceholderPrefix("$flyway{")
     flyway
   }

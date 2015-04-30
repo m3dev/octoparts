@@ -30,6 +30,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.mvc.Result
 
+import scala.collection.SortedSet
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -140,7 +141,7 @@ class AdminControllerSpec extends FunSpec
   it("should show a list of parts") {
     val repository = mock[MutableConfigsRepository]
     val adminController = new AdminController(cacheOps = DummyCacheOps, repository = repository)
-    doReturn(Future.successful(Seq(part.copy(uriToInterpolate = "http://www.example.com", owner = "aName")))).when(repository).findAllConfigs()
+    doReturn(Future.successful(SortedSet(part.copy(uriToInterpolate = "http://www.example.com", owner = "aName")))).when(repository).findAllConfigs()
 
     val listParts = adminController.listParts(FakeRequest())
     contentAsString(listParts) should include("http://www.example.com")
@@ -151,10 +152,10 @@ class AdminControllerSpec extends FunSpec
     val repository = mock[MutableConfigsRepository]
     val adminController = new AdminController(cacheOps = DummyCacheOps, repository = repository)
 
-    doReturn(Future.successful(Seq(part))).when(repository).findAllConfigs()
+    doReturn(Future.successful(SortedSet(part))).when(repository).findAllConfigs()
     doReturn(Future.successful(Some(part))).when(repository).findConfigByPartId(part.partId)
-    doReturn(Future.successful(Seq(mockThreadConfig))).when(repository).findAllThreadPoolConfigs()
-    doReturn(Future.successful(Seq.empty)).when(repository).findAllCacheGroups()
+    doReturn(Future.successful(SortedSet(mockThreadConfig))).when(repository).findAllThreadPoolConfigs()
+    doReturn(Future.successful(SortedSet.empty[CacheGroup])).when(repository).findAllCacheGroups()
 
     val result = adminController.newPart.apply(FakeRequest())
     status(result) should equal(OK)
@@ -165,10 +166,10 @@ class AdminControllerSpec extends FunSpec
     val repository = mock[MutableConfigsRepository]
     val adminController = new AdminController(cacheOps = DummyCacheOps, repository = repository)
 
-    doReturn(Future.successful(Seq(part))).when(repository).findAllConfigs()
+    doReturn(Future.successful(SortedSet(part))).when(repository).findAllConfigs()
     doReturn(Future.successful(Some(part))).when(repository).findConfigByPartId(part.partId)
-    doReturn(Future.successful(Seq(mockThreadConfig))).when(repository).findAllThreadPoolConfigs()
-    doReturn(Future.successful(Seq.empty)).when(repository).findAllCacheGroups()
+    doReturn(Future.successful(SortedSet(mockThreadConfig))).when(repository).findAllThreadPoolConfigs()
+    doReturn(Future.successful(SortedSet.empty[CacheGroup])).when(repository).findAllCacheGroups()
 
     val result = adminController.editPart(part.partId).apply(FakeRequest())
     status(result) should equal(OK)
@@ -179,9 +180,9 @@ class AdminControllerSpec extends FunSpec
     val repository = mock[MutableConfigsRepository]
     val adminController = new AdminController(cacheOps = DummyCacheOps, repository = repository)
     doReturn(Future.successful(124L)).when(repository).save(anyObject[HttpPartConfig]())(anyObject[ConfigMapper[HttpPartConfig]], anyObject[Span])
-    doReturn(Future.successful(Seq.empty)).when(repository).findAllCacheGroupsByName(anyVararg[String]())(anyObject[Span])
-    doReturn(Future.successful(Seq(mockThreadConfig))).when(repository).findAllThreadPoolConfigs()
-    doReturn(Future.successful(Seq.empty)).when(repository).findAllCacheGroups()
+    doReturn(Future.successful(SortedSet.empty[CacheGroup])).when(repository).findAllCacheGroupsByName(anyVararg[String]())(anyObject[Span])
+    doReturn(Future.successful(SortedSet(mockThreadConfig))).when(repository).findAllThreadPoolConfigs()
+    doReturn(Future.successful(SortedSet.empty[CacheGroup])).when(repository).findAllCacheGroups()
 
     val result = adminController.createPart.apply(FakeRequest().withFormUrlEncodedBody(validPartEditFormParams: _*))
     whenReady(result) { r =>
@@ -190,7 +191,7 @@ class AdminControllerSpec extends FunSpec
 
       val newCiCaptor = ArgumentCaptor.forClass(classOf[HttpPartConfig])
       verify(repository).save(newCiCaptor.capture())(anyObject[ConfigMapper[HttpPartConfig]], anyObject[Span])
-      verify(repository).findAllCacheGroupsByName(Seq.empty: _*)
+      verify(repository).findAllCacheGroupsByName(Nil: _*)
       newCiCaptor.getValue.uriToInterpolate should be("http://www.example2.com")
     }
   }
@@ -205,11 +206,11 @@ class AdminControllerSpec extends FunSpec
       doReturn(Future.successful(())).when(cacheOps).increasePartVersion(anyString())(anyObject[Span])
       doReturn(Future.successful(Some(part2))).when(repository).findConfigByPartId(mockitoEq(part.partId))(anyObject[Span])
       doReturn(Future.successful(1)).when(repository).deleteConfigByPartId(mockitoEq(part.partId))(anyObject[Span])
-      doReturn(Future.successful(Seq.empty)).when(repository).findAllCacheGroupsByName(anyVararg[String]())(anyObject[Span])
+      doReturn(Future.successful(SortedSet.empty[CacheGroup])).when(repository).findAllCacheGroupsByName(anyVararg[String]())(anyObject[Span])
       doReturn(Future.successful(Some(mockPartParam))).when(repository).findParamById(anyLong())(anyObject[Span])
-      doReturn(Future.successful(Seq(mockThreadConfig))).when(repository).findAllThreadPoolConfigs()(anyObject[Span])
-      doReturn(Future.successful(Seq.empty)).when(repository).findAllCacheGroups()(anyObject[Span])
-      doReturn(Future.successful(Seq(part2))).when(repository).findAllConfigs()(anyObject[Span])
+      doReturn(Future.successful(SortedSet(mockThreadConfig))).when(repository).findAllThreadPoolConfigs()(anyObject[Span])
+      doReturn(Future.successful(SortedSet.empty[CacheGroup])).when(repository).findAllCacheGroups()(anyObject[Span])
+      doReturn(Future.successful(SortedSet(part2))).when(repository).findAllConfigs()(anyObject[Span])
       (adminController, cacheOps, repository, part2)
     }
 
@@ -218,9 +219,11 @@ class AdminControllerSpec extends FunSpec
         val (controller, cacheOps, repository, part) = setupController
         doReturn(Future.successful(124L)).when(repository).save(anyObject[HttpPartConfig]())(anyObject[ConfigMapper[HttpPartConfig]], anyObject[Span])
         val result = controller.updatePart(part.partId).apply(FakeRequest().withFormUrlEncodedBody(validPartEditFormParams: _*))
-        status(result) should be(FOUND)
-        redirectLocation(result).get should include(routes.AdminController.showPart("aNewName").url)
-        verify(cacheOps, Mockito.timeout(1000)).increasePartVersion(part.partId)
+        whenReady(result) { _ =>
+          status(result) should be(FOUND)
+          redirectLocation(result).get should include(routes.AdminController.showPart("aNewName").url)
+          verify(cacheOps, Mockito.timeout(1000)).increasePartVersion(part.partId)
+        }
       }
     }
 
@@ -320,7 +323,7 @@ class AdminControllerSpec extends FunSpec
         doReturn(Future.successful(Some(part))).when(repository).findConfigByPartId(mockitoEq(part.partId))(anyObject[Span])
         doReturn(Future.successful(1)).when(repository).deleteConfigByPartId(mockitoEq(part.partId))(anyObject[Span])
         val deletePart = adminController.deletePart(part.partId)(FakeRequest())
-        whenReady(deletePart) { result =>
+        whenReady(deletePart) { _ =>
           status(deletePart) should be(FOUND)
           redirectLocation(deletePart).fold(fail())(_ should include(routes.AdminController.listParts().url))
 
@@ -338,7 +341,7 @@ class AdminControllerSpec extends FunSpec
         doReturn(Future.successful(None)).when(repository).findConfigByPartId(mockitoEq("someOther"))(anyObject[Span])
 
         val deletePart = adminController.deletePart("someOther")(FakeRequest())
-        whenReady(deletePart) { result =>
+        whenReady(deletePart) { _ =>
           status(deletePart) should be(FOUND)
           redirectLocation(deletePart).fold(fail())(_ should include(routes.AdminController.listParts.url))
           flash(deletePart).get(BootstrapFlashStyles.danger.toString) should be('defined)
@@ -354,13 +357,13 @@ class AdminControllerSpec extends FunSpec
       it("should copy the part and show the edit form for the newly created part") {
         val repository = mock[MutableConfigsRepository]
         val adminController = new AdminController(cacheOps = DummyCacheOps, repository = repository)
-        doReturn(Future.successful(Seq(part))).when(repository).findAllConfigs()(anyObject[Span])
+        doReturn(Future.successful(SortedSet(part))).when(repository).findAllConfigs()(anyObject[Span])
         doReturn(Future.successful(Some(part))).when(repository).findConfigByPartId(mockitoEq(part.partId))(anyObject[Span])
         doReturn(Future.successful(124L)).when(repository).save(anyObject[HttpPartConfig]())(anyObject[ConfigMapper[HttpPartConfig]], anyObject[Span])
 
         val result = adminController.copyPart(part.partId).apply(FakeRequest())
         status(result) should be(FOUND)
-        val expectedNewPartId = part.partId + "_"
+        val expectedNewPartId = s"${part.partId}_"
         redirectLocation(result).get should include(routes.AdminController.editPart(expectedNewPartId).url)
       }
     }
@@ -372,7 +375,7 @@ class AdminControllerSpec extends FunSpec
         doReturn(Future.successful(None)).when(repository).findConfigByPartId(mockitoEq("someOther"))(anyObject[Span])
 
         val deletePart = adminController.copyPart("someOther")(FakeRequest())
-        whenReady(deletePart) { result =>
+        whenReady(deletePart) { _ =>
           status(deletePart) should be(FOUND)
           redirectLocation(deletePart).fold(fail())(_ should include(routes.AdminController.listParts.url))
           flash(deletePart).get(BootstrapFlashStyles.danger.toString) should be('defined)
@@ -404,8 +407,8 @@ class AdminControllerSpec extends FunSpec
           val newCiCaptor = ArgumentCaptor.forClass(classOf[PartParam])
           verify(repository).save(newCiCaptor.capture())(anyObject[ConfigMapper[PartParam]], anyObject[Span])
 
-          newCiCaptor.getValue.inputName should be(existingParam.inputName + "_")
-          newCiCaptor.getValue.outputName should be(existingParam.outputName + "_")
+          newCiCaptor.getValue.inputName should be(s"${existingParam.inputName}_")
+          newCiCaptor.getValue.outputName should be(s"${existingParam.outputName}_")
           newCiCaptor.getValue.paramType should be(existingParam.paramType)
         }
       }
@@ -420,7 +423,7 @@ class AdminControllerSpec extends FunSpec
         doReturn(Future.successful(None)).when(repository).findParamById(anyLong())(anyObject[Span])
 
         val copyParam = adminController.copyParam(part.partId, 12345L)(FakeRequest())
-        whenReady(copyParam) { result =>
+        whenReady(copyParam) { _ =>
           status(copyParam) should equal(FOUND)
           redirectLocation(copyParam).fold(fail())(_ should include(routes.AdminController.showPart(part.partId).url))
 
@@ -439,7 +442,7 @@ class AdminControllerSpec extends FunSpec
 
     doReturn(Future.successful(Some(part))).when(repository).findConfigByPartId(mockitoEq(part.partId))(anyObject[Span])
     doReturn(Future.successful(37L)).when(repository).save(anyObject[PartParam]())(anyObject[ConfigMapper[PartParam]], anyObject[Span])
-    doReturn(Future.successful(Seq.empty)).when(repository).findAllCacheGroupsByName(anyVararg[String]())(anyObject[Span])
+    doReturn(Future.successful(SortedSet.empty[CacheGroup])).when(repository).findAllCacheGroupsByName(anyVararg[String]())(anyObject[Span])
 
     val createParam = adminController.createParam(part.partId)(
       FakeRequest().withFormUrlEncodedBody("outputName" -> "someName", "paramType" -> "cookie", "required" -> "true")
@@ -451,7 +454,7 @@ class AdminControllerSpec extends FunSpec
       verify(repository).findConfigByPartId(part.partId)
       val newCiCaptor = ArgumentCaptor.forClass(classOf[PartParam])
       verify(repository).save(newCiCaptor.capture())(anyObject[ConfigMapper[PartParam]], anyObject[Span])
-      verify(repository).findAllCacheGroupsByName(Seq.empty: _*)
+      verify(repository).findAllCacheGroupsByName(Nil: _*)
       verify(cacheOps, Mockito.timeout(1000)).increasePartVersion(part.partId)
 
       newCiCaptor.getValue.outputName should be("someName")
@@ -468,7 +471,7 @@ class AdminControllerSpec extends FunSpec
     doReturn(Future.successful(Some(part))).when(repository).findConfigByPartId(part.partId)
     doReturn(Future.successful(37L)).when(repository).save(anyObject[PartParam]())(anyObject[ConfigMapper[PartParam]], anyObject[Span])
     doReturn(Future.successful(Some(mockPartParam))).when(repository).findParamById(mockitoEq(mockPartParam.id.get))(anyObject[Span])
-    doReturn(Future.successful(Seq.empty)).when(repository).findAllCacheGroupsByName(anyVararg[String]())(anyObject[Span])
+    doReturn(Future.successful(SortedSet.empty[CacheGroup])).when(repository).findAllCacheGroupsByName(anyVararg[String]())(anyObject[Span])
 
     val updateParam = adminController.updateParam(part.partId, mockPartParam.id.get)(
       FakeRequest().withFormUrlEncodedBody("outputName" -> "newName", "paramType" -> "body", "versioned" -> "true")
@@ -480,7 +483,7 @@ class AdminControllerSpec extends FunSpec
       verify(repository).findConfigByPartId(part.partId)
       val newCiCaptor = ArgumentCaptor.forClass(classOf[PartParam])
       verify(repository).save(newCiCaptor.capture())(anyObject[ConfigMapper[PartParam]], anyObject[Span])
-      verify(repository).findAllCacheGroupsByName(Seq.empty: _*)
+      verify(repository).findAllCacheGroupsByName(Nil: _*)
       verify(cacheOps, Mockito.timeout(1000)).increasePartVersion(part.partId)
 
       newCiCaptor.getValue.outputName should be("newName")
@@ -496,7 +499,7 @@ class AdminControllerSpec extends FunSpec
     when(repository.deletePartParamById(anyLong())(anyObject[Span])).thenReturn(Future.successful(1))
     doReturn(Future.successful(Some(part))).when(repository).findConfigByPartId(part.partId)
     doReturn(Future.successful(Some(mockPartParam))).when(repository).findParamById(mockitoEq(mockPartParam.id.get))(anyObject[Span])
-    doReturn(Future.successful(Seq.empty)).when(repository).findAllCacheGroupsByName(anyVararg[String]())(anyObject[Span])
+    doReturn(Future.successful(SortedSet.empty[CacheGroup])).when(repository).findAllCacheGroupsByName(anyVararg[String]())(anyObject[Span])
 
     val deleteParam = adminController.deleteParam(part.partId, mockPartParam.id.get)(FakeRequest())
     status(deleteParam) should equal(FOUND)
@@ -507,6 +510,19 @@ class AdminControllerSpec extends FunSpec
       verify(repository).deletePartParamById(newCiCaptor.capture())(anyObject[Span])
       verify(cacheOps, Mockito.timeout(1000)).increasePartVersion(mockitoEq(part.partId))(anyObject[Span])
       newCiCaptor.getValue should be(part.id.get)
+    }
+  }
+
+  it("should display a ThreadPoolConfig") {
+    val repository = mock[MutableConfigsRepository]
+    val adminController = new AdminController(cacheOps = DummyCacheOps, repository = repository)
+    val tpc = mockThreadConfig.copy(id = Some(123L))
+    doReturn(Future.successful(Some(tpc))).when(repository).findThreadPoolConfigById(mockitoEq(123L))(anyObject[Span])
+
+    val showThreadPool = adminController.showThreadPool(123L)(FakeRequest())
+    whenReady(showThreadPool) { result =>
+      verify(repository).findThreadPoolConfigById(mockitoEq(123L))(anyObject[Span])
+      result.header.status shouldBe OK
     }
   }
 
@@ -529,9 +545,9 @@ class AdminControllerSpec extends FunSpec
   it("should update a thread pool config") {
     val repository = mock[MutableConfigsRepository]
     val adminController = new AdminController(cacheOps = DummyCacheOps, repository = repository)
-    doReturn(Future.successful(76L)).when(repository).save(anyObject[ThreadPoolConfig]())(anyObject[ConfigMapper[ThreadPoolConfig]], anyObject[Span])
-    val tpc = mockThreadConfig.copy(id = Some(123))
+    val tpc = mockThreadConfig.copy(id = Some(123L))
     doReturn(Future.successful(Some(tpc))).when(repository).findThreadPoolConfigById(anyLong())(anyObject[Span])
+    doReturn(Future.successful(123L)).when(repository).save(anyObject[ThreadPoolConfig]())(anyObject[ConfigMapper[ThreadPoolConfig]], anyObject[Span])
 
     val updateThreadPool = adminController.updateThreadPool(123L)(FakeRequest().withFormUrlEncodedBody("threadPoolKey" -> "myNewThreadPool", "coreSize" -> "99"))
     whenReady(updateThreadPool) { result =>
@@ -542,6 +558,19 @@ class AdminControllerSpec extends FunSpec
       newCiCaptor.getValue.threadPoolKey should be("myNewThreadPool")
       newCiCaptor.getValue.coreSize should be(99)
       newCiCaptor.getValue.createdAt should be(tpc.createdAt)
+    }
+  }
+
+  it("should display a CacheGroup") {
+    val repository = mock[MutableConfigsRepository]
+    val adminController = new AdminController(cacheOps = DummyCacheOps, repository = repository)
+    val cacheGroup = mockCacheGroup.copy(id = Some(123))
+    doReturn(Future.successful(Some(cacheGroup))).when(repository).findCacheGroupByName(mockitoEq(mockCacheGroup.name))(anyObject[Span])
+
+    val showCacheGroup = adminController.showCacheGroup(cacheGroup.name)(FakeRequest())
+    whenReady(showCacheGroup) { result =>
+      verify(repository).findCacheGroupByName(mockitoEq(mockCacheGroup.name))(anyObject[Span])
+      result.header.status shouldBe OK
     }
   }
 
@@ -562,14 +591,13 @@ class AdminControllerSpec extends FunSpec
   it("should update a CacheGroup") {
     val repository = mock[MutableConfigsRepository]
     val adminController = new AdminController(cacheOps = DummyCacheOps, repository = repository)
-    doReturn(Future.successful(76L)).when(repository).save(anyObject[CacheGroup]())(anyObject[ConfigMapper[CacheGroup]], anyObject[Span])
-    doReturn(Future.successful(Seq(part))).when(repository).findAllConfigs()(anyObject[Span])
-    val cacheGroup = mockCacheGroup.copy(id = Some(123))
-    doReturn(Future.successful(Some(cacheGroup))).when(repository).findCacheGroupByName(anyString())(anyObject[Span])
+    val cacheGroup = mockCacheGroup.copy(id = Some(123L))
+    doReturn(Future.successful(Some(cacheGroup))).when(repository).findCacheGroupByName(mockitoEq(cacheGroup.name))(anyObject[Span])
+    doReturn(Future.successful(123L)).when(repository).save(anyObject[CacheGroup]())(anyObject[ConfigMapper[CacheGroup]], anyObject[Span])
 
-    val saveCacheGroup = adminController.updateCacheGroup("123")(FakeRequest().withFormUrlEncodedBody("name" -> "myEditedThreadPool", "description" -> "harooo"))
+    val saveCacheGroup = adminController.updateCacheGroup(cacheGroup.name)(FakeRequest().withFormUrlEncodedBody("name" -> "myEditedThreadPool", "description" -> "harooo"))
     whenReady(saveCacheGroup) { result =>
-      verify(repository).findCacheGroupByName("123")
+      verify(repository).findCacheGroupByName(mockitoEq(cacheGroup.name))(anyObject[Span])
 
       val newCiCaptor = ArgumentCaptor.forClass(classOf[CacheGroup])
       verify(repository).save(newCiCaptor.capture())(anyObject[ConfigMapper[CacheGroup]], anyObject[Span])

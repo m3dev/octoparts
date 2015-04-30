@@ -4,8 +4,8 @@ import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 
 import com.m3.octoparts.model.config.json._
-import com.m3.octoparts.model.{ HttpMethod, ResponseMeta, AggregateResponse }
-import org.scalatest.{ Matchers, FunSpec }
+import com.m3.octoparts.model.{ AggregateResponse, HttpMethod, ResponseMeta }
+import org.scalatest.{ FunSpec, Matchers }
 
 import scala.collection.convert.Wrappers.SeqWrapper
 import scala.concurrent.duration._
@@ -22,10 +22,24 @@ class ExtractorsSpec extends FunSpec with Matchers {
   }
   describe("EndpointListExtractor") {
     it("should extract something that has just been serialized") {
-      val configs = Seq(HttpPartConfig("p", "me", "http://localhost", Some(""),
-        HttpMethod.Post, HystrixConfig(5.seconds, ThreadPoolConfig("knitty", 1, 10), "p", "knitty", true),
-        httpPoolSize = 5, httpConnectionTimeout = 1.second, httpSocketTimeout = 5.seconds, httpDefaultEncoding = StandardCharsets.UTF_8,
-        alertMailSettings = AlertMailSettings.Off))
+      val configs = Seq(
+        HttpPartConfig(
+          partId = "p",
+          owner = "me",
+          uriToInterpolate = "http://localhost",
+          description = Some(""),
+          method = HttpMethod.Post,
+          hystrixConfig = HystrixConfig(5.seconds, ThreadPoolConfig("knitty", 1, 10), "p", "knitty", localContentsAsFallback = true),
+          additionalValidStatuses = Set.empty,
+          httpPoolSize = 5,
+          httpConnectionTimeout = 1.second,
+          httpSocketTimeout = 5.seconds,
+          httpDefaultEncoding = StandardCharsets.UTF_8,
+          parameters = Set.empty,
+          cacheGroups = Set.empty,
+          alertMailSettings = AlertMailSettings.Off
+        )
+      )
       val serialized = OctopartsApiBuilder.Mapper.writeValueAsBytes(configs)
       EndpointListExtractor.deserialize(new ByteArrayInputStream(serialized)) should equal(SeqWrapper(configs))
     }

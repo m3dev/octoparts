@@ -28,7 +28,7 @@ private[client] class RequestBuilder(requestMeta: RequestMeta) {
       this
     }
 
-    def build() {
+    def build() = {
       val builtParams = params.synchronized(params.result())
       partRequests.synchronized(partRequests += PartRequest(partId, id, builtParams))
     }

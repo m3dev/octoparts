@@ -9,8 +9,8 @@ import com.m3.octoparts.hystrix.{ HystrixExecutor, MockHttpClientComponent }
 import com.m3.octoparts.model.HttpMethod.Get
 import com.m3.octoparts.model.config.ParamType._
 import com.m3.octoparts.model.config._
-import com.twitter.zipkin.gen.Span
 import com.m3.octoparts.model.{ PartRequest, PartResponse, RequestMeta }
+import com.twitter.zipkin.gen.Span
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpUriRequest
 import org.scalatest._
@@ -117,6 +117,12 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
       headers should contain("X-OCTOPARTS-REQUEST-ID" -> "bande a part")
       headers should contain("X-OCTOPARTS-PARENT-REQUEST-ID" -> "hey man that's so meta")
     }
+    it("should be able to pass exotic query params") {
+      val hArgs = Map(
+        ShortPartParam("query1", Query) -> Seq("\"'&=")
+      )
+      handler.createBlockingHttpRetrieve(partRequestInfo, hArgs, None).uri.getQuery shouldBe "query1=\"'&="
+    }
   }
 
   describe("#collectHeaders") {
@@ -157,7 +163,7 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
         override def future[T](f: => T, fallbackTransform: Option[String] => T) = Future.successful(f)
       }
       def httpMethod = Get
-      val additionalValidStatuses = Set.empty[Int]
+      protected val additionalValidStatuses = Set.empty[Int]
       def httpClient = client
     }
   }

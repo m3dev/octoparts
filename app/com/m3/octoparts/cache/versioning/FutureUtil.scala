@@ -2,7 +2,7 @@ package com.m3.octoparts.cache.versioning
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-private object FutureUtil {
+private[versioning] object FutureUtil {
 
   def thenDoIfWasNone(futureOpt: Future[Option[_]])(action: => Future[Unit])(
     implicit executionContext: ExecutionContext): Future[Boolean] = {

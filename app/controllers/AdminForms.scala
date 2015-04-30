@@ -1,7 +1,6 @@
 package controllers
 
-import java.nio.charset.Charset
-
+import java.nio.charset.{ Charset => JavaCharset }
 import com.beachape.logging.LTSVLogger
 import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config._
@@ -10,6 +9,7 @@ import org.joda.time.DateTime
 import play.api.data.Forms._
 import play.api.data._
 
+import scala.collection.SortedSet
 import scala.concurrent.duration._
 
 object AdminForms {
@@ -33,13 +33,13 @@ object AdminForms {
     data =>
 
     /** Create a brand new HttpPartConfig using the data input into the form */
-    def toNewHttpPartConfig(owner: String, cacheGroups: Set[CacheGroup]): HttpPartConfig = HttpPartConfig(
+    def toNewHttpPartConfig(owner: String, cacheGroups: SortedSet[CacheGroup]): HttpPartConfig = HttpPartConfig(
       partId = PartData.trimPartId(data.partId),
       owner = owner,
       description = data.description,
       uriToInterpolate = data.httpSettings.uri,
       method = HttpMethod.withName(data.httpSettings.method),
-      additionalValidStatuses = HttpPartConfig.parseValidStatuses(data.httpSettings.additionalValidStatuses.filterNot(_.isEmpty)),
+      additionalValidStatuses = HttpPartConfig.parseValidStatuses(data.httpSettings.additionalValidStatuses),
       httpPoolSize = data.httpSettings.httpPoolSize,
       httpConnectionTimeout = data.httpSettings.httpConnectionTimeoutInMs.milliseconds,
       httpSocketTimeout = data.httpSettings.httpSocketTimeoutInMs.milliseconds,
@@ -69,13 +69,12 @@ object AdminForms {
     )
 
     /** Update an existing HttpPartConfig using the data input into the form */
-    def toUpdatedHttpPartConfig(originalPart: HttpPartConfig, params: Set[PartParam], cacheGroups: Set[CacheGroup]): HttpPartConfig = originalPart.copy(
+    def toUpdatedHttpPartConfig(originalPart: HttpPartConfig, cacheGroups: SortedSet[CacheGroup]): HttpPartConfig = originalPart.copy(
       partId = PartData.trimPartId(data.partId),
-      parameters = params,
       description = data.description,
       uriToInterpolate = data.httpSettings.uri,
       method = HttpMethod.withName(data.httpSettings.method),
-      additionalValidStatuses = HttpPartConfig.parseValidStatuses(data.httpSettings.additionalValidStatuses.filterNot(_.isEmpty)),
+      additionalValidStatuses = HttpPartConfig.parseValidStatuses(data.httpSettings.additionalValidStatuses),
       httpPoolSize = data.httpSettings.httpPoolSize,
       httpConnectionTimeout = data.httpSettings.httpConnectionTimeoutInMs.milliseconds,
       httpSocketTimeout = data.httpSettings.httpSocketTimeoutInMs.milliseconds,
@@ -117,7 +116,7 @@ object AdminForms {
         httpPoolSize = part.httpPoolSize,
         httpConnectionTimeoutInMs = part.httpConnectionTimeout.toMillis.toInt,
         httpSocketTimeoutInMs = part.httpSocketTimeout.toMillis.toInt,
-        httpDefaultEncoding = part.httpDefaultEncoding.name(),
+        httpDefaultEncoding = part.httpDefaultEncoding.name,
         httpProxy = part.httpProxy),
       hystrixConfig = HystrixConfigData(
         commandKey = part.hystrixConfigItem.commandKey,
@@ -127,7 +126,7 @@ object AdminForms {
         localContentsAsFallback = part.hystrixConfigItem.localContentsAsFallback
       ),
       ttl = part.cacheTtl.map(_.toSeconds.toInt),
-      cacheGroupNames = part.cacheGroups.map(_.name).toSeq,
+      cacheGroupNames = part.cacheGroups.toSeq.map(_.name),
       alertMailData = AlertMailData(
         enabled = part.alertMailsEnabled,
         interval = Some(part.alertInterval.toSeconds.toInt),
@@ -162,7 +161,7 @@ object AdminForms {
         "httpPoolSize" -> number(min = 1),
         "httpConnectionTimeoutInMs" -> number(min = 0),
         "httpSocketTimeoutInMs" -> number(min = 0),
-        "httpDefaultEncoding" -> text.verifying(string => Charset.isSupported(string)),
+        "httpDefaultEncoding" -> text.verifying(string => JavaCharset.isSupported(string)),
         "httpProxy" -> optional(text)
       )(HttpConfigData.apply)(HttpConfigData.unapply),
       "hystrixConfig" -> mapping(

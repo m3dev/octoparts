@@ -20,7 +20,7 @@ class RichFutureWithTimeoutSpec extends FunSpec with Matchers with ScalaFutures 
 
   describe("#timeoutIn") {
 
-    val fTimeout = 500 millis
+    val fTimeout = 500.millis
 
     it("should cause a Future to timeout after the passed in duration time") {
       val fWithTimeout: Future[Int] = Future {

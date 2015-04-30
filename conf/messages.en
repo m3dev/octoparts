@@ -50,6 +50,7 @@ parts.parameter.description=Description
 parts.parameter.type=Output type
 parts.parameter.required=Required
 parts.parameter.versioned=Can triggers cache flushes
+parts.parameter.cacheGroups=Associated cache groups
 parts.section.hystrix=Hystrix settings
 parts.hystrix.commandKey=Command key
 parts.hystrix.commandGroupKey=Command group
@@ -64,6 +65,7 @@ parts.cache.ttl.label=Time to live (seconds)
 parts.cache.ttl.help=Not set = Eternal; 0 = Do not cache
 parts.cache.unlimited=No limit
 parts.cache.none=Cache disabled
+parts.cache.flush=Flush cache
 parts.section.cacheGroup=Cache groups
 parts.cacheGroup.none=None yet
 parts.section.alertMail=Alert mail settings
@@ -95,7 +97,8 @@ tryIt.title=Try {0} !
 tryIt.disable=Disable
 tryIt.meta=Meta
 tryIt.send=Send
-tryIt.response=Response
+tryIt.response-octoparts=Octoparts response
+tryIt.response-contents=Part response contents
 tryIt.clear=Clear
 
 parameter.edit=Edit parameter {1} of part {0}
@@ -104,15 +107,19 @@ parameter.ifDifferent=(if different)
 parameter.cacheGroups.none=None yet
 
 threadPools.this=Thread pool
+threadPools.detail=Thread pool details
 threadPools.list=Thread pools
 threadPools.create=Create a new thread pool
 threadPools.edit=Edit settings for thread pool {0}
 threadPools.key=Thread pool key
 threadPools.coreSize=Core size
+threadPools.queueSize=Queue size
+threadPools.members=Members
 
 cacheGroups.this=Cache group
 cacheGroups.list=Cache groups
 cacheGroups.create=Create a new cache group
+cacheGroups.detail=Cache group details
 cacheGroups.edit=Edit cache group {0}
 cacheGroups.name=Name
 cacheGroups.description=Description
@@ -122,18 +129,25 @@ cacheGroups.parts=Member parts
 cacheGroups.numParts=Member parts count
 cacheGroups.parameters=Member parameters
 cacheGroups.numParameters=Member parameters count
+cacheGroups.flush=Quick flush (parts only)
 
 menu.links=Links
 menu.monitoring=Monitoring
 menu.info=Information
 menu.logout=Log out
 
-admin.partParameterMismatch=The parameter with ID {0} does not belog to part {1}
+admin.partParameterMismatch=The parameter with ID {0} does not belong to part {1}
 admin.parameterNotFound=There was no parameter with ID {0}
 admin.threadPoolNotFound=There was no thread pool with ID {0}
 admin.partNotFound=Part not found: {0}
 admin.cacheGroupNotFound=Cache group not found: {0}
 admin.validationErrors=Validation errors: {0}
+admin.warnings.QueryParamInterpolation=Interpolation should not be used for query parameters ({0}).
+admin.warnings.MissingPathParam=The interpolation token ''{0}'' had no corresponding path parameter.
+admin.warnings.PathParamNoInterp=The path parameter ''{0}'' had no corresponding interpolation token.
+admin.warnings.PathParamOption=The path parameter ''{0}'' should be required.
+admin.warnings.WhitespaceInUri=There is a whitespace in the URI.
+admin.warnings.AlertEmailOff=Alert emails should be enabled in production mode.
 
 admin.export=Export
 admin.import=Import configuration

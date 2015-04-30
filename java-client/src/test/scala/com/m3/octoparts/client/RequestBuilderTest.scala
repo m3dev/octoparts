@@ -36,7 +36,7 @@ class RequestBuilderTest extends FunSpec with BeforeAndAfterAll with Matchers {
     OctopartsApiBuilder.Mapper.readValue(serialized, classOf[AggregateRequest]) shouldBe ag
   }
 
-  override def afterAll() {
+  override def afterAll() = {
     apiBuilder.close()
   }
 }

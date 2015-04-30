@@ -91,6 +91,8 @@ class InstrumentedHttpClient(
    * A [[PoolingHttpClientConnectionManager]] which monitors the number of open connections.
    */
   private[http] class InstrumentedHttpClientConnectionMgr extends PoolingHttpClientConnectionManager {
+    // TODO use this after moving to httpclient-4.4
+    // setValidateAfterInactivity(1) // always revalidate connections
     setDefaultMaxPerRoute(connectionPoolSize)
     setMaxTotal(connectionPoolSize)
 

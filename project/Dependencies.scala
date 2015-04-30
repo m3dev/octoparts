@@ -14,14 +14,16 @@ object Dependencies {
 
   val thePlayVersion = play.core.PlayVersion.current
   val slf4jVersion = "1.7.10"
-  val hystrixVersion = "1.3.20"
-  val httpClientVersion = "4.4"
-  val scalikejdbcVersion = "2.2.3"
+  val hystrixVersion = "1.4.1"
+  // http-client 4.4 has an unsolved issue which affects us critically: https://issues.apache.org/jira/browse/HTTPCLIENT-1609
+  // Stay on 4.3.x until this is fixed.
+  val httpClientVersion = "4.3.6"
+  val scalikejdbcVersion = "2.2.5"
   val swaggerVersion = "1.3.12"
   val jacksonVersion = "2.5.1"
 
   // Logging
-  val logbackClassic      = "ch.qos.logback"            % "logback-classic"               % "1.1.2"
+  val logbackClassic      = "ch.qos.logback"            % "logback-classic"               % "1.1.3"
   val slf4jApi            = "org.slf4j"                 % "slf4j-api"                     % slf4jVersion
   val jclOverSlf4j        = "org.slf4j"                 % "jcl-over-slf4j"                % slf4jVersion
   val log4jOverSlf4j      = "org.slf4j"                 % "log4j-over-slf4j"              % slf4jVersion
@@ -33,20 +35,20 @@ object Dependencies {
   // Hystrix
   val hystrixCore         = "com.netflix.hystrix"       % "hystrix-core"                  % hystrixVersion
   val hystrixStream       = "com.netflix.hystrix"       % "hystrix-metrics-event-stream"  % hystrixVersion
-  val rxJavaScala         = "io.reactivex"              %% "rxscala"                      % "0.23.1" // matches the version rxjava used in hystrix-core
+  val rxJavaScala         = "io.reactivex"              %% "rxscala"                      % "0.24.0" // compatible with the rxjava (1.0.7) used in hystrix-core. Check again if you change.
 
   // HTTP clients
-  val asyncHttpClient     = "com.ning"                  % "async-http-client"             % "1.9.11"
+  val asyncHttpClient     = "com.ning"                  % "async-http-client"             % "1.9.11" // not upgrading because play-ws uses this version
   val httpClient          = "org.apache.httpcomponents" % "httpclient"                    % httpClientVersion
   val httpClientCache     = "org.apache.httpcomponents" % "httpclient-cache"              % httpClientVersion
-  val metricsHttpClient   = "io.dropwizard.metrics"     % "metrics-httpclient"            % "3.1.0"
+  val metricsHttpClient   = "io.dropwizard.metrics"     % "metrics-httpclient"            % "3.1.1"
 
   // DB
   val postgres            = "org.postgresql"            % "postgresql"                    % "9.4-1201-jdbc41"   % Runtime
-  val skinnyOrm           = "org.skinny-framework"      %% "skinny-orm"                   % "1.3.13"
+  val skinnyOrm           = "org.skinny-framework"      %% "skinny-orm"                   % "1.3.15"
   val scalikeJdbc         = "org.scalikejdbc"           %% "scalikejdbc"                  % scalikejdbcVersion
   val scalikeJdbcConfig   = "org.scalikejdbc"           %% "scalikejdbc-config"           % scalikejdbcVersion
-  val scalikeJdbcPlay     = "org.scalikejdbc"           %% "scalikejdbc-play-plugin"      % "2.3.5"
+  val scalikeJdbcPlay     = "org.scalikejdbc"           %% "scalikejdbc-play-plugin"      % "2.3.6"
   val dbcp2               = "org.apache.commons"        % "commons-dbcp2"                 % "2.1"
 
   // Memcached
@@ -83,7 +85,7 @@ object Dependencies {
   val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.6"
   val findbugs            = "com.google.code.findbugs"  % "jsr305"                        % "3.0.0"
 
-  val zipkinFutures       = "com.beachape"              %% "zipkin-futures-play"          % "0.0.7"
+  val zipkinFutures       = "com.beachape"              %% "zipkin-futures-play"          % "0.1.0"
 
   val withoutExcluded = { (m: ModuleID) =>
     m.excludeAll(

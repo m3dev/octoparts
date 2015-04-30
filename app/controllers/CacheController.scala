@@ -100,11 +100,17 @@ class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
     }
   }
 
-  private def checkResult(fu: Future[Unit])(implicit request: RequestHeader): Future[Result] = {
+  private def checkResult(fu: Future[_])(implicit request: RequestHeader): Future[Result] = {
     fu.map(_ => Ok("OK")).recover(logAndRenderError("ERROR: " + _.toString))
   }
 
-  private def renderInvalidated[A](invalidatedThings: Seq[A]) = Ok(s"OK: invalidated the following: $invalidatedThings")
+  private def renderInvalidated[A](invalidatedThings: Seq[A]) = Ok {
+    if (invalidatedThings.isEmpty) {
+      "OK"
+    } else {
+      s"OK: invalidated the following:\n${invalidatedThings.mkString("\n")}"
+    }
+  }
 
   private def logAndRenderError(render: Throwable => String)(implicit request: RequestHeader): PartialFunction[Throwable, Result] = {
     case NonFatal(err) =>
@@ -115,26 +121,16 @@ class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
   /**
    * Invalidates the given group's PartParams
    *
-   * Does a fetch of each PartParam that is on the CacheGroup because
-   * 1. These may be stale because CacheGroups are cached (unlikely)
-   * 2. We CANNOT assume that PartParams from CacheGroup#partParams have their parent HttpPartConfig
-   * readily available
-   *
    * @return Future sequence of partParam names that were invalidated
    */
-  private def invalidateGroupPartParams(group: CacheGroup, paramValue: String)(implicit parentSpan: Span): Future[Seq[String]] = {
-    val futureMaybeParamSeq = Future.sequence(group.partParams.map(_.id).flatten.map(repository.findParamById))
-    futureMaybeParamSeq.flatMap { maybeParamSeq =>
-      Future.sequence(for {
-        maybeParam <- maybeParamSeq
-        param <- maybeParam
-        partConfig <- param.httpPartConfig // Safe to assume at this point that they exist
-      } yield {
-        cacheOps.increaseParamVersion(VersionedParamKey(partConfig.partId, param.outputName, paramValue)).map { done =>
-          param.outputName
-        }
-      }
-      )
+  private def invalidateGroupPartParams(group: CacheGroup, paramValue: String)(implicit parentSpan: Span): Future[Seq[String]] = Future.sequence {
+    for {
+      param <- group.partParams.toSeq
+      partConfig <- param.httpPartConfig // Safe to assume at this point that they exist
+    } yield {
+      val vpk = VersionedParamKey(partConfig.partId, param.outputName, paramValue)
+      val ipv: Future[_] = cacheOps.increaseParamVersion(vpk)
+      ipv.map(_ => param.outputName)
     }
   }
 
@@ -142,10 +138,13 @@ class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
    * Invalidates the given group's parts
    * @return Future sequence of Part names that were invalidated
    */
-  private def invalidateGroupParts(group: CacheGroup)(implicit parentSpan: Span): Future[Seq[String]] = Future.sequence(for {
-    part <- group.httpPartConfigs
-  } yield {
-    cacheOps.increasePartVersion(part.partId).map(done => part.partId)
-  })
+  private def invalidateGroupParts(group: CacheGroup)(implicit parentSpan: Span): Future[Seq[String]] = Future.sequence {
+    for {
+      part <- group.httpPartConfigs.toSeq
+    } yield {
+      val ipv: Future[_] = cacheOps.increasePartVersion(part.partId)
+      ipv.map(_ => part.partId)
+    }
+  }
 
 }

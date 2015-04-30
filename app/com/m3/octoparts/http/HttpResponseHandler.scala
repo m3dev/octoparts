@@ -15,7 +15,7 @@ import scala.collection.convert.Wrappers.JListWrapper
 import scala.util.Try
 
 /**
- * Custom HttpResponseHandler that returns a [[com.m3.octoparts.http.HttpResponse]] case class
+ * Custom HttpResponseHandler that returns a [[HttpResponse]] case class
  */
 class HttpResponseHandler(defaultEncoding: Charset) extends ResponseHandler[HttpResponse] {
   /**
@@ -23,10 +23,7 @@ class HttpResponseHandler(defaultEncoding: Charset) extends ResponseHandler[Http
    * HttpResponse case class
    *
    * Looks like a big method, but mostly it's mostly just pulling values out of
-   * ApacheHttpResponse
-   *
-   * @param apacheResp [[org.apache.http.HttpResponse]]
-   * @return HttpResponse
+   * [[ApacheHttpResponse]]
    */
   def handleResponse(apacheResp: ApacheHttpResponse): HttpResponse = {
     val headers = apacheResp.getAllHeaders.toSeq
@@ -56,7 +53,7 @@ class HttpResponseHandler(defaultEncoding: Charset) extends ResponseHandler[Http
     Try {
       // HttpCookie.parse may throw an IllegalArgumentException
       JListWrapper(HttpCookie.parse(value))
-    }.getOrElse(Seq.empty)
+    }.getOrElse(Nil)
   }
 
   /**

@@ -1,4 +1,4 @@
-@(parts: Seq[presentation.HttpPartConfigView])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
+@(parts: scala.collection.SortedSet[presentation.HttpPartConfigView])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
 
 @views.html.adminlayout(Messages("parts.list")) {
     <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.css" />
@@ -12,7 +12,6 @@
     }
     -->
     </style>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     @views.html.datatables()
 } {
 
@@ -32,7 +31,10 @@
         @for(partView <- parts) {
             <tr>
                 <td>
-                    <a id="@partView.partId"></a> <span title="@Messages("parts.updated"): @partView.lastUpdate">@partView.partId</span>
+                    <a href="@controllers.routes.AdminController.showPart(partView.partId)"><span title="@Messages("parts.updated"): @partView.lastUpdate">@partView.partId</span></a>
+                    @if(partView.warnings.nonEmpty) {
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true" title="@partView.warnings.mkString("\n")"></span>
+                    }
                 </td>
                 <td>@partView.uriToInterpolate</td>
                 <td>@partView.config.owner</td>

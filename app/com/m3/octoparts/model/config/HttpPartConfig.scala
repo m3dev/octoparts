@@ -1,12 +1,12 @@
 package com.m3.octoparts.model.config
 
-import java.nio.charset.Charset
-
 import com.m3.octoparts.cache.config.CacheConfig
 import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config.json.{ HttpPartConfig => JsonHttpPartConfig, AlertMailSettings }
+import org.apache.http.HttpStatus
 import org.joda.time.DateTime
 
+import scala.collection.SortedSet
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.Try
@@ -24,16 +24,16 @@ case class HttpPartConfig(id: Option[Long] = None, // None means that the record
                           description: Option[String],
                           uriToInterpolate: String,
                           method: HttpMethod.Value,
-                          additionalValidStatuses: Set[Int] = Set.empty,
+                          additionalValidStatuses: SortedSet[Int] = SortedSet.empty,
                           httpPoolSize: Int,
                           httpConnectionTimeout: FiniteDuration,
                           httpSocketTimeout: FiniteDuration,
                           httpDefaultEncoding: Charset,
                           httpProxy: Option[String] = None,
-                          parameters: Set[PartParam] = Set.empty,
+                          parameters: SortedSet[PartParam] = SortedSet.empty,
                           hystrixConfig: Option[HystrixConfig] = None,
                           deprecatedInFavourOf: Option[String] = None,
-                          cacheGroups: Set[CacheGroup] = Set.empty,
+                          cacheGroups: SortedSet[CacheGroup] = SortedSet.empty,
                           cacheTtl: Option[FiniteDuration] = Some(Duration.Zero), // in seconds
                           alertMailsEnabled: Boolean,
                           alertAbsoluteThreshold: Option[Int],
@@ -53,7 +53,7 @@ case class HttpPartConfig(id: Option[Long] = None, // None means that the record
 
   def cacheConfig: CacheConfig = {
     // make sure the order of parameters never changes (using DB id)
-    val versionedParamNames = parameters.filter(_.versioned).toSeq.sortBy(_.id).map(_.outputName)
+    val versionedParamNames = parameters.toSeq.filter(_.versioned).sortBy(_.id).map(_.outputName)
     CacheConfig(cacheTtl, versionedParamNames)
   }
 
@@ -63,12 +63,23 @@ case class HttpPartConfig(id: Option[Long] = None, // None means that the record
 
 object HttpPartConfig {
 
-  def parseValidStatuses(mbVal: Option[String]): Set[Int] = mbVal.fold(Set.empty[Int]) {
-    _.split(",").flatMap { tok =>
-      Try {
+  /**
+   * Parses a CSV string, and filters out tokens that are not numbers >= 400.
+   * @return a sorted list of unique statuses.
+   */
+  def parseValidStatuses(mbVal: Option[String]): SortedSet[Int] = {
+    val validStatuses = for {
+      someVal <- mbVal.toSeq
+      if someVal.nonEmpty
+      tok <- someVal.split(',')
+      status <- Try {
         tok.trim.toInt
       }.toOption
-    }.toSet
+      if status >= HttpStatus.SC_BAD_REQUEST
+    } yield {
+      status
+    }
+    validStatuses.to[SortedSet]
   }
 
   /**
@@ -83,15 +94,15 @@ object HttpPartConfig {
       uriToInterpolate = config.uriToInterpolate,
       method = config.method,
       hystrixConfig = HystrixConfig.toJsonModel(config.hystrixConfig.get),
-      additionalValidStatuses = config.additionalValidStatuses,
+      additionalValidStatuses = config.additionalValidStatuses.toSet,
       httpPoolSize = config.httpPoolSize,
       httpConnectionTimeout = config.httpConnectionTimeout,
       httpSocketTimeout = config.httpSocketTimeout,
-      httpDefaultEncoding = config.httpDefaultEncoding,
+      httpDefaultEncoding = config.httpDefaultEncoding.underlying,
       httpProxy = config.httpProxy,
-      parameters = config.parameters.map(PartParam.toJsonModel),
+      parameters = config.parameters.toSet.map(PartParam.toJsonModel),
       deprecatedInFavourOf = config.deprecatedInFavourOf,
-      cacheGroups = config.cacheGroups.map(CacheGroup.toJsonModel),
+      cacheGroups = config.cacheGroups.toSet.map(CacheGroup.toJsonModel),
       cacheTtl = config.cacheTtl,
       alertMailSettings = AlertMailSettings(alertMailsEnabled = config.alertMailsEnabled,
         alertAbsoluteThreshold = config.alertAbsoluteThreshold,
@@ -111,15 +122,15 @@ object HttpPartConfig {
       uriToInterpolate = config.uriToInterpolate,
       method = config.method,
       hystrixConfig = Some(HystrixConfig.fromJsonModel(config.hystrixConfig)),
-      additionalValidStatuses = config.additionalValidStatuses,
+      additionalValidStatuses = config.additionalValidStatuses.to[SortedSet],
       httpPoolSize = config.httpPoolSize,
       httpConnectionTimeout = config.httpConnectionTimeout,
       httpSocketTimeout = config.httpSocketTimeout,
-      httpDefaultEncoding = config.httpDefaultEncoding,
+      httpDefaultEncoding = Charset.forName(config.httpDefaultEncoding.name),
       httpProxy = config.httpProxy,
-      parameters = config.parameters.map(PartParam.fromJsonModel),
+      parameters = config.parameters.map(PartParam.fromJsonModel).to[SortedSet],
       deprecatedInFavourOf = config.deprecatedInFavourOf,
-      cacheGroups = config.cacheGroups.map(CacheGroup.fromJsonModel),
+      cacheGroups = config.cacheGroups.map(CacheGroup.fromJsonModel).to[SortedSet],
       cacheTtl = config.cacheTtl,
       alertMailsEnabled = config.alertMailSettings.alertMailsEnabled,
       alertAbsoluteThreshold = config.alertMailSettings.alertAbsoluteThreshold,
@@ -133,4 +144,5 @@ object HttpPartConfig {
     )
   }
 
+  implicit val order: Ordering[HttpPartConfig] = Ordering.by(_.partId)
 }

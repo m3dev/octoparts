@@ -28,7 +28,7 @@ class HystrixExecutorSpec
   describe("#future") {
     it("should return a Future[Result] that makes sense") {
       val executor = HystrixExecutor(noFallbackConfig)
-      val f = executor.future(3, _.map(_.toInt).getOrElse(90))
+      val f = executor.future(3, _.fold(90)(_.toInt))
       whenReady(f) {
         _ should be(3)
       }
@@ -52,7 +52,7 @@ class HystrixExecutorSpec
             Thread.sleep(3.seconds.toMillis)
             9
           },
-          _.map(_.toInt).getOrElse(90)
+          _.fold(90)(_.toInt)
         )
         whenReady(f) {
           _ shouldBe 9
@@ -66,7 +66,7 @@ class HystrixExecutorSpec
             throw new IllegalArgumentException
             9
           },
-          _.map(_.toInt).getOrElse(90)
+          _.fold(90)(_.toInt)
         )
         whenReady(f) {
           _ shouldBe 9

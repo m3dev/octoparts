@@ -11,7 +11,6 @@ import com.m3.octoparts.repository.MutableConfigsRepository
 import com.twitter.zipkin.gen.Span
 import controllers.support.{ AuthSupport, LoggingSupport }
 import org.joda.time.DateTime
-import play.api.Logger
 import play.api.data._
 import play.api.data.validation.ValidationError
 import play.api.http.MediaType
@@ -23,6 +22,9 @@ import play.api.mvc._
 import presentation.{ HttpPartConfigView, NavbarLinks, ParamView }
 
 import scala.annotation.tailrec
+import scala.collection
+import scala.collection.SortedSet
+import scala.collection.immutable.TreeSet
 import scala.concurrent.Future
 import scala.util.{ Success, Failure, Try }
 import scala.util.control.NonFatal
@@ -46,7 +48,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
    */
 
   def listParts = AuthorizedAction.async { implicit req =>
-    val partsView = repository.findAllConfigs().map { configs => configs.map(HttpPartConfigView) }
+    val partsView: Future[SortedSet[HttpPartConfigView]] = repository.findAllConfigs().map { _.map(HttpPartConfigView(_)) }
     partsView.map(ps => Ok(views.html.part.list(ps)))
   }
 
@@ -79,7 +81,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
       showPartForm(formWithErrors, None, Messages("form.hasErrors"))
     }, { data =>
       repository.findAllCacheGroupsByName(data.cacheGroupNames: _*).flatMap { cacheGroups =>
-        val part = data.toNewHttpPartConfig(owner = req.principal.nickname, cacheGroups = cacheGroups.toSet)
+        val part = data.toNewHttpPartConfig(owner = req.principal.nickname, cacheGroups = cacheGroups)
         repository.save(part).map { id =>
           Found(controllers.routes.AdminController.showPart(part.partId).url)
         }.recoverWith {
@@ -100,18 +102,16 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
         showPartForm(formWithErrors, Some(part), Messages("form.hasErrors"))
       }, { data =>
         repository.findAllCacheGroupsByName(data.cacheGroupNames: _*).flatMap { cacheGroups =>
-          loadParams(part).flatMap { params =>
-            val updatedPart = data.toUpdatedHttpPartConfig(part, params.flatten, cacheGroups = cacheGroups.toSet)
-            val saveResult = repository.save(updatedPart)
-            saveResult.onComplete(_ => if (shouldBustCache(part, updatedPart)) cacheOps.increasePartVersion(partId))
-            saveResult.map { id =>
-              Found(controllers.routes.AdminController.showPart(updatedPart.partId).url)
-            }.recoverWith {
-              case NonFatal(e) =>
-                // Problem with save: display form again with an error message
-                errorRc(e)
-                showPartForm(form, Some(part), extractMessage(e))
-            }
+          val updatedPart = data.toUpdatedHttpPartConfig(part, cacheGroups)
+          val saveResult = repository.save(updatedPart)
+          saveResult.onComplete(_ => if (shouldBustCache(part, updatedPart)) cacheOps.increasePartVersion(partId))
+          saveResult.map { id =>
+            Found(controllers.routes.AdminController.showPart(updatedPart.partId).url)
+          }.recoverWith {
+            case NonFatal(e) =>
+              // Problem with save: display form again with an error message
+              errorRc(e)
+              showPartForm(form, Some(part), extractMessage(e))
           }
         }
       })
@@ -122,8 +122,8 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
     infoRc
     findAndUsePart(partId) { part =>
       repository.findAllConfigs().flatMap { allParts =>
-        val existingPartIds = allParts.map(_.partId).toSet
-        val existingCommandKeys = allParts.flatMap(_.hystrixConfig).map(_.commandKey).toSet
+        val existingPartIds = allParts.map(_.partId)
+        val existingCommandKeys = allParts.flatMap(_.hystrixConfig).map(_.commandKey)
         val newPart = part.copy(
           id = None,
           parameters = part.parameters.map(_.copy(id = None)),
@@ -182,7 +182,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
       charset
     }
     val fileData = java.nio.file.Files.readAllBytes(jsonFile.ref.file.toPath)
-    val jsonData = new String(fileData, fileContentType.headOption.orElse(req.charset).getOrElse("UTF-8"))
+    val jsonData = new String(fileData, fileContentType.orElse(req.charset).getOrElse("UTF-8"))
     val tryExtract = for {
       json <- Try(Json.parse(jsonData))
       a <- mapJson[Seq[JsonHttpPartConfig]](json)
@@ -225,16 +225,17 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
   def newParam(partId: String) = AuthorizedAction.async { implicit req =>
     findAndUsePart(partId) { part =>
       repository.findAllCacheGroups().map { cgs =>
-        Ok(views.html.param.edit(partId = part.partId, cacheGroups = cgs, selectedCacheGroupIds = Set.empty, maybeParam = None))
+        Ok(views.html.param.edit(AdminForms.paramForm, partId = part.partId, cacheGroups = cgs, maybeParam = None))
       }
     }
   }
 
   def editParam(partId: String, paramId: Long) = AuthorizedAction.async { implicit req =>
     findAndUseParam(partId, paramId) { param =>
-      repository.findAllCacheGroups().map { cgs =>
-        Ok(views.html.param.edit(
-          partId = partId, cacheGroups = cgs, selectedCacheGroupIds = param.cacheGroups.map(_.id.get).toSet, maybeParam = Some(ParamView(param))))
+      repository.findAllCacheGroups().map { allCacheGroups =>
+        val paramData = ParamData(param.outputName, param.inputNameOverride, param.description, param.paramType.toString, param.required, param.versioned, param.cacheGroups.toSeq.map(_.name))
+        val paramFormWithDefaults = AdminForms.paramForm.fill(paramData)
+        Ok(views.html.param.edit(form = paramFormWithDefaults, partId = partId, cacheGroups = allCacheGroups, maybeParam = Some(ParamView(param))))
       }
     }
   }
@@ -254,7 +255,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
             outputName = data.outputName,
             inputNameOverride = data.inputNameOverride.filterNot(_.isEmpty),
             description = data.description.filterNot(_.isEmpty),
-            cacheGroups = cacheGroups.toSet,
+            cacheGroups = cacheGroups,
             createdAt = DateTime.now,
             updatedAt = DateTime.now)
           saveAndRedirect {
@@ -281,7 +282,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
               outputName = data.outputName,
               inputNameOverride = data.inputNameOverride.filterNot(_.isEmpty),
               description = data.description.filterNot(_.isEmpty),
-              cacheGroups = cacheGroups.toSet,
+              cacheGroups = cacheGroups,
               updatedAt = DateTime.now)
             saveAndRedirect {
               saveParamAndClearPartResponseCache(partId, newParam)
@@ -337,6 +338,10 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
     Ok(views.html.threadpool.edit(None))
   }
 
+  def showThreadPool(id: Long) = AuthorizedAction.async { implicit req =>
+    findAndUseThreadPool(id) { tpc => Future.successful(Ok(views.html.threadpool.show(tpc))) }
+  }
+
   def editThreadPool(id: Long) = AuthorizedAction.async { implicit req =>
     findAndUseThreadPool(id) { tpc => Future.successful(Ok(views.html.threadpool.edit(Some(tpc)))) }
   }
@@ -351,7 +356,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
       val tpc = ThreadPoolConfig(threadPoolKey = data.threadPoolKey, coreSize = data.coreSize, createdAt = DateTime.now, updatedAt = DateTime.now)
       saveAndRedirect {
         repository.save(tpc)
-      }(routes.AdminController.listThreadPools, id => routes.AdminController.editThreadPool(id))
+      }(routes.AdminController.listThreadPools, id => routes.AdminController.showThreadPool(id))
     })
   }
 
@@ -366,7 +371,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
         val updatedTpc = tpc.copy(threadPoolKey = data.threadPoolKey, coreSize = data.coreSize, updatedAt = DateTime.now)
         saveAndRedirect {
           repository.save(updatedTpc)
-        }(routes.AdminController.listThreadPools, _ => routes.AdminController.editThreadPool(id))
+        }(routes.AdminController.editThreadPool(id), _ => routes.AdminController.showThreadPool(id))
       })
     }
   }
@@ -397,6 +402,10 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
     Ok(views.html.cachegroup.edit(None))
   }
 
+  def showCacheGroup(name: String) = AuthorizedAction.async { implicit req =>
+    findAndUseCacheGroup(name) { cg => Future.successful(Ok(views.html.cachegroup.show(cg))) }
+  }
+
   def editCacheGroup(name: String) = AuthorizedAction.async { implicit req =>
     findAndUseCacheGroup(name) { cg => Future.successful(Ok(views.html.cachegroup.edit(Some(cg)))) }
   }
@@ -412,7 +421,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
       val cacheGroup = CacheGroup(name = data.name, description = data.description, owner = owner, createdAt = DateTime.now, updatedAt = DateTime.now)
       saveAndRedirect {
         repository.save(cacheGroup)
-      }(routes.AdminController.listCacheGroups, id => routes.AdminController.editCacheGroup(cacheGroup.name))
+      }(routes.AdminController.newCacheGroup, id => routes.AdminController.showCacheGroup(cacheGroup.name))
     })
   }
 
@@ -427,7 +436,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
         val updatedCacheGroup = cg.copy(name = data.name, description = data.description, updatedAt = DateTime.now)
         saveAndRedirect {
           repository.save(updatedCacheGroup)
-        }(routes.AdminController.listCacheGroups, _ => routes.AdminController.editCacheGroup(updatedCacheGroup.name))
+        }(routes.AdminController.editCacheGroup(name), _ => routes.AdminController.showCacheGroup(updatedCacheGroup.name))
       })
     }
   }
@@ -458,27 +467,6 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
     }
   }
 
-  private def loadParams(part: HttpPartConfig)(implicit parentSpan: Span): Future[Set[Option[PartParam]]] = {
-    /*
-    When updating a HttpPartConfig in the current UI, the CacheGroups for the child PartParams
-    are left intact (this may change in the future).
-
-    This is because:
-    1. PartParams for a HttpPartConfig are saved/edited separately one-by-one
-    2. CacheGroups for a PartParam need to be configured from PartParams
-
-    As a result, we need to load the Params for an HttpPartConfig to make sure we have the Params'
-    CacheGroup information resolved.
-    */
-    val paramsWithCacheGroups = for {
-      param <- part.parameters
-      paramId <- param.id
-    } yield {
-      repository.findParamById(paramId) // Has CacheGroups loaded
-    }
-    Future.sequence(paramsWithCacheGroups)
-  }
-
   private def findAndUseParam(partId: String, paramId: Long)(f: PartParam => Future[Result])(implicit req: RequestHeader): Future[Result] = {
     repository.findParamById(paramId).flatMap { maybeParam =>
       maybeParam.map { param =>
@@ -506,34 +494,17 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
   }
 
   private def findAndUseCacheGroup(name: String)(f: (CacheGroup) => Future[Result])(implicit req: RequestHeader): Future[Result] = {
-    // Type-twiddling to turn an Option[Future[_]] into a Future[Option[_]]
-    def populate(maybeCacheGroup: Option[CacheGroup]): Future[Option[CacheGroup]] = {
-      val maybeF: Option[Future[CacheGroup]] = maybeCacheGroup.map[Future[CacheGroup]](populateCacheGroup)
-      maybeF.fold[Future[Option[CacheGroup]]](Future.successful(None)) { fCacheGroup => fCacheGroup.map(Some(_)) }
-    }
-
-    val fMaybeCacheGroup: Future[Option[CacheGroup]] =
-      repository.findCacheGroupByName(name).flatMap(populate)
-
-    fMaybeCacheGroup.flatMap { maybeCacheGroup =>
-      maybeCacheGroup.map(f).getOrElse {
-        warnRc("Cache group name" -> name, "Error" -> "not found")
-        Future.successful(flashError(routes.AdminController.listCacheGroups, Messages("admin.cacheGroupNotFound", name)))
+    for {
+      mbCacheGroup <- repository.findCacheGroupByName(name)
+      result <- mbCacheGroup match {
+        case None => {
+          warnRc("Cache group name" -> name, "Error" -> "not found")
+          Future.successful(flashError(routes.AdminController.listCacheGroups, Messages("admin.cacheGroupNotFound", name)))
+        }
+        case Some(cacheGroup) => f(cacheGroup)
       }
-    }
-  }
-
-  /**
-   * Must populate PartParam.httpPartConfig, so that for a given CacheGroup,
-   * for each of the PartParams that it has, we can display the HttpPartParam it belongs to.
-   * This is used in the 'show cache group' view.
-   */
-  private def populateCacheGroup(cacheGroup: CacheGroup)(implicit parentSpan: Span): Future[CacheGroup] = {
-    repository.findAllConfigs().map { allConfigs =>
-      val allConfigsMap = allConfigs.map(c => c.id.get -> c).toMap
-      cacheGroup.copy(partParams = cacheGroup.partParams.map { partParam =>
-        partParam.copy(httpPartConfig = partParam.httpPartConfigId.flatMap(id => allConfigsMap.get(id)))
-      })
+    } yield {
+      result
     }
   }
 
@@ -623,8 +594,8 @@ object AdminController {
    * Creates a unique name, by appending `suffix` until the result is not in `reservedNames`.
    */
   @tailrec
-  private[controllers] def makeNewName(currentName: String, reservedNames: Set[String], suffix: String = "_"): String = {
-    if (!reservedNames.contains(currentName)) {
+  private[controllers] def makeNewName(currentName: String, reservedNames: String => Boolean, suffix: String = "_"): String = {
+    if (!reservedNames(currentName)) {
       currentName
     } else {
       makeNewName(currentName + suffix, reservedNames, suffix)

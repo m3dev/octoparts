@@ -1,4 +1,4 @@
-# Octoparts [![Build Status](https://travis-ci.org/m3dev/octoparts.svg?branch=develop)](https://travis-ci.org/m3dev/octoparts) [![Coverage Status](https://coveralls.io/repos/m3dev/octoparts/badge.png?branch=develop)](https://coveralls.io/r/m3dev/octoparts?branch=develop)
+# Octoparts [![Build Status](https://travis-ci.org/m3dev/octoparts.svg?branch=develop)](https://travis-ci.org/m3dev/octoparts) [![Coverage Status](https://coveralls.io/repos/m3dev/octoparts/badge.svg?branch=develop)](https://coveralls.io/r/m3dev/octoparts?branch=develop)
 
 [See documentation](http://m3dev.github.io/octoparts/)
 

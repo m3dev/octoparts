@@ -3,6 +3,8 @@ package com.m3.octoparts.model.config
 import org.joda.time.DateTime
 import com.m3.octoparts.model.config.json.{ PartParam => JsonPartParam }
 
+import scala.collection.SortedSet
+
 /**
  * Model for holding Parameter configuration data for a Http dependency that
  * comes with a companion-object that can populate it from the database
@@ -24,7 +26,7 @@ case class PartParam(
     paramType: ParamType.Value,
     outputName: String,
     inputNameOverride: Option[String] = None,
-    cacheGroups: Set[CacheGroup] = Set.empty,
+    cacheGroups: SortedSet[CacheGroup] = SortedSet.empty,
     createdAt: DateTime,
     updatedAt: DateTime) extends ConfigModel[PartParam] {
 
@@ -47,7 +49,7 @@ object PartParam {
       outputName = param.outputName,
       inputNameOverride = param.inputNameOverride,
       description = param.description,
-      cacheGroups = param.cacheGroups.map(CacheGroup.toJsonModel)
+      cacheGroups = param.cacheGroups.toSet.map(CacheGroup.toJsonModel)
     )
   }
 
@@ -59,9 +61,11 @@ object PartParam {
       outputName = param.outputName,
       inputNameOverride = param.inputNameOverride,
       description = param.description,
-      cacheGroups = param.cacheGroups.map(CacheGroup.fromJsonModel),
+      cacheGroups = param.cacheGroups.map(CacheGroup.fromJsonModel).to[SortedSet],
       createdAt = DateTime.now,
       updatedAt = DateTime.now
     )
   }
+
+  implicit val order: Ordering[PartParam] = Ordering.by(pp => (pp.outputName, pp.paramType))
 }

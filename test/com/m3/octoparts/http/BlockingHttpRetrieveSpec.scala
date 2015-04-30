@@ -13,11 +13,10 @@ class BlockingHttpRetrieveSpec extends FunSpec with Matchers with ScalaFutures {
     trait HttpRetrieveBodyContext {
       def httpMethod: HttpMethod
       def uriForCommand: URI = new URI("http://beachape.com")
-      def headersForCommand: Seq[(String, String)] = Seq.empty
       def command = new BlockingHttpRetrieve with MockHttpClientComponent {
         val method = httpMethod
         override val maybeBody = Some("thing")
-        override val headers = headersForCommand
+        override val headers = Nil
         val uri = uriForCommand
       }
     }

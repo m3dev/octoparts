@@ -14,7 +14,7 @@ import play.api.mvc.{ Action, Controller }
 import shade.memcached.MemcachedCodecs
 
 import scala.concurrent.Future
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
 /**
@@ -45,7 +45,7 @@ class HealthcheckController(configsRepo: ConfigsRepository,
           "hystrix" -> hystrixStatus,
           "memcached" -> memcachedStatus
         )
-        val colour = calculateColour(statuses.values)
+        val colour = calculateColour(statuses.filterKeys(_ != "hystrix").values)
         val health = ServiceHealth(colour, statuses)
         logIfUnhealthy(health)
         health
@@ -57,7 +57,7 @@ class HealthcheckController(configsRepo: ConfigsRepository,
    * Check that the DB connection is alive and there is at least one part registered in the system
    */
   private def checkDb()(implicit parentSpan: Span): Future[DbStatus] = {
-    val fCount = configsRepo.findAllConfigs().map(_.length)
+    val fCount = configsRepo.findAllConfigs().map(_.size)
     fCount.map { count =>
       if (count > 0) DbStatus(ok = true, message = "DB looks fine")
       else DbStatus(ok = false, message = "parts_config table is empty!")
@@ -65,7 +65,11 @@ class HealthcheckController(configsRepo: ConfigsRepository,
       case NonFatal(e) =>
         LTSVLogger.warn(e, "Health check failed" -> "DB")
         DbStatus(ok = false, message = e.toString)
-    } time { case (status, duration) => LTSVLogger.info("DbStatus" -> status, "Time taken" -> toRelevantUnit(duration)) }
+    } time {
+      case (status, duration) if duration > 1.second => LTSVLogger.warn("DbStatus" -> status, "Time taken" -> toRelevantUnit(duration))
+      case (status, duration) if duration > 100.milliseconds => LTSVLogger.debug("DbStatus" -> status, "Time taken" -> toRelevantUnit(duration))
+      case (status, duration) => LTSVLogger.trace("DbStatus" -> status, "Time taken" -> toRelevantUnit(duration))
+    }
   }
 
   /**
@@ -84,7 +88,11 @@ class HealthcheckController(configsRepo: ConfigsRepository,
       }
     } map {
       bools => MemcachedStatus(bools.forall(identity))
-    } time { case (status, duration) => LTSVLogger.info("MemcachedStatus" -> status, "Time taken" -> toRelevantUnit(duration)) }
+    } time {
+      case (status, duration) if duration > 100.milliseconds => LTSVLogger.warn("MemcachedStatus" -> status, "Time taken" -> toRelevantUnit(duration))
+      case (status, duration) if duration > 10.milliseconds => LTSVLogger.debug("MemcachedStatus" -> status, "Time taken" -> toRelevantUnit(duration))
+      case (status, duration) => LTSVLogger.trace("MemcachedStatus" -> status, "Time taken" -> toRelevantUnit(duration))
+    }
   }
 
   /**
@@ -95,7 +103,14 @@ class HealthcheckController(configsRepo: ConfigsRepository,
     val commandKeysWithOpenCircuitBreakers = hystrixHealthReporter.getCommandKeysWithOpenCircuitBreakers
     val ok = commandKeysWithOpenCircuitBreakers.isEmpty
     val hystrixStatus = HystrixStatus(ok, commandKeysWithOpenCircuitBreakers)
-    LTSVLogger.info("HystrixStatus" -> hystrixStatus, "Time taken" -> toRelevantUnit(Duration(System.nanoTime() - startTime, TimeUnit.NANOSECONDS)))
+    val duration = toRelevantUnit(Duration(System.nanoTime() - startTime, TimeUnit.NANOSECONDS))
+    if (duration > 10.milliseconds) {
+      LTSVLogger.warn("HystrixStatus" -> hystrixStatus, "Time taken" -> duration)
+    } else if (duration > 1.milliseconds) {
+      LTSVLogger.debug("HystrixStatus" -> hystrixStatus, "Time taken" -> duration)
+    } else {
+      LTSVLogger.trace("HystrixStatus" -> hystrixStatus, "Time taken" -> duration)
+    }
     hystrixStatus
   }
 }

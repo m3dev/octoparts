@@ -2,7 +2,7 @@ package controllers
 
 import javax.ws.rs.QueryParam
 
-import com.beachape.zipkin.{ TracedFuture, ReqHeaderToSpanImplicit }
+import com.beachape.zipkin.ReqHeaderToSpanImplicit
 import com.beachape.zipkin.services.ZipkinServiceLike
 import com.m3.octoparts.json.format.ConfigModel._
 import com.m3.octoparts.json.format.ReqResp._
@@ -77,23 +77,14 @@ class PartsController(
     val fConfigs = partIdParams match {
       case Nil => configsRepository.findAllConfigs().trace("find-all-configs")
       case partIds =>
-        val fParts = partIds.map(id => configsRepository.findConfigByPartId(id).trace(s"find-config-by-part-ids: ${id}"))
+        val fParts = partIds.map(partId => configsRepository.findConfigByPartId(partId).trace("find-config-by-part-ids", "ids" -> partId))
         Future.sequence(fParts).map(_.flatten)
     }
 
-    val fCacheGroups = configsRepository.findAllCacheGroups()
-
     for {
       configs <- fConfigs
-      allCacheGroups <- fCacheGroups
     } yield {
-      val configsWithPartParamCacheGroups = configs.map {
-        config =>
-          config.copy(parameters = config.parameters.toSeq.map {
-            param => param.copy(cacheGroups = allCacheGroups.filter(_.partParams.exists(_.id == param.id)).toSet)
-          }.toSet)
-      }
-      Ok(Json.toJson(configsWithPartParamCacheGroups.map(HttpPartConfig.toJsonModel)))
+      Ok(Json.toJson(configs.map(HttpPartConfig.toJsonModel)))
     }
   }
 
