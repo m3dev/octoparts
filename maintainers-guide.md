@@ -28,9 +28,10 @@ addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0")
 
 #### Operations
 
-- Run `git flow release start/finish "{full-version}"`
-- Set version as "{full-version}" in `Version.scala` (no need to commit)
+- Run `git flow release start "{full-version}"`
+- Set version as "{full-version}" in `Version.scala` and commit
 - Run `./scripts/publish_libs.sh`
+- Run `git flow release finish "{full-version}"`
 - Use `sbt sonatypeRelease` from `sbt-sonatype` plugin or access sonatype console (https://oss.sonatype.org/)
 - Upon success, push to master
 - Switch to develop. Merge master. Set version as "{next-version}-SNAPSHOT" in Version.scala and push
