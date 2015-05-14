@@ -17,6 +17,7 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.pool.PoolStats
 import org.apache.http.protocol.{ HttpContext, HttpRequestExecutor }
 import com.m3.octoparts.BuildInfo
+import org.apache.http.util.VersionInfo
 
 import scala.concurrent.duration._
 
@@ -70,12 +71,17 @@ class InstrumentedHttpClient(
       .setProxy(mbProxy.orNull)
       .build()
 
+    val apacheClientVersion = {
+      val vi = Option(VersionInfo.loadVersionInfo("org.apache.http.client", classOf[HttpClientBuilder].getClassLoader))
+      vi.map(_.getRelease).getOrElse(VersionInfo.UNAVAILABLE)
+    }
+
     HttpClientBuilder
       .create
       .setRequestExecutor(requestExecutor)
       .setConnectionManager(connectionManager)
       .setDefaultRequestConfig(clientConfig)
-      .setUserAgent(s"Octoparts-Client (${BuildInfo.version}, Scala ${BuildInfo.scalaVersion})")
+      .setUserAgent(s"Apache-HttpClient ${apacheClientVersion} (Octoparts ${BuildInfo.version}, Scala ${BuildInfo.scalaVersion})")
       .build
   }
 
