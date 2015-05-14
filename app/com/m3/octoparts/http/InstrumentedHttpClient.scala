@@ -16,6 +16,7 @@ import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.pool.PoolStats
 import org.apache.http.protocol.{ HttpContext, HttpRequestExecutor }
+import com.m3.octoparts.BuildInfo
 
 import scala.concurrent.duration._
 
@@ -74,6 +75,7 @@ class InstrumentedHttpClient(
       .setRequestExecutor(requestExecutor)
       .setConnectionManager(connectionManager)
       .setDefaultRequestConfig(clientConfig)
+      .setUserAgent(s"Octoparts-Client (${BuildInfo.version}, Scala ${BuildInfo.scalaVersion})")
       .build
   }
 
