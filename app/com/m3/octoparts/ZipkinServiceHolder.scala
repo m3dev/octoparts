@@ -16,7 +16,7 @@ object ZipkinServiceHolder {
 
   def spanNamer(r: RequestHeader): String = {
     val tags = r.tags
-    val pathPattern = tags.get("ROUTE_PATTERN")
+    val pathPattern = tags.get(play.api.Routes.ROUTE_PATTERN)
     val path = pathPattern.getOrElse(r.path)
     s"${r.method} - $path"
   }
