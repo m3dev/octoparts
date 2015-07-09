@@ -15,7 +15,10 @@ object ZipkinServiceHolder {
   private implicit val ex = play.api.libs.concurrent.Execution.Implicits.defaultContext
 
   def spanNamer(r: RequestHeader): String = {
-    s"${r.method} - ${r.path.replaceAll("/[0-9]+", "/XXX")}"
+    val tags = r.tags
+    val pathPattern = tags.get("ROUTE_PATTERN")
+    val path = pathPattern.getOrElse(r.path)
+    s"${r.method} - $path"
   }
 
   val ZipkinService: ZipkinServiceLike = if (Play.isTest) {
