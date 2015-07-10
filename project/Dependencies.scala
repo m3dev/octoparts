@@ -8,6 +8,7 @@ object Dependencies {
     // Use in-house Maven repo before other remote repos if env var is set
     resolvers ++= Seq(Resolver.defaultLocal) ++ sys.env.get("INHOUSE_MAVEN_REPO").map("Inhouse".at) ++ Seq(
       Resolver.typesafeRepo("releases"),
+      Resolver.sonatypeRepo("releases"),
       Resolver.sonatypeRepo("snapshots")
       )
   }
@@ -85,7 +86,7 @@ object Dependencies {
   val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.6"
   val findbugs            = "com.google.code.findbugs"  % "jsr305"                        % "3.0.0"
 
-  val zipkinFutures       = "com.beachape"              %% "zipkin-futures-play"          % "0.1.0"
+  val zipkinFutures       = "com.beachape"              %% "zipkin-futures-play"          % "0.1.1"
 
   val withoutExcluded = { (m: ModuleID) =>
     m.excludeAll(
