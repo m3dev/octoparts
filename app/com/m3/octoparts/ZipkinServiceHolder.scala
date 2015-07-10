@@ -4,7 +4,6 @@ import java.net.InetAddress
 
 import com.beachape.zipkin.services.{ BraveZipkinService, NoopZipkinService, ZipkinServiceLike }
 import com.github.kristofa.brave.zipkin.ZipkinSpanCollector
-import play.api.mvc.RequestHeader
 import play.api.{ Logger, Play }
 
 import scala.util.{ Failure, Success, Try }
@@ -13,13 +12,6 @@ object ZipkinServiceHolder {
 
   private implicit val app = play.api.Play.current
   private implicit val ex = play.api.libs.concurrent.Execution.Implicits.defaultContext
-
-  def spanNamer(r: RequestHeader): String = {
-    val tags = r.tags
-    val pathPattern = tags.get(play.api.Routes.ROUTE_PATTERN)
-    val path = pathPattern.getOrElse(r.path)
-    s"${r.method} - $path"
-  }
 
   val ZipkinService: ZipkinServiceLike = if (Play.isTest) {
     NoopZipkinService
