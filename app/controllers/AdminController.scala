@@ -14,7 +14,7 @@ import org.joda.time.DateTime
 import play.api.data._
 import play.api.data.validation.ValidationError
 import play.api.http.MediaType
-import play.api.i18n.{ Lang, Messages }
+import play.api.i18n.{ MessagesApi, I18nSupport, Messages }
 import play.api.libs.Files
 import play.api.libs.json._
 import play.api.mvc.MultipartFormData.FilePart
@@ -22,15 +22,19 @@ import play.api.mvc._
 import presentation.{ HttpPartConfigView, NavbarLinks, ParamView }
 
 import scala.annotation.tailrec
-import scala.collection
 import scala.collection.SortedSet
-import scala.collection.immutable.TreeSet
 import scala.concurrent.Future
 import scala.util.{ Success, Failure, Try }
 import scala.util.control.NonFatal
 
-class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(implicit val navbarLinks: NavbarLinks = NavbarLinks(None, None, None, None))
-    extends Controller with AuthSupport with LoggingSupport with ReqHeaderToSpanImplicit {
+class AdminController(cacheOps: CacheOps,
+                      repository: MutableConfigsRepository,
+                      val messagesApi: MessagesApi)(implicit val navbarLinks: NavbarLinks = NavbarLinks(None, None, None, None))
+    extends Controller
+    with AuthSupport
+    with LoggingSupport
+    with ReqHeaderToSpanImplicit
+    with I18nSupport {
 
   import controllers.AdminForms._
   import AdminController._
@@ -158,7 +162,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
     Ok(views.html.part.importForm())
   }
 
-  private def importFlashReport(extractedConfigs: Seq[JsonHttpPartConfig], insertedPartIds: Seq[String])(implicit lang: Lang): Flash = {
+  private def importFlashReport(extractedConfigs: Seq[JsonHttpPartConfig], insertedPartIds: Seq[String])(implicit req: RequestHeader): Flash = {
     val flashInfo = if (insertedPartIds.nonEmpty) {
       Map(BootstrapFlashStyles.success.toString -> Messages("admin.import.successful", insertedPartIds.size, extractedConfigs.size, insertedPartIds.mkString(", ")))
     } else Map.empty[String, String]
@@ -531,7 +535,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
         val dangerMsg = req.flash.get(BootstrapFlashStyles.danger.toString).toSeq ++ allErrorMsgs
         Flash(req.flash.data + (BootstrapFlashStyles.danger.toString -> dangerMsg.mkString("\n")))
       }
-      Ok(views.html.part.edit(form, tps, cgs, maybePart)(flash, navbarLinks, implicitly[Lang]))
+      Ok(views.html.part.edit(form, tps, cgs, maybePart)(flash, navbarLinks, implicitly[Messages]))
     }
   }
 
@@ -614,9 +618,7 @@ object AdminController {
     val messages = for {
       (jsPath, validationErrors) <- errors
     } yield {
-      val validationErrorMsg = validationErrors.map { validationError =>
-        Messages(validationError.message, validationError.args)
-      }.mkString(",")
+      val validationErrorMsg = validationErrors.map(_.message).mkString(",")
       s"error at: $jsPath reason: $validationErrorMsg"
     }
     messages.mkString("; ")

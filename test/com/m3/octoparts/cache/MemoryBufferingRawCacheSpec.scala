@@ -38,7 +38,7 @@ class MemoryBufferingRawCacheSpec extends FunSpec with Matchers {
 
   it("should automatically renew expired entries") {
     import scala.concurrent.ExecutionContext.Implicits.global
-    val mbrc = new StatsRecordingMemoryBufferingRawCache(new InMemoryRawCache(), 200.milliseconds)
+    val mbrc = new StatsRecordingMemoryBufferingRawCache(new InMemoryRawCache(NoopZipkinService), 200.milliseconds)
     Await.result(mbrc.set("ABC", "DEF", 1.hour), 10.millis)
     // reset lastStore
     mbrc.storeInMemoryCache("GGG", "")

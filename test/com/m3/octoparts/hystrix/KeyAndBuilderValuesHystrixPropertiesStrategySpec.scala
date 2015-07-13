@@ -1,10 +1,10 @@
 package com.m3.octoparts.hystrix
 
-import com.m3.octoparts.Global
 import com.netflix.hystrix.strategy.HystrixPlugins
 import com.netflix.hystrix.strategy.properties.HystrixPropertiesFactory
 import com.netflix.hystrix.{ HystrixCommandProperties, HystrixCommandKey }
 import org.scalatest.{ Matchers, FunSpec }
+import com.m3.octoparts.wiring.OctopartsApplicationLoader
 
 class KeyAndBuilderValuesHystrixPropertiesStrategySpec extends FunSpec with Matchers {
 
@@ -22,7 +22,8 @@ class KeyAndBuilderValuesHystrixPropertiesStrategySpec extends FunSpec with Matc
 
   describe("after registering with HystrixPlugins") {
     it("should allow HystrixPropertiesFactory.getCommandProperties to instantiate different HystrixCommandProperties for the same command key") {
-      Global.setHystrixPropertiesStrategy()
+      val startupSupport = new OctopartsApplicationLoader
+      startupSupport.setHystrixPropertiesStrategy()
       HystrixPlugins.getInstance().getPropertiesStrategy.getClass shouldBe subject.getClass
 
       val properties1 = HystrixPropertiesFactory.getCommandProperties(

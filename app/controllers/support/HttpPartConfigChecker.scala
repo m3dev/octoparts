@@ -9,19 +9,19 @@ import play.api.Play
 import play.api.i18n.{ Lang, Messages }
 
 trait HttpPartConfigChecker {
-  def warnings(t: HttpPartConfig)(implicit lang: Lang): Seq[String]
+  def warnings(t: HttpPartConfig)(implicit messages: Messages): Seq[String]
 }
 
 object HttpPartConfigChecker {
   lazy val checks = Seq(QueryParamInterpolation, MissingPathParam, PathParamNoInterp, PathParamOption, WhitespaceInUri) ++
     (if (Play.current.configuration.getString("application.env").contains("production")) Seq(AlertEmailOff) else Nil)
-  def apply(httpPartConfig: HttpPartConfig)(implicit lang: Lang): Seq[String] = {
+  def apply(httpPartConfig: HttpPartConfig)(implicit messages: Messages): Seq[String] = {
     checks.flatMap(_.warnings(httpPartConfig))
   }
 }
 
 object QueryParamInterpolation extends HttpPartConfigChecker {
-  def warnings(hpc: HttpPartConfig)(implicit lang: Lang): Seq[String] = {
+  def warnings(hpc: HttpPartConfig)(implicit messages: Messages): Seq[String] = {
     val someValue = UUID.randomUUID().toString
     val interpolated = HttpPartRequestHandler.interpolate(hpc.uriToInterpolate)(_ => someValue)
     interpolated.query.params.collect {
@@ -34,7 +34,7 @@ object QueryParamInterpolation extends HttpPartConfigChecker {
  * Prints warning when there is a missing interpolation token found
  */
 object MissingPathParam extends HttpPartConfigChecker {
-  def warnings(hpc: HttpPartConfig)(implicit lang: Lang): Seq[String] = {
+  def warnings(hpc: HttpPartConfig)(implicit messages: Messages): Seq[String] = {
     val missingMark = UUID.randomUUID().toString
     val foundMark = UUID.randomUUID().toString
     val pathParamValues = hpc.parameters.toSeq.collect {
@@ -59,7 +59,7 @@ object MissingPathParam extends HttpPartConfigChecker {
  * Prints warning when there is a path param with no interpolation
  */
 object PathParamNoInterp extends HttpPartConfigChecker {
-  def warnings(hpc: HttpPartConfig)(implicit lang: Lang): Seq[String] = {
+  def warnings(hpc: HttpPartConfig)(implicit messages: Messages): Seq[String] = {
     hpc.parameters.toSeq.collect {
       case pp: PartParam if pp.paramType == ParamType.Path && !hpc.uriToInterpolate.containsSlice(s"$${${pp.outputName}}") => pp.outputName
     }.map(Messages("admin.warnings.PathParamNoInterp", _))
@@ -70,7 +70,7 @@ object PathParamNoInterp extends HttpPartConfigChecker {
  * Prints warning when there is an optional path param
  */
 object PathParamOption extends HttpPartConfigChecker {
-  def warnings(hpc: HttpPartConfig)(implicit lang: Lang): Seq[String] = {
+  def warnings(hpc: HttpPartConfig)(implicit messages: Messages): Seq[String] = {
     hpc.parameters.toSeq.collect {
       case pp: PartParam if pp.paramType == ParamType.Path && !pp.required => pp.outputName
     }.map(Messages("admin.warnings.PathParamOption", _))
@@ -81,7 +81,7 @@ object PathParamOption extends HttpPartConfigChecker {
  * Prints a warning when there is a whitespace in the URI
  */
 object WhitespaceInUri extends HttpPartConfigChecker {
-  def warnings(hpc: HttpPartConfig)(implicit lang: Lang): Seq[String] = {
+  def warnings(hpc: HttpPartConfig)(implicit messages: Messages): Seq[String] = {
     if (hpc.uriToInterpolate.filter(Character.isWhitespace).isEmpty) Nil
     else Seq(Messages("admin.warnings.WhitespaceInUri"))
   }
@@ -91,7 +91,7 @@ object WhitespaceInUri extends HttpPartConfigChecker {
  * Prints a warning when email alerts are disabled in production
  */
 case object AlertEmailOff extends HttpPartConfigChecker {
-  def warnings(hpc: HttpPartConfig)(implicit lang: Lang): Seq[String] = {
+  def warnings(hpc: HttpPartConfig)(implicit messages: Messages): Seq[String] = {
     if (hpc.alertMailsEnabled) Nil else Seq(Messages("admin.warnings.AlertEmailOff"))
   }
 }

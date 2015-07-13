@@ -14,9 +14,8 @@ import scala.language.postfixOps
 class DBConfigsRepositorySpec extends fixture.FlatSpec with DBSuite with Matchers with ConfigDataMocks with ScalaFutures {
 
   implicit val p = PatienceConfig(timeout = 5 seconds)
-  implicit val zipkinService = NoopZipkinService
   implicit val emptySpan = new Span()
-  lazy val dbConfigRepo = new DBConfigsRepository()
+  lazy val dbConfigRepo = new DBConfigsRepository(NoopZipkinService, scala.concurrent.ExecutionContext.global)
 
   behavior of "DBConfigsRepository"
 

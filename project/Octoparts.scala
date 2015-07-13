@@ -1,4 +1,4 @@
-import play.PlayScala
+import play.sbt.PlayScala
 import sbt._
 import sbt.Keys._
 

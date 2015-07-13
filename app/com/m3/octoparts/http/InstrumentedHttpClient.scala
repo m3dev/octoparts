@@ -5,7 +5,7 @@ import java.nio.charset.Charset
 
 import com.beachape.logging.LTSVLogger
 import com.codahale.metrics.{ Gauge, MetricRegistry }
-import com.m3.octoparts.OctopartsMetricsRegistry
+import com.m3.octoparts.OctopartsMetrics
 import com.m3.octoparts.model.config.HttpProxySettings
 import org.apache.http._
 import org.apache.http.client.HttpClient
@@ -110,7 +110,7 @@ class InstrumentedHttpClient(
       case (key, f) =>
         val gaugeName = registryName(key)
         try {
-          OctopartsMetricsRegistry.default.register(gaugeName, new Gauge[Int] {
+          OctopartsMetrics.default.register(gaugeName, new Gauge[Int] {
             def getValue = f(getTotalStats)
           })
         } catch {
@@ -121,7 +121,7 @@ class InstrumentedHttpClient(
     override def shutdown() = {
       super.shutdown()
       gauges.keys.foreach { key =>
-        OctopartsMetricsRegistry.default.remove(registryName(key))
+        OctopartsMetrics.default.remove(registryName(key))
       }
     }
   }
@@ -131,7 +131,7 @@ class InstrumentedHttpClient(
     private val registryName = MetricRegistry.name(classOf[HttpClient], name)
 
     override def execute(request: HttpRequest, conn: HttpClientConnection, context: HttpContext) = {
-      val timerContext = OctopartsMetricsRegistry.default.timer(registryName).time
+      val timerContext = OctopartsMetrics.default.timer(registryName).time
       try {
         super.execute(request, conn, context)
       } finally {
@@ -139,7 +139,7 @@ class InstrumentedHttpClient(
       }
     }
 
-    def close() = OctopartsMetricsRegistry.default.remove(registryName)
+    def close() = OctopartsMetrics.default.remove(registryName)
   }
 
   def close() = {

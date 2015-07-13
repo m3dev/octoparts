@@ -9,12 +9,12 @@ import com.m3.octoparts.aggregator.handler._
 import com.m3.octoparts.aggregator.service._
 import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.HttpPartConfig
+import com.m3.octoparts.support.PlayAppSupport
 import com.m3.octoparts.support.mocks.{ ConfigDataMocks, MockConfigRepository }
 import com.twitter.zipkin.gen.Span
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{ FlatSpec, Matchers }
-import org.scalatestplus.play.OneAppPerSuite
-import play.api.libs.json._
+import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
@@ -23,7 +23,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with ConfigDataMocks with OneAppPerSuite {
+class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with ConfigDataMocks with PlayAppSupport {
 
   import scala.concurrent.ExecutionContext.Implicits.global
   private implicit val emptySpan = new Span()
@@ -57,7 +57,7 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
   }, NoopZipkinService)
   private val partsService = new PartsService(partsRequestService)
 
-  private val controller = new PartsController(partsService, configsRepository, 10 seconds, true, NoopZipkinService)
+  private val controller = new PartsController(partsService, configsRepository, 10 seconds, true, actorSystem, NoopZipkinService)
 
   it should "return 400 to an unknown json" in {
     val json = Json.parse("""{"json":"unknown"}""")

@@ -14,7 +14,7 @@ import scala.concurrent.duration.Duration
 /**
  * View adapter for an HttpPartConfig.
  */
-case class HttpPartConfigView(config: HttpPartConfig)(implicit lang: Lang) {
+case class HttpPartConfigView(config: HttpPartConfig)(implicit messages: Messages) {
 
   def addParamLink: String = controllers.routes.AdminController.newParam(config.partId).url
 

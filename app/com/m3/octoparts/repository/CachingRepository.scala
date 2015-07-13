@@ -27,7 +27,8 @@ trait CachingRepository extends ConfigsRepository {
 
    Empty Span -> we don't actually send anything.
   */
-  reloadCache()(new Span())
+  // TODO figure out why this causes the server to die with ExceptionInInitializerError: null
+  //  reloadCache()(new Span())
 
   /**
    * Generic method for putting something into cache using any kind of identifier

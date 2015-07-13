@@ -1,15 +1,15 @@
 package controllers.support
 
 import com.m3.octoparts.auth.{ PrincipalSessionPersistence, Principal }
+import com.m3.octoparts.support.PlayAppSupport
 import org.scalatest.{ FlatSpec, Matchers }
-import org.scalatestplus.play.OneAppPerSuite
 import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc.Results._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
-class DummyPrincipalSupportSpec extends FlatSpec with Matchers with OneAppPerSuite with DummyPrincipalSupport {
+class DummyPrincipalSupportSpec extends FlatSpec with Matchers with PlayAppSupport with DummyPrincipalSupport {
 
   val action = Action.andThen(autoAuthenticateRequest).apply(req => Ok(s"Hi, ${req.principal.nickname}"))
 

@@ -5,10 +5,11 @@ import com.m3.octoparts.aggregator.service.{ PartsService, PartResponseLocalCont
 import com.m3.octoparts.cache.PartResponseCachingSupport
 
 import play.api.libs.concurrent.Akka
+import play.api.Play.current
 
-trait AggregatorServicesModule extends RepositoriesModule with AggregatorHandlersModule { module =>
+trait AggregatorServicesModule extends RepositoriesModule with AggregatorHandlersModule with ExecutionContextsModule { module =>
 
-  implicit val partsServiceContext = Akka.system.dispatchers.lookup("contexts.parts-service")
+  private implicit lazy val ec = partsServiceContext
 
   lazy val partRequestServiceBase = new PartRequestService(
     configsRepository,

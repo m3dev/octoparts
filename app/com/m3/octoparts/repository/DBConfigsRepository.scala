@@ -15,7 +15,7 @@ import skinny.orm.feature.CRUDFeatureWithId
 import skinny.orm.feature.associations.Association
 
 import scala.collection.SortedSet
-import scala.concurrent.{ Future, blocking }
+import scala.concurrent.{ ExecutionContext, Future, blocking }
 
 /**
  * DAO for SkinnyCRUDMapper-based persistence for dependency configs (HttpPartConfig),
@@ -40,17 +40,14 @@ import scala.concurrent.{ Future, blocking }
  * In the first case, the session is the globally implicit session
  * The second allows to be explicit (for tests)
  */
-class DBConfigsRepository(implicit val zipkinService: ZipkinServiceLike) extends ImmutableDBRepository with MutableDBRepository with ConfigImporter
+class DBConfigsRepository(zipkinServiceFactory: => ZipkinServiceLike, protected val executionContext: ExecutionContext) extends ImmutableDBRepository with MutableDBRepository with ConfigImporter {
 
-object DBContext {
-
-  // A separate ExecutionContext to avoid starving the global one with blocking DB operations
-  implicit val dbFetchExecutionContext = Akka.system(Play.current).dispatchers.lookup("contexts.db")
-
+  implicit lazy val zipkinService: ZipkinServiceLike = zipkinServiceFactory
 }
 
 trait ImmutableDBRepository extends ConfigsRepository {
-  import DBContext._
+
+  protected implicit def executionContext: ExecutionContext
 
   implicit def zipkinService: ZipkinServiceLike
 
@@ -187,13 +184,14 @@ trait ImmutableDBRepository extends ConfigsRepository {
    */
   private[repository] def getAllWithSession[A: Ordering](mapper: CRUDFeatureWithId[Long, A],
                                                          joins: Seq[Association[_]] = Nil,
-                                                         includes: Seq[Association[_]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[SortedSet[A]] = Future {
-    blocking {
-      val ret = mapper.joins(joins: _*).includes(includes: _*).findAll().to[SortedSet]
-      LTSVLogger.debug("Table" -> mapper.tableName, "Retrieved records" -> ret.size.toString)
-      ret
-    }
-  }.measure("DB_GET")
+                                                         includes: Seq[Association[_]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[SortedSet[A]] =
+    Future {
+      blocking {
+        val ret = mapper.joins(joins: _*).includes(includes: _*).findAll().to[SortedSet]
+        LTSVLogger.debug("Table" -> mapper.tableName, "Retrieved records" -> ret.size.toString)
+        ret
+      }
+    }.measure("DB_GET")
 
   /**
    * Gets all the records from a table according to a where clause and logs the number of records retrieved
@@ -211,7 +209,8 @@ trait ImmutableDBRepository extends ConfigsRepository {
 }
 
 trait MutableDBRepository extends MutableConfigsRepository {
-  import com.m3.octoparts.repository.DBContext._
+
+  protected implicit def executionContext: ExecutionContext
 
   implicit def zipkinService: ZipkinServiceLike
   private val zipkinSpanNameBase = "db-repo-mutation"

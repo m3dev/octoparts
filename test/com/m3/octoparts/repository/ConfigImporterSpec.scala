@@ -11,8 +11,7 @@ import org.scalatest.{ Matchers, fixture }
 class ConfigImporterSpec extends fixture.FlatSpec with DBSuite with Matchers with ConfigDataMocks with ScalaFutures with IntegrationPatience {
 
   def completeCfg(partId: String) = mockHttpPartConfig.copy(partId = partId, hystrixConfig = Some(mockHystrixConfig.copy(commandKey = partId)))
-  implicit val zipkinService = NoopZipkinService
-  lazy val dbConfigRepo = new DBConfigsRepository()
+  lazy val dbConfigRepo = new DBConfigsRepository(NoopZipkinService, scala.concurrent.ExecutionContext.global)
 
   it should "not import more than 1 config per partId" in {
     implicit session =>

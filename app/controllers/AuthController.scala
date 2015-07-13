@@ -10,7 +10,7 @@ import play.api.mvc.{ Action, Controller }
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 
-object AuthController extends Controller with AuthSupport {
+class AuthController extends Controller with AuthSupport {
 
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
 

@@ -1,6 +1,6 @@
 package com.m3.octoparts.future
 
-import com.m3.octoparts.OctopartsMetricsRegistry
+import com.m3.octoparts.OctopartsMetrics
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
@@ -40,7 +40,7 @@ object RichFutureWithTiming {
     }
 
     def measure(metricsName: String)(implicit executionContext: ExecutionContext): Future[A] = time {
-      (_, duration) => OctopartsMetricsRegistry.default.timer(metricsName).update(duration.length, duration.unit)
+      (_, duration) => OctopartsMetrics.default.timer(metricsName).update(duration.length, duration.unit)
     }
   }
 }

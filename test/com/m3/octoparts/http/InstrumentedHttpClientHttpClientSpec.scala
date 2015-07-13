@@ -2,7 +2,7 @@ package com.m3.octoparts.http
 
 import java.nio.charset.StandardCharsets
 
-import com.m3.octoparts.OctopartsMetricsRegistry
+import com.m3.octoparts.OctopartsMetrics
 import org.apache.http.client.methods.HttpHead
 import org.scalatest.{ FunSpec, Matchers }
 import scala.concurrent.duration._
@@ -22,11 +22,11 @@ class InstrumentedHttpClientHttpClientSpec extends FunSpec with Matchers {
   it("should remove gauges on close") {
     val client = new InstrumentedHttpClient("A", 1, 5.seconds, 5.seconds, StandardCharsets.UTF_8, mbProxySettings = None)
     InstrumentedHttpClient.gauges.keys.foreach { key =>
-      OctopartsMetricsRegistry.default.getGauges.get(client.connectionManager.registryName(key)) shouldNot be(null)
+      OctopartsMetrics.default.getGauges.get(client.connectionManager.registryName(key)) shouldNot be(null)
     }
     client.close()
     InstrumentedHttpClient.gauges.keys.foreach { key =>
-      OctopartsMetricsRegistry.default.getGauges.get(client.connectionManager.registryName(key)) should be(null)
+      OctopartsMetrics.default.getGauges.get(client.connectionManager.registryName(key)) should be(null)
     }
   }
 

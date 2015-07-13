@@ -29,8 +29,11 @@ import com.m3.octoparts.json.format.ConfigModel._ // For serdes of the models
  */
 class OctoClient(val baseUrl: String, protected val clientTimeout: FiniteDuration, protected val extraWait: FiniteDuration = 50.milliseconds)(implicit val octoPlayApp: Application) extends OctoClientLike {
 
-  protected def wsHolderFor(url: String, timeout: FiniteDuration) =
-    WS.url(url).withRequestTimeout((timeout + extraWait).toMillis.toInt)
+  private val client = WS.client
+
+  protected def wsRequestFor(url: String, timeout: FiniteDuration) = {
+    client.url(url).withRequestTimeout((timeout + extraWait).toMillis.toInt)
+  }
 
   protected def rescuer[A](defaultReturn: => A): PartialFunction[Throwable, A] = {
     case JsResultException(e) => {
@@ -61,9 +64,9 @@ trait OctoClientLike {
   def baseUrl: String
 
   /**
-   * Returns a [[play.api.libs.ws.WSRequestHolder]] for a given a URL string
+   * Returns a [[play.api.libs.ws.WSRequest]] for a given a URL string
    */
-  protected def wsHolderFor(url: String, timeout: FiniteDuration): WSRequestHolder
+  protected def wsRequestFor(url: String, timeout: FiniteDuration): WSRequest
 
   /**
    * The client-wide timeout
@@ -152,7 +155,7 @@ trait OctoClientLike {
    * @param partIds a list of partIds in specific to retrieve endpoint info for.
    */
   def listEndpoints(partIds: String*)(implicit ec: ExecutionContext): Future[Seq[HttpPartConfig]] = {
-    wsHolderFor(urlFor(ListEndpoints), clientTimeout)
+    wsRequestFor(urlFor(ListEndpoints), clientTimeout)
       .withQueryString(partIds.map(n => partIdFilterName -> n): _*)
       .get()
       .map(resp => resp.json.as[Seq[HttpPartConfig]])
@@ -223,7 +226,7 @@ trait OctoClientLike {
    * @param headers headers to send along with the request
    */
   protected def wsPost[A](url: String, timeout: FiniteDuration, body: A, headers: Seq[(String, String)] = Nil)(implicit wrt: Writeable[A], ct: ContentTypeOf[A]): Future[WSResponse] = {
-    wsHolderFor(url, timeout)
+    wsRequestFor(url, timeout)
       .withHeaders(headers: _*)
       .post(body)
   }

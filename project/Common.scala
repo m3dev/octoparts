@@ -1,9 +1,13 @@
 import com.typesafe.sbt.packager.Keys._
-import play.PlayImport.PlayKeys._
+
 import sbt.Keys._
 import sbt._
 import net.virtualvoid.sbt.graph.Plugin._
 import xerial.sbt.Sonatype._
+
+import play.sbt.Play.autoImport._
+import play.sbt.routes.RoutesKeys._
+import PlayKeys._
 
 object Common {
 
@@ -54,7 +58,7 @@ object Common {
     excludeConfFilesFromJarSettings ++
     sonatypeSettings ++
     Seq(
-      playVersion := Dependencies.thePlayVersion,
+      routesGenerator := InjectedRoutesGenerator,
       playDefaultPort := 9000,
       publishArtifact := false,
       libraryDependencies ++= Dependencies.rootDependencies
@@ -94,10 +98,8 @@ object Common {
     scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
   )
 
-  private lazy val testSettings = inConfig(Test){
-    Seq(
-      parallelExecution in Test := false,  // Avoid DB-related tests stomping on each other
-      testOptions += Tests.Argument("-oF") // full stack traces
-    )
-  }
+  private lazy val testSettings = Seq(
+    parallelExecution in Test := false,  // Avoid DB-related tests stomping on each other
+    testOptions in Test += Tests.Argument("-oF") // full stack traces
+  )
 }

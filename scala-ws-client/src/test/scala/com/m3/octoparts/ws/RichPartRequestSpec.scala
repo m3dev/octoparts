@@ -11,6 +11,7 @@ class RichPartRequestSpec extends FunSpec with Matchers {
   describe("#withBody") {
 
     import PartRequestEnrichment._
+    import scala.concurrent.ExecutionContext.Implicits.global
     implicit val tuple3IntWriteable = new Writeable[(Int, Int, Int)](
       transform = { a => s"${a._1 + a._2 + a._3}".getBytes(StandardCharsets.UTF_8) }, None)
 

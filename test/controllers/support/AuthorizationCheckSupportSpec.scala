@@ -1,8 +1,8 @@
 package controllers.support
 
 import com.m3.octoparts.auth.{ OctopartsAuthPlugin, PrincipalSessionPersistence }
+import com.m3.octoparts.support.PlayAppSupport
 import org.scalatest.{ FlatSpec, Matchers }
-import org.scalatestplus.play.OneAppPerSuite
 import play.api.mvc.Action
 import play.api.mvc.Results._
 import play.api.test.FakeRequest
@@ -10,7 +10,7 @@ import play.api.test.Helpers._
 
 import scala.concurrent.Future
 
-class AuthorizationCheckSupportSpec extends FlatSpec with Matchers with OneAppPerSuite
+class AuthorizationCheckSupportSpec extends FlatSpec with Matchers with PlayAppSupport
     with AuthenticationCheckSupport with AuthorizationCheckSupport {
 
   val authPlugin: Option[OctopartsAuthPlugin] = None

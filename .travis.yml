@@ -18,7 +18,7 @@ before_script:
   - psql -c "GRANT ALL PRIVILEGES ON DATABASE octoparts_test to octoparts_app;" -U postgres
 
 script:
-  - sbt clean compile
+  - sbt clean compile test:compile
   - sbt coverage test
   - find $HOME/.sbt -name "*.lock" -type f -delete && find $HOME/.ivy2/cache -name "*[\[\]\(\)]*.properties" -type f -delete
 

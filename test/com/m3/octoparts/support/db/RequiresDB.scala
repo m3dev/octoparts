@@ -3,12 +3,13 @@ package com.m3.octoparts.support.db
 import java.sql.Connection
 
 import com.beachape.logging.LTSVLogger
+import com.m3.octoparts.support.PlayAppSupport
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.MigrationInfo
 import org.flywaydb.core.api.callback.FlywayCallback
-import org.scalatest.Suite
-import org.scalatestplus.play.OneAppPerSuite
+import org.scalatest.{ Status, Args, Suite }
 import scalikejdbc.ConnectionPool
+import scalikejdbc.config.DBs
 
 import scala.util.control.NonFatal
 
@@ -18,7 +19,7 @@ import scala.util.control.NonFatal
  * It extends OneAppPerSuite so that we use the Play app's Scalikejdbc connection pool,
  * thereby connecting to the correct DB (as configured in application.test.conf).
  */
-trait RequiresDB extends Suite with OneAppPerSuite {
+trait RequiresDB extends Suite with PlayAppSupport {
 
   lazy val flyway = {
     val flyway = new Flyway
@@ -60,9 +61,6 @@ trait RequiresDB extends Suite with OneAppPerSuite {
     flyway
   }
 
-  // Start the Scalikejdbc connection pool
-  //DBs.setupAll()
-
   /**
    * Method to tear down the entire database corresponding to this environment
    *
@@ -90,4 +88,5 @@ trait RequiresDB extends Suite with OneAppPerSuite {
   def migrate(): Int = {
     flyway.migrate()
   }
+
 }

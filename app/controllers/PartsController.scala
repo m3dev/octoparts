@@ -2,8 +2,10 @@ package controllers
 
 import javax.ws.rs.QueryParam
 
+import akka.actor.ActorSystem
 import com.beachape.zipkin.ReqHeaderToSpanImplicit
 import com.beachape.zipkin.services.ZipkinServiceLike
+import com.m3.octoparts.future.PromiseSupport
 import com.m3.octoparts.json.format.ConfigModel._
 import com.m3.octoparts.json.format.ReqResp._
 import com.m3.octoparts.aggregator.service.PartsService
@@ -13,7 +15,6 @@ import com.m3.octoparts.repository.ConfigsRepository
 import com.wordnik.swagger.annotations._
 import controllers.support.{ PartListFilterSupport, LoggingSupport }
 import org.apache.http.client.cache.HeaderConstants
-import play.api.libs.concurrent.Promise
 import play.api.libs.json.Json
 import play.api.mvc._
 
@@ -31,11 +32,13 @@ class PartsController(
   configsRepository: ConfigsRepository,
   requestTimeout: Duration,
   readClientCacheHeaders: Boolean,
+  val actorSystem: ActorSystem,
   implicit val zipkinService: ZipkinServiceLike)
     extends Controller
     with LoggingSupport
     with PartListFilterSupport
-    with ReqHeaderToSpanImplicit {
+    with ReqHeaderToSpanImplicit
+    with PromiseSupport {
 
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
   import com.beachape.zipkin.FutureEnrichment._
@@ -114,7 +117,7 @@ class PartsController(
 
   private def withRequestTimeout(fResponse: Future[AggregateResponse]): Future[Result] = {
     val fOkResponse = fResponse.map(aggResp => Ok(Json.toJson(aggResp)))
-    val fTimeout = Promise.timeout(InternalServerError("Request timed out"), requestTimeout)
+    val fTimeout = timeout(InternalServerError("Request timed out"), requestTimeout)
     Future.firstCompletedOf(Seq(fOkResponse, fTimeout))
   }
 

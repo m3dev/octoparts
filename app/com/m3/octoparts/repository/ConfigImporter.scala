@@ -13,8 +13,6 @@ import scala.concurrent.Future
 trait ConfigImporter {
   self: MutableDBRepository with ImmutableDBRepository =>
 
-  import com.m3.octoparts.repository.DBContext._
-
   def importConfigs(configs: Seq[json.HttpPartConfig])(implicit parentSpan: Span) = DB.futureLocalTx { implicit session => importConfigsWithSession(configs) }
 
   private[repository] class ImportAction(uniqueConfigs: SortedSet[json.HttpPartConfig])(implicit session: DBSession) {
