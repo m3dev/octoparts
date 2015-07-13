@@ -22,6 +22,7 @@ object Dependencies {
   val scalikejdbcVersion = "2.2.5"
   val swaggerVersion = "1.3.12"
   val jacksonVersion = "2.5.1"
+  val macwireVersion = "1.0.5"
 
   // Logging
   val logbackClassic      = "ch.qos.logback"            % "logback-classic"               % "1.1.3"
@@ -58,9 +59,12 @@ object Dependencies {
 
   // Play plugins
   val playFlyway          = "com.github.tototoshi"      %% "play-flyway"                  % "1.2.1"
-  val scaldiPlay          = "org.scaldi"                %% "scaldi-play"                  % "0.5.3"
   val metricsPlay         = "com.kenshoo"               %% "metrics-play"                 % "2.3.0_0.1.8"
   val providedPlay        = "com.typesafe.play"         %% "play"                         % thePlayVersion      % Provided
+
+  // DI
+  val macwireMacros       = "com.softwaremill.macwire"  %% "macros"                       % macwireVersion
+  val macwireRuntime      = "com.softwaremill.macwire"  %% "runtime"                      % macwireVersion
 
   // Swagger
   val swaggerPlay         = "com.wordnik"               %% "swagger-play2"                % swaggerVersion
@@ -138,9 +142,12 @@ object Dependencies {
     jta,
     scalaUri,
 
+    // DI
+    macwireMacros,
+    macwireRuntime,
+
     // Play plugins
     playFlyway,
-    scaldiPlay,
     metricsPlay,
     swaggerPlay,
 
