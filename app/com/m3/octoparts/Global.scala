@@ -2,18 +2,13 @@ package com.m3.octoparts
 
 import java.io.File
 import java.util.concurrent.TimeUnit
-
-import _root_.controllers.ControllersModule
 import com.beachape.zipkin.ZipkinHeaderFilter
-import com.beachape.zipkin.services.ZipkinServiceLike
 import com.kenshoo.play.metrics.MetricsFilter
-import com.m3.octoparts.cache.CacheModule
-import com.m3.octoparts.http.HttpModule
-import com.m3.octoparts.hystrix.{ KeyAndBuilderValuesHystrixPropertiesStrategy, HystrixMetricsLogger, HystrixModule }
-import com.m3.octoparts.logging.PartRequestLogger
+import com.m3.octoparts.hystrix.{ KeyAndBuilderValuesHystrixPropertiesStrategy, HystrixMetricsLogger }
 import com.beachape.logging.LTSVLogger
-import com.m3.octoparts.repository.{ ConfigsRepository, RepositoriesModule }
+import com.m3.octoparts.wiring.Amalgamated
 import com.netflix.hystrix.strategy.HystrixPlugins
+import com.softwaremill.macwire.MacwireMacros._
 import com.twitter.zipkin.gen.Span
 import com.typesafe.config.ConfigFactory
 import com.wordnik.swagger.config.{ ConfigFactory => SwaggerConfigFactory }
@@ -22,13 +17,11 @@ import org.apache.commons.lang3.StringUtils
 import play.api._
 import play.api.libs.concurrent.Akka
 import play.api.mvc._
-import scaldi.Module
-import scaldi.play.ScaldiSupport
 
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
-object Global extends WithFilters(ZipkinHeaderFilter(ZipkinServiceHolder.ZipkinService), MetricsFilter) with ScaldiSupport {
+object Global extends WithFilters(ZipkinHeaderFilter(ZipkinServiceHolder.ZipkinService), MetricsFilter) {
 
   val info = ApiInfo(
     title = "Octoparts",
@@ -40,18 +33,15 @@ object Global extends WithFilters(ZipkinHeaderFilter(ZipkinServiceHolder.ZipkinS
 
   SwaggerConfigFactory.config.setApiInfo(info)
 
-  def applicationModule =
-    aggregator.module ::
-      new RepositoriesModule ::
-      new CacheModule ::
-      new HystrixModule ::
-      new HttpModule ::
-      new ControllersModule ::
-      new Module {
-        // Random stuff that doesn't belong in other modules
-        bind[PartRequestLogger] to PartRequestLogger
-        bind[ZipkinServiceLike] to ZipkinServiceHolder.ZipkinService
-      }
+  lazy val Components = new Amalgamated(Play.current)
+  lazy val InjectionModule = wiredInModule(Components)
+
+  override def getControllerInstance[A](controllerClass: Class[A]): A = {
+    InjectionModule.lookup(controllerClass) match {
+      case head :: Nil => head
+      case _ => super.getControllerInstance(controllerClass)
+    }
+  }
 
   // Load environment-specific application.${env}.conf, merged with the generic application.conf
   override def onLoadConfig(config: Configuration, path: File, classloader: ClassLoader, mode: Mode.Mode): Configuration = {
@@ -98,7 +88,7 @@ object Global extends WithFilters(ZipkinHeaderFilter(ZipkinServiceHolder.ZipkinS
   private def checkForDodgyPartIds(): Unit = {
     import play.api.libs.concurrent.Execution.Implicits.defaultContext
     implicit val emptySpan = new Span() // empty span -> doesn't trace
-    val configsRepo = inject[ConfigsRepository]
+    val configsRepo = Components.configsRepository
     for {
       configs <- configsRepo.findAllConfigs()
       config <- configs
