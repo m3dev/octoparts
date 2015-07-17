@@ -1,3 +1,6 @@
+- name: install the 'Development tools' package group
+  yum: name="@Development tools" state=present
+
 - name: Install td-agent
   yum: name=td-agent state=installed
 
@@ -8,7 +11,7 @@
 
 - name: Install libcurl-devel
   yum: name=libcurl-devel state=installed
-  
+
 - name: Install fluent-plugin-elasticsearch gem
   shell: /usr/lib64/fluent/ruby/bin/fluent-gem install fluent-plugin-elasticsearch
   when: fluent_plugin_elasticsearch_check.stdout == "false"
