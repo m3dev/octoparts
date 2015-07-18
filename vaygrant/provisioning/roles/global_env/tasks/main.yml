@@ -7,3 +7,14 @@
   file: >
     dest={{ octoparts_log_dir }} state=directory
     owner={{ app_user }} group={{ app_group }} mode=755
+
+- name: Check if conf file exists
+  stat: path=/parts/conf/application.dev.conf
+  register: app_conf_stat
+
+- name: Create conf file
+  command: cp /parts/conf/application.dev.conf.sample /parts/conf/application.dev.conf
+  when: not app_conf_stat.stat.exists
+
+- name: Set permissions on conf file
+  file: path=/parts/conf/application.dev.conf owner={{ app_user }} group={{ app_group }} mode=644
