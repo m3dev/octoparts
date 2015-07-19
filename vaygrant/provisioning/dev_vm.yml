@@ -15,3 +15,4 @@
     - td_agent
     - elasticsearch
     - kibana
+    - zipkin
