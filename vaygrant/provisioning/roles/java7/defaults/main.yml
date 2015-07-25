@@ -1,0 +1,4 @@
+jdk7_version: '1.7.0_80'
+jdk7_pkg_version: '7'
+symlink_to: 'java7'
+src_base_dir: "/tmp"
