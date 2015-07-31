@@ -27,7 +27,9 @@
                     }]
                 };
                 @for(metaProp <- metaProps) {
-                    aggjson.requestMeta['@metaProp'] = form.find('input[name="meta.@metaProp"]').val();
+                    if (!form.find('input[name="dis_meta.@metaProp"]').is(':checked')) {
+                      aggjson.requestMeta['@metaProp'] = form.find('input[name="meta.@metaProp"]').val();
+                    }
                 }
                 var params = aggjson.requests[0].params;
                 @for(param <- part.editableParamsView) {
@@ -95,7 +97,7 @@
                                         });
                                     });
                                 </script>
-                                @if(!param.required){ @Messages("tryIt.disable") <input type="checkbox" name="dis_@param.param.inputName"  checked="checked" /> }
+                                @if(!param.required){ @Messages("tryIt.disable") <input type="checkbox" name="dis_@param.param.inputName" checked="checked" /> }
                             </div>
                         </div>
                     </div>
@@ -106,14 +108,17 @@
         <fieldset>
             <legend>@Messages("tryIt.meta")</legend>
             @for(metaProp <- metaProps) {
-                <div class="form-group">
-                    <label for="meta.@metaProp" class="col-sm-2 control-label">@metaProp</label>
-                    <div class="row">
-                        <div class="col-sm-5">
-                            <input name="meta.@metaProp" id="meta.@metaProp" type="text" class="form-control" />
+                @defining(part.registeredParamsView.find(_.inputNameJs == s"meta.$metaProp")) { metaParam =>
+                    <div class="form-group">
+                        <label for="meta.@metaProp" class="col-sm-2 control-label">@metaProp</label>
+                        <div class="row">
+                            <div class="col-sm-5">
+                                <input name="meta.@metaProp" id="meta.@metaProp" type="text" class="form-control @{metaParam.fold("optional")(_.requiredCls)}"/>
+                            @if(!metaParam.fold(false)(_.required)){ @Messages("tryIt.disable") <input type="checkbox" name="dis_meta.@metaProp" checked="checked"/> }
+                            </div>
                         </div>
                     </div>
-                </div>
+                }
             }
         </fieldset>
     </form>
