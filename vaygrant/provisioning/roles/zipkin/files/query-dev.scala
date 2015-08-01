@@ -19,7 +19,7 @@ import com.twitter.zipkin.storage.anormdb.{DB, DBConfig, DBParams}
 import com.twitter.zipkin.storage.Store
 
 
-val db = DB(new DBConfig(name = "sqlite-persistent", params = DBParams(dbName = "/opt/zipkin/zipkin-query"), install = true))
+val db = DB(new DBConfig(name = "sqlite-persistent", params = DBParams(dbName = "/opt/zipkin/zipkin-collector"), install = false))
 val storeBuilder = Store.Builder(
   StorageBuilder(db),
   IndexBuilder(db),
