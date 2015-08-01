@@ -1,0 +1,121 @@
+- name: Download Zipkin Source
+  command: >
+    wget -O /tmp/zipkin-1.1.0-src.zip https://github.com/openzipkin/zipkin/archive/1.1.0.zip
+    creates=/tmp/zipkin-1.1.0-src.zip
+  tags: zipkin
+
+- name: Download Zipkin Web
+  command: >
+    wget -O /tmp/zipkin-web.zip https://github.com/openzipkin/zipkin/releases/download/1.1.0/zipkin-web.zip
+    creates=/tmp/zipkin-web.zip
+  tags: zipkin
+
+- name: Download Zipkin Query Service
+  command: >
+    wget -O /tmp/zipkin-query-service.zip https://github.com/openzipkin/zipkin/releases/download/1.1.0/zipkin-query-service.zip
+    creates=/tmp/zipkin-query-service.zip
+  tags: zipkin
+
+
+- name: Download Zipkin Collector Service
+  command: >
+    wget -O /tmp/zipkin-collector-service.zip https://github.com/openzipkin/zipkin/releases/download/1.1.0/zipkin-collector-service.zip
+    creates=/tmp/zipkin-collector-service.zip
+  tags: zipkin
+
+- name: Make sure supervisord is installed
+  yum: name=supervisor state=installed
+  tags: zipkin
+
+- name: Make sure unzip is installed
+  yum: name=unzip state=installed
+  tags: zipkin
+
+- name: Add Zipkin group
+  group: name=zipkin
+  tags: zipkin
+
+- name: Add Zipkin user
+  user: name=zipkin group=zipkin comment="Zipkin user"
+  tags: zipkin
+
+- name: Make sure zipkin directory exists
+  file: path=/opt/zipkin state=directory owner=zipkin group=zipkin
+  tags: zipkin
+
+- name: Make sure zipkin/zipkin-web directory exists
+  file: path=/opt/zipkin/zipkin-web state=directory owner=zipkin group=zipkin
+  tags: zipkin
+
+- name: Check if zipkin source extracted
+  stat: path=/opt/zipkin/zipkin-1.1.0
+  register: zipkin_source_stat
+
+- name: Extract Zipkin Source (Zipkin Web only)
+  command:
+    unzip /tmp/zipkin-1.1.0-src.zip "zipkin-1.1.0/zipkin-web/*" -d /opt/zipkin
+  sudo: yes
+  sudo_user: zipkin
+  tags: zipkin
+
+- name: Move Zipkin Web Source folder
+  command:
+    mv /opt/zipkin/zipkin-1.1.0/zipkin-web /opt/zipkin/zipkin-web
+  sudo: yes
+  sudo_user: zipkin
+  tags: zipkin
+
+- name: Extract Zipkin Web
+  command:
+    unzip /tmp/zipkin-web.zip -d /opt/zipkin
+    creates=/opt/zipkin/zipkin-web-1.1.0
+  sudo: yes
+  sudo_user: zipkin
+  tags: zipkin
+
+- name: Extract Zipkin Query Service
+  command:
+    unzip /tmp/zipkin-query-service.zip -d /opt/zipkin
+    creates=/opt/zipkin/zipkin-query-service-1.1.0
+  sudo: yes
+  sudo_user: zipkin
+  tags: zipkin
+
+- name: Extract Zipkin Collector Service
+  command:
+    unzip /tmp/zipkin-collector-service.zip -d /opt/zipkin
+    creates=/opt/zipkin/zipkin-collector-service-1.1.0
+  sudo: yes
+  sudo_user: zipkin
+  tags: zipkin
+
+- name: Copy Zipkin collector service config
+  copy: >
+    src=collector-dev.scala dest=/opt/zipkin/collector-dev.scala
+  sudo: yes
+  sudo_user: zipkin
+  tags: zipkin
+
+- name: Copy Zipkin query service config
+  copy: >
+    src=query-dev.scala dest=/opt/zipkin/query-dev.scala
+  sudo: yes
+  sudo_user: zipkin
+  tags: zipkin
+
+- name: Copy Zipkin web service config
+  copy: >
+    src=web-dev.scala dest=/opt/zipkin/web-dev.scala
+  sudo: yes
+  sudo_user: zipkin
+  tags: zipkin
+
+- name: Set up supervisord to run Zipkin
+  copy: >
+    src=supervisord.conf dest=/etc/supervisord.conf
+    owner=root group=root mode=755
+  tags: zipkin
+
+- name: Start Zipkin via supervisord
+  service: name=supervisord state=started enabled=yes
+  tags: zipkin
