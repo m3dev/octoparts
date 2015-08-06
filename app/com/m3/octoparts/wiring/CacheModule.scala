@@ -26,7 +26,8 @@ trait CacheModule extends UtilsModule {
     val queue: BlockingQueue[Runnable] = new ArrayBlockingQueue[Runnable](queueSize)
 
     ExecutionContext.fromExecutor(
-      new ThreadPoolExecutor(0, poolSize, 1L, TimeUnit.MINUTES, queue, namedThreadFactory))
+      new ThreadPoolExecutor(0, poolSize, 1L, TimeUnit.MINUTES, queue, namedThreadFactory)
+    )
   }
 
   lazy val latestVersionCache = {

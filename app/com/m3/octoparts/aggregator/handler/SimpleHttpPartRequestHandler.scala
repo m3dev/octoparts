@@ -16,10 +16,11 @@ import scala.concurrent.ExecutionContext
  * @param hystrixExecutor HystrixExecutor
  */
 class SimpleHttpPartRequestHandler(
-  val partId: String,
-  val httpClient: HttpClientLike,
-  val uriToInterpolate: String,
-  val httpMethod: HttpMethod.Value,
+  val partId:                  String,
+  val httpClient:              HttpClientLike,
+  val uriToInterpolate:        String,
+  val httpMethod:              HttpMethod.Value,
   val additionalValidStatuses: SortedSet[Int],
-  val hystrixExecutor: HystrixExecutor)(implicit val executionContext: ExecutionContext, implicit val zipkinService: ZipkinServiceLike)
+  val hystrixExecutor:         HystrixExecutor
+)(implicit val executionContext: ExecutionContext, implicit val zipkinService: ZipkinServiceLike)
     extends HttpPartRequestHandler

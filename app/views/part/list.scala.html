@@ -12,7 +12,7 @@
     }
     -->
     </style>
-    @views.html.datatables()
+    @views.html.datatables(Some("#export-selected"))
 } {
 
     <a href="@controllers.routes.AdminController.newPart" class="btn btn-primary" style="margin: 5px 0;">@Messages("parts.create")</a>

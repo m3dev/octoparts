@@ -9,8 +9,11 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 
 private class Streamer(
-    poller: HystrixMetricsPoller, listener: MetricsAsJsonPollerListener, delay: FiniteDuration)(
-        implicit executionContext: ExecutionContext) {
+    poller: HystrixMetricsPoller, listener: MetricsAsJsonPollerListener, delay: FiniteDuration
+)(
+    implicit
+    executionContext: ExecutionContext
+) {
 
   import play.api.Play.current
   import play.api.libs.concurrent.Akka.{ system => actorSystem }

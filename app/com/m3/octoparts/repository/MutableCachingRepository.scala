@@ -13,10 +13,13 @@ import scala.concurrent.{ ExecutionContext, Future }
  * Caching decorators for a mutable repository.
  */
 class MutableCachingRepository(
-  val delegate: MutableConfigsRepository,
-  val cache: Cache,
-  val httpClientPool: HttpClientPool)(
-    implicit val executionContext: ExecutionContext)
+  val delegate:       MutableConfigsRepository,
+  val cache:          Cache,
+  val httpClientPool: HttpClientPool
+)(
+  implicit
+  val executionContext: ExecutionContext
+)
     extends CachingRepository
     with MutableConfigsRepository {
 

@@ -34,12 +34,13 @@ import scala.concurrent.duration._
  * @param defaultEncoding to be used when the response does not specify an encoding. set to a no-fail encoding like ASCII to handle binary data.
  */
 class InstrumentedHttpClient(
-  name: String,
+  name:               String,
   connectionPoolSize: Int,
-  connectTimeout: FiniteDuration,
-  socketTimeout: FiniteDuration,
-  defaultEncoding: Charset,
-  mbProxySettings: Option[HttpProxySettings])
+  connectTimeout:     FiniteDuration,
+  socketTimeout:      FiniteDuration,
+  defaultEncoding:    Charset,
+  mbProxySettings:    Option[HttpProxySettings]
+)
     extends HttpClientLike
     with Closeable {
   import com.m3.octoparts.http.InstrumentedHttpClient._

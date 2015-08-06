@@ -5,7 +5,9 @@ import scala.concurrent.{ ExecutionContext, Future }
 private[versioning] object FutureUtil {
 
   def thenDoIfWasNone(futureOpt: Future[Option[_]])(action: => Future[Unit])(
-    implicit executionContext: ExecutionContext): Future[Boolean] = {
+    implicit
+    executionContext: ExecutionContext
+  ): Future[Boolean] = {
     futureOpt.flatMap {
       _.fold {
         val result: Future[Unit] = action
@@ -19,7 +21,9 @@ private[versioning] object FutureUtil {
   }
 
   def doIfWasSome[R](futureOpt: Future[Option[R]])(action: R => Unit)(
-    implicit executionContext: ExecutionContext): Future[Unit] = {
+    implicit
+    executionContext: ExecutionContext
+  ): Future[Unit] = {
     futureOpt.map(_.fold {}(action))
   }
 

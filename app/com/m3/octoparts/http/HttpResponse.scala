@@ -20,12 +20,13 @@ import com.m3.octoparts.model.{ CacheControl, Cookie }
  * @param body maybe a body String
  */
 case class HttpResponse(
-  status: Int,
-  message: String,
-  headers: Seq[(String, String)] = Nil,
-  cookies: Seq[Cookie] = Nil,
-  mimeType: Option[String] = None,
-  charset: Option[String] = None,
-  cacheControl: CacheControl = CacheControl.NotSet,
-  fromFallback: Boolean = false,
-  body: Option[String] = None)
+  status:       Int,
+  message:      String,
+  headers:      Seq[(String, String)] = Nil,
+  cookies:      Seq[Cookie]           = Nil,
+  mimeType:     Option[String]        = None,
+  charset:      Option[String]        = None,
+  cacheControl: CacheControl          = CacheControl.NotSet,
+  fromFallback: Boolean               = false,
+  body:         Option[String]        = None
+)

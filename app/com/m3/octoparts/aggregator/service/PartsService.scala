@@ -15,9 +15,11 @@ import scala.language.postfixOps
 /**
  * Service that has a #processParts method that returns a Future[AggregateResponse]
  */
-class PartsService(partRequestService: PartRequestServiceBase,
-                   val partRequestLogger: PartRequestLogger = PartRequestLogger,
-                   maximumAggReqTimeout: FiniteDuration = 5.seconds)(implicit val executionContext: ExecutionContext)
+class PartsService(
+  partRequestService:    PartRequestServiceBase,
+  val partRequestLogger: PartRequestLogger      = PartRequestLogger,
+  maximumAggReqTimeout:  FiniteDuration         = 5.seconds
+)(implicit val executionContext: ExecutionContext)
     extends PartServiceErrorHandler with LogUtil {
 
   import com.m3.octoparts.logging.LTSVables._

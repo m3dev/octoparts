@@ -1,12 +1,12 @@
-@()(implicit req: RequestHeader, lang: Lang)
+@(exportSelector: Option[String])(implicit req: RequestHeader, lang: Lang)
 
 <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.css" />
 <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/datatables/1.10.5/css/jquery.dataTables_themeroller.css" />
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/datatables/1.10.5/js/jquery.dataTables.min.js"></script>
-@helper.javascriptRouter("jsRoutes")(
-    routes.javascript.PartsController.list
-)
+@if(exportSelector.isDefined) {
+@helper.javascriptRouter("jsRoutes")(routes.javascript.PartsController.list)
+}
 <script type="text/javascript">
 $(document).ready(function() {
 	var table = $('table.dataTable').DataTable({
@@ -16,15 +16,15 @@ $(document).ready(function() {
         "pagingType": "full_numbers",
         "pageLength": 50
 	});
-	var exportSelectedLink = $('#export-selected');
+	@exportSelector.map { selector =>
+	var exportSelectedLink = $("@selector");
 	exportSelectedLink.attr("disabled", "disabled");
 	$('table.dataTable tbody').on( 'click', 'tr', function () {
         $(this).toggleClass('selected');
         var selectedRows = table.rows('.selected').data();
-        var ids = selectedRows
-          .map(function(row){
+        var ids = selectedRows.map(function(row){
             return $(row[0]).text(); // extract id from id markup
-          });
+        });
         if (ids.length > 0) {
             var downloadUrl = jsRoutes.controllers.PartsController.list(ids).url;
             exportSelectedLink.removeClass("disabled");
@@ -34,7 +34,7 @@ $(document).ready(function() {
             exportSelectedLink.attr("disabled", "disabled");
             exportSelectedLink.addClass("disabled");
         }
-
-    } );
+    });
+	}
 });
 </script>

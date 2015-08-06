@@ -17,18 +17,19 @@ import scala.collection.SortedSet
  *                          meaningful names (e.g. 'dogId' can be used instead of 'd')
  */
 case class PartParam(
-    id: Option[Long] = None, //Implies not yet inserted into the DB
-    httpPartConfigId: Option[Long] = None,
-    httpPartConfig: Option[HttpPartConfig] = None,
-    description: Option[String] = None,
-    required: Boolean,
-    versioned: Boolean,
-    paramType: ParamType.Value,
-    outputName: String,
-    inputNameOverride: Option[String] = None,
-    cacheGroups: SortedSet[CacheGroup] = SortedSet.empty,
-    createdAt: DateTime,
-    updatedAt: DateTime) extends ConfigModel[PartParam] {
+    id:                Option[Long]           = None, //Implies not yet inserted into the DB
+    httpPartConfigId:  Option[Long]           = None,
+    httpPartConfig:    Option[HttpPartConfig] = None,
+    description:       Option[String]         = None,
+    required:          Boolean,
+    versioned:         Boolean,
+    paramType:         ParamType.Value,
+    outputName:        String,
+    inputNameOverride: Option[String]         = None,
+    cacheGroups:       SortedSet[CacheGroup]  = SortedSet.empty,
+    createdAt:         DateTime,
+    updatedAt:         DateTime
+) extends ConfigModel[PartParam] {
 
   /**
    * This is the key used to look for a value inside the PartRequest
