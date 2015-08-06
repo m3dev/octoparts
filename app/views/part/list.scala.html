@@ -66,8 +66,8 @@
 
     <a href="@controllers.routes.AdminController.newPart" class="btn btn-primary" style="margin: 5px 0;">@Messages("parts.create")</a>
 
-    <a class="btn btn-default disabled" disabled id="export-selected" download="octoparts-export-selected.json" href="#">Export selected</a>
-    <a class="btn btn-default" id="select-all" href="#">Select all</a>
+    <a class="btn btn-default disabled" disabled id="export-selected" download="octoparts-export-selected.json" href="#">@Messages("admin.exportSelected")</a>
+    <a class="btn btn-default" id="select-all" href="#">@Messages("admin.selectAll")</a>
 
     <table class="dataTable stripe hover compact">
         <thead>

@@ -150,6 +150,8 @@ admin.warnings.WhitespaceInUri=URIに空欄が入っています。
 admin.warnings.AlertEmailOff=メールアラートが無効になっています。
 
 admin.export=エクスポート
+admin.exportSelected=選択したものをエクスポート
+admin.selectAll=すべて選択する
 admin.export.all=全てのパーツをエクスポート
 admin.import=パーツインポート
 admin.import.help=JSONデータファイルを選ぶ…
