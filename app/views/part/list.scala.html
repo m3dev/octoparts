@@ -16,7 +16,8 @@
     @views.html.datatables()
     <script type="text/javascript">
     $(document).ready(function() {
-        var table = $('table.dataTable').DataTable();
+        var tableObject = $('table.dataTable');
+        var table = tableObject.DataTable();
         var exportSelectedLink = $("#export-selected");
         var selectAll = $("#select-all");
 
@@ -54,7 +55,8 @@
             updateDownloadLink();
         });
 
-        exportSelectedLink.on("click", function (){
+        // on filtering
+        tableObject.on('search.dt', function () {
             updateDownloadLink();
         });
 
