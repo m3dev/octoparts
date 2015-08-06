@@ -18,23 +18,46 @@
     $(document).ready(function() {
         var table = $('table.dataTable').DataTable();
         var exportSelectedLink = $("#export-selected");
-	    exportSelectedLink.attr("disabled", "disabled");
-        $('table.dataTable tbody').on( 'click', 'tr', function () {
-            $(this).toggleClass('selected');
-            var selectedRows = table.rows('.selected').data();
+        var selectAll = $("#select-all");
+
+        var updateDownloadLink = function(){
+            var selectedRows = table.rows(".selected", { filter: 'applied' }).data();
             var ids = selectedRows.map(function(row){
                 return $(row[0]).text(); // extract id from id markup
             });
             if (ids.length > 0) {
                 var downloadUrl = jsRoutes.controllers.PartsController.list(ids).url;
-                exportSelectedLink.removeClass("disabled");
-                exportSelectedLink.removeAttr("disabled");
                 exportSelectedLink.attr("href", downloadUrl);
+                toggleDownloadLink(true);
             } else {
-                exportSelectedLink.attr("disabled", "disabled");
-                exportSelectedLink.addClass("disabled");
+                toggleDownloadLink(false);
             }
+        };
+
+        var toggleDownloadLink = function(enabled) {
+          if(enabled) {
+            exportSelectedLink.removeClass("disabled");
+            exportSelectedLink.removeAttr("disabled");
+          } else {
+            exportSelectedLink.attr("disabled", "disabled");
+          }
+        }
+
+	    exportSelectedLink.attr("disabled", "disabled");
+        $('table.dataTable tbody').on( 'click', 'tr', function () {
+            $(this).toggleClass('selected');
+            updateDownloadLink();
         });
+
+        selectAll.on('click', function(){
+            table.$('tr', {"filter": "applied"} ).addClass("selected");
+            updateDownloadLink();
+        });
+
+        exportSelectedLink.on("click", function (){
+            updateDownloadLink();
+        });
+
     });
     </script>
 } {
@@ -42,6 +65,7 @@
     <a href="@controllers.routes.AdminController.newPart" class="btn btn-primary" style="margin: 5px 0;">@Messages("parts.create")</a>
 
     <a class="btn btn-default disabled" disabled id="export-selected" download="octoparts-export-selected.json" href="#">Export selected</a>
+    <a class="btn btn-default" id="select-all" href="#">Select all</a>
 
     <table class="dataTable stripe hover compact">
         <thead>
