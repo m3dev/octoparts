@@ -1,4 +1,4 @@
-@(threadPoolConfigs: scala.collection.SortedSet[com.m3.octoparts.model.config.ThreadPoolConfig])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang, req: RequestHeader)
+@(threadPoolConfigs: scala.collection.SortedSet[com.m3.octoparts.model.config.ThreadPoolConfig])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
 
 @views.html.adminlayout(Messages("threadPools.list")) {
     <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.css" />
@@ -12,7 +12,7 @@
     }
     -->
     </style>
-    @views.html.datatables(None)
+    @views.html.datatables()
 } {
 
     <a href="@controllers.routes.AdminController.newThreadPool" class="btn btn-primary" style="margin: 5px 0;">@Messages("threadPools.create")</a>

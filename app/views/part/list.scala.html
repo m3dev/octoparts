@@ -12,7 +12,31 @@
     }
     -->
     </style>
-    @views.html.datatables(Some("#export-selected"))
+    @helper.javascriptRouter("jsRoutes")(routes.javascript.PartsController.list)
+    @views.html.datatables()
+    <script type="text/javascript">
+    $(document).ready(function() {
+        var table = $('table.dataTable').DataTable();
+        var exportSelectedLink = $("#export-selected");
+	    exportSelectedLink.attr("disabled", "disabled");
+        $('table.dataTable tbody').on( 'click', 'tr', function () {
+            $(this).toggleClass('selected');
+            var selectedRows = table.rows('.selected').data();
+            var ids = selectedRows.map(function(row){
+                return $(row[0]).text(); // extract id from id markup
+            });
+            if (ids.length > 0) {
+                var downloadUrl = jsRoutes.controllers.PartsController.list(ids).url;
+                exportSelectedLink.removeClass("disabled");
+                exportSelectedLink.removeAttr("disabled");
+                exportSelectedLink.attr("href", downloadUrl);
+            } else {
+                exportSelectedLink.attr("disabled", "disabled");
+                exportSelectedLink.addClass("disabled");
+            }
+        });
+    });
+    </script>
 } {
 
     <a href="@controllers.routes.AdminController.newPart" class="btn btn-primary" style="margin: 5px 0;">@Messages("parts.create")</a>

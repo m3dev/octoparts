@@ -1,4 +1,4 @@
-@(part: presentation.HttpPartConfigView)(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang, req: RequestHeader)
+@(part: presentation.HttpPartConfigView)(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
 
 @views.html.adminlayout(Messages("parts.detail")) {
     <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.css" />
@@ -12,7 +12,7 @@
     }
     -->
     </style>
-    @views.html.datatables(None)
+    @views.html.datatables()
 } {
 
     <h1>@Messages("parts.detail")</h1>
