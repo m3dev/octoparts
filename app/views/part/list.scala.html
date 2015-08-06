@@ -1,4 +1,4 @@
-@(parts: scala.collection.SortedSet[presentation.HttpPartConfigView])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
+@(parts: scala.collection.SortedSet[presentation.HttpPartConfigView])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang, req: RequestHeader)
 
 @views.html.adminlayout(Messages("parts.list")) {
     <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.css" />
@@ -16,6 +16,8 @@
 } {
 
     <a href="@controllers.routes.AdminController.newPart" class="btn btn-primary" style="margin: 5px 0;">@Messages("parts.create")</a>
+
+    <a class="btn btn-default disabled" disabled id="export-selected" download="octoparts-export-selected.json" href="#">Export selected</a>
 
     <table class="dataTable stripe hover compact">
         <thead>

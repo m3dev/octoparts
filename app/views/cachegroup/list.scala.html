@@ -1,4 +1,4 @@
-@(cacheGroups: scala.collection.SortedSet[com.m3.octoparts.model.config.CacheGroup])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
+@(cacheGroups: scala.collection.SortedSet[com.m3.octoparts.model.config.CacheGroup])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang, req: RequestHeader)
 
 @views.html.adminlayout(Messages("cacheGroups.list")) {
     <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.css" />

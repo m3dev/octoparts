@@ -3,86 +3,86 @@
 # ~~~~
 
 # Map static resources from the /public folder to the /assets URL path
-GET         /assets/*file                                                          controllers.Assets.at(path="/public", file)
+GET         /assets/*file                                                                       controllers.Assets.at(path="/public", file)
 
 # Dependencies-related API
-GET         /octoparts/2/list                                                      @controllers.PartsController.list(partIdParams: List[String] ?= Nil)
-POST        /octoparts/2                                                           @controllers.PartsController.retrieveParts
+GET         /octoparts/2/list                                                                   @controllers.PartsController.list(partIdParams: List[String] ?= Nil)
+POST        /octoparts/2                                                                        @controllers.PartsController.retrieveParts
 
 # Cache invalidation API
-POST        /octoparts/2/cache/invalidate/part/:partId                                         @controllers.CacheController.invalidatePart(partId)
-POST        /octoparts/2/cache/invalidate/part/:partId/:paramName/:paramValue                  @controllers.CacheController.invalidatePartParam(partId, paramName, paramValue)
+POST        /octoparts/2/cache/invalidate/part/:partId                                          @controllers.CacheController.invalidatePart(partId)
+POST        /octoparts/2/cache/invalidate/part/:partId/:paramName/:paramValue                   @controllers.CacheController.invalidatePartParam(partId, paramName, paramValue)
 POST        /octoparts/2/cache/invalidate/cache-group/:cacheGroupName/parts                     @controllers.CacheController.invalidateCacheGroupParts(cacheGroupName)
 POST        /octoparts/2/cache/invalidate/cache-group/:cacheGroupName/params/:paramValue        @controllers.CacheController.invalidateCacheGroupParam(cacheGroupName, paramValue)
 
 # Admin screens
-GET         /                                                                      @controllers.AdminController.listParts
-GET         /admin                                                                 @controllers.AdminController.listParts
-GET         /admin/auth-test                                                       @controllers.AdminController.authTest
+GET         /                                                                                   @controllers.AdminController.listParts
+GET         /admin                                                                              @controllers.AdminController.listParts
+GET         /admin/auth-test                                                                    @controllers.AdminController.authTest
 
-GET         /admin/parts                                                           @controllers.AdminController.listParts
-GET         /admin/parts/new                                                       @controllers.AdminController.newPart
-POST        /admin/parts/create                                                    @controllers.AdminController.createPart
-GET         /admin/parts/import                                                    @controllers.AdminController.showImportParts
-POST        /admin/parts/import                                                    @controllers.AdminController.doImportParts
-GET         /admin/parts/:partId/show                                              @controllers.AdminController.showPart(partId)
-GET         /admin/parts/:partId/edit                                              @controllers.AdminController.editPart(partId)
-POST        /admin/parts/:partId/update                                            @controllers.AdminController.updatePart(partId)
-POST        /admin/parts/:partId/copy                                              @controllers.AdminController.copyPart(partId)
-GET         /admin/parts/:partId/delete                                            @controllers.AdminController.confirmDeletePart(partId)
-POST        /admin/parts/:partId/delete                                            @controllers.AdminController.deletePart(partId)
-GET         /admin/parts/:partId/test                                              @controllers.AdminController.testPart(partId)
+GET         /admin/parts                                                                        @controllers.AdminController.listParts
+GET         /admin/parts/new                                                                    @controllers.AdminController.newPart
+POST        /admin/parts/create                                                                 @controllers.AdminController.createPart
+GET         /admin/parts/import                                                                 @controllers.AdminController.showImportParts
+POST        /admin/parts/import                                                                 @controllers.AdminController.doImportParts
+GET         /admin/parts/:partId/show                                                           @controllers.AdminController.showPart(partId)
+GET         /admin/parts/:partId/edit                                                           @controllers.AdminController.editPart(partId)
+POST        /admin/parts/:partId/update                                                         @controllers.AdminController.updatePart(partId)
+POST        /admin/parts/:partId/copy                                                           @controllers.AdminController.copyPart(partId)
+GET         /admin/parts/:partId/delete                                                         @controllers.AdminController.confirmDeletePart(partId)
+POST        /admin/parts/:partId/delete                                                         @controllers.AdminController.deletePart(partId)
+GET         /admin/parts/:partId/test                                                           @controllers.AdminController.testPart(partId)
 
-GET         /admin/parts/:partId/params/new                                        @controllers.AdminController.newParam(partId)
-POST        /admin/parts/:partId/params/create                                     @controllers.AdminController.createParam(partId)
-GET         /admin/parts/:partId/params/:paramId/edit                              @controllers.AdminController.editParam(partId, paramId: Long)
-POST        /admin/parts/:partId/params/:paramId/update                            @controllers.AdminController.updateParam(partId, paramId: Long)
-POST        /admin/parts/:partId/params/:paramId/copy                              @controllers.AdminController.copyParam(partId, paramId: Long)
-GET         /admin/parts/:partId/params/:paramId/delete                            @controllers.AdminController.confirmDeleteParam(partId, paramId: Long)
-POST        /admin/parts/:partId/params/:paramId/delete                            @controllers.AdminController.deleteParam(partId, paramId: Long)
+GET         /admin/parts/:partId/params/new                                                     @controllers.AdminController.newParam(partId)
+POST        /admin/parts/:partId/params/create                                                  @controllers.AdminController.createParam(partId)
+GET         /admin/parts/:partId/params/:paramId/edit                                           @controllers.AdminController.editParam(partId, paramId: Long)
+POST        /admin/parts/:partId/params/:paramId/update                                         @controllers.AdminController.updateParam(partId, paramId: Long)
+POST        /admin/parts/:partId/params/:paramId/copy                                           @controllers.AdminController.copyParam(partId, paramId: Long)
+GET         /admin/parts/:partId/params/:paramId/delete                                         @controllers.AdminController.confirmDeleteParam(partId, paramId: Long)
+POST        /admin/parts/:partId/params/:paramId/delete                                         @controllers.AdminController.deleteParam(partId, paramId: Long)
 
-GET         /admin/thread-pools                                                    @controllers.AdminController.listThreadPools
-GET         /admin/thread-pools/new                                                @controllers.AdminController.newThreadPool
-POST        /admin/thread-pools/create                                             @controllers.AdminController.createThreadPool
-GET         /admin/thread-pools/:threadPoolId/show                                 @controllers.AdminController.showThreadPool(threadPoolId: Long)
-GET         /admin/thread-pools/:threadPoolId/edit                                 @controllers.AdminController.editThreadPool(threadPoolId: Long)
-POST        /admin/thread-pools/:threadPoolId/update                               @controllers.AdminController.updateThreadPool(threadPoolId: Long)
-GET         /admin/thread-pools/:threadPoolId/delete                               @controllers.AdminController.confirmDeleteThreadPool(threadPoolId: Long)
-POST        /admin/thread-pools/:threadPoolId/delete                               @controllers.AdminController.deleteThreadPool(threadPoolId: Long)
+GET         /admin/thread-pools                                                                 @controllers.AdminController.listThreadPools
+GET         /admin/thread-pools/new                                                             @controllers.AdminController.newThreadPool
+POST        /admin/thread-pools/create                                                          @controllers.AdminController.createThreadPool
+GET         /admin/thread-pools/:threadPoolId/show                                              @controllers.AdminController.showThreadPool(threadPoolId: Long)
+GET         /admin/thread-pools/:threadPoolId/edit                                              @controllers.AdminController.editThreadPool(threadPoolId: Long)
+POST        /admin/thread-pools/:threadPoolId/update                                            @controllers.AdminController.updateThreadPool(threadPoolId: Long)
+GET         /admin/thread-pools/:threadPoolId/delete                                            @controllers.AdminController.confirmDeleteThreadPool(threadPoolId: Long)
+POST        /admin/thread-pools/:threadPoolId/delete                                            @controllers.AdminController.deleteThreadPool(threadPoolId: Long)
 
-GET         /admin/cache-groups                                                    @controllers.AdminController.listCacheGroups
-GET         /admin/cache-groups/new                                                @controllers.AdminController.newCacheGroup
-POST        /admin/cache-groups/create                                             @controllers.AdminController.createCacheGroup
-GET         /admin/cache-groups/:cacheGroupName/show                               @controllers.AdminController.showCacheGroup(cacheGroupName)
-GET         /admin/cache-groups/:cacheGroupName/edit                               @controllers.AdminController.editCacheGroup(cacheGroupName)
-POST        /admin/cache-groups/:cacheGroupName/update                             @controllers.AdminController.updateCacheGroup(cacheGroupName)
-GET         /admin/cache-groups/:cacheGroupName/delete                             @controllers.AdminController.confirmDeleteCacheGroup(cacheGroupName)
-POST        /admin/cache-groups/:cacheGroupName/delete                             @controllers.AdminController.deleteCacheGroup(cacheGroupName)
+GET         /admin/cache-groups                                                                 @controllers.AdminController.listCacheGroups
+GET         /admin/cache-groups/new                                                             @controllers.AdminController.newCacheGroup
+POST        /admin/cache-groups/create                                                          @controllers.AdminController.createCacheGroup
+GET         /admin/cache-groups/:cacheGroupName/show                                            @controllers.AdminController.showCacheGroup(cacheGroupName)
+GET         /admin/cache-groups/:cacheGroupName/edit                                            @controllers.AdminController.editCacheGroup(cacheGroupName)
+POST        /admin/cache-groups/:cacheGroupName/update                                          @controllers.AdminController.updateCacheGroup(cacheGroupName)
+GET         /admin/cache-groups/:cacheGroupName/delete                                          @controllers.AdminController.confirmDeleteCacheGroup(cacheGroupName)
+POST        /admin/cache-groups/:cacheGroupName/delete                                          @controllers.AdminController.deleteCacheGroup(cacheGroupName)
 
 
 # Auth
-GET         /auth/callback                                                         controllers.AuthController.callback(origUrl)
-GET         /auth/logout                                                           controllers.AuthController.logout
+GET         /auth/callback                                                                      controllers.AuthController.callback(origUrl)
+GET         /auth/logout                                                                        controllers.AuthController.logout
 
 # Hystrix event stream
-GET         /hystrix.stream                                                        @controllers.hystrix.HystrixController.stream(delayMs: Option[Int])
+GET         /hystrix.stream                                                                     @controllers.hystrix.HystrixController.stream(delayMs: Option[Int])
 
 # -- Swagger-related --
 
 # File redirects
-GET         /swagger-ui/*file                                                      controllers.Assets.at(path = "/public/swagger-ui", file)
-GET         /swagger-ui                                                            controllers.Default.redirect(to = "/swagger-ui/")
-GET         /swagger-ui/                                                           controllers.Assets.at(path = "/public/swagger-ui", file = "index.html")
+GET         /swagger-ui/*file                                                                   controllers.Assets.at(path = "/public/swagger-ui", file)
+GET         /swagger-ui                                                                         controllers.Default.redirect(to = "/swagger-ui/")
+GET         /swagger-ui/                                                                        controllers.Assets.at(path = "/public/swagger-ui", file = "index.html")
 
 # Swagger - Root Resources Listing
-GET         /api-docs                                                              controllers.ApiHelpController.getResources
-GET         /api-docs$path<.+>                                                     controllers.ApiHelpController.getResource(path)
+GET         /api-docs                                                                           controllers.ApiHelpController.getResources
+GET         /api-docs$path<.+>                                                                  controllers.ApiHelpController.getResource(path)
 
 
 # System admin stuff
-GET         /system/build                                                          controllers.system.BuildInfoController.showBuildInfo
-GET         /system/config                                                         @controllers.system.SystemConfigController.showSystemConfig
-GET         /system/config/logger                                                  @controllers.system.SystemConfigController.showLoggerStatus
-GET         /system/healthcheck                                                    @controllers.system.HealthcheckController.healthcheck
-GET         /system/metrics                                                        com.kenshoo.play.metrics.MetricsController.metrics
+GET         /system/build                                                                       controllers.system.BuildInfoController.showBuildInfo
+GET         /system/config                                                                      @controllers.system.SystemConfigController.showSystemConfig
+GET         /system/config/logger                                                               @controllers.system.SystemConfigController.showLoggerStatus
+GET         /system/healthcheck                                                                 @controllers.system.HealthcheckController.healthcheck
+GET         /system/metrics                                                                     com.kenshoo.play.metrics.MetricsController.metrics
 
