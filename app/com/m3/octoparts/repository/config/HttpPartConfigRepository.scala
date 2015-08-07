@@ -117,8 +117,8 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
     fk = "httpPartConfigId",
     merge = (c, hc) => c.copy(hystrixConfig = hc)
   ).includes[HystrixConfig](
-    merge = (cs, hs) => cs.map { c => c.copy(hystrixConfig = hs.find(_.httpPartConfigId == c.id)) }
-  )
+      merge = (cs, hs) => cs.map { c => c.copy(hystrixConfig = hs.find(_.httpPartConfigId == c.id)) }
+    )
 
   // initializes the default references
   {

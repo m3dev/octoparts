@@ -12,9 +12,8 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{ ExecutionContext, Future }
 
 class MemcachedCacheOps(
-  cache:              Cache,
-  latestVersionCache: LatestVersionCache
-)(implicit executionContext: ExecutionContext)
+  cache: Cache,
+  latestVersionCache: LatestVersionCache)(implicit executionContext: ExecutionContext)
     extends CacheOps
     with TtlCalculator {
 
@@ -63,8 +62,7 @@ class MemcachedCacheOps(
   }
 
   case class CombinedVersionLookup(
-      partVersionLookup: VersionLookup[String], paramVersionLookups: Seq[VersionLookup[VersionedParamKey]]
-  )(implicit parentSpan: Span) {
+      partVersionLookup: VersionLookup[String], paramVersionLookups: Seq[VersionLookup[VersionedParamKey]])(implicit parentSpan: Span) {
 
     lazy val all: Seq[VersionLookup[_]] = partVersionLookup +: paramVersionLookups
 
@@ -171,8 +169,7 @@ class MemcachedCacheOps(
 
   // assumes hashes do not collide : only versions are verified
   private def checkAndReturn(
-    directive: CacheDirective, resp: PartResponse, versionLookups: CombinedVersionLookup
-  )(implicit parentSpan: Span): Future[Option[PartResponse]] = {
+    directive: CacheDirective, resp: PartResponse, versionLookups: CombinedVersionLookup)(implicit parentSpan: Span): Future[Option[PartResponse]] = {
     // really basic check to make sure we return a valid entry
     // e.g. has the right partId
     if (resp.partId == versionLookups.partId) {

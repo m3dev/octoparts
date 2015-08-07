@@ -27,12 +27,11 @@ import scala.concurrent.duration._
   consumes = "application/json"
 )
 class PartsController(
-    partsService:               PartsService,
-    configsRepository:          ConfigsRepository,
-    requestTimeout:             Duration,
-    readClientCacheHeaders:     Boolean,
-    implicit val zipkinService: ZipkinServiceLike
-) extends Controller with LoggingSupport with ReqHeaderToSpanImplicit {
+    partsService: PartsService,
+    configsRepository: ConfigsRepository,
+    requestTimeout: Duration,
+    readClientCacheHeaders: Boolean,
+    implicit val zipkinService: ZipkinServiceLike) extends Controller with LoggingSupport with ReqHeaderToSpanImplicit {
 
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
   import com.beachape.zipkin.FutureEnrichment._
@@ -75,7 +74,7 @@ class PartsController(
     responseContainer = "List",
     httpMethod = "GET"
   )
-  def list(@ApiParam(value = "Optional part ids to filter on. Note, this should be passed as multiple partIdParams=partId, e.g ?partIdParams=wut&partIdParams=wut3 ", allowMultiple = true)@QueryParam("partIdParams") partIdParams:List[String]= Nil) = Action.async { implicit request =>
+  def list(@ApiParam(value = "Optional part ids to filter on. Note, this should be passed as multiple partIdParams=partId, e.g ?partIdParams=wut&partIdParams=wut3 ", allowMultiple = true)@QueryParam("partIdParams") partIdParams: List[String] = Nil) = Action.async { implicit request =>
     debugRc
     val fConfigs = partIdParams match {
       case Nil => configsRepository.findAllConfigs().trace("find-all-configs")

@@ -26,4 +26,4 @@ addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "0.2.1")
 // For publishing coverage data to coveralls.io
 addSbtPlugin("org.scoverage" %% "sbt-coveralls" % "1.0.0.BETA1")
 
-addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "0.6.0")
+addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "0.7.0")

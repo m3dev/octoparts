@@ -20,9 +20,8 @@ trait AuthorizationCheckSupport {
    * @param onUnauthorized what action to take when a user is not authenticated (e.g. a redirect)
    */
   protected[support] def authorizationCheckFilter(
-    isAuthorized:   AuthenticatedRequest[_] => Future[Boolean],
-    onUnauthorized: AuthenticatedRequest[_] => Future[Result]
-  ) = new ActionFilter[AuthenticatedRequest] {
+    isAuthorized: AuthenticatedRequest[_] => Future[Boolean],
+    onUnauthorized: AuthenticatedRequest[_] => Future[Result]) = new ActionFilter[AuthenticatedRequest] {
 
     def filter[A](inputReq: AuthenticatedRequest[A]) = {
       isAuthorized(inputReq).flatMap { authorized =>

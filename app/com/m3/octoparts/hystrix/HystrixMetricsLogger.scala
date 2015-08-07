@@ -33,16 +33,15 @@ object HystrixMetricsLogger extends HystrixCommandMetricsRepository with LTSVLog
   }
 
   private def log(
-    commandName:      String,
-    circuitOpen:      Boolean,
-    errorCount:       Long,
-    errorPercentage:  Int,
-    execTimeMsMean:   Int,
+    commandName: String,
+    circuitOpen: Boolean,
+    errorCount: Long,
+    errorPercentage: Int,
+    execTimeMsMean: Int,
     execTimeMsMedian: Int,
-    execTimeMs95:     Int,
-    execTimeMs99:     Int,
-    execTimeMs998:    Int
-  ): Unit = {
+    execTimeMs95: Int,
+    execTimeMs99: Int,
+    execTimeMs998: Int): Unit = {
 
     info(
       "commandName" -> commandName,

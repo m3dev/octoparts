@@ -14,19 +14,17 @@ import scala.concurrent.duration.FiniteDuration
  * @param requests List[PartRequest]
  */
 case class AggregateRequest(
-  @(ApiModelProperty @field)(required = true)@BeanProperty requestMeta:RequestMeta,
-  @BeanProperty requests:                                            Seq[PartRequest] = Nil
-)
+  @(ApiModelProperty @field)(required = true)@BeanProperty requestMeta: RequestMeta,
+  @BeanProperty requests: Seq[PartRequest] = Nil)
 
 case class RequestMeta(
-  @(ApiModelProperty @field)(required = true)@BeanProperty id:                                     String,
-  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty serviceId:        Option[String]         = None,
-  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty userId:           Option[String]         = None,
-  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty sessionId:        Option[String]         = None,
-  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty requestUrl:       Option[String]         = None,
-  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty userAgent:        Option[String]         = None,
-  @(ApiModelProperty @field)(required = false, dataType = "integer", value = "in ms")@BeanProperty timeout:Option[FiniteDuration]= None
-)
+  @(ApiModelProperty @field)(required = true)@BeanProperty id: String,
+  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty serviceId: Option[String] = None,
+  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty userId: Option[String] = None,
+  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty sessionId: Option[String] = None,
+  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty requestUrl: Option[String] = None,
+  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty userAgent: Option[String] = None,
+  @(ApiModelProperty @field)(required = false, dataType = "integer", value = "in ms")@BeanProperty timeout: Option[FiniteDuration] = None)
 
 /**
  * A request for a given part. One of more of these can be combined into a single AggregateRequest.
@@ -41,14 +39,12 @@ case class RequestMeta(
  * @param params list of parameters. Several parameters can have the same key; within those, order is kept as much a can be.
  */
 case class PartRequest(
-  @(ApiModelProperty @field)(required = true)@BeanProperty partId:             String,
-  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty id:Option[String]= None,
+  @(ApiModelProperty @field)(required = true)@BeanProperty partId: String,
+  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty id: Option[String] = None,
   // TODO use a Map[String, Seq[String]] here when Swagger finally supports maps.
-  @BeanProperty params: Seq[PartRequestParam] = Nil
-)
+  @BeanProperty params: Seq[PartRequestParam] = Nil)
 
 case class PartRequestParam(
-  @(ApiModelProperty @field)(required = true)@BeanProperty key:String,
-  @(ApiModelProperty @field)(required = true)@BeanProperty value:String
-)
+  @(ApiModelProperty @field)(required = true)@BeanProperty key: String,
+  @(ApiModelProperty @field)(required = true)@BeanProperty value: String)
 

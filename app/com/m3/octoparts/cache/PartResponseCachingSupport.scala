@@ -37,10 +37,9 @@ trait PartResponseCachingSupport extends PartRequestServiceBase {
   def cacheOps: CacheOps
 
   override def processWithConfig(
-    ci:              HttpPartConfig,
+    ci: HttpPartConfig,
     partRequestInfo: PartRequestInfo,
-    params:          Map[ShortPartParam, Seq[String]]
-  )(implicit parentSpan: Span): Future[PartResponse] = {
+    params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): Future[PartResponse] = {
 
     if (partRequestInfo.noCache || !ci.cacheConfig.cachingEnabled) {
       // noCache or TTL defined but 0 => skip caching
@@ -67,10 +66,9 @@ trait PartResponseCachingSupport extends PartRequestServiceBase {
   }
 
   private def onCacheFailure(
-    ci:              HttpPartConfig,
+    ci: HttpPartConfig,
     partRequestInfo: PartRequestInfo,
-    params:          Map[ShortPartParam, Seq[String]]
-  )(implicit parentSpan: Span): PartialFunction[Throwable, Future[PartResponse]] = {
+    params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): PartialFunction[Throwable, Future[PartResponse]] = {
     case ce: CacheException => {
       ce.getCause match {
         case te: shade.TimeoutException =>
@@ -91,12 +89,11 @@ trait PartResponseCachingSupport extends PartRequestServiceBase {
   }
 
   private[cache] def revalidate(
-    partResponse:    PartResponse,
-    directive:       CacheDirective,
-    ci:              HttpPartConfig,
+    partResponse: PartResponse,
+    directive: CacheDirective,
+    ci: HttpPartConfig,
     partRequestInfo: PartRequestInfo,
-    params:          Map[ShortPartParam, Seq[String]]
-  )(implicit parentSpan: Span): Future[PartResponse] = {
+    params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): Future[PartResponse] = {
 
     val revalidationParams = for {
       (name, value) <- partResponse.cacheControl.revalidationHeaders

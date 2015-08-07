@@ -15,9 +15,8 @@ import scala.concurrent.duration.FiniteDuration
  * @param responses PartResponse
  */
 case class AggregateResponse(
-  @(ApiModelProperty @field)(required = true)@BeanProperty responseMeta:ResponseMeta,
-  @BeanProperty responses:                                            Seq[PartResponse] = Nil
-) {
+    @(ApiModelProperty @field)(required = true)@BeanProperty responseMeta: ResponseMeta,
+    @BeanProperty responses: Seq[PartResponse] = Nil) {
 
   @(ApiModelProperty @field)(hidden = true)
   private lazy val partsLookup = responses.map(r => r.id -> r).toMap
@@ -41,9 +40,8 @@ case class AggregateResponse(
 }
 
 case class ResponseMeta(
-  @(ApiModelProperty @field)(required = true)@BeanProperty id:                                        String,
-  @(ApiModelProperty @field)(required = true, dataType = "integer", value = "in ms")@BeanProperty processTime:FiniteDuration
-)
+  @(ApiModelProperty @field)(required = true)@BeanProperty id: String,
+  @(ApiModelProperty @field)(required = true, dataType = "integer", value = "in ms")@BeanProperty processTime: FiniteDuration)
 
 /**
  * @param partId same as corresponding partRequest
@@ -61,19 +59,18 @@ case class ResponseMeta(
  *
  */
 case class PartResponse(
-  @(ApiModelProperty @field)(required = true)@BeanProperty partId:                         String,
-  @(ApiModelProperty @field)(required = true)@BeanProperty id:                             String,
-  @BeanProperty cookies:                                                                   Seq[Cookie]    = Nil,
-  @(ApiModelProperty @field)(required = false, dataType = "integer")@BeanProperty statusCode:Option[Int]  = None,
+  @(ApiModelProperty @field)(required = true)@BeanProperty partId: String,
+  @(ApiModelProperty @field)(required = true)@BeanProperty id: String,
+  @BeanProperty cookies: Seq[Cookie] = Nil,
+  @(ApiModelProperty @field)(required = false, dataType = "integer")@BeanProperty statusCode: Option[Int] = None,
   @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty mimeType: Option[String] = None,
-  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty charset:  Option[String] = None,
-  @BeanProperty cacheControl:                                                              CacheControl   = CacheControl.NotSet,
+  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty charset: Option[String] = None,
+  @BeanProperty cacheControl: CacheControl = CacheControl.NotSet,
   @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty contents: Option[String] = None,
-  @BeanProperty warnings:                                                                  Seq[String]    = Nil,
-  @BeanProperty errors:                                                                    Seq[String]    = Nil,
-  @(ApiModelProperty @field)(required = true)@BooleanBeanProperty retrievedFromCache:      Boolean        = false,
-  @(ApiModelProperty @field)(required = true)@BooleanBeanProperty retrievedFromLocalContents:Boolean      = false
-)
+  @BeanProperty warnings: Seq[String] = Nil,
+  @BeanProperty errors: Seq[String] = Nil,
+  @(ApiModelProperty @field)(required = true)@BooleanBeanProperty retrievedFromCache: Boolean = false,
+  @(ApiModelProperty @field)(required = true)@BooleanBeanProperty retrievedFromLocalContents: Boolean = false)
 
 /**
  * Immutable wrapper for cookies
@@ -81,15 +78,14 @@ case class PartResponse(
  * Ideally we should handle no more than these fields
  */
 case class Cookie(
-  @(ApiModelProperty @field)(required = true)@BeanProperty name:                   String,
-  @(ApiModelProperty @field)(required = true)@BeanProperty value:                  String,
-  @(ApiModelProperty @field)(required = true)@BooleanBeanProperty httpOnly:        Boolean,
-  @(ApiModelProperty @field)(required = true)@BooleanBeanProperty secure:          Boolean,
-  @(ApiModelProperty @field)(required = true)@BooleanBeanProperty discard:         Boolean,
-  @(ApiModelProperty @field)(required = true)@BeanProperty maxAge:                 Long,
-  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty path:Option[String],
-  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty domain:Option[String]
-)
+  @(ApiModelProperty @field)(required = true)@BeanProperty name: String,
+  @(ApiModelProperty @field)(required = true)@BeanProperty value: String,
+  @(ApiModelProperty @field)(required = true)@BooleanBeanProperty httpOnly: Boolean,
+  @(ApiModelProperty @field)(required = true)@BooleanBeanProperty secure: Boolean,
+  @(ApiModelProperty @field)(required = true)@BooleanBeanProperty discard: Boolean,
+  @(ApiModelProperty @field)(required = true)@BeanProperty maxAge: Long,
+  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty path: Option[String],
+  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty domain: Option[String])
 
 object CacheControl {
   val NotSet = CacheControl()
@@ -104,12 +100,11 @@ object CacheControl {
  * @param lastModified a date. we do not parse it and use it as-is
  */
 case class CacheControl(
-  @(ApiModelProperty @field)(required = true)@BooleanBeanProperty noStore:               Boolean        = false,
-  @(ApiModelProperty @field)(required = true)@BooleanBeanProperty noCache:               Boolean        = false,
-  @(ApiModelProperty @field)(required = false, dataType = "long")@BeanProperty expiresAt:Option[Long]   = None,
-  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty etag:   Option[String] = None,
-  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty lastModified:Option[String]= None
-) {
+    @(ApiModelProperty @field)(required = true)@BooleanBeanProperty noStore: Boolean = false,
+    @(ApiModelProperty @field)(required = true)@BooleanBeanProperty noCache: Boolean = false,
+    @(ApiModelProperty @field)(required = false, dataType = "long")@BeanProperty expiresAt: Option[Long] = None,
+    @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty etag: Option[String] = None,
+    @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty lastModified: Option[String] = None) {
 
   def canRevalidate = etag.isDefined || lastModified.isDefined
 }

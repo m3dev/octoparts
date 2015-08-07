@@ -37,11 +37,11 @@ object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with Timestam
     belongsToWithFk[ThreadPoolConfig](
       ThreadPoolConfigRepository, "threadPoolConfigId", (h, c) => h.copy(threadPoolConfig = c)
     ).includes[ThreadPoolConfig](merge = (hystrixConfigs, threadConfigs) =>
-      hystrixConfigs.map { h =>
-        threadConfigs.collectFirst {
-          case tpc if h.threadPoolConfigId == tpc.id => h.copy(threadPoolConfig = Some(tpc))
-        }.getOrElse(h)
-      })
+        hystrixConfigs.map { h =>
+          threadConfigs.collectFirst {
+            case tpc if h.threadPoolConfigId == tpc.id => h.copy(threadPoolConfig = Some(tpc))
+          }.getOrElse(h)
+        })
   }
 
   // initializes the default references

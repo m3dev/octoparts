@@ -19,33 +19,32 @@ import scala.util.Try
  * @param localContents the static contents which is used instead of actual contents of this part
  */
 case class HttpPartConfig(
-  id:                      Option[Long]           = None, // None means that the record is new
-  partId:                  String,
-  owner:                   String,
-  description:             Option[String],
-  uriToInterpolate:        String,
-  method:                  HttpMethod.Value,
-  additionalValidStatuses: SortedSet[Int]         = SortedSet.empty,
-  httpPoolSize:            Int,
-  httpConnectionTimeout:   FiniteDuration,
-  httpSocketTimeout:       FiniteDuration,
-  httpDefaultEncoding:     Charset,
-  httpProxy:               Option[String]         = None,
-  parameters:              SortedSet[PartParam]   = SortedSet.empty,
-  hystrixConfig:           Option[HystrixConfig]  = None,
-  deprecatedInFavourOf:    Option[String]         = None,
-  cacheGroups:             SortedSet[CacheGroup]  = SortedSet.empty,
-  cacheTtl:                Option[FiniteDuration] = Some(Duration.Zero), // in seconds
-  alertMailsEnabled:       Boolean,
-  alertAbsoluteThreshold:  Option[Int],
-  alertPercentThreshold:   Option[Double],
-  alertInterval:           FiniteDuration,
-  alertMailRecipients:     Option[String],
-  localContentsEnabled:    Boolean,
-  localContents:           Option[String],
-  createdAt:               DateTime,
-  updatedAt:               DateTime
-) extends ConfigModel[HttpPartConfig] {
+    id: Option[Long] = None, // None means that the record is new
+    partId: String,
+    owner: String,
+    description: Option[String],
+    uriToInterpolate: String,
+    method: HttpMethod.Value,
+    additionalValidStatuses: SortedSet[Int] = SortedSet.empty,
+    httpPoolSize: Int,
+    httpConnectionTimeout: FiniteDuration,
+    httpSocketTimeout: FiniteDuration,
+    httpDefaultEncoding: Charset,
+    httpProxy: Option[String] = None,
+    parameters: SortedSet[PartParam] = SortedSet.empty,
+    hystrixConfig: Option[HystrixConfig] = None,
+    deprecatedInFavourOf: Option[String] = None,
+    cacheGroups: SortedSet[CacheGroup] = SortedSet.empty,
+    cacheTtl: Option[FiniteDuration] = Some(Duration.Zero), // in seconds
+    alertMailsEnabled: Boolean,
+    alertAbsoluteThreshold: Option[Int],
+    alertPercentThreshold: Option[Double],
+    alertInterval: FiniteDuration,
+    alertMailRecipients: Option[String],
+    localContentsEnabled: Boolean,
+    localContents: Option[String],
+    createdAt: DateTime,
+    updatedAt: DateTime) extends ConfigModel[HttpPartConfig] {
   /**
    * Method to use when we are sure we have a HystrixConfig inside the
    * hystrixConfig field.

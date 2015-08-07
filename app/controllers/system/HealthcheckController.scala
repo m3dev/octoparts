@@ -22,11 +22,10 @@ import scala.util.control.NonFatal
  * Checks the status of the database and the Hystrix circuit breakers.
  */
 class HealthcheckController(
-  configsRepo:               ConfigsRepository,
-  hystrixHealthReporter:     HystrixHealthReporter,
-  memcached:                 RawCache,
-  memcachedCacheKeysToCheck: MemcachedCacheKeysToCheck
-) extends Controller with LogUtil with ReqHeaderToSpanImplicit {
+    configsRepo: ConfigsRepository,
+    hystrixHealthReporter: HystrixHealthReporter,
+    memcached: RawCache,
+    memcachedCacheKeysToCheck: MemcachedCacheKeysToCheck) extends Controller with LogUtil with ReqHeaderToSpanImplicit {
 
   import controllers.system.HealthcheckController._
   import play.api.libs.concurrent.Execution.Implicits.defaultContext

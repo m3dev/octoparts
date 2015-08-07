@@ -6,8 +6,7 @@ package com.m3.octoparts.cache.versioning
  * e.g. VersionedParamKey("userInfoPart", "userId", "123") may have a cache version of 99.
  */
 case class VersionedParamKey(
-  partId:    String,
+  partId: String,
   paramName: String,
-  value:     String
-)
+  value: String)
 

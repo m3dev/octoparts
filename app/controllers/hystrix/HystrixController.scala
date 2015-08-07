@@ -11,10 +11,9 @@ import play.api.mvc._
 import scala.concurrent.duration._
 
 class HystrixController(
-  defaultDelay:      FiniteDuration = 1.second,
-  pollerQueueSize:   Int            = 10000,
-  defaultMaxClients: Int            = 10
-)
+  defaultDelay: FiniteDuration = 1.second,
+  pollerQueueSize: Int = 10000,
+  defaultMaxClients: Int = 10)
     extends Controller {
 
   import play.api.libs.concurrent.Execution.Implicits.defaultContext

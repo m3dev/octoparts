@@ -170,11 +170,10 @@ trait ImmutableDBRepository extends ConfigsRepository {
    * Gets a single model from a table according to a where clause and logs the where clause used
    */
   private[repository] def getWithSession[A](
-    mapper:   CRUDFeatureWithId[Long, A],
-    where:    SQLSyntax,
-    joins:    Seq[Association[_]]        = Nil,
-    includes: Seq[Association[_]]        = Nil
-  )(implicit session: DBSession = ReadOnlyAutoSession): Future[Option[A]] = Future {
+    mapper: CRUDFeatureWithId[Long, A],
+    where: SQLSyntax,
+    joins: Seq[Association[_]] = Nil,
+    includes: Seq[Association[_]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[Option[A]] = Future {
     blocking {
       val ret = mapper.joins(joins: _*).includes(includes: _*).findBy(where)
       ret.foreach {
@@ -188,10 +187,9 @@ trait ImmutableDBRepository extends ConfigsRepository {
    * Gets all the records from a table and logs the number of records retrieved
    */
   private[repository] def getAllWithSession[A: Ordering](
-    mapper:   CRUDFeatureWithId[Long, A],
-    joins:    Seq[Association[_]]        = Nil,
-    includes: Seq[Association[_]]        = Nil
-  )(implicit session: DBSession = ReadOnlyAutoSession): Future[SortedSet[A]] = Future {
+    mapper: CRUDFeatureWithId[Long, A],
+    joins: Seq[Association[_]] = Nil,
+    includes: Seq[Association[_]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[SortedSet[A]] = Future {
     blocking {
       val ret = mapper.joins(joins: _*).includes(includes: _*).findAll().to[SortedSet]
       LTSVLogger.debug("Table" -> mapper.tableName, "Retrieved records" -> ret.size.toString)
@@ -203,11 +201,10 @@ trait ImmutableDBRepository extends ConfigsRepository {
    * Gets all the records from a table according to a where clause and logs the number of records retrieved
    */
   private[repository] def getAllByWithSession[A: Ordering](
-    mapper:   CRUDFeatureWithId[Long, A],
-    where:    SQLSyntax,
-    joins:    Seq[Association[_]]        = Nil,
-    includes: Seq[Association[_]]        = Nil
-  )(implicit session: DBSession = ReadOnlyAutoSession): Future[SortedSet[A]] = Future {
+    mapper: CRUDFeatureWithId[Long, A],
+    where: SQLSyntax,
+    joins: Seq[Association[_]] = Nil,
+    includes: Seq[Association[_]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[SortedSet[A]] = Future {
     blocking {
       val ret = mapper.joins(joins: _*).includes(includes: _*).findAllBy(where).to[SortedSet]
       LTSVLogger.debug("Table" -> mapper.tableName, "Retrieved records" -> ret.size.toString)
