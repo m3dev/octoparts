@@ -11,8 +11,7 @@ import scala.concurrent.duration.Duration
  * @param versionedParamKeys a list of parameters that are versioned
  * @param ttl Time To Live
  */
-case class CacheDirective(
-  partId: String,
-  versionedParamKeys: Seq[VersionedParamKey] = Nil,
-  paramValues: Map[ShortPartParam, Seq[String]] = Map.empty,
-  ttl: Option[Duration] = None)
+case class CacheDirective(partId: String,
+                          versionedParamKeys: Seq[VersionedParamKey] = Nil,
+                          paramValues: Map[ShortPartParam, Seq[String]] = Map.empty,
+                          ttl: Option[Duration] = None)

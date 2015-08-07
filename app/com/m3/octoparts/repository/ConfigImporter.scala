@@ -79,8 +79,7 @@ trait ConfigImporter {
           httpPartConfigId = Some(configId),
           httpPartConfig = None,
           threadPoolConfigId = threadPoolConfigsWithIds.get(jHystrixConfig.threadPoolConfig.threadPoolKey),
-          threadPoolConfig = None
-        )
+          threadPoolConfig = None)
         getWithSession(HystrixConfigRepository, sqls.eq(HystrixConfigRepository.defaultAlias.commandKey, nakedHystrixConfig.commandKey)).flatMap {
           _.fold(saveWithSession(HystrixConfigRepository, nakedHystrixConfig)) {
             existingHystrixConfig => throw new IllegalArgumentException(s"There is already a HystrixConfig with key=${existingHystrixConfig.commandKey}")

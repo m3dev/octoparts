@@ -14,12 +14,11 @@ import scala.concurrent.duration._
 
 object AdminForms {
 
-  case class AlertMailData(
-    enabled: Boolean,
-    interval: Option[Int],
-    absoluteThreshold: Option[Int],
-    percentThreshold: Option[BigDecimal],
-    recipients: Option[String])
+  case class AlertMailData(enabled: Boolean,
+                           interval: Option[Int],
+                           absoluteThreshold: Option[Int],
+                           percentThreshold: Option[BigDecimal],
+                           recipients: Option[String])
 
   case class PartData(
       partId: String,
@@ -118,8 +117,7 @@ object AdminForms {
         httpConnectionTimeoutInMs = part.httpConnectionTimeout.toMillis.toInt,
         httpSocketTimeoutInMs = part.httpSocketTimeout.toMillis.toInt,
         httpDefaultEncoding = part.httpDefaultEncoding.name,
-        httpProxy = part.httpProxy
-      ),
+        httpProxy = part.httpProxy),
       hystrixConfig = HystrixConfigData(
         commandKey = part.hystrixConfigItem.commandKey,
         commandGroupKey = part.hystrixConfigItem.commandGroupKey,
@@ -138,8 +136,7 @@ object AdminForms {
       ),
       localContentsConfig = LocalContentsConfig(
         enabled = part.localContentsEnabled,
-        contents = part.localContents
-      )
+        contents = part.localContents)
     )
 
     private def trimPartId(original: String): String = {

@@ -21,8 +21,7 @@ class HttpClientPool extends KeyedResourcePool[HttpPartConfigClientKey, HttpClie
     connectTimeout = key.httpConnectionTimeout,
     socketTimeout = key.httpSocketTimeout,
     defaultEncoding = key.httpDefaultEncoding,
-    mbProxySettings = key.httpProxySettings
-  )
+    mbProxySettings = key.httpProxySettings)
 
   protected def onRemove(value: HttpClientLike) = value match {
     case cl: AutoCloseable => Try {
@@ -41,7 +40,6 @@ object HttpClientPool {
       httpConnectionTimeout = part.httpConnectionTimeout,
       httpSocketTimeout = part.httpSocketTimeout,
       httpDefaultEncoding = part.httpDefaultEncoding.underlying,
-      httpProxySettings = part.httpProxySettings
-    )
+      httpProxySettings = part.httpProxySettings)
   }
 }

@@ -26,8 +26,7 @@ object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with Timestam
   // #byDefault is used for now in case we ever need to refer back to the HttpPartConfig
   // to which this HystrixConfig belongs
   lazy val httpPartConfigOpt = belongsToWithFk[HttpPartConfig](
-    HttpPartConfigRepository, "httpPartConfigId", (hc, mbHpc) => hc.copy(httpPartConfig = mbHpc)
-  )
+    HttpPartConfigRepository, "httpPartConfigId", (hc, mbHpc) => hc.copy(httpPartConfig = mbHpc))
 
   /*
     #byDefault should always be used here because we need to be able to eager load the thread
@@ -59,6 +58,5 @@ object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with Timestam
     timeout = rs.long(n.timeout).millis,
     localContentsAsFallback = rs.get(n.localContentsAsFallback),
     createdAt = rs.get(n.createdAt),
-    updatedAt = rs.get(n.updatedAt)
-  )
+    updatedAt = rs.get(n.updatedAt))
 }

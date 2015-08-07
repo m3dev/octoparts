@@ -10,10 +10,9 @@ import scala.concurrent.Future
 
 trait PartResponseLocalContentSupport extends PartRequestServiceBase {
 
-  override def processWithConfig(
-    ci: HttpPartConfig,
-    partRequestInfo: PartRequestInfo,
-    params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): Future[PartResponse] = {
+  override def processWithConfig(ci: HttpPartConfig,
+                                 partRequestInfo: PartRequestInfo,
+                                 params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): Future[PartResponse] = {
     if (ci.localContentsEnabled) {
       Future.successful(createPartResponse(ci, partRequestInfo))
     } else {

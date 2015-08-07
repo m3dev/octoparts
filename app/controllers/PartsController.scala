@@ -41,8 +41,7 @@ class PartsController(
     nickname = "Endpoints invocation",
     notes = "Send an AggregateRequest to invoke backend endpoints. Will respond with an AggregateResponse for you to sort through.",
     response = classOf[AggregateResponse],
-    httpMethod = "POST"
-  )
+    httpMethod = "POST")
   @ApiResponses(Array(new ApiResponse(code = 400, message = "Invalid input")))
   @ApiImplicitParams(Array(new ApiImplicitParam(
     value = "An AggregateRequest consisting of PartRequests that individually invoke a registered backend service once.",
@@ -72,8 +71,7 @@ class PartsController(
     notes = "Returns a list of registered endpoints in the system.",
     response = classOf[HttpPartConfig],
     responseContainer = "List",
-    httpMethod = "GET"
-  )
+    httpMethod = "GET")
   def list(@ApiParam(value = "Optional part ids to filter on. Note, this should be passed as multiple partIdParams=partId, e.g ?partIdParams=wut&partIdParams=wut3 ", allowMultiple = true)@QueryParam("partIdParams") partIdParams: List[String] = Nil) = Action.async { implicit request =>
     debugRc
     val fConfigs = partIdParams match {
@@ -96,8 +94,7 @@ class PartsController(
       "noCache" -> noCache.toString,
       "timeoutMs" -> aggregateRequest.requestMeta.timeout.fold("default")(_.toMillis.toString),
       "requestUrl" -> aggregateRequest.requestMeta.requestUrl.getOrElse("unknown"),
-      "numParts" -> aggregateRequest.requests.size.toString
-    )
+      "numParts" -> aggregateRequest.requests.size.toString)
     if (underlyingLogger.isDebugEnabled) debugRc(logData: _*) else info(logData: _*)
   }
 
