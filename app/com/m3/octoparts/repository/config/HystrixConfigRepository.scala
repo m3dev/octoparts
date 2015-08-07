@@ -40,7 +40,8 @@ object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with Timestam
           threadConfigs.collectFirst {
             case tpc if h.threadPoolConfigId == tpc.id => h.copy(threadPoolConfig = Some(tpc))
           }.getOrElse(h)
-        })
+        }
+      )
   }
 
   // initializes the default references

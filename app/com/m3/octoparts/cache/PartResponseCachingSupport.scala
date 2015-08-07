@@ -86,12 +86,11 @@ trait PartResponseCachingSupport extends PartRequestServiceBase {
     }
   }
 
-  private[cache] def revalidate(
-    partResponse: PartResponse,
-    directive: CacheDirective,
-    ci: HttpPartConfig,
-    partRequestInfo: PartRequestInfo,
-    params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): Future[PartResponse] = {
+  private[cache] def revalidate(partResponse: PartResponse,
+                                directive: CacheDirective,
+                                ci: HttpPartConfig,
+                                partRequestInfo: PartRequestInfo,
+                                params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): Future[PartResponse] = {
 
     val revalidationParams = for {
       (name, value) <- partResponse.cacheControl.revalidationHeaders

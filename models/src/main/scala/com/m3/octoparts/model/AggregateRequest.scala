@@ -16,13 +16,14 @@ import scala.concurrent.duration.FiniteDuration
 case class AggregateRequest(@(ApiModelProperty @field)(required = true)@BeanProperty requestMeta: RequestMeta,
                             @BeanProperty requests: Seq[PartRequest] = Nil)
 
-case class RequestMeta(@(ApiModelProperty @field)(required = true)@BeanProperty id: String,
-                       @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty serviceId: Option[String] = None,
-                       @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty userId: Option[String] = None,
-                       @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty sessionId: Option[String] = None,
-                       @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty requestUrl: Option[String] = None,
-                       @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty userAgent: Option[String] = None,
-                       @(ApiModelProperty @field)(required = false, dataType = "integer", value = "in ms")@BeanProperty timeout: Option[FiniteDuration] = None)
+case class RequestMeta(
+  @(ApiModelProperty @field)(required = true)@BeanProperty id: String,
+  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty serviceId: Option[String] = None,
+  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty userId: Option[String] = None,
+  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty sessionId: Option[String] = None,
+  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty requestUrl: Option[String] = None,
+  @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty userAgent: Option[String] = None,
+  @(ApiModelProperty @field)(required = false, dataType = "integer", value = "in ms")@BeanProperty timeout: Option[FiniteDuration] = None)
 
 /**
  * A request for a given part. One of more of these can be combined into a single AggregateRequest.
