@@ -22,9 +22,9 @@
         var selectAll = $("#select-all");
 
         var updateDownloadLink = function(){
-            var selectedRows = table.rows(".selected", { filter: 'applied' }).data();
-            var ids = selectedRows.map(function(row){
-                return $(row[0]).text(); // extract id from id markup
+            var selectedCheckboxes = table.$('input[type="checkbox"]:checked', { filter: 'applied' });
+            var ids = $.map(selectedCheckboxes, function(checkbox) {
+                return $(checkbox).val();
             });
             if (ids.length > 0) {
                 var downloadUrl = jsRoutes.controllers.PartsController.list(ids).url;
@@ -42,16 +42,22 @@
           } else {
             exportSelectedLink.attr("disabled", "disabled");
           }
-        }
+        };
 
-	    exportSelectedLink.attr("disabled", "disabled");
-        $('table.dataTable tbody').on( 'click', 'tr', function () {
-            $(this).toggleClass('selected');
+        // disable export button to start
+        exportSelectedLink.attr("disabled", "disabled");
+
+        // on checking a checkbox
+        $('table.dataTable tbody').on( 'click', 'input[type=checkbox]', function () {
             updateDownloadLink();
         });
 
+        // select all button
         selectAll.on('click', function(){
-            table.$('tr', {"filter": "applied"} ).addClass("selected");
+            // Get all rows with search applied
+            var rows = table.rows({ 'search': 'applied' }).nodes();
+            // Check/uncheck checkboxes for all rows in the table
+            $('input[type="checkbox"]', rows).prop('checked', this.checked);
             updateDownloadLink();
         });
 
@@ -67,11 +73,11 @@
     <a href="@controllers.routes.AdminController.newPart" class="btn btn-primary" style="margin: 5px 0;">@Messages("parts.create")</a>
 
     <a class="btn btn-default disabled" disabled id="export-selected" download="octoparts-export-selected.json" href="#">@Messages("admin.exportSelected")</a>
-    <a class="btn btn-default" id="select-all" href="#">@Messages("admin.selectAll")</a>
 
     <table class="dataTable stripe hover compact">
         <thead>
             <tr>
+                <th><input type="checkbox" id="select-all"></th>
                 <th>@Messages("parts.partId")</th>
                 <th>@Messages("parts.url")</th>
                 <th>@Messages("parts.owner")</th>
@@ -82,6 +88,9 @@
         <tbody>
         @for(partView <- parts) {
             <tr>
+                <td>
+                    <input type="checkbox" value="@partView.partId">
+                </td>
                 <td>
                     <a href="@controllers.routes.AdminController.showPart(partView.partId)"><span title="@Messages("parts.updated"): @partView.lastUpdate">@partView.partId</span></a>
                     @if(partView.warnings.nonEmpty) {
