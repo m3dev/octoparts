@@ -41,18 +41,17 @@ object HystrixConfig {
  * Holds the Hystrix Configuration data for a given dependency
  */
 case class HystrixConfig(
-    id:                      Option[Long]             = None, // None means the HystrixConfig is new (not inserted yet)
-    httpPartConfigId:        Option[Long]             = None,
-    httpPartConfig:          Option[HttpPartConfig]   = None,
-    threadPoolConfigId:      Option[Long]             = None,
-    threadPoolConfig:        Option[ThreadPoolConfig] = None,
-    commandKey:              String,
-    commandGroupKey:         String,
-    timeout:                 FiniteDuration           = HystrixConfig.defaultTimeout,
+    id: Option[Long] = None, // None means the HystrixConfig is new (not inserted yet)
+    httpPartConfigId: Option[Long] = None,
+    httpPartConfig: Option[HttpPartConfig] = None,
+    threadPoolConfigId: Option[Long] = None,
+    threadPoolConfig: Option[ThreadPoolConfig] = None,
+    commandKey: String,
+    commandGroupKey: String,
+    timeout: FiniteDuration = HystrixConfig.defaultTimeout,
     localContentsAsFallback: Boolean,
-    createdAt:               DateTime,
-    updatedAt:               DateTime
-) extends ConfigModel[HystrixConfig] {
+    createdAt: DateTime,
+    updatedAt: DateTime) extends ConfigModel[HystrixConfig] {
 
   /**
    * Method to use when we are sure we have a ThreadPoolConfig inside the

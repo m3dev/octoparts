@@ -29,8 +29,7 @@ object Global extends WithFilters(ZipkinHeaderFilter(ZipkinServiceHolder.ZipkinS
     termsOfServiceUrl = "<Choose your own terms of service url>",
     contact = "<Put your own contact info here>",
     license = "<Choose your own licence>",
-    licenseUrl = "<Choose your own licence URL>"
-  )
+    licenseUrl = "<Choose your own licence URL>")
 
   SwaggerConfigFactory.config.setApiInfo(info)
 

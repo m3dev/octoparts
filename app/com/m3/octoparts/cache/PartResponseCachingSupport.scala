@@ -36,11 +36,9 @@ trait PartResponseCachingSupport extends PartRequestServiceBase {
   import com.beachape.zipkin.FutureEnrichment._
   def cacheOps: CacheOps
 
-  override def processWithConfig(
-    ci:              HttpPartConfig,
-    partRequestInfo: PartRequestInfo,
-    params:          Map[ShortPartParam, Seq[String]]
-  )(implicit parentSpan: Span): Future[PartResponse] = {
+  override def processWithConfig(ci: HttpPartConfig,
+                                 partRequestInfo: PartRequestInfo,
+                                 params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): Future[PartResponse] = {
 
     if (partRequestInfo.noCache || !ci.cacheConfig.cachingEnabled) {
       // noCache or TTL defined but 0 => skip caching
@@ -66,11 +64,9 @@ trait PartResponseCachingSupport extends PartRequestServiceBase {
     }
   }
 
-  private def onCacheFailure(
-    ci:              HttpPartConfig,
-    partRequestInfo: PartRequestInfo,
-    params:          Map[ShortPartParam, Seq[String]]
-  )(implicit parentSpan: Span): PartialFunction[Throwable, Future[PartResponse]] = {
+  private def onCacheFailure(ci: HttpPartConfig,
+                             partRequestInfo: PartRequestInfo,
+                             params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): PartialFunction[Throwable, Future[PartResponse]] = {
     case ce: CacheException => {
       ce.getCause match {
         case te: shade.TimeoutException =>
@@ -90,13 +86,11 @@ trait PartResponseCachingSupport extends PartRequestServiceBase {
     }
   }
 
-  private[cache] def revalidate(
-    partResponse:    PartResponse,
-    directive:       CacheDirective,
-    ci:              HttpPartConfig,
-    partRequestInfo: PartRequestInfo,
-    params:          Map[ShortPartParam, Seq[String]]
-  )(implicit parentSpan: Span): Future[PartResponse] = {
+  private[cache] def revalidate(partResponse: PartResponse,
+                                directive: CacheDirective,
+                                ci: HttpPartConfig,
+                                partRequestInfo: PartRequestInfo,
+                                params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): Future[PartResponse] = {
 
     val revalidationParams = for {
       (name, value) <- partResponse.cacheControl.revalidationHeaders
