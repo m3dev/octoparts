@@ -2,6 +2,8 @@
 
 @metaProps = @{Seq("serviceId", "userId", "sessionId", "requestUrl", "userAgent")}
 
+@requiredCls(paramView: presentation.ParamView)= {if (required) "required" else "optional"}
+
 @views.html.adminlayout(Messages("tryIt.title", part.partId)) {
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js"></script>
@@ -83,7 +85,7 @@
                 <legend>@Messages("parts.parameter")</legend>
                 @for(param <- part.editableParamsView) {
                     <div class="form-group">
-                        <label for="id" class="col-sm-2 control-label @param.requiredCls">@param.name</label>
+                        <label for="id" class="col-sm-2 control-label @requiredCls(param)">@param.name</label>
                         <div class="row">
                             <div class="col-sm-5">
                                 <ul id="tagit_@param.param.inputName"></ul>
@@ -113,7 +115,7 @@
                         <label for="meta.@metaProp" class="col-sm-2 control-label">@metaProp</label>
                         <div class="row">
                             <div class="col-sm-5">
-                                <input name="meta.@metaProp" id="meta.@metaProp" type="text" class="form-control @{metaParam.fold("optional")(_.requiredCls)}"/>
+                                <input name="meta.@metaProp" id="meta.@metaProp" type="text" class="form-control @{metaParam.fold(Html("optional"))(requiredCls)}"/>
                             @if(!metaParam.fold(false)(_.required)){ @Messages("tryIt.disable") <input type="checkbox" name="dis_meta.@metaProp" checked="checked"/> }
                             </div>
                         </div>
