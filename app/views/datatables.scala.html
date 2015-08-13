@@ -1,9 +1,6 @@
 @()(implicit lang: Lang)
 
-<link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.css" />
-<link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/datatables/1.10.5/css/jquery.dataTables_themeroller.css" />
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/datatables/1.10.5/js/jquery.dataTables.min.js"></script>
+@datatablesJsAndStyles()
 <script type="text/javascript">
 $(document).ready(function() {
 	$('table.dataTable').dataTable({

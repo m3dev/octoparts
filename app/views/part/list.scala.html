@@ -13,10 +13,21 @@
     -->
     </style>
     @helper.javascriptRouter("jsRoutes")(routes.javascript.PartsController.list)
-    @views.html.datatables()
+    @views.html.datatablesJsAndStyles()
     <script type="text/javascript">
     $(document).ready(function() {
         var tableObject = $('table.dataTable');
+        var tableDepr = tableObject.dataTable({
+            "language": {"url": '//cdn.datatables.net/plug-ins/f2c75b7247b/i18n/@{lang.toLocale.getDisplayLanguage(java.util.Locale.ENGLISH)}.json'},
+            "jQueryUI": true,
+            "stateSave": true,
+            "pagingType": "full_numbers",
+            "pageLength": 50,
+            "aoColumnDefs": [
+              { 'bSortable': false, 'aTargets': [ 0 ] }
+           ],
+           "order": [[ 1, "desc" ]]
+        });
         var table = tableObject.DataTable();
         var exportSelectedLink = $("#export-selected");
         var selectAll = $("#select-all");
