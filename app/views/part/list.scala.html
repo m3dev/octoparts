@@ -41,18 +41,25 @@
             }
         };
 
-        var updateSelectAll = function(selectedIds) {
-            if (selectedIds.length == 0) {
-                selectAll.attr("checked", false);
-            }
+        var updateSelectAll = function(selectedShownIds) {
+            var selectAllChecked = (selectedShownIds.length != 0) && (selectedShownIds.length == currentlyShownIds().length);
+            selectAll.prop("checked", selectAllChecked);
+        };
+
+        var currentlyShownIds = function () {
+            var checkboxes = table.$('input[type="checkbox"]', { filter: 'applied' });
+            return checkboxesToIds(checkboxes);
         };
 
         var currentlySelectedIds = function() {
             var selectedCheckboxes = table.$('input[type="checkbox"]:checked', { filter: 'applied' });
-            var ids = $.map(selectedCheckboxes, function(checkbox) {
+            return checkboxesToIds(selectedCheckboxes);
+        };
+
+        var checkboxesToIds = function(checkboxesJQArray) {
+            return $.map(checkboxesJQArray, function(checkbox) {
                 return $(checkbox).val();
             });
-            return ids;
         };
 
         var toggleDownloadLink = function(enabled) {
