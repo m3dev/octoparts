@@ -32,18 +32,28 @@
         var exportSelectedLink = $("#export-selected");
         var selectAll = $("#select-all");
 
-        var updateDownloadLink = function(){
-            var selectedCheckboxes = table.$('input[type="checkbox"]:checked', { filter: 'applied' });
-            var ids = $.map(selectedCheckboxes, function(checkbox) {
-                return $(checkbox).val();
-            });
-            if (ids.length > 0) {
-                var downloadUrl = jsRoutes.controllers.PartsController.list(ids).url;
+        var updateDownloadLink = function(selectedIds){
+            if (selectedIds.length > 0) {
+                var downloadUrl = jsRoutes.controllers.PartsController.list(selectedIds).url;
                 exportSelectedLink.attr("href", downloadUrl);
                 toggleDownloadLink(true);
             } else {
                 toggleDownloadLink(false);
             }
+        };
+
+        var updateSelectAll = function(selectedIds) {
+            if (selectedIds.length == 0) {
+                selectAll.attr("checked", false);
+            }
+        };
+
+        var currentlySelectedIds = function() {
+            var selectedCheckboxes = table.$('input[type="checkbox"]:checked', { filter: 'applied' });
+            var ids = $.map(selectedCheckboxes, function(checkbox) {
+                return $(checkbox).val();
+            });
+            return ids;
         };
 
         var toggleDownloadLink = function(enabled) {
@@ -60,21 +70,25 @@
 
         // on checking a checkbox
         $('table.dataTable tbody').on( 'click', 'input[type=checkbox]', function () {
-            updateDownloadLink();
+            var selectedIds = currentlySelectedIds();
+            updateDownloadLink(selectedIds);
+            updateSelectAll(selectedIds);
         });
 
-        // select all button
+        // on clicking the select all button
         selectAll.on('click', function(){
             // Get all rows with search applied
             var rows = table.rows({ 'search': 'applied' }).nodes();
             // Check/uncheck checkboxes for all rows in the table
             $('input[type="checkbox"]', rows).prop('checked', this.checked);
-            updateDownloadLink();
+            updateDownloadLink(currentlySelectedIds());
         });
 
         // on filtering
         tableObject.on('search.dt', function () {
-            updateDownloadLink();
+            var selectedIds = currentlySelectedIds();
+            updateDownloadLink(selectedIds);
+            updateSelectAll(selectedIds);
         });
 
     });
