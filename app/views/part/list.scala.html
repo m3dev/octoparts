@@ -17,7 +17,7 @@
     <script type="text/javascript">
     $(document).ready(function() {
         var tableObject = $('table.dataTable');
-        var tableDepr = tableObject.dataTable({
+        var table = tableObject.DataTable({
             "language": {"url": '//cdn.datatables.net/plug-ins/f2c75b7247b/i18n/@{lang.toLocale.getDisplayLanguage(java.util.Locale.ENGLISH)}.json'},
             "jQueryUI": true,
             "stateSave": true,
@@ -28,7 +28,6 @@
            ],
            "order": [[ 1, "desc" ]]
         });
-        var table = tableObject.DataTable();
         var exportSelectedLink = $("#export-selected");
         var selectAll = $("#select-all");
 
