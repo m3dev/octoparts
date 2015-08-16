@@ -151,7 +151,9 @@ admin.warnings.AlertEmailOff=メールアラートが無効になっています
 
 admin.export=エクスポート
 admin.exportSelected=選択したものをエクスポート
-admin.selectAll=すべて選択する
+admin.select=選択
+admin.select.all=全て
+admin.select.none=クリア
 admin.export.all=全てのパーツをエクスポート
 admin.import=パーツインポート
 admin.import.help=JSONデータファイルを選ぶ…

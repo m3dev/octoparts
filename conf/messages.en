@@ -151,7 +151,9 @@ admin.warnings.AlertEmailOff=Alert emails should be enabled in production mode.
 
 admin.export=Export
 admin.exportSelected=Export selected
-admin.selectAll=Select all
+admin.select=Select
+admin.select.all=All
+admin.select.none=None
 admin.import=Import configuration
 admin.import.title=Import configuration from a JSON file
 admin.export.all=Export all

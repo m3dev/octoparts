@@ -17,6 +17,8 @@
     <script type="text/javascript">
     $(document).ready(function() {
         var tableObject = $('table.dataTable');
+        var selectAll = $("#select-all");
+        var selectNone = $("#select-none");
         var table = tableObject.DataTable({
             "language": {"url": '//cdn.datatables.net/plug-ins/f2c75b7247b/i18n/@{lang.toLocale.getDisplayLanguage(java.util.Locale.ENGLISH)}.json'},
             "jQueryUI": true,
@@ -29,7 +31,6 @@
            "order": [[ 1, "desc" ]]
         });
         var exportSelectedLink = $("#export-selected");
-        var selectAll = $("#select-all");
 
         var updateDownloadLink = function(selectedIds){
             if (selectedIds.length > 0) {
@@ -39,11 +40,6 @@
             } else {
                 toggleDownloadLink(false);
             }
-        };
-
-        var updateSelectAll = function(selectedShownIds) {
-            var selectAllChecked = (selectedShownIds.length != 0) && (selectedShownIds.length == currentlyShownIds().length);
-            selectAll.prop("checked", selectAllChecked);
         };
 
         var currentlyShownIds = function () {
@@ -71,30 +67,58 @@
           }
         };
 
+        var updateSelectButtons = function(selectedShownIds) {
+            var shownIds = currentlyShownIds();
+            if (shownIds.length > 0) {
+                if (selectedShownIds.length == shownIds.length) {
+                    selectAll.attr("disabled", "disabled");
+                } else {
+                    selectAll.removeAttr("disabled");
+                }
+                if (selectedShownIds.length > 0) {
+                  selectNone.removeAttr("disabled");
+                } else {
+                  selectNone.attr("disabled", "disabled");
+                }
+            } else {
+              selectAll.attr("disabled", "disabled");
+              selectNone.attr("disabled", "disabled");
+            }
+        };
+
+        var selectButtonSetup = function(selectButtonJQObj, checkStateOnclick) {
+            selectButtonJQObj.on("click", function(e) {
+                // Get all rows with search applied
+                var rows = table.rows({ 'search': 'applied' }).nodes();
+                // Check/uncheck checkboxes for all rows in the table
+                $('input[type="checkbox"]', rows).prop('checked', checkStateOnclick);
+                var currentlySelected = currentlySelectedIds();
+                updateSelectButtons(currentlySelected);
+                updateDownloadLink(currentlySelected);
+                e.preventDefault();
+            });
+        };
+
         // disable export button to start
         exportSelectedLink.attr("disabled", "disabled");
+
+        // init select buttons
+        updateSelectButtons(currentlySelectedIds());
+        selectButtonSetup(selectAll, true);
+        selectButtonSetup(selectNone, false);
 
         // on checking a checkbox
         $('table.dataTable tbody').on( 'click', 'input[type=checkbox]', function () {
             var selectedIds = currentlySelectedIds();
             updateDownloadLink(selectedIds);
-            updateSelectAll(selectedIds);
-        });
-
-        // on clicking the select all button
-        selectAll.on('click', function(){
-            // Get all rows with search applied
-            var rows = table.rows({ 'search': 'applied' }).nodes();
-            // Check/uncheck checkboxes for all rows in the table
-            $('input[type="checkbox"]', rows).prop('checked', this.checked);
-            updateDownloadLink(currentlySelectedIds());
+            updateSelectButtons(selectedIds);
         });
 
         // on filtering
         tableObject.on('search.dt', function () {
             var selectedIds = currentlySelectedIds();
             updateDownloadLink(selectedIds);
-            updateSelectAll(selectedIds);
+            updateSelectButtons(selectedIds);
         });
 
     });
@@ -103,12 +127,18 @@
 
     <a href="@controllers.routes.AdminController.newPart" class="btn btn-primary" style="margin: 5px 0;">@Messages("parts.create")</a>
 
-    <a class="btn btn-default disabled" disabled id="export-selected" download="octoparts-export-selected.json" href="#">@Messages("admin.exportSelected")</a>
+    <a class="btn btn-default disabled" id="export-selected" download="octoparts-export-selected.json" href="#">@Messages("admin.exportSelected")</a>
+
+    <p>
+        @Messages("admin.select"):
+        <a id="select-all" class="btn btn-link btn-sm" href="#">@Messages("admin.select.all")</a>
+        <a id="select-none" class="btn btn-link btn-sm" href="#">@Messages("admin.select.none")</a>
+    </p>
 
     <table class="dataTable stripe hover compact">
         <thead>
             <tr>
-                <th><input type="checkbox" id="select-all"></th>
+                <th></th>
                 <th>@Messages("parts.partId")</th>
                 <th>@Messages("parts.url")</th>
                 <th>@Messages("parts.owner")</th>
