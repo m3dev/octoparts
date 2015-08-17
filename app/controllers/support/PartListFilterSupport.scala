@@ -1,8 +1,9 @@
 package controllers.support
 
+import com.wordnik.swagger.annotations.ApiModelProperty
 import play.api.data.Form
 import play.api.data.Forms._
-import scala.beans.BeanProperty
+import scala.annotation.meta.field
 
 trait PartListFilterSupport {
 
@@ -14,4 +15,4 @@ trait PartListFilterSupport {
 
 }
 
-case class PartListFilter(@BeanProperty ids: Seq[String])
+case class PartListFilter(@(ApiModelProperty @field)(required = true) ids: Seq[String])
