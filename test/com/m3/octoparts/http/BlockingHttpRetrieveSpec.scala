@@ -75,7 +75,7 @@ class BlockingHttpRetrieveSpec extends FunSpec with Matchers with ScalaFutures {
                   val entity = req.getEntity
                   entity.getContentType.getValue should include("charset=UTF-8")
                 }
-                case _ => fail("The request doesn'T contain entities")
+                case _ => fail("The request doesn't contain entities")
               }
             }
           }
