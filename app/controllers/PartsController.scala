@@ -91,7 +91,7 @@ class PartsController(
   @ApiImplicitParams(Array(new ApiImplicitParam(
     value = "An array of ids",
     required = true,
-    dataType = "controllers.support.ParamIdFilter",
+    dataType = "controllers.support.PartListFilter",
     paramType = "body",
     name = "body"
   )))
