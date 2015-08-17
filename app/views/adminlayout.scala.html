@@ -9,14 +9,13 @@
 <html lang="@lang.language">
     <head>
         <title>[@Play.current.configuration.getString("application.env").getOrElse("dev")] @title</title>
-        @meta
-        <!-- Latest compiled and minified CSS -->
-        <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
-            <!-- Optional theme -->
-        <link rel="stylesheet" href="/assets/css/bootstrap-theme.min.css">
-            <!-- Latest compiled and minified JavaScript -->
+
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
         <script src="/assets/js/bootstrap.min.js"></script>
+        @meta
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/assets/css/bootstrap-theme.min.css">
         @if(Play.current.configuration.getString("application.env").exists(_.toLowerCase.startsWith("prod"))) {
             <style>
                 body { background-color : #ffdcdc ; }
@@ -32,8 +31,7 @@
                 <div class="row">
                     <div class="col-md-12">
                         @for((k, v) <- flash.data) {
-                            <!-- Assumes all flashes are error messages -->
-                            <div class="alert alert-danger">@k : @v</div>
+                            <div class="alert alert-@k">@v</div>
                         }
                     </div>
                 </div>

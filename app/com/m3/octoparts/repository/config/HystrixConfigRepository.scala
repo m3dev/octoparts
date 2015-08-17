@@ -14,20 +14,19 @@ object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with Timestam
 
   override lazy val tableName = "hystrix_config"
 
-  val defaultTimeout = (5 seconds).toMillis
-
   protected val permittedFields = Seq(
     "httpPartConfigId" -> SkinnyParamType.Long,
     "threadPoolConfigId" -> SkinnyParamType.Long,
     "commandKey" -> SkinnyParamType.String,
     "commandGroupKey" -> SkinnyParamType.String,
-    "timeoutInMs" -> SkinnyParamType.Long
+    "localContentsAsFallback" -> SkinnyParamType.Boolean,
+    "timeout" -> ExtraParamType.FineDurationParamType
   )
 
   // #byDefault is used for now in case we ever need to refer back to the HttpPartConfig
   // to which this HystrixConfig belongs
   lazy val httpPartConfigOpt = belongsToWithFk[HttpPartConfig](
-    HttpPartConfigRepository, "httpPartConfigId", (h, c) => h.copy(httpPartConfig = c))
+    HttpPartConfigRepository, "httpPartConfigId", (hc, mbHpc) => hc.copy(httpPartConfig = mbHpc))
 
   /*
     #byDefault should always be used here because we need to be able to eager load the thread
@@ -39,7 +38,7 @@ object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with Timestam
     ).includes[ThreadPoolConfig](merge = (hystrixConfigs, threadConfigs) =>
         hystrixConfigs.map { h =>
           threadConfigs.collectFirst {
-            case t if h.threadPoolConfigId == t.id => h.copy(threadPoolConfig = Some(t))
+            case tpc if h.threadPoolConfigId == tpc.id => h.copy(threadPoolConfig = Some(tpc))
           }.getOrElse(h)
         }
       )
@@ -55,10 +54,10 @@ object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with Timestam
     id = rs.get(n.id),
     httpPartConfigId = rs.get(n.httpPartConfigId),
     threadPoolConfigId = rs.get(n.threadPoolConfigId),
-    commandKey = rs.get(n.commandKey),
-    commandGroupKey = rs.get(n.commandGroupKey),
-    timeoutInMs = rs.get(n.timeoutInMs),
+    commandKey = rs.string(n.commandKey),
+    commandGroupKey = rs.string(n.commandGroupKey),
+    timeout = rs.long(n.timeout).millis,
+    localContentsAsFallback = rs.get(n.localContentsAsFallback),
     createdAt = rs.get(n.createdAt),
     updatedAt = rs.get(n.updatedAt))
-
 }

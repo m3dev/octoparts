@@ -1,9 +1,9 @@
-@(partId: String,
-  cacheGroups: Seq[com.m3.octoparts.model.config.CacheGroup],
-  selectedCacheGroupIds: Set[Long],
-  maybeParam: Option[presentation.ParamView])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
+@(form: Form[controllers.AdminForms.ParamData],
+        partId: String,
+        cacheGroups: scala.collection.SortedSet[com.m3.octoparts.model.config.CacheGroup],
+        maybeParam: Option[presentation.ParamView])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
 
-    @title = @{
+@title = @{
     maybeParam match {
         case Some(param) => Messages("parameter.edit", partId, param.name)
         case None => Messages("parameter.create", partId)
@@ -15,10 +15,11 @@
         case None => controllers.routes.AdminController.createParam(partId)
     }
 }
+@* Override the default field constructor and use our simple one instead *@
+@implicitField = @{ helper.FieldConstructor(simplefield.apply) }
 
 @views.html.adminlayout(title) {
 
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/jquery.validationEngine.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/languages/jquery.validationEngine-@{lang.language}.min.js"></script>
     <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/validationEngine.jquery.min.css"/>
@@ -40,7 +41,7 @@
            <label for="outputName" class="col-sm-2 control-label">@Messages("parts.parameter.outputName")</label>
             <div class="row">
                 <div class="col-sm-5">
-                    <input name="outputName" type="text" value="@maybeParam.map(_.name).getOrElse("")" class="form-control validate[required]" />
+                    @helper.inputText(form("outputName"), 'class -> "form-control validate[required]")
                </div>
             </div>
         </div>
@@ -49,11 +50,16 @@
             <label for="outputType" class="col-sm-2 control-label">@Messages("parts.parameter.type")</label>
             <div class="row">
                 <div class="col-sm-5">
-                    <select name="paramType" class="form-control">
-                        @for(outputType <- com.m3.octoparts.model.config.ParamType.values.toSeq) {
-                            <option value="@outputType" @if(maybeParam.exists(_.param.paramType == outputType)) { selected="selected" } >@outputType</option>
-                        }
-                    </select>
+                    @helper.select(form("paramType"), options = com.m3.octoparts.model.config.ParamType.values.toSeq.sorted.map(pt => pt.toString -> pt.toString), 'class -> "form-control")
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="description" class="col-sm-2 control-label">@Messages("parts.parameter.description")</label>
+            <div class="row">
+                <div class="col-sm-5">
+                @helper.textarea(form("description"), 'class -> "form-control")
                 </div>
             </div>
         </div>
@@ -62,40 +68,38 @@
             <label for="required" class="col-sm-2 control-label">@Messages("parts.parameter.required")</label>
             <div class="row">
                 <div class="col-sm-5">
-                    <input name="required" type="checkbox" value="true" @if(maybeParam.exists(_.required)) { checked="checked" } />
-                </div>
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="inputNameOverride" class="col-sm-2 control-label">@Messages("parts.parameter.inputName") @Messages("parameter.ifDifferent")</label>
-            <div class="row">
-                <div class="col-sm-5">
-                    <input name="inputNameOverride" type="text" class="form-control" value="@maybeParam.flatMap(_.param.inputNameOverride).getOrElse("")"/>
+                    @helper.checkbox(form("required"))
                 </div>
             </div>
         </div>
 
         <div class="form-group">
-        <label for="cacheGroups" class="col-sm-2 control-label">@Messages("cacheGroups.this")</label>
-        <div class="row">
-        <div class="col-sm-5">
-            @if(cacheGroups.isEmpty) {
-                @Messages("parameter.cacheGroups.none")
-            } else {
-                <select name="cacheGroups[]" multiple>
-                    @for(cacheGroup <- cacheGroups) {
-                        <option value="@cacheGroup.name" @if(selectedCacheGroupIds.contains(cacheGroup.id.get)) { selected="selected" }>@cacheGroup.name</option>
-                    }
-                </select>
-            }
+            <label for="inputNameOverride" class="col-sm-2 control-label">@Messages("parts.parameter.inputName") @Messages("parameter.ifDifferent")</label>
+            <div class="row">
+                <div class="col-sm-5">
+                    @helper.inputText(form("inputNameOverride"), 'class -> "form-control")
+                </div>
+            </div>
         </div>
+
+        <div class="form-group">
+            <label for="cacheGroups" class="col-sm-2 control-label">@Messages("cacheGroups.this")</label>
+            <div class="row">
+                <div class="col-sm-5">
+                    @if(cacheGroups.isEmpty) {
+                        @Messages("parameter.cacheGroups.none")
+                    } else {
+                        @helper.select(form("cacheGroups"), options = cacheGroups.toSeq.map(cg => cg.name -> cg.name), 'multiple -> "multiple", 'class -> "form-control")
+                    }
+                </div>
+            </div>
         </div>
 
         <div class="form-group">
             <label for="versioned" class="col-sm-2 control-label">@Messages("parts.parameter.versioned")</label>
             <div class="row">
                 <div class="col-sm-5">
-                    <input name="versioned" type="checkbox"value="true" @if(maybeParam.exists(_.versioned)) { checked="checked" } />
+                    @helper.checkbox(form("versioned"))
                 </div>
             </div>
         </div>

@@ -3,7 +3,7 @@ package com.m3.octoparts.http
 import java.net.URI
 import java.nio.charset.StandardCharsets
 
-import com.m3.octoparts.http.HttpMethod._
+import com.m3.octoparts.model.HttpMethod
 import org.apache.http.HttpEntityEnclosingRequest
 import org.apache.http.client.methods._
 import org.apache.http.entity.StringEntity
@@ -18,7 +18,7 @@ trait BlockingHttpRetrieve {
    */
   def httpClient: HttpClientLike
 
-  def method: HttpMethod
+  def method: HttpMethod.Value
 
   def maybeBody: Option[String]
 
@@ -35,6 +35,7 @@ trait BlockingHttpRetrieve {
    * @return HttpUriRequest
    */
   private[http] def request: HttpUriRequest = {
+    import HttpMethod._
     val req = method match {
       case Get => new HttpGet(uri)
       case Head => new HttpHead(uri)

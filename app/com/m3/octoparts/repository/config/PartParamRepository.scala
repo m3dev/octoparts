@@ -3,13 +3,16 @@ package com.m3.octoparts.repository.config
 import com.m3.octoparts.model.config._
 import scalikejdbc._
 import skinny.orm.feature.TimestampsFeature
+import skinny.orm.feature.associations.{ BelongsToAssociation, HasManyAssociation }
 import skinny.{ ParamType => SkinnyParamType }
+
+import scala.collection.SortedSet
 
 object PartParamRepository extends ConfigMapper[PartParam] with TimestampsFeature[PartParam] {
 
-  override lazy val defaultAlias = createAlias("part_param")
+  lazy val defaultAlias = createAlias("part_param")
 
-  override lazy val tableName = "part_param"
+  override val tableName = "part_param"
 
   /**
    * Overridden to allow us to persist the CacheGroups associated with a PartParam
@@ -32,29 +35,30 @@ object PartParamRepository extends ConfigMapper[PartParam] with TimestampsFeatur
     "versioned" -> SkinnyParamType.Boolean,
     "paramType" -> SkinnyParamType.String,
     "outputName" -> SkinnyParamType.String,
+    "description" -> SkinnyParamType.String,
     "inputNameOverride" -> SkinnyParamType.String,
     "cacheGroupId" -> SkinnyParamType.Long
   )
 
-  lazy val httpPartConfigRef = belongsToWithFk[HttpPartConfig](
+  lazy val httpPartConfigRef: BelongsToAssociation[PartParam] = belongsToWithFk[HttpPartConfig](
     right = HttpPartConfigRepository,
     fk = "httpPartConfigId",
-    merge = (p, c) => p.copy(httpPartConfig = c)
+    merge = (pp, mbHpc) => pp.copy(httpPartConfig = mbHpc)
   )
 
   /*
     Note that you cannot actually tack on .includes to do nested eager loading because it seems to be
     broken with hasManyThrough (e.g. trying to eager load a HttpPartConfig's PartParams' CacheGroups does not work)
    */
-  lazy val cacheGroupsRef = hasManyThroughWithFk[CacheGroup](
+  lazy val cacheGroupsRef: HasManyAssociation[PartParam] = hasManyThroughWithFk[CacheGroup](
     through = PartParamCacheGroupRepository,
     many = CacheGroupRepository,
     throughFk = "partParamId",
     manyFk = "cacheGroupId",
-    merge = (param, cacheGroups) => param.copy(cacheGroups = cacheGroups.toSet)
+    merge = (param, cacheGroups) => param.copy(cacheGroups = cacheGroups.to[SortedSet])
   ).includes[CacheGroup](
       (params, cacheGroups) => params.map { param =>
-        param.copy(cacheGroups = cacheGroups.filter(_.partParams.exists(_.id == param.id)).toSet)
+        param.copy(cacheGroups = cacheGroups.filter(_.partParams.exists(_.id == param.id)).to[SortedSet])
       }
     )
 
@@ -84,6 +88,7 @@ object PartParamRepository extends ConfigMapper[PartParam] with TimestampsFeatur
     paramType = ParamType.withName(rs.get(n.paramType)),
     outputName = rs.get(n.outputName),
     inputNameOverride = rs.get(n.inputNameOverride),
+    description = rs.get(n.description),
     createdAt = rs.get(n.createdAt),
     updatedAt = rs.get(n.updatedAt)
   )
@@ -91,8 +96,8 @@ object PartParamRepository extends ConfigMapper[PartParam] with TimestampsFeatur
   /**
    * Returns a collection of params that belong to a part
    */
-  def findByPartId(partId: Long)(implicit dbSession: DBSession): Seq[PartParam] = {
-    findAllBy(sqls.eq(defaultAlias.httpPartConfigId, partId))
+  def findByPartId(partId: Long)(implicit dbSession: DBSession): SortedSet[PartParam] = {
+    findAllBy(sqls.eq(defaultAlias.httpPartConfigId, partId)).to[SortedSet]
   }
 
 }

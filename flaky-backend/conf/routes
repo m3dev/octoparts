@@ -1,8 +1,0 @@
-# Routes
-# This file defines all application routes (Higher priority routes first)
-# ~~~~
-
-# Home page
-GET     /slow                       controllers.Application.slow(delay: Int ?= 5000)
-GET     /flaky                      controllers.Application.flaky(successRate: Double ?= 0.5)
-

@@ -12,6 +12,6 @@ import scala.concurrent.duration.Duration
  * @param ttl Time To Live
  */
 case class CacheDirective(partId: String,
-                          versionedParamKeys: Seq[VersionedParamKey] = Seq.empty,
-                          paramMap: Map[ShortPartParam, String] = Map.empty,
+                          versionedParamKeys: Seq[VersionedParamKey] = Nil,
+                          paramValues: Map[ShortPartParam, Seq[String]] = Map.empty,
                           ttl: Option[Duration] = None)

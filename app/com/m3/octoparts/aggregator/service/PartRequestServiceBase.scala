@@ -1,12 +1,13 @@
 package com.m3.octoparts.aggregator.service
 
+import com.beachape.logging.LTSVLogger
+import com.beachape.zipkin.services.ZipkinServiceLike
 import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.aggregator.handler.HttpHandlerFactory
 import com.m3.octoparts.model.PartResponse
 import com.m3.octoparts.model.config.{ HttpPartConfig, ShortPartParam }
 import com.m3.octoparts.repository.ConfigsRepository
-import skinny.logging.Logging
-import skinny.util.LTSV
+import com.twitter.zipkin.gen.Span
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -16,8 +17,10 @@ import scala.concurrent.{ ExecutionContext, Future }
  * Implements the basic shared methods but leaves some methods to be implemented in
  * children classes / decorators
  */
-trait PartRequestServiceBase extends RequestParamSupport with Logging {
+trait PartRequestServiceBase extends RequestParamSupport {
   implicit def executionContext: ExecutionContext
+
+  protected implicit def zipkinService: ZipkinServiceLike
 
   def repository: ConfigsRepository
 
@@ -34,21 +37,14 @@ trait PartRequestServiceBase extends RequestParamSupport with Logging {
    * @param pReq Part Request
    * @return Future[PartResponse]
    */
-  def responseFor(pReq: PartRequestInfo): Future[PartResponse] = {
-    Option(pReq.partRequest.partId).map { partId =>
-      val fMaybeCi = repository.findConfigByPartId(partId)
-      fMaybeCi.flatMap {
-        _.fold {
-          unsupported(pReq)
-        } {
-          ci =>
-            val params = combineParams(ci.parameters, pReq)
-            processWithConfig(ci, pReq, params)
-        }
+  def responseFor(pReq: PartRequestInfo)(implicit parentSpan: Span): Future[PartResponse] = {
+    val fMaybeCi = repository.findConfigByPartId(pReq.partRequest.partId)
+    fMaybeCi.flatMap {
+      case Some(ci) => {
+        val params = combineParams(ci.parameters, pReq)
+        processWithConfig(ci, pReq, params)
       }
-    }.getOrElse {
-      // sanity validation
-      Future.failed(new IllegalArgumentException("partId is missing"))
+      case None => unsupported(pReq)
     }
   }
 
@@ -57,7 +53,7 @@ trait PartRequestServiceBase extends RequestParamSupport with Logging {
    */
   private def unsupported(pReq: PartRequestInfo): Future[PartResponse] = {
     val partId = pReq.partRequest.partId
-    warn(LTSV.dump("Request Id" -> pReq.requestMeta.id, "Requested PartId" -> partId, "Error" -> "not found"))
+    LTSVLogger.warn("Request Id" -> pReq.requestMeta.id, "Requested PartId" -> partId, "Error" -> "not found")
     Future.successful(PartResponse(partId, pReq.partRequestId, errors = Seq(unsupportedMsg(partId))))
   }
 
@@ -87,9 +83,9 @@ trait PartRequestServiceBase extends RequestParamSupport with Logging {
    *           trait, but may be used for decorator purposes in Stackable traits.
    * @return Future[PartResponse], which includes adding deprecation notices
    */
-  protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, String]): Future[PartResponse] = {
+  protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): Future[PartResponse] = {
     val handler = handlerFactory.makeHandler(ci)
-    val fResp = handler.process(params)
+    val fResp = handler.process(partRequestInfo, params)
     fResp.map {
       resp =>
         val respWithId = resp.copy(id = partRequestInfo.partRequestId)

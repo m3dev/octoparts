@@ -15,7 +15,6 @@
 
 @views.html.adminlayout(title) {
 
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/jquery.validationEngine.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/languages/jquery.validationEngine-@{lang.language}.min.js"></script>
     <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/validationEngine.jquery.min.css"/>
@@ -36,7 +35,7 @@
         <label for="url" class="col-sm-2 control-label">@Messages("cacheGroups.name")</label>
         <div class="row">
             <div class="col-sm-5">
-                <input name="name" type="text" class="form-control validate[required]" value="@maybeCacheGroup.map(_.name).getOrElse("")"/>
+                <input name="name" type="text" class="form-control validate[required]" value="@maybeCacheGroup.map(_.name)"/>
             </div>
         </div>
     </div>
@@ -45,7 +44,7 @@
         <label for="method" class="col-sm-2 control-label">@Messages("cacheGroups.description")</label>
         <div class="row">
             <div class="col-sm-5">
-                <input name="description" type="text" class="form-control validate[required]" value="@maybeCacheGroup.map(_.description).getOrElse("")"/>
+                <input name="description" type="text" class="form-control validate[required]" value="@maybeCacheGroup.map(_.description)"/>
             </div>
         </div>
     </div>
@@ -58,36 +57,6 @@
             </div>
         </div>
     </div>
-
-    @for(cacheGroup <- maybeCacheGroup) {
-        @if(!(cacheGroup.httpPartConfigs.isEmpty && cacheGroup.partParams.isEmpty)) {
-            <div class="form-group">
-                <label class="col-sm-2 control-label">@Messages("cacheGroups.dependency")</label>
-                <div class="row">
-                    <div class="col-sm-5">
-                        @if(cacheGroup.httpPartConfigs.nonEmpty) {
-                            <h3>@Messages("cacheGroups.parts")</h3>
-                            <ul>
-                                @for(config <- cacheGroup.httpPartConfigs) {
-                                    <li><a href="@controllers.routes.AdminController.showPart(config.partId)">@config.partId</a></li>
-                                }
-                            </ul>
-                        }
-                        @if(cacheGroup.partParams.nonEmpty) {
-                            <h3>@Messages("cacheGroups.parameters")</h3>
-                            <ul>
-                                @for(param <- cacheGroup.partParams) {
-                                    <li><a href="@controllers.routes.AdminController.showPart(param.httpPartConfig.get.partId)">@param.httpPartConfig.get.partId</a>
-                                        \ @param.outputName
-                                    </li>
-                                }
-                            </ul>
-                        }
-                    </div>
-                </div>
-            </div>
-        }
-    }
     </form>
 
 }

@@ -1,18 +1,24 @@
 package com.m3.octoparts.util
 
-import java.util.concurrent.{ ConcurrentHashMap, ConcurrentMap }
+import java.util.concurrent.locks.ReentrantReadWriteLock
 
 /**
  * A pool of key-value pairs.
  * It has a method to build a new value and a method to clean up all values that are no longer needed.
  */
 trait KeyedResourcePool[K, V] {
-  private val holder: ConcurrentMap[K, V] = new ConcurrentHashMap[K, V]()
+
+  // Locks
+  private val rwl = new ReentrantReadWriteLock()
+  private val rlock = rwl.readLock
+  private val wlock = rwl.writeLock
+
+  private var holder: Map[K, V] = Map.empty[K, V]
 
   /**
    * Factory method to create a new element
    */
-  protected def makeNew(): V
+  protected def makeNew(key: K): V
 
   /**
    * Listener that is run after a value is removed
@@ -24,16 +30,24 @@ trait KeyedResourcePool[K, V] {
    * Get the value corresponding to the given key.
    * If no such value existed, a new one is created.
    */
-  def getOrCreate(key: K): V = Option(holder.get(key)) match {
-    case Some(v) => v
-    case None =>
-      val d = makeNew()
-      val old = holder.put(key, d)
-      // once d has been put, old (if it went in before last get) must be discarded properly
-      if (old != null) {
-        onRemove(old)
-      }
-      d
+  final def getOrCreate(key: K): V = {
+    def get: Option[V] = {
+      rlock.lock()
+      try {
+        holder get key
+      } finally { rlock.unlock() }
+    }
+    def create: V = {
+      wlock.lock()
+      try {
+        get getOrElse {
+          val d = makeNew(key)
+          holder = holder + (key -> d)
+          d
+        }
+      } finally { wlock.unlock() }
+    }
+    get getOrElse create
   }
 
   /**
@@ -42,17 +56,17 @@ trait KeyedResourcePool[K, V] {
    *
    * @param validKeys all keys that you want to keep
    */
-  final def cleanObsolete(validKeys: Set[K]): Unit = {
-    val it = holder.entrySet().iterator
-    while (it.hasNext) {
-      val next = it.next()
-      if (!validKeys.contains(next.getKey)) {
-        // Must remove before evicting, or callers might get an evicted value
-        it.remove()
-
-        onRemove(next.getValue)
+  final def cleanObsolete(validKeys: K => Boolean): Unit = {
+    wlock.lock()
+    try {
+      holder.foreach {
+        case (key, value) =>
+          if (!validKeys(key)) {
+            holder = holder - key
+            onRemove(value)
+          }
       }
-    }
+    } finally { wlock.unlock() }
   }
 
   /**

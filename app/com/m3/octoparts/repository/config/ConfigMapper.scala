@@ -1,8 +1,7 @@
 package com.m3.octoparts.repository.config
 
-import com.m3.octoparts.model.config.ConfigModel
+import com.m3.octoparts.model.config._
 import scalikejdbc.DBSession
-import skinny.logging.Logging
 import skinny.orm.SkinnyCRUDMapper
 import skinny.{ PermittedStrongParameters, StrongParameters, ParamType => SkinnyParamType }
 
@@ -12,7 +11,7 @@ import skinny.{ PermittedStrongParameters, StrongParameters, ParamType => Skinny
  * Contains helper methods to direct how a model should be saved by a
  * Mapper companion object
  */
-trait ConfigMapper[A <: ConfigModel[A]] extends SkinnyCRUDMapper[A] with Logging {
+trait ConfigMapper[A <: ConfigModel[A]] extends SkinnyCRUDMapper[A] {
 
   /**
    * Converts a given case class-like thing into a Map[Symbol, Any]
@@ -46,7 +45,7 @@ trait ConfigMapper[A <: ConfigModel[A]] extends SkinnyCRUDMapper[A] with Logging
    * By default, simply matches on the Option[Long] id field, and if it is defined,
    * calls updateById using the sanitised version of the models' fields. If it is NOT
    * defined, then calls createWithPermittedAttributes, passing in the same sanitised
-   * verison of the fields.
+   * version of the fields.
    *
    * Should be overridden to handle more complicated use-cases (such as creating/updating
    * child objects)
@@ -57,10 +56,21 @@ trait ConfigMapper[A <: ConfigModel[A]] extends SkinnyCRUDMapper[A] with Logging
   def save(model: A)(implicit s: DBSession = autoSession): Long = {
     model.id.fold(createWithPermittedAttributes(permitted(model))) { id =>
       val updatedCount = updateById(id).withPermittedAttributes(permitted(model))
-      if (updatedCount != 1)
-        throw new IllegalStateException(s"Save for $model did not update 1 row")
+      if (updatedCount != 1) throw new IllegalStateException(s"Save for $model did not update 1 row")
       id
     }
   }
 
+}
+
+/**
+ * This companion object exists to hold the type class instances of the [[ConfigMapper]]
+ * type class.
+ */
+object ConfigMapper {
+  implicit val CacheGroupMapper: ConfigMapper[CacheGroup] = CacheGroupRepository
+  implicit val HttpPartConfigMapper: ConfigMapper[HttpPartConfig] = HttpPartConfigRepository
+  implicit val HystrixConfigMapper: ConfigMapper[HystrixConfig] = HystrixConfigRepository
+  implicit val PartParamMapper: ConfigMapper[PartParam] = PartParamRepository
+  implicit val ThreadPoolConfigMapper: ConfigMapper[ThreadPoolConfig] = ThreadPoolConfigRepository
 }

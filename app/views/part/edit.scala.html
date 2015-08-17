@@ -1,6 +1,6 @@
 @(form: Form[controllers.AdminForms.PartData],
-  threadPoolConfigs: Seq[com.m3.octoparts.model.config.ThreadPoolConfig],
-  cacheGroups: Seq[com.m3.octoparts.model.config.CacheGroup],
+  threadPoolConfigs: scala.collection.SortedSet[com.m3.octoparts.model.config.ThreadPoolConfig],
+  cacheGroups: scala.collection.SortedSet[com.m3.octoparts.model.config.CacheGroup],
   maybePart: Option[com.m3.octoparts.model.config.HttpPartConfig])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
 
 @* Override the default field constructor and use our simple one instead *@
@@ -20,14 +20,54 @@
 }
 
 @views.html.adminlayout(title) {
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/jquery.validationEngine.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/languages/jquery.validationEngine-@{lang.language}.min.js"></script>
     <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/validationEngine.jquery.min.css"/>
     <script type="text/javascript">
-    $(document).ready(function(){
-        $("#editPart").validationEngine({
+    $(document).ready(function() {
+        var form = $('#editPart');
+        form.validationEngine({
             prettySelect : true
+        });
+
+        var localContentsConfigContents = $("#localContentsConfig_contents");
+        var localContents = $("#localContents");
+
+        $("#jsonValidateButton").click(function () {
+            var valid = isValidJsonString(localContentsConfigContents.val());
+            localContents.toggleClass("has-success", valid);
+            localContents.toggleClass("has-error", !valid);
+            localContentsConfigContents.popover("show");
+        });
+
+        localContentsConfigContents.popover({trigger: "manual", content: function() {
+            var valid = isValidJsonString($(this).val());
+            return valid ? '@Messages("parts.localContents.contents.valid")' : '@Messages("parts.localContents.contents.invalid")';
+        }});
+
+        function isValidJsonString(s) {
+            try {
+                JSON.parse(s);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        form.on('submit', function(e) {
+            var partIdInput = $('#partId');
+            var origPartId = partIdInput.data('orig-value');
+            var newPartId = partIdInput.val();
+            if (!!origPartId && origPartId !== newPartId) {
+                // partId has been changed
+                return confirm(
+                    'DANGER: You are changing the part ID from "' + origPartId + '" to "' + newPartId + '"\n\n' +
+                    'Are you sure you want to do this?!\n\n' +
+                    'Any Octoparts client service that relies on the old ID will be adversely affected.');
+            } else {
+                // OK to submit form
+                return true;
+            }
         });
     });
     </script>
@@ -43,7 +83,9 @@
                 <label for="id" class="col-sm-2 control-label">@Messages("parts.partId")</label>
                 <div class="row">
                     <div class="col-sm-5">
-                        @helper.inputText(form("partId"), 'class -> "form-control validate[required]")
+                        @helper.inputText(form("partId"),
+                            'class -> "form-control validate[required]",
+                            Symbol("data-orig-value") -> form("partId").value.getOrElse(""))
                     </div>
                 </div>
             </div>
@@ -52,7 +94,7 @@
                 <label for="description" class="col-sm-2 control-label">@Messages("parts.description")</label>
                 <div class="row">
                     <div class="col-sm-5">
-                        @helper.textarea(form("description"), 'class -> "form-control validate[required]")
+                        @helper.textarea(form("description"), 'class -> "form-control")
                     </div>
                 </div>
             </div>
@@ -65,13 +107,16 @@
                     </div>
                 </div>
             </div>
+        </fieldset>
+        <fieldset>
+           <legend>@Messages("parts.section.http")</legend>
 
             <div class="form-group">
                 <label for="url" class="col-sm-2 control-label">@Messages("parts.url")</label>
                 <div class="row">
                     <div class="col-sm-5">
                         @Messages("parts.interpolation")<br />
-						@helper.inputText(form("uri"), 'class -> "form-control validate[required]", 'type -> "url")
+						@helper.inputText(form("httpSettings.uri"), 'class -> "form-control validate[required]", 'type -> "url")
                     </div>
                 </div>
             </div>
@@ -81,8 +126,8 @@
                 <div class="row">
                     <div class="col-sm-5">
                         @helper.select(
-                            field = form("method"),
-                            options = com.m3.octoparts.http.HttpMethod.values.toSeq.map(method => (method.toString, method.toString)),
+                            field = form("httpSettings.method"),
+                            options = com.m3.octoparts.model.HttpMethod.values.toSeq.sorted.map(method => (method.toString, method.toString)),
                             args = 'class -> "form-control"
                         )
                     </div>
@@ -94,7 +139,57 @@
                 <div class="row">
                     <div class="col-sm-5">
                         @Messages("parts.additionalValidStatuses.label")
-                        @helper.inputText(form("additionalValidStatuses"), 'class -> "form-control")
+                        @helper.inputText(form("httpSettings.additionalValidStatuses"), 'class -> "form-control")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="httpPoolSize" class="col-sm-2 control-label">@Messages("parts.httpPoolSize")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @Messages("parts.httpPoolSize.label")
+                        @helper.inputText(form("httpSettings.httpPoolSize"), 'class -> "form-control validate[required]", 'min -> "1", 'type -> "number")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="httpConnectionTimeoutInMs" class="col-sm-2 control-label">@Messages("parts.httpConnectionTimeoutInMs")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @Messages("parts.httpConnectionTimeoutInMs.label")
+                        @helper.inputText(form("httpSettings.httpConnectionTimeoutInMs"), 'class -> "form-control validate[required]")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="httpSocketTimeoutInMs" class="col-sm-2 control-label">@Messages("parts.httpSocketTimeoutInMs")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @Messages("parts.httpSocketTimeoutInMs.label")
+                        @helper.inputText(form("httpSettings.httpSocketTimeoutInMs"), 'class -> "form-control validate[required]")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="httpDefaultEncoding" class="col-sm-2 control-label">@Messages("parts.httpDefaultEncoding")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @Messages("parts.httpDefaultEncoding.label")
+                        @helper.inputText(form("httpSettings.httpDefaultEncoding"), 'class -> "form-control validate[required]")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="httpProxy" class="col-sm-2 control-label">@Messages("parts.httpProxy")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                        @Messages("parts.httpProxy.label")
+                        @helper.inputText(form("httpSettings.httpProxy"), 'class -> "form-control")
                     </div>
                 </div>
             </div>
@@ -107,7 +202,7 @@
                 <label for="commandKey" class="col-sm-2 control-label">@Messages("parts.hystrix.commandKey")</label>
                 <div class="row">
                     <div class="col-sm-5">
-                        @helper.inputText(form("commandKey"), 'class -> "form-control validate[required]")
+                        @helper.inputText(form("hystrixConfig.commandKey"), 'class -> "form-control validate[required]")
                     </div>
                 </div>
             </div>
@@ -116,7 +211,7 @@
                 <label for="commandGroupKey" class="col-sm-2 control-label">@Messages("parts.hystrix.commandGroupKey")</label>
                 <div class="row">
                     <div class="col-sm-5">
-                        @helper.inputText(form("commandGroupKey"), 'class -> "form-control validate[required]")
+                        @helper.inputText(form("hystrixConfig.commandGroupKey"), 'class -> "form-control validate[required]")
                     </div>
                 </div>
             </div>
@@ -125,7 +220,16 @@
                 <label for="timeoutInMs" class="col-sm-2 control-label">@Messages("parts.hystrix.timeoutInMs.label")</label>
                 <div class="row">
                     <div class="col-sm-5">
-                        @helper.inputText(form("timeoutInMs"), 'class -> "form-control validate[required]")
+                        @helper.inputText(form("hystrixConfig.timeoutInMs"), 'class -> "form-control validate[required]")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="commandKey" class="col-sm-2 control-label">@Messages("parts.hystrix.localContentsAsFallback")</label>
+                <div class="row">
+                    <div class="col-sm-5">
+                    @helper.checkbox(form("hystrixConfig.localContentsAsFallback"))
                     </div>
                 </div>
             </div>
@@ -135,12 +239,42 @@
                 <div class="row">
                     <div class="col-sm-5">
                         @helper.select(
-                            field = form("threadPoolConfigId"),
-                            options = threadPoolConfigs.map(tpc => (tpc.id.get.toString, s"${tpc.threadPoolKey} (core size: ${tpc.coreSize})")),
-                            args = 'class -> "form-control")
+                            field = form("hystrixConfig.threadPoolConfigId"),
+                            options = for {
+                                tpc <- threadPoolConfigs.toSeq
+                                tpcId <- tpc.id
+                            } yield (tpcId.toString, s"${tpc.threadPoolKey} (core size: ${tpc.coreSize})"),
+                            args = 'class -> "form-control validate[required]")
                     </div>
                 </div>
             </div>
+
+            <fieldset>
+                <legend>@Messages("parts.section.localContents")</legend>
+
+                <div class="form-group">
+                    <label for="localContentsEnabled" class="col-sm-2 control-label">@Messages("parts.localContents.always")</label>
+                    <div class="row">
+                        <div class="col-sm-5">
+                        @helper.checkbox(form("localContentsConfig.enabled"))
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="localContents">
+                    <label for="localContents" class="col-sm-2 control-label">@Messages("parts.localContents.contents")</label>
+                    <div class="row">
+                        <div class="col-sm-5">
+                        @helper.textarea(form("localContentsConfig.contents"),
+                            'class -> "form-control",
+                            'rows -> 12,
+                            Symbol("data-placement") -> "top")
+                        </div>
+                        <button id="jsonValidateButton" type="button" class="btn btn-default">@Messages("parts.localContents.validateJson")</button>
+                    </div>
+                </div>
+            </fieldset>
+
         </fieldset>
 
         <fieldset>
@@ -165,7 +299,7 @@
                     } else {
                         @helper.select(
                             field = form("cacheGroupNames"),
-                            options = cacheGroups.map(cg => (cg.name, cg.name)),
+                            options = cacheGroups.toSeq.map(cg => (cg.name, cg.name)),
                             args = 'multiple -> "")
                     }
                     </div>
@@ -177,31 +311,31 @@
             <legend>@Messages("parts.section.alertMail")</legend>
 
             <div class="form-group">
-                <label for="alertMailsEnabled" class="col-sm-2 control-label">@Messages("parts.alertMail.enabled")</label>
+                <label for="alertMail.enabled" class="col-sm-2 control-label">@Messages("parts.alertMail.enabled")</label>
                 <div class="row">
                     <div class="col-sm-5">
-                        @helper.checkbox(form("alertMailsEnabled"))
+                        @helper.checkbox(form("alertMail.enabled"))
                     </div>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="alertInterval" class="col-sm-2 control-label">@Messages("parts.alertMail.interval.label")</label>
+                <label for="alertMail.interval" class="col-sm-2 control-label">@Messages("parts.alertMail.interval.label")</label>
                 <div class="row">
                     <div class="col-sm-5">
-                        @helper.inputText(form("alertInterval"), 'class -> "form-control", 'min -> "1")
+                        @helper.inputText(form("alertMail.interval"), 'class -> "form-control", 'min -> "1")
                     </div>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="alertAbsoluteThreshold" class="col-sm-2 control-label">@Messages("parts.alertMail.condition.label")</label>
+                <label for="alertMail.absoluteThreshold" class="col-sm-2 control-label">@Messages("parts.alertMail.condition.label")</label>
                 <div class="row">
                     <div class="col-sm-5">
-						@helper.inputText(form("alertAbsoluteThreshold"), 'min -> "0")
+						@helper.inputText(form("alertMail.absoluteThreshold"), 'min -> "0", 'type -> "number")
                         @Messages("parts.alertMail.condition.absolute", "")
                         @Messages("parts.alertMail.condition.or")
-						@helper.inputText(form("alertPercentThreshold"), 'min -> "0", 'max -> "100", 'step -> "any")
+						@helper.inputText(form("alertMail.percentThreshold"), 'min -> "0", 'max -> "100", 'step -> "any")
                         @Messages("parts.alertMail.condition.relative", "")
                         @Messages("parts.alertMail.condition.what")
                         <p class="help-block">@Messages("parts.alertMail.selectOne")</p>
@@ -210,10 +344,10 @@
             </div>
 
             <div class="form-group">
-                <label for="alertMailRecipients" class="col-sm-2 control-label">@Messages("parts.alertMail.recipients.label")</label>
+                <label for="alertMail.recipients" class="col-sm-2 control-label">@Messages("parts.alertMail.recipients.label")</label>
                 <div class="row">
                     <div class="col-sm-5">
-                        @helper.inputText(form("alertMailRecipients"), 'class -> "form-control")
+                        @helper.inputText(form("alertMail.recipients"), 'class -> "form-control")
                         <p class="help-block">@Messages("parts.alertMail.recipients.help")</p>
                     </div>
                 </div>
@@ -230,5 +364,4 @@
             </div>
         </div>
     </form>
-
 }

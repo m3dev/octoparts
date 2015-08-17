@@ -1,12 +1,13 @@
 package com.m3.octoparts.repository
 
-import com.m3.octoparts.cache.client.CacheAccessor
+import com.m3.octoparts.cache.Cache
 import com.m3.octoparts.cache.key.{ CacheGroupCacheKey, CacheKey, HttpPartConfigCacheKey }
 import com.m3.octoparts.http.HttpClientPool
-import play.api.Logger
+import com.beachape.logging.LTSVLogger
+import com.twitter.zipkin.gen.Span
 import shade.memcached.MemcachedCodecs._
-import skinny.util.LTSV
 
+import scala.collection.SortedSet
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.postfixOps
@@ -17,21 +18,25 @@ trait CachingRepository extends ConfigsRepository {
 
   def delegate: ConfigsRepository
 
-  def cacheAccessor: CacheAccessor
+  def cache: Cache
 
   def httpClientPool: HttpClientPool
 
-  // Warm up the cache on initialisation of this wrapper
-  reloadCache()
+  /*
+   Warm up the cache on initialisation of this wrapper
+
+   Empty Span -> we don't actually send anything.
+  */
+  reloadCache()(new Span())
 
   /**
    * Generic method for putting something into cache using any kind of identifier
    */
-  def put[A](cacheKey: CacheKey, maybeCacheable: Option[A]): Future[Unit] = {
-    cacheAccessor.doPut(cacheKey, maybeCacheable, Some(Duration.Inf)).recover {
+  def put[A](cacheKey: CacheKey, maybeCacheable: Option[A])(implicit parentSpan: Span): Future[Unit] = {
+    cache.put(cacheKey, maybeCacheable, Some(Duration.Inf)).recover {
       // no need to propagate cache put errors
       case NonFatal(cacheFailure) =>
-        Logger.error(LTSV.dump("Cache put" -> cacheKey.toString), cacheFailure)
+        LTSVLogger.error(cacheFailure, "Cache put" -> cacheKey.toString)
     }
   }
 
@@ -40,34 +45,35 @@ trait CachingRepository extends ConfigsRepository {
    *
    * If we eventually add more objects that need to be cached, simply follow the pattern
    */
-  protected def reloadCache(): Future[Seq[Unit]] = {
+  protected def reloadCache()(implicit parentSpan: Span): Future[Unit] = {
+    LTSVLogger.info("Reloading configs cache")
     val reloadFSeqs = Seq(
       findAllAndCache(findAllConfigs())(c => HttpPartConfigCacheKey(c.partId)),
       findAllAndCache(findAllCacheGroups())(cG => CacheGroupCacheKey(cG.name))
     )
-    Future.sequence(reloadFSeqs).map(_.flatten)
+    Future.sequence(reloadFSeqs).map(_ => {})
   }
 
   /**
    * Given a function that returns a Future Sequence of A and a function that turns
    * each A into a CacheKey, performs a find-and-cache
    */
-  private def findAllAndCache[A](findAll: => Future[Seq[A]])(cacheKey: A => CacheKey): Future[Seq[Unit]] = {
+  private def findAllAndCache[A](findAll: => Future[SortedSet[A]])(cacheKey: A => CacheKey)(implicit parentSpan: Span): Future[Unit] = {
     for {
-      seq <- findAll
-      seqFPut <- Future.sequence(seq.map(obj => put(cacheKey(obj), Some(obj))))
-    } yield seqFPut
+      all <- findAll
+      _ <- Future.sequence(all.toSeq.map(obj => put(cacheKey(obj), Some(obj))))
+    } yield {}
   }
 
-  def findConfigByPartId(partId: String) = fetchFromCacheOrElse(partId)(delegate.findConfigByPartId, HttpPartConfigCacheKey(_))
+  def findConfigByPartId(partId: String)(implicit parentSpan: Span) = fetchFromCacheOrElse(partId)(delegate.findConfigByPartId, HttpPartConfigCacheKey(_))
 
-  def findParamById(id: Long) = delegate.findParamById(id)
+  def findParamById(id: Long)(implicit parentSpan: Span) = delegate.findParamById(id)
 
-  def findAllCacheGroups() = delegate.findAllCacheGroups()
+  def findAllCacheGroups()(implicit parentSpan: Span) = delegate.findAllCacheGroups()
 
-  def findCacheGroupByName(name: String) = fetchFromCacheOrElse(name)(delegate.findCacheGroupByName, CacheGroupCacheKey(_))
+  def findCacheGroupByName(name: String)(implicit parentSpan: Span) = fetchFromCacheOrElse(name)(delegate.findCacheGroupByName, CacheGroupCacheKey(_))
 
-  def findAllCacheGroupsByName(names: String*) = delegate.findAllCacheGroupsByName(names: _*)
+  def findAllCacheGroupsByName(names: String*)(implicit parentSpan: Span) = delegate.findAllCacheGroupsByName(names: _*)
 
   /**
    * Generic Cache-decorated fetch
@@ -83,8 +89,8 @@ trait CachingRepository extends ConfigsRepository {
    * cache-fetch miss, fetch2 finishes with an error and we end up trying to do another fetch from
    * the database but that is hard to side-step (and might not be such a bad thing)
    */
-  private def fetchFromCacheOrElse[A, B](identifier: A)(notFromCacheFind: A => Future[Option[B]], cacheKey: A => CacheKey): Future[Option[B]] = {
-    cacheAccessor.doGet[Option[B]](cacheKey(identifier)).flatMap {
+  private def fetchFromCacheOrElse[A, B](identifier: A)(notFromCacheFind: A => Future[Option[B]], cacheKey: A => CacheKey)(implicit parentSpan: Span): Future[Option[B]] = {
+    cache.get[Option[B]](cacheKey(identifier)).flatMap {
       _.fold {
         val fMaybeDBConfig = notFromCacheFind(identifier)
         fMaybeDBConfig.foreach(put(cacheKey(identifier), _))
@@ -93,10 +99,10 @@ trait CachingRepository extends ConfigsRepository {
     }.recoverWith {
       case NonFatal(e) =>
         Option(e.getCause).fold {
-          Logger.error(LTSV.dump("Cache retrieve this identifier" -> identifier.toString), e)
+          LTSVLogger.error(e, "Cache retrieve this identifier" -> identifier.toString)
         } {
-          case cause: shade.TimeoutException => Logger.warn(LTSV.dump("Cache retrieve timed out for this identifier" -> identifier.toString))
-          case cause => Logger.error(LTSV.dump("Cache retrieve this identifier" -> identifier.toString), cause)
+          case cause: shade.TimeoutException => LTSVLogger.warn("Cache retrieve timed out for this identifier" -> identifier.toString)
+          case cause => LTSVLogger.error(cause, "Cache retrieve this identifier" -> identifier.toString)
         }
 
         notFromCacheFind(identifier)
@@ -107,24 +113,24 @@ trait CachingRepository extends ConfigsRepository {
 
   // this operation is not cached. only use in admin screen
   // it forces the cache puts to happen before completion to avoid discrepancies between screens
-  def findAllConfigs() = delegate.findAllConfigs().flatMap {
+  def findAllConfigs()(implicit parentSpan: Span) = delegate.findAllConfigs().flatMap {
     cSeq =>
-      val futures = Future.sequence(cSeq.map { config =>
+      val futures = Future.sequence(cSeq.toSeq.map { config =>
         {
           put(HttpPartConfigCacheKey(config.partId), Some(config)).map {
             finished => config
           }
         }
       })
-      // Shutdown any HTTP clients for partIds that no longer exist (e.g due to renaming/deletion of configs)
-      httpClientPool.cleanObsolete(cSeq.map(_.partId).toSet)
-      futures
+      // Shutdown any HTTP clients for parts that no longer exist or require a renewal of the HTTP client
+      httpClientPool.cleanObsolete(cSeq.map(HttpClientPool.HttpPartConfigClientKey.apply))
+      futures.map(_.to[SortedSet])
   }
 
   // not cached
-  def findThreadPoolConfigById(id: Long) = delegate.findThreadPoolConfigById(id)
+  def findThreadPoolConfigById(id: Long)(implicit parentSpan: Span) = delegate.findThreadPoolConfigById(id)
 
   // not cached
-  def findAllThreadPoolConfigs() = delegate.findAllThreadPoolConfigs()
+  def findAllThreadPoolConfigs()(implicit parentSpan: Span) = delegate.findAllThreadPoolConfigs()
 
 }

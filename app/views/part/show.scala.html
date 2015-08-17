@@ -12,7 +12,6 @@
     }
     -->
     </style>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     @views.html.datatables()
 } {
 
@@ -20,12 +19,16 @@
 
     <h4><a href="@part.tryItLink" class="btn btn-default">@Messages("parts.tryIt")</a>
         <a href="@part.editLink" class="btn btn-primary">@Messages("edit")</a>
-		<form action="@controllers.routes.AdminController.copyPart(part.partId)" method="post">
+        <a href="@part.exportLink" class="btn btn-default" download="octoparts-export-@{part.partId}.json">@Messages("admin.export")</a>
+        @helper.form(action = controllers.routes.AdminController.copyPart(part.partId), 'method -> "post") {
             <input type="submit" value="@Messages("duplicate")" class="btn btn-info" />
-        </form>
-        <form action="@controllers.routes.AdminController.deletePart(part.partId)" method="post">
-            <input type="submit" value="@Messages("delete")" class="btn btn-danger" />
-        </form></h4>
+        }
+        <a href="@controllers.routes.AdminController.confirmDeletePart(part.partId)" class="btn btn-danger">@Messages("delete")</a>
+    </h4>
+
+    @for(warnMsg <- part.warnings) {
+        <div class="alert alert-warning">@warnMsg</div>
+    }
 
     <h2>@Messages("parts.section.basic")</h2>
     <dl>
@@ -34,7 +37,7 @@
         <dt>@Messages("parts.owner")</dt>
         <dd>@part.config.owner</dd>
         <dt>@Messages("parts.description")</dt>
-        <dd>@part.description</dd>
+        <dd style="white-space: pre">@part.description</dd>
         <dt>@Messages("parts.deprecation")</dt>
         <dd>@part.deprecation</dd>
         <dt>@Messages("parts.created")</dt>
@@ -57,37 +60,51 @@
         <dd>@part.httpMethod</dd>
         @if(part.config.additionalValidStatuses.nonEmpty) {
             <dt>@Messages("parts.additionalValidStatuses")</dt>
-            <dd>@Messages("parts.additionalValidStatuses.wrap", part.config.additionalValidStatuses.mkString(", "))</dd>
+            <dd>@Messages("parts.additionalValidStatuses.wrap", part.additionalValidStatuses)</dd>
         }
+        <dt>@Messages("parts.httpPoolSize")</dt>
+        <dd>@part.config.httpPoolSize</dd>
+        <dt>@Messages("parts.httpConnectionTimeoutInMs")</dt>
+        <dd>@part.config.httpConnectionTimeout.toCoarsest</dd>
+        <dt>@Messages("parts.httpSocketTimeoutInMs")</dt>
+        <dd>@part.config.httpSocketTimeout.toCoarsest</dd>
+        <dt>@Messages("parts.httpDefaultEncoding")</dt>
+        <dd>@part.config.httpDefaultEncoding</dd>
+        <dt>@Messages("parts.httpProxy")</dt>
+        <dd>@part.config.httpProxy</dd>
         <dt>@Messages("parts.parameter")</dt>
         <dd>
             <a href="@part.addParamLink" class="btn btn-primary" style="margin: 5px 0;">@Messages("parts.parameter.create")</a>
-            <table class="dataTable">
+            <table class="dataTable stripe hover compact">
                 <thead>
                     <tr>
                         <th>@Messages("parts.parameter.outputName")</th>
                         <th>@Messages("parts.parameter.inputName")</th>
                         <th>@Messages("parts.parameter.type")</th>
                         <th>@Messages("parts.parameter.required")</th>
+                        <th>@Messages("parts.parameter.description")</th>
                         <th>@Messages("parts.parameter.versioned")</th>
+                        <th>@Messages("parts.parameter.cacheGroups")</th>
                         <th>@Messages("action")</th>
                     </tr>
                 </thead>
                 <tbody>
-                @for(paramView <- part.registeredParamsView) {
+                @for(paramView <- part.registeredParamsView.toSeq; paramId <- paramView.param.id) {
                     <tr>
+                        <td>@paramView.outputName</td>
                         <td>@paramView.name</td>
-                        <td>@paramView.param.inputName</td>
                         <td>@paramView.paramType</td>
                         <td>@paramView.required</td>
+                        <td style="white-space: pre">@paramView.description</td>
                         <td>@paramView.versioned</td>
-                        <td><a href="@controllers.routes.AdminController.editParam(part.partId, paramView.param.id.get)" class="btn btn-primary">@Messages("edit")</a>
-                            <form action="@controllers.routes.AdminController.copyParam(part.partId, paramView.param.id.get)" method="post">
+                        <td><ul>@for(cacheGroup <- paramView.param.cacheGroups) {
+                            <li><a href="@controllers.routes.AdminController.showCacheGroup(cacheGroup.name)">@cacheGroup.name</a></li>
+                        }</ul></td>
+                        <td><a href="@controllers.routes.AdminController.editParam(part.partId, paramId)" class="btn btn-primary">@Messages("edit")</a>
+                            <form action="@controllers.routes.AdminController.copyParam(part.partId, paramId)" method="post">
                                 <input type="submit" value="@Messages("duplicate")" class="btn btn-info" />
                             </form>
-                            <form action="@controllers.routes.AdminController.deleteParam(part.partId, paramView.param.id.get)" method="post">
-                                <input type="submit" value="@Messages("delete")" class="btn btn-danger" />
-                            </form>
+                            <a href="@controllers.routes.AdminController.confirmDeleteParam(part.partId, paramId)" class="btn btn-danger">@Messages("delete")</a>
                         </td>
                     </tr>
                 }
@@ -106,15 +123,23 @@
                 <dt>@Messages("parts.hystrix.commandGroupKey")</dt>
                 <dd>@hystrixConfigItem.commandGroupKey</dd>
                 <dt>@Messages("parts.hystrix.timeoutInMs")</dt>
-                <dd>@hystrixConfigItem.timeoutInMs</dd>
+                <dd>@hystrixConfigItem.timeout.toCoarsest</dd>
+                <dt>@Messages("parts.hystrix.localContentsAsFallback")</dt>
+                <dd>@hystrixConfigItem.localContentsAsFallback</dd>
                 <dt>@Messages("threadPools.key")</dt>
-                <dd>@hystrixConfigItem.threadPoolConfigItem.threadPoolKey</dd>
+                <dd><a href="@controllers.routes.AdminController.showThreadPool(hystrixConfigItem.threadPoolConfigItem.id.get)">@hystrixConfigItem.threadPoolConfigItem.threadPoolKey</a></dd>
             }
             case None => {
                 <dt>@Messages("parts.hystrix.none.title")</dt>
                 <dd>@Messages("parts.hystrix.none.body")</dd>
             }
         }
+        <h3>@Messages("parts.section.localContents")</h3>
+
+        <dt>@Messages("parts.localContents.always")</dt>
+        <dd>@part.config.localContentsEnabled</dd>
+        <dt>@Messages("parts.localContents.contents")</dt>
+        <dd>@part.config.localContents</dd>
     </dl>
 
     <hr/>
@@ -122,7 +147,11 @@
 
     <dl>
         <dt>@Messages("parts.cache.ttl")</dt>
-        <dd>@part.cacheTtlStr</dd>
+        <dd>@part.cacheTtlStr @if(!part.config.cacheTtl.contains(scala.concurrent.duration.Duration.Zero)) {
+            @helper.form(action = controllers.routes.CacheController.invalidatePart(part.partId), 'method -> "post") {
+                <input type="submit" value="@Messages("parts.cache.flush")" class="btn btn-danger" />
+            }
+        }</dd>
     </dl>
 
     <hr/>
@@ -132,7 +161,7 @@
             @Messages("parts.cacheGroup.none")
         } else {
             @for(group <- part.config.cacheGroups) {
-                <li>@group.name</li>
+                <li><a href="@controllers.routes.AdminController.showCacheGroup(group.name)">@group.name</a></li>
             }
         }
     </ul>
@@ -150,4 +179,5 @@
         <p>@Messages("parts.alertMail.none")</p>
     }
 
+    <hr/>
 }

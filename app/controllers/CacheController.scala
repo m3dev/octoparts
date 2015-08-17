@@ -1,11 +1,12 @@
 package controllers
 
 import javax.ws.rs.PathParam
-
-import com.m3.octoparts.cache.client.CacheClient
+import com.beachape.zipkin.ReqHeaderToSpanImplicit
+import com.m3.octoparts.cache.CacheOps
 import com.m3.octoparts.cache.versioning.VersionedParamKey
 import com.m3.octoparts.model.config.CacheGroup
 import com.m3.octoparts.repository.ConfigsRepository
+import com.twitter.zipkin.gen.Span
 import com.wordnik.swagger.annotations._
 import controllers.support.LoggingSupport
 import play.api.mvc.{ Action, Controller, RequestHeader, Result }
@@ -19,9 +20,10 @@ import scala.util.control.NonFatal
   produces = "text/plain",
   consumes = "application/json"
 )
-class CacheController(cacheClient: CacheClient, repository: ConfigsRepository)
+class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
     extends Controller
-    with LoggingSupport {
+    with LoggingSupport
+    with ReqHeaderToSpanImplicit {
 
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
@@ -33,10 +35,10 @@ class CacheController(cacheClient: CacheClient, repository: ConfigsRepository)
     httpMethod = "POST"
   )
   def invalidatePart(
-    @ApiParam(value = "The id of the endpoint that you you wish to invalidate", required = true)@PathParam("partId") partId: String) = Action.async { implicit request =>
+    @ApiParam(value = "The id of the endpoint that you wish to invalidate", required = true)@PathParam("partId") partId: String) = Action.async { implicit request =>
     // TODO could check if part exists and return a 404 if not
     debugRc("action" -> "invalidateAll", "partId" -> partId)
-    checkResult(cacheClient.increasePartVersion(partId))
+    checkResult(cacheOps.increasePartVersion(partId))
   }
 
   @ApiOperation(
@@ -47,12 +49,12 @@ class CacheController(cacheClient: CacheClient, repository: ConfigsRepository)
     httpMethod = "POST"
   )
   def invalidatePartParam(
-    @ApiParam(value = "The id of the endpoint that you you wish to invalidate", required = true)@PathParam("partId") partId: String,
+    @ApiParam(value = "The id of the endpoint that you wish to invalidate", required = true)@PathParam("partId") partId: String,
     @ApiParam(value = "The parameter name that you wish to invalidate with", required = true)@PathParam("paramName") paramName: String,
     @ApiParam(value = "The specific parameter value that you wish to invalidate by", required = true)@PathParam("paramValue") paramValue: String) = Action.async { implicit request =>
     // TODO could check if part exists and return a 404 if not
     debugRc("action" -> "invalidateAll", "partId" -> partId, "pname" -> paramName, "pvalue" -> paramValue)
-    checkResult(cacheClient.increaseParamVersion(VersionedParamKey(partId, paramName, paramValue)))
+    checkResult(cacheOps.increaseParamVersion(VersionedParamKey(partId, paramName, paramValue)))
   }
 
   @ApiOperation(
@@ -98,11 +100,17 @@ class CacheController(cacheClient: CacheClient, repository: ConfigsRepository)
     }
   }
 
-  private def checkResult(fu: Future[Unit])(implicit request: RequestHeader): Future[Result] = {
+  private def checkResult(fu: Future[_])(implicit request: RequestHeader): Future[Result] = {
     fu.map(_ => Ok("OK")).recover(logAndRenderError("ERROR: " + _.toString))
   }
 
-  private def renderInvalidated[A](invalidatedThings: Seq[A]) = Ok(s"OK: invalidated the following: $invalidatedThings")
+  private def renderInvalidated[A](invalidatedThings: Seq[A]) = Ok {
+    if (invalidatedThings.isEmpty) {
+      "OK"
+    } else {
+      s"OK: invalidated the following:\n${invalidatedThings.mkString("\n")}"
+    }
+  }
 
   private def logAndRenderError(render: Throwable => String)(implicit request: RequestHeader): PartialFunction[Throwable, Result] = {
     case NonFatal(err) =>
@@ -113,26 +121,16 @@ class CacheController(cacheClient: CacheClient, repository: ConfigsRepository)
   /**
    * Invalidates the given group's PartParams
    *
-   * Does a fetch of each PartParam that is on the CacheGroup because
-   * 1. These may be stale because CacheGroups are cached (unlikely)
-   * 2. We CANNOT assume that PartParams from CacheGroup#partParams have their parent HttpPartConfig
-   * readily available
-   *
    * @return Future sequence of partParam names that were invalidated
    */
-  private def invalidateGroupPartParams(group: CacheGroup, paramValue: String): Future[Seq[String]] = {
-    val futureMaybeParamSeq = Future.sequence(group.partParams.map(_.id).flatten.map(repository.findParamById))
-    futureMaybeParamSeq.flatMap { maybeParamSeq =>
-      Future.sequence(for {
-        maybeParam <- maybeParamSeq
-        param <- maybeParam
-        partConfig <- param.httpPartConfig // Safe to assume at this point that they exist
-      } yield {
-        cacheClient.increaseParamVersion(VersionedParamKey(partConfig.partId, param.outputName, paramValue)).map { done =>
-          param.outputName
-        }
-      }
-      )
+  private def invalidateGroupPartParams(group: CacheGroup, paramValue: String)(implicit parentSpan: Span): Future[Seq[String]] = Future.sequence {
+    for {
+      param <- group.partParams.toSeq
+      partConfig <- param.httpPartConfig // Safe to assume at this point that they exist
+    } yield {
+      val vpk = VersionedParamKey(partConfig.partId, param.outputName, paramValue)
+      val ipv: Future[_] = cacheOps.increaseParamVersion(vpk)
+      ipv.map(_ => param.outputName)
     }
   }
 
@@ -140,10 +138,13 @@ class CacheController(cacheClient: CacheClient, repository: ConfigsRepository)
    * Invalidates the given group's parts
    * @return Future sequence of Part names that were invalidated
    */
-  private def invalidateGroupParts(group: CacheGroup): Future[Seq[String]] = Future.sequence(for {
-    part <- group.httpPartConfigs
-  } yield {
-    cacheClient.increasePartVersion(part.partId).map(done => part.partId)
-  })
+  private def invalidateGroupParts(group: CacheGroup)(implicit parentSpan: Span): Future[Seq[String]] = Future.sequence {
+    for {
+      part <- group.httpPartConfigs.toSeq
+    } yield {
+      val ipv: Future[_] = cacheOps.increasePartVersion(part.partId)
+      ipv.map(_ => part.partId)
+    }
+  }
 
 }

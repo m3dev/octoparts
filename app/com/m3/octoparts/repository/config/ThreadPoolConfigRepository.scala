@@ -5,24 +5,26 @@ import scalikejdbc._
 import skinny.orm.feature.TimestampsFeature
 import skinny.{ ParamType => SkinnyParamType }
 
+import scala.collection.SortedSet
+
 object ThreadPoolConfigRepository extends ConfigMapper[ThreadPoolConfig] with TimestampsFeature[ThreadPoolConfig] {
 
-  override lazy val defaultAlias = createAlias("thread_pool_config")
+  lazy val defaultAlias = createAlias("thread_pool_config")
 
-  override lazy val tableName = "thread_pool_config"
+  override val tableName = "thread_pool_config"
 
-  override val permittedFields = Seq(
+  protected val permittedFields = Seq(
     "threadPoolKey" -> SkinnyParamType.String,
     "coreSize" -> SkinnyParamType.Int
   )
 
-  lazy val hystrixCommandRef = hasMany[HystrixConfig](
+  lazy val hystrixConfigRef = hasMany[HystrixConfig](
     many = HystrixConfigRepository -> HystrixConfigRepository.defaultAlias,
     // defines join condition by using aliases
     on = (t, h) => sqls.eq(t.id, h.threadPoolConfigId),
     // function to merge associations to main entity
-    merge = (t, h) => t.copy(hystrixConfigs = h)
-  )
+    merge = (tpc, hcs) => tpc.copy(hystrixConfigs = hcs.toSet)
+  ).includes[HystrixConfig]((tpcs, hcs) => tpcs.map(tpc => tpc.copy(hystrixConfigs = hcs.filter(_.threadPoolConfigId == tpc.id).toSet)))
 
   def extract(rs: WrappedResultSet, n: ResultName[ThreadPoolConfig]) = ThreadPoolConfig(
     id = rs.get(n.id),

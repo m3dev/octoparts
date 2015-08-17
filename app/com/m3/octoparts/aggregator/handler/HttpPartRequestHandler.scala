@@ -2,12 +2,17 @@ package com.m3.octoparts.aggregator.handler
 
 import java.net.{ URI, URLEncoder }
 
-import com.m3.octoparts.http.{ HttpResponse, _ }
+import com.beachape.zipkin.TracedFuture
+import com.beachape.zipkin.services.ZipkinServiceLike
+import com.m3.octoparts.aggregator.PartRequestInfo
+import com.m3.octoparts.http._
 import com.m3.octoparts.hystrix._
-import com.m3.octoparts.model.PartResponse
+import com.m3.octoparts.model.{ HttpMethod, PartResponse }
 import com.m3.octoparts.model.config._
 import com.netaporter.uri.Uri
+import com.netaporter.uri.config.UriConfig
 import com.netaporter.uri.dsl._
+import com.twitter.zipkin.gen.Span
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.matching.Regex
@@ -19,7 +24,11 @@ import scala.util.matching.Regex
 trait HttpPartRequestHandler extends Handler {
   handler =>
 
+  import HttpPartRequestHandler._
+
   implicit def executionContext: ExecutionContext
+
+  implicit def zipkinService: ZipkinServiceLike
 
   def httpClient: HttpClientLike
 
@@ -27,16 +36,9 @@ trait HttpPartRequestHandler extends Handler {
 
   def httpMethod: HttpMethod.Value
 
-  def additionalValidStatuses: Set[Int]
+  protected def additionalValidStatuses: Int => Boolean
 
   def hystrixExecutor: HystrixExecutor
-
-  /**
-   * A regex for matching "${...}" placeholders in strings
-   */
-  private val PlaceholderReplacer: Regex = """\$\{([^\}]+)\}""".r
-
-  // def registeredParams: Set[PartParam]
 
   /**
    * Given arguments for this handler, builds a blocking HTTP request with the proper
@@ -47,39 +49,60 @@ trait HttpPartRequestHandler extends Handler {
    * contain a Failure instead of Success. Make sure to transform with
    * .recover
    *
+   * @param partRequestInfo info about the request, used for generating HTTP headers for request tracing
    * @param hArgs Preparsed HystrixArguments
    * @return Future[PartResponse]
    */
-  def process(hArgs: HandlerArguments): Future[PartResponse] = {
-    hystrixExecutor.future {
-      createBlockingHttpRetrieve(hArgs).retrieve()
-    }.map {
-      createPartResponse
+  def process(partRequestInfo: PartRequestInfo, hArgs: HandlerArguments)(implicit parentSpan: Span): Future[PartResponse] = {
+    TracedFuture("Http request", "partId" -> partRequestInfo.partRequest.partId) { maybeSpan =>
+      hystrixExecutor.future(
+        createBlockingHttpRetrieve(partRequestInfo, hArgs, maybeSpan).retrieve(),
+        maybeContents => HttpResponse(
+          status = 203, // 203 -> Non-authoritative info
+          body = maybeContents,
+          fromFallback = true,
+          message = "From fallback"
+        )
+      ).map {
+          createPartResponse
+        }
     }
   }
 
   /**
    * Returns a BlockingHttpRetrieve command
    *
+   * @param partRequestInfo the part request that spawned this HttpRetrieve
    * @param hArgs Handler arguments
+   * @param tracingSpan [[Span]] generated for tracing; the details of this will be forwarded as headers
    * @return a command object that will perform an HTTP request on demand
    */
-  def createBlockingHttpRetrieve(hArgs: HandlerArguments): BlockingHttpRetrieve = {
+  def createBlockingHttpRetrieve(partRequestInfo: PartRequestInfo, hArgs: HandlerArguments, tracingSpan: Option[Span]): BlockingHttpRetrieve = {
     new BlockingHttpRetrieve {
       val httpClient = handler.httpClient
-      val method = httpMethod
-      val uri = new URI(buildUri(hArgs))
+      def method = httpMethod
+      val uri = new URI(buildUri(hArgs).toString(UriConfig.conservative))
       val maybeBody = hArgs.collectFirst {
-        case (p, v) if p.paramType == ParamType.Body => v
+        case (p, headValue +: _) if p.paramType == ParamType.Body => headValue
       }
-      val headers = collectHeaders(hArgs)
+      val headers = {
+        collectHeaders(hArgs) ++
+          buildTracingHeaders(partRequestInfo) ++
+          tracingSpan.fold(Map.empty[String, String])(zipkinService.spanToIdsMap)
+      }
     }
+  }
+
+  private def buildTracingHeaders(partRequestInfo: PartRequestInfo): Seq[(String, String)] = {
+    Seq(
+      AggregateRequestIdHeader -> partRequestInfo.requestMeta.id,
+      PartRequestIdHeader -> partRequestInfo.partRequestId,
+      PartIdHeader -> partRequestInfo.partRequest.partId
+    )
   }
 
   /**
    * Transforms a HttpResponse case class into a PartResponse
-   * @param httpResp HttpResponse
-   * @return PartREsponse
    */
   def createPartResponse(httpResp: HttpResponse) = PartResponse(
     partId,
@@ -90,7 +113,8 @@ trait HttpPartRequestHandler extends Handler {
     charset = httpResp.charset,
     cacheControl = httpResp.cacheControl,
     contents = httpResp.body,
-    errors = if (httpResp.status < 400 || additionalValidStatuses.contains(httpResp.status)) Nil else Seq(httpResp.message)
+    retrievedFromLocalContents = httpResp.fromFallback,
+    errors = if (httpResp.status < 400 || additionalValidStatuses(httpResp.status)) Nil else Seq(httpResp.message)
   )
 
   /**
@@ -106,10 +130,23 @@ trait HttpPartRequestHandler extends Handler {
    * @return Map[String, String]
    */
   def collectHeaders(hArgs: HandlerArguments): Seq[(String, String)] = {
-    hArgs.toSeq.collect {
-      case (p, v) if p.paramType == ParamType.Header => p.outputName -> v
-      case (p, v) if p.paramType == ParamType.Cookie => "Cookie" -> (escapeCookie(p.outputName) + "=" + escapeCookie(v))
+    // group Cookies. According to RFC 6265, at most one Cookie header may be sent.
+    val cookieHeadersElements = for {
+      (p, values) <- hArgs if p.paramType == ParamType.Cookie
+      cookieName = escapeCookie(p.outputName)
+      v <- values
+    } yield {
+      s"$cookieName=${escapeCookie(v)}"
     }
+    val cookieHeaderValue = if (cookieHeadersElements.isEmpty) None else Some(cookieHeadersElements.mkString("; "))
+
+    // for other headers, no grouping is done. Note: duplicate headers are allowed!
+    cookieHeaderValue.map("Cookie" -> _).toSeq ++ (for {
+      (p, values) <- hArgs if p.paramType == ParamType.Header if p.outputName != "Cookie"
+      v <- values
+    } yield {
+      p.outputName -> v
+    })
   }
 
   /**
@@ -121,13 +158,31 @@ trait HttpPartRequestHandler extends Handler {
    */
   private[handler] def buildUri(hArgs: HandlerArguments): Uri = {
     val baseUri = interpolate(uriToInterpolate) { key =>
+      val ThePathParam = ShortPartParam(key, ParamType.Path)
       val maybeParamsVal: Option[String] = hArgs.collectFirst {
-        case (p, v) if p.paramType == ParamType.Path && p.outputName == key => v
+        case (ThePathParam, headValue +: _) => headValue
       }
       maybeParamsVal.getOrElse("")
     }
-    baseUri.addParams(hArgs.collect { case (p, v) if p.paramType == ParamType.Query => (p.outputName, v) }.toSeq)
+    val kvs = for {
+      // toSeq because we don't want the result to be a map (with unique keys)
+      (p, values) <- hArgs.toSeq if p.paramType == ParamType.Query
+      v <- values
+    } yield p.outputName -> v
+    baseUri.addParams(kvs)
   }
+
+}
+
+object HttpPartRequestHandler {
+  val AggregateRequestIdHeader = "X-OCTOPARTS-PARENT-REQUEST-ID"
+  val PartRequestIdHeader = "X-OCTOPARTS-REQUEST-ID"
+  val PartIdHeader = "X-OCTOPARTS-PART-ID"
+
+  /**
+   * A regex for matching "${...}" placeholders in strings
+   */
+  private val PlaceholderReplacer: Regex = """\$\{([^\}]+)\}""".r
 
   /**
    * Replace all instances of "${...}" placeholders in the given string
@@ -136,7 +191,6 @@ trait HttpPartRequestHandler extends Handler {
    * @param replacer a function that replaces the contents of the placeholder (excluding braces) with a string
    * @return the interpolated string
    */
-  private def interpolate(stringToInterpolate: String)(replacer: String => String) =
+  def interpolate(stringToInterpolate: String)(replacer: String => String): String =
     PlaceholderReplacer.replaceAllIn(stringToInterpolate, { m => replacer(m.group(1)) })
-
 }

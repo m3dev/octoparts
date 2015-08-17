@@ -8,9 +8,10 @@ import org.mockito.Mockito._
 import org.mockito.{ Matchers => MockMatchers }
 import scala.concurrent.{ TimeoutException, Future }
 import com.m3.octoparts.aggregator.PartRequestInfo
-import scala.Some
+import scala.concurrent.duration._
 import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import org.scalatest.time.{ Second, Span }
+import com.twitter.zipkin.gen.{ Span => TwitterSpan }
 import java.io.IOException
 import com.m3.octoparts.model.PartResponse
 
@@ -24,6 +25,7 @@ class PartsServiceSpec extends FlatSpec with Matchers with MockitoSugar with Sca
 
   val serviceId = Some("myService")
   val partId = "bande a part"
+  implicit val emtpySpan = new TwitterSpan()
 
   it should "log a successful response that was a cache hit" in {
     val partReqService = mock[PartRequestServiceBase]
@@ -31,7 +33,7 @@ class PartsServiceSpec extends FlatSpec with Matchers with MockitoSugar with Sca
     val partsService = new PartsService(partReqService, logger)
 
     val aggReq = AggregateRequest(RequestMeta(id = "foo", serviceId = serviceId), Seq(PartRequest(partId)))
-    when(partReqService.responseFor(MockMatchers.any[PartRequestInfo]))
+    when(partReqService.responseFor(MockMatchers.any[PartRequestInfo])(MockMatchers.any[TwitterSpan]))
       .thenReturn(Future.successful(PartResponse(partId, partId, retrievedFromCache = true)))
 
     whenReady(partsService.processParts(aggReq)) { _ =>
@@ -47,7 +49,7 @@ class PartsServiceSpec extends FlatSpec with Matchers with MockitoSugar with Sca
     val partsService = new PartsService(partReqService, logger)
 
     val aggReq = AggregateRequest(RequestMeta(id = "foo", serviceId = serviceId), Seq(PartRequest(partId)))
-    when(partReqService.responseFor(MockMatchers.any[PartRequestInfo]))
+    when(partReqService.responseFor(MockMatchers.any[PartRequestInfo])(MockMatchers.any[TwitterSpan]))
       .thenReturn(Future.successful(PartResponse(partId, partId, retrievedFromCache = false)))
 
     whenReady(partsService.processParts(aggReq)) { _ =>
@@ -62,8 +64,8 @@ class PartsServiceSpec extends FlatSpec with Matchers with MockitoSugar with Sca
     val logger = mock[PartRequestLogger]
     val partsService = new PartsService(partReqService, logger)
 
-    val aggReq = AggregateRequest(RequestMeta(id = "foo", serviceId = serviceId, timeoutMs = Some(123)), Seq(PartRequest(partId)))
-    when(partReqService.responseFor(MockMatchers.any[PartRequestInfo]))
+    val aggReq = AggregateRequest(RequestMeta(id = "foo", serviceId = serviceId, timeout = Some(123.millis)), Seq(PartRequest(partId)))
+    when(partReqService.responseFor(MockMatchers.any[PartRequestInfo])(MockMatchers.any[TwitterSpan]))
       .thenReturn(Future.failed(new TimeoutException))
 
     whenReady(partsService.processParts(aggReq)) { _ =>
@@ -76,8 +78,8 @@ class PartsServiceSpec extends FlatSpec with Matchers with MockitoSugar with Sca
     val logger = mock[PartRequestLogger]
     val partsService = new PartsService(partReqService, logger)
 
-    val aggReq = AggregateRequest(RequestMeta(id = "foo", serviceId = serviceId, timeoutMs = Some(123)), Seq(PartRequest(partId)))
-    when(partReqService.responseFor(MockMatchers.any[PartRequestInfo]))
+    val aggReq = AggregateRequest(RequestMeta(id = "foo", serviceId = serviceId, timeout = Some(123.millis)), Seq(PartRequest(partId)))
+    when(partReqService.responseFor(MockMatchers.any[PartRequestInfo])(MockMatchers.any[TwitterSpan]))
       .thenReturn(Future.failed(new IOException("Oh no!")))
 
     whenReady(partsService.processParts(aggReq)) { _ =>
@@ -91,7 +93,7 @@ class PartsServiceSpec extends FlatSpec with Matchers with MockitoSugar with Sca
     val partsService = new PartsService(partReqService, logger)
 
     val aggReq = AggregateRequest(RequestMeta(id = "foo", serviceId = serviceId), Seq(PartRequest(partId)))
-    when(partReqService.responseFor(MockMatchers.any[PartRequestInfo]))
+    when(partReqService.responseFor(MockMatchers.any[PartRequestInfo])(MockMatchers.any[TwitterSpan]))
       .thenReturn(Future.successful(PartResponse(partId, partId, statusCode = Some(400), errors = Seq("Bad request!"))))
 
     whenReady(partsService.processParts(aggReq)) { _ =>

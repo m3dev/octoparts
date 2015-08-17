@@ -4,7 +4,7 @@ import java.net.URI
 import org.apache.http.HttpEntityEnclosingRequest
 import org.scalatest.{ Matchers, FunSpec }
 import org.scalatest.concurrent.ScalaFutures
-import HttpMethod._
+import com.m3.octoparts.model.HttpMethod._
 import org.apache.http.client.methods._
 import com.m3.octoparts.hystrix.MockHttpClientComponent
 
@@ -14,11 +14,10 @@ class BlockingHttpRetrieveSpec extends FunSpec with Matchers with ScalaFutures {
     trait HttpRetrieveBodyContext {
       def httpMethod: HttpMethod
       def uriForCommand: URI = new URI("http://beachape.com")
-      def headersForCommand: Seq[(String, String)] = Seq.empty
       def command = new BlockingHttpRetrieve with MockHttpClientComponent {
         val method = httpMethod
         val maybeBody = Some("thing")
-        val headers = headersForCommand
+        val headers = Nil
         val uri = uriForCommand
       }
     }

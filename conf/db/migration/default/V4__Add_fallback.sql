@@ -1,0 +1,1 @@
+ALTER TABLE hystrix_config ADD COLUMN local_contents_as_fallback boolean DEFAULT false NOT NULL;
