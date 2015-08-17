@@ -14,7 +14,7 @@ import com.twitter.zipkin.gen.Span
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{ FlatSpec, Matchers }
 import org.scalatestplus.play.OneAppPerSuite
-import play.api.libs.json.{ JsSuccess, Json }
+import play.api.libs.json._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
@@ -89,6 +89,15 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
 
   it should "show a filtered list of octoparts" in {
     val result = controller.list(List("void")).apply(FakeRequest())
+
+    status(result) should be(200)
+    contentAsString(result) should include("void")
+    contentAsString(result) shouldNot include("error")
+    contentAsString(result) shouldNot include("slow")
+  }
+
+  it should "show a filtered list of octoparts when POST is used" in {
+    val result = controller.listPost.apply(FakeRequest().withJsonBody(Json.obj("ids" -> Json.arr("void"))))
 
     status(result) should be(200)
     contentAsString(result) should include("void")

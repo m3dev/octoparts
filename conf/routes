@@ -7,6 +7,7 @@ GET         /assets/*file                                                       
 
 # Dependencies-related API
 GET         /octoparts/2/list                                                                   @controllers.PartsController.list(partIdParams: List[String] ?= Nil)
+POST        /octoparts/2/list                                                                   @controllers.PartsController.listPost
 POST        /octoparts/2                                                                        @controllers.PartsController.retrieveParts
 
 # Cache invalidation API
