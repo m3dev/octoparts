@@ -96,7 +96,16 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
     contentAsString(result) shouldNot include("slow")
   }
 
-  it should "show a filtered list of octoparts when POST is used" in {
+  it should "show a filtered list of octoparts when POST is used without a filter" in {
+    val result = controller.listPost.apply(FakeRequest())
+
+    status(result) should be(200)
+    contentAsString(result) should include("void")
+    contentAsString(result) should include("error")
+    contentAsString(result) should include("slow")
+  }
+
+  it should "show a filtered list of octoparts when POST is used with a filter" in {
     val result = controller.listPost.apply(FakeRequest().withJsonBody(Json.obj("ids" -> Json.arr("void"))))
 
     status(result) should be(200)
