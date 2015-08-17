@@ -131,6 +131,7 @@ class PartsController(
       configs <- fConfigs
     } yield {
       Ok(Json.toJson(configs.map(HttpPartConfig.toJsonModel)))
+        .withHeaders("Content-disposition" -> "attachment; filename=exported-parts.json")
     }
   }
 
