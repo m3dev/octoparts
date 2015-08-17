@@ -1,6 +1,7 @@
 package com.m3.octoparts.http
 
 import java.net.URI
+import org.apache.http.HttpEntityEnclosingRequest
 import org.scalatest.{ Matchers, FunSpec }
 import org.scalatest.concurrent.ScalaFutures
 import com.m3.octoparts.model.HttpMethod._
@@ -15,8 +16,8 @@ class BlockingHttpRetrieveSpec extends FunSpec with Matchers with ScalaFutures {
       def uriForCommand: URI = new URI("http://beachape.com")
       def command = new BlockingHttpRetrieve with MockHttpClientComponent {
         val method = httpMethod
-        override val maybeBody = Some("thing")
-        override val headers = Nil
+        val maybeBody = Some("thing")
+        val headers = Nil
         val uri = uriForCommand
       }
     }
@@ -62,6 +63,24 @@ class BlockingHttpRetrieveSpec extends FunSpec with Matchers with ScalaFutures {
           override def httpMethod: HttpMethod = Options
           command.request shouldBe a[HttpOptions]
         }
+      }
+      describe("when there is a body for the given request type") {
+
+        it("should have UTF-8 entity encoding") {
+          Seq(Post, Put, Patch).foreach { method =>
+            new HttpRetrieveBodyContext {
+              override def httpMethod: HttpMethod = method
+              command.request match {
+                case req: HttpEntityEnclosingRequest => {
+                  val entity = req.getEntity
+                  entity.getContentType.getValue should include("charset=UTF-8")
+                }
+                case _ => fail("The request doesn't contain entities")
+              }
+            }
+          }
+        }
+
       }
     }
 
