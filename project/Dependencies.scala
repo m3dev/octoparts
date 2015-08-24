@@ -8,6 +8,7 @@ object Dependencies {
     // Use in-house Maven repo before other remote repos if env var is set
     resolvers ++= Seq(Resolver.defaultLocal) ++ sys.env.get("INHOUSE_MAVEN_REPO").map("Inhouse".at) ++ Seq(
       Resolver.typesafeRepo("releases"),
+      Resolver.sonatypeRepo("releases"),
       Resolver.sonatypeRepo("snapshots")
       )
   }
@@ -21,6 +22,7 @@ object Dependencies {
   val scalikejdbcVersion = "2.2.5"
   val swaggerVersion = "1.3.12"
   val jacksonVersion = "2.5.1"
+  val macwireVersion = "1.0.5"
 
   // Logging
   val logbackClassic      = "ch.qos.logback"            % "logback-classic"               % "1.1.3"
@@ -57,9 +59,12 @@ object Dependencies {
 
   // Play plugins
   val playFlyway          = "com.github.tototoshi"      %% "play-flyway"                  % "1.2.1"
-  val scaldiPlay          = "org.scaldi"                %% "scaldi-play"                  % "0.5.3"
   val metricsPlay         = "com.kenshoo"               %% "metrics-play"                 % "2.3.0_0.1.8"
   val providedPlay        = "com.typesafe.play"         %% "play"                         % thePlayVersion      % Provided
+
+  // DI
+  val macwireMacros       = "com.softwaremill.macwire"  %% "macros"                       % macwireVersion
+  val macwireRuntime      = "com.softwaremill.macwire"  %% "runtime"                      % macwireVersion
 
   // Swagger
   val swaggerPlay         = "com.wordnik"               %% "swagger-play2"                % swaggerVersion
@@ -85,7 +90,7 @@ object Dependencies {
   val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.6"
   val findbugs            = "com.google.code.findbugs"  % "jsr305"                        % "3.0.0"
 
-  val zipkinFutures       = "com.beachape"              %% "zipkin-futures-play"          % "0.1.0"
+  val zipkinFutures       = "com.beachape"              %% "zipkin-futures-play"          % "0.1.1"
 
   val withoutExcluded = { (m: ModuleID) =>
     m.excludeAll(
@@ -137,9 +142,12 @@ object Dependencies {
     jta,
     scalaUri,
 
+    // DI
+    macwireMacros,
+    macwireRuntime,
+
     // Play plugins
     playFlyway,
-    scaldiPlay,
     metricsPlay,
     swaggerPlay,
 

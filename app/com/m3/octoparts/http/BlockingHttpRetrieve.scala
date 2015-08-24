@@ -1,6 +1,7 @@
 package com.m3.octoparts.http
 
 import java.net.URI
+import java.nio.charset.StandardCharsets
 
 import com.m3.octoparts.model.HttpMethod
 import org.apache.http.HttpEntityEnclosingRequest
@@ -59,10 +60,13 @@ trait BlockingHttpRetrieve {
 
   /**
    * Sets the body entity on the request
+   *
+   * We restrict this to UTF-8 encoding because Octoparts is only supposed to be receiving
+   * UTF-8 encoded request bodies in the first place.
    */
   private def maybeSetBody(req: HttpEntityEnclosingRequest): Unit = {
     for (body <- maybeBody)
-      req.setEntity(new StringEntity(body))
+      req.setEntity(new StringEntity(body, StandardCharsets.UTF_8))
   }
 
   /**

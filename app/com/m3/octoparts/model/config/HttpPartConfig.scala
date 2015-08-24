@@ -104,7 +104,8 @@ object HttpPartConfig {
       deprecatedInFavourOf = config.deprecatedInFavourOf,
       cacheGroups = config.cacheGroups.toSet.map(CacheGroup.toJsonModel),
       cacheTtl = config.cacheTtl,
-      alertMailSettings = AlertMailSettings(alertMailsEnabled = config.alertMailsEnabled,
+      alertMailSettings = AlertMailSettings(
+        alertMailsEnabled = config.alertMailsEnabled,
         alertAbsoluteThreshold = config.alertAbsoluteThreshold,
         alertPercentThreshold = config.alertPercentThreshold,
         alertInterval = config.alertInterval,

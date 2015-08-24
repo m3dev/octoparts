@@ -8,6 +8,7 @@
     - disable_iptables # makes sense for dev vms only
     - yum_repos
     - { role: java, when: accept_oracle_licence == "yes" }
+    - { role: java7, when: accept_oracle_licence == "yes" }
     - { role: postgres, db_user: octoparts_app, db_name: octoparts, db_password: passw0rd }
     - { role: global_env, app_user: vagrant, app_group: vagrant, play_env: dev }
     - tomcat # Default variables for this role deploy the Hystrix dashboard ..
@@ -15,3 +16,4 @@
     - td_agent
     - elasticsearch
     - kibana
+    - zipkin

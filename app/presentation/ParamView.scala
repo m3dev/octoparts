@@ -9,8 +9,6 @@ import org.apache.commons.lang.StringEscapeUtils
 case class ParamView(param: PartParam) {
   def id: Option[Long] = param.id
 
-  def requiredCls: String = if (required) "required" else "optional"
-
   def name: String = param.inputNameOverride.getOrElse(param.outputName)
 
   def outputName: String = param.outputName

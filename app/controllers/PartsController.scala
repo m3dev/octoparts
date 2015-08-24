@@ -11,7 +11,7 @@ import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.HttpPartConfig
 import com.m3.octoparts.repository.ConfigsRepository
 import com.wordnik.swagger.annotations._
-import controllers.support.LoggingSupport
+import controllers.support.{ PartListFilterSupport, LoggingSupport }
 import org.apache.http.client.cache.HeaderConstants
 import play.api.libs.concurrent.Promise
 import play.api.libs.json.Json
@@ -27,11 +27,15 @@ import scala.concurrent.duration._
   consumes = "application/json"
 )
 class PartsController(
-    partsService: PartsService,
-    configsRepository: ConfigsRepository,
-    requestTimeout: Duration,
-    readClientCacheHeaders: Boolean,
-    implicit val zipkinService: ZipkinServiceLike) extends Controller with LoggingSupport with ReqHeaderToSpanImplicit {
+  partsService: PartsService,
+  configsRepository: ConfigsRepository,
+  requestTimeout: Duration,
+  readClientCacheHeaders: Boolean,
+  implicit val zipkinService: ZipkinServiceLike)
+    extends Controller
+    with LoggingSupport
+    with PartListFilterSupport
+    with ReqHeaderToSpanImplicit {
 
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
   import com.beachape.zipkin.FutureEnrichment._
@@ -72,20 +76,30 @@ class PartsController(
     response = classOf[HttpPartConfig],
     responseContainer = "List",
     httpMethod = "GET")
-  def list(@ApiParam(value = "Optional part ids to filter on. Note, this should be passed as multiple partIdParams=partId, e.g ?partIdParams=wut&partIdParams=wut3 ", allowMultiple = true)@QueryParam("partIdParams") partIdParams: List[String] = Nil) = Action.async { implicit request =>
-    debugRc
-    val fConfigs = partIdParams match {
-      case Nil => configsRepository.findAllConfigs().trace("find-all-configs")
-      case partIds =>
-        val fParts = partIds.map(partId => configsRepository.findConfigByPartId(partId).trace("find-config-by-part-ids", "ids" -> partId))
-        Future.sequence(fParts).map(_.flatten)
+  def list(@ApiParam(value = "Optional part ids to filter on. Note, this should be passed as multiple partIdParams=partId, e.g ?partIdParams=wut&partIdParams=wut3 ", allowMultiple = true)@QueryParam("partIdParams") partIdParams: List[String] = Nil) =
+    Action.async { implicit req =>
+      retrieveParts(partIdParams)
     }
 
-    for {
-      configs <- fConfigs
-    } yield {
-      Ok(Json.toJson(configs.map(HttpPartConfig.toJsonModel)))
-    }
+  @ApiOperation(
+    value = "Return a list of all registered endpoints in the system, but sent via a POST",
+    nickname = "Endpoints listing POST",
+    notes = "Returns a list of registered endpoints in the system. Use this if you want to do filtering with so many IDs that you hit the URL limit of our server",
+    response = classOf[HttpPartConfig],
+    responseContainer = "List",
+    httpMethod = "POST")
+  @ApiImplicitParams(Array(new ApiImplicitParam(
+    value = "An array of ids",
+    required = true,
+    dataType = "controllers.support.PartListFilter",
+    paramType = "body",
+    name = "body"
+  )))
+  def listPost = Action.async { implicit req =>
+    partListFilterForm.bindFromRequest().fold(
+      hasErrors => Future.successful(BadRequest("Could no bind ids from request")),
+      bound => retrieveParts(bound.ids)
+    )
   }
 
   private def logAggregateRequest(aggregateRequest: AggregateRequest, noCache: Boolean)(implicit request: RequestHeader): Unit = {
@@ -102,6 +116,23 @@ class PartsController(
     val fOkResponse = fResponse.map(aggResp => Ok(Json.toJson(aggResp)))
     val fTimeout = Promise.timeout(InternalServerError("Request timed out"), requestTimeout)
     Future.firstCompletedOf(Seq(fOkResponse, fTimeout))
+  }
+
+  private def retrieveParts(ids: Seq[String])(implicit req: Request[AnyContent]): Future[Result] = {
+    debugRc
+    val fConfigs = ids match {
+      case Nil => configsRepository.findAllConfigs().trace("find-all-configs")
+      case partIds => {
+        val fParts = partIds.map(partId => configsRepository.findConfigByPartId(partId).trace("find-config-by-part-ids", "ids" -> partId))
+        Future.sequence(fParts).map(_.flatten)
+      }
+    }
+    for {
+      configs <- fConfigs
+    } yield {
+      Ok(Json.toJson(configs.map(HttpPartConfig.toJsonModel)))
+        .withHeaders("Content-disposition" -> "attachment; filename=exported-parts.json")
+    }
   }
 
 }

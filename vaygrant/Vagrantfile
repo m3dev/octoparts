@@ -10,16 +10,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # please see the online documentation at vagrantup.com.
 
   # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box = "centOS6.5_64_nrel"
-
-  # The url from where the 'config.vm.box' box will be fetched if it
-  # doesn't already exist on the user's system.
-  config.vm.box_url = "http://developer.nrel.gov/downloads/vagrant-boxes/CentOS-6.5-x86_64-v20140311.box"
+  config.vm.box = "chef/centos-6.5"
 
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine.
   config.vm.network :forwarded_port, guest: 9000, host: 9000 # For accessing octoparts
   config.vm.network :forwarded_port, guest: 8080, host: 8080 # For accessing hystrix-dashboard from host
+  config.vm.network :forwarded_port, guest: 8085, host: 8085 # For accessing zipkin-web from host
   config.vm.network :forwarded_port, guest: 8443, host: 8443
   config.vm.network :forwarded_port, guest: 5432, host: 5432 # PSQL
   config.vm.network :forwarded_port, guest: 11211, host: 11211 # Memcached
