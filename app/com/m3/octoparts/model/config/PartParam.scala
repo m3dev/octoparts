@@ -1,8 +1,9 @@
 package com.m3.octoparts.model.config
 
-import com.m3.octoparts.repository.config.PartParamRepository
 import org.joda.time.DateTime
-import skinny.{ ParamType => SkinnyParamType }
+import com.m3.octoparts.model.config.json.{ PartParam => JsonPartParam }
+
+import scala.collection.SortedSet
 
 /**
  * Model for holding Parameter configuration data for a Http dependency that
@@ -19,22 +20,52 @@ case class PartParam(
     id: Option[Long] = None, //Implies not yet inserted into the DB
     httpPartConfigId: Option[Long] = None,
     httpPartConfig: Option[HttpPartConfig] = None,
+    description: Option[String] = None,
     required: Boolean,
     versioned: Boolean,
     paramType: ParamType.Value,
     outputName: String,
     inputNameOverride: Option[String] = None,
-    cacheGroups: Set[CacheGroup] = Set.empty,
+    cacheGroups: SortedSet[CacheGroup] = SortedSet.empty,
     createdAt: DateTime,
     updatedAt: DateTime) extends ConfigModel[PartParam] {
-
-  override def mapper = PartParamRepository
 
   /**
    * This is the key used to look for a value inside the PartRequest
    */
   def inputName: String = inputNameOverride.getOrElse(outputName)
+}
 
-  def shorter = ShortPartParam(outputName, paramType)
+object PartParam {
 
+  /**
+   * Returns a [[JsonPartParam]] for a [[PartParam]]
+   */
+  def toJsonModel(param: PartParam): JsonPartParam = {
+    JsonPartParam(
+      required = param.required,
+      versioned = param.versioned,
+      paramType = param.paramType,
+      outputName = param.outputName,
+      inputNameOverride = param.inputNameOverride,
+      description = param.description,
+      cacheGroups = param.cacheGroups.toSet.map(CacheGroup.toJsonModel)
+    )
+  }
+
+  def fromJsonModel(param: JsonPartParam): PartParam = {
+    PartParam(
+      required = param.required,
+      versioned = param.versioned,
+      paramType = param.paramType,
+      outputName = param.outputName,
+      inputNameOverride = param.inputNameOverride,
+      description = param.description,
+      cacheGroups = param.cacheGroups.map(CacheGroup.fromJsonModel).to[SortedSet],
+      createdAt = DateTime.now,
+      updatedAt = DateTime.now
+    )
+  }
+
+  implicit val order: Ordering[PartParam] = Ordering.by(pp => (pp.outputName, pp.paramType))
 }

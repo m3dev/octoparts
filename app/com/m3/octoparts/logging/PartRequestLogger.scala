@@ -1,6 +1,7 @@
 package com.m3.octoparts.logging
 
-import skinny.logging.Logger
+import com.beachape.logging.LTSVLoggerLike
+import play.api.Logger
 
 /**
  * Helper for logging the results of part requests in LTSV format.
@@ -16,9 +17,9 @@ trait PartRequestLogger {
 
 }
 
-object PartRequestLogger extends PartRequestLogger with LTSVLogWriter {
+object PartRequestLogger extends PartRequestLogger with LTSVLoggerLike {
 
-  val logger = Logger("PartRequests")
+  val underlyingLogger = Logger("PartRequests").underlyingLogger
 
   def logSuccess(partId: String, parentRequestId: String, serviceId: Option[String], cacheHit: Boolean, responseMs: Long): Unit = {
     val hitOrMiss = if (cacheHit) "hit" else "miss"

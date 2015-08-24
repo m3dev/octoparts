@@ -1,17 +1,20 @@
 package presentation
 
 import com.m3.octoparts.model.config.HttpPartConfig
+import controllers.support.HttpPartConfigChecker
 import org.apache.commons.lang.StringEscapeUtils
 import org.joda.time.DateTime
+import play.api.Play
 import play.api.i18n.{ Lang, Messages }
 import play.twirl.api.Html
 
+import scala.collection.SortedSet
 import scala.concurrent.duration.Duration
 
 /**
  * View adapter for an HttpPartConfig.
  */
-case class HttpPartConfigView(config: HttpPartConfig) {
+case class HttpPartConfigView(config: HttpPartConfig)(implicit lang: Lang) {
 
   def addParamLink: String = controllers.routes.AdminController.newParam(config.partId).url
 
@@ -21,11 +24,15 @@ case class HttpPartConfigView(config: HttpPartConfig) {
 
   def editLink: String = controllers.routes.AdminController.editPart(config.partId).url
 
-  def commandGroup: String = config.hystrixConfig.fold("")(_.commandGroupKey)
+  def exportLink: String = controllers.routes.PartsController.list(List(partId)).url
 
-  def timeoutInMs: Long = config.hystrixConfig.fold(5000L)(_.timeoutInMs)
+  def commandGroup: Option[String] = config.hystrixConfig.map(_.commandGroupKey)
 
-  def commandKey: String = config.hystrixConfig.fold("")(_.commandKey)
+  lazy val warnings: Seq[String] = HttpPartConfigChecker(config)
+
+  def timeoutInMs: Int = config.hystrixConfig.fold(5000)(_.timeout.toMillis.toInt)
+
+  def commandKey: Option[String] = config.hystrixConfig.map(_.commandKey)
 
   def uriToInterpolate: String = config.uriToInterpolate
 
@@ -35,17 +42,15 @@ case class HttpPartConfigView(config: HttpPartConfig) {
 
   def httpMethod: String = config.method.toString
 
-  def threadPoolKey: String = config.hystrixConfig.flatMap(_.threadPoolConfig).fold("")(_.threadPoolKey)
+  def threadPoolKey: Option[String] = config.hystrixConfig.flatMap(_.threadPoolConfig).map(_.threadPoolKey)
 
-  def registeredParamsView: Set[ParamView] = config.parameters.map { p => ParamView(p) }
+  def registeredParamsView: SortedSet[ParamView] = config.parameters.map(ParamView.apply)
 
-  def editableParamsView: Set[ParamView] = config.parameters.collect {
-    case p if !p.inputName.startsWith("meta.") => ParamView(p)
-  }
+  def editableParamsView: SortedSet[ParamView] = registeredParamsView.filterNot(_.name.startsWith("meta."))
 
-  def description: String = config.description
+  def description: Option[String] = config.description
 
-  def deprecation(implicit lang: Lang): Html = config.deprecatedInFavourOf match {
+  def deprecation: Html = config.deprecatedInFavourOf match {
     case Some(s) if s.length() > 0 =>
       Html(Messages("parts.deprecation.seeOther", s"""<a href="${controllers.routes.AdminController.showPart(s).url}">$s</a>"""))
     case _ => Html(Messages("parts.deprecation.none"))
@@ -55,25 +60,31 @@ case class HttpPartConfigView(config: HttpPartConfig) {
 
   def created: String = formatTs(config.createdAt)
 
-  def cacheTtlStr(implicit lang: Lang): String = {
+  def cacheTtlStr: String = {
     config.cacheTtl.fold(Messages("parts.cache.unlimited")) {
       case Duration.Zero => Messages("parts.cache.none")
-      case dd => dd.toString // not worth localizing yet
+      case dd => dd.toString() // not worth localizing yet
     }
   }
 
-  def alertMailCondition(implicit lang: Lang): Html = {
+  def alertMailCondition: Html = {
     val thresholdCondition = (
       config.alertAbsoluteThreshold.map(Messages("parts.alertMail.condition.absolute", _)) ++
       config.alertPercentThreshold.map(Messages("parts.alertMail.condition.relative", _))
     ).mkString(s" ${Messages("parts.alertMail.condition.or")} ")
-    Html(Messages("parts.alertMail.condition.summary", config.alertInterval.toString, thresholdCondition))
+    Html(Messages("parts.alertMail.condition.summary", config.alertInterval.toString(), thresholdCondition))
   }
 
-  def alertMailRecipients(implicit lang: Lang): String = config.alertMailRecipients.getOrElse(Messages("parts.alertMail.recipients.none"))
+  def alertMailRecipients: String = config.alertMailRecipients.getOrElse(Messages("parts.alertMail.recipients.none"))
 
-  private def formatTs(ts: DateTime)(implicit lang: Lang) = Option(ts).fold(Messages("na")) {
+  def additionalValidStatuses: String = config.additionalValidStatuses.mkString(", ")
+
+  private def formatTs(ts: DateTime) = Option(ts).fold(Messages("na")) {
     _.toString(Messages("ymdFormat"))
   }
 
+}
+
+object HttpPartConfigView {
+  implicit val order: Ordering[HttpPartConfigView] = Ordering.by(_.config)
 }

@@ -1,3 +1,6 @@
+- name: Ensure selinux python bindings are installed
+  yum: name=libselinux-python state=present
+
 - name: Add JPackage yum repo
   copy: >
     src=jpackage_repo dest=/etc/yum.repos.d/jpackage.repo

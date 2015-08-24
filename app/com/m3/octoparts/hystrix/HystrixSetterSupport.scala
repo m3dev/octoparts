@@ -22,7 +22,7 @@ trait HystrixSetterSupport {
       andThreadPoolKey(HystrixThreadPoolKey.Factory.asKey(config.threadPoolConfigItem.threadPoolKey)).
       andThreadPoolPropertiesDefaults(threadPoolProperties).
       andCommandPropertiesDefaults(HystrixCommandProperties.Setter().
-        withExecutionIsolationThreadTimeoutInMilliseconds(config.timeoutInMs.toInt).
-        withFallbackEnabled(false))
+        withExecutionTimeoutInMilliseconds(config.timeout.toMillis.toInt).
+        withFallbackEnabled(config.localContentsAsFallback))
   }
 }

@@ -25,7 +25,7 @@ private[client] class OKResponseExtractor(uri: String) extends AsyncCompletionHa
     }
   }
 
-  override def onThrowable(t: Throwable) {
+  override def onThrowable(t: Throwable) = {
     Log.warn(s"For path: $uri", t)
   }
 }

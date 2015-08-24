@@ -1,2 +1,5 @@
 export PLAY_ENV={{ play_env }}
 export OCTOPARTS_LOG_DIR={{ octoparts_log_dir }}
+export OCTOPARTS_ZIPKIN_HOST=localhost
+export OCTOPARTS_ZIPKIN_PORT=9410
+export OCTOPARTS_ZIPKIN_SAMPLE_RATE=2.0

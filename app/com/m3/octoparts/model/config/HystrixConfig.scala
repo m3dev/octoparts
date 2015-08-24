@@ -1,14 +1,44 @@
 package com.m3.octoparts.model.config
 
-import com.m3.octoparts.repository.config.HystrixConfigRepository
+import scala.concurrent.duration._
 import org.joda.time.DateTime
+import com.m3.octoparts.model.config.json.{ HystrixConfig => JsonHystrixConfig }
 
 import scala.language.postfixOps
 
+object HystrixConfig {
+  val defaultTimeout = 5.seconds
+  implicit val order: Ordering[HystrixConfig] = Ordering.by(_.commandKey)
+
+  /**
+   * Returns a [[JsonHystrixConfig]] for a given [[HystrixConfig]]
+   */
+  def toJsonModel(config: HystrixConfig): JsonHystrixConfig = {
+    require(config.threadPoolConfig.isDefined)
+    JsonHystrixConfig(
+      threadPoolConfig = ThreadPoolConfig.toJsonModel(config.threadPoolConfig.get),
+      commandKey = config.commandKey,
+      commandGroupKey = config.commandGroupKey,
+      localContentsAsFallback = config.localContentsAsFallback,
+      timeout = config.timeout
+    )
+  }
+
+  def fromJsonModel(config: JsonHystrixConfig): HystrixConfig = {
+    HystrixConfig(
+      threadPoolConfig = Some(ThreadPoolConfig.fromJsonModel(config.threadPoolConfig)),
+      commandKey = config.commandKey,
+      commandGroupKey = config.commandGroupKey,
+      timeout = config.timeout,
+      localContentsAsFallback = config.localContentsAsFallback,
+      createdAt = DateTime.now,
+      updatedAt = DateTime.now
+    )
+  }
+}
+
 /**
  * Holds the Hystrix Configuration data for a given dependency
- *
- * TODO: Link to a ThreadPoolConfig
  */
 case class HystrixConfig(
     id: Option[Long] = None, // None means the HystrixConfig is new (not inserted yet)
@@ -18,11 +48,10 @@ case class HystrixConfig(
     threadPoolConfig: Option[ThreadPoolConfig] = None,
     commandKey: String,
     commandGroupKey: String,
-    timeoutInMs: Long = HystrixConfigRepository.defaultTimeout,
+    timeout: FiniteDuration = HystrixConfig.defaultTimeout,
+    localContentsAsFallback: Boolean,
     createdAt: DateTime,
     updatedAt: DateTime) extends ConfigModel[HystrixConfig] {
-
-  override def mapper = HystrixConfigRepository
 
   /**
    * Method to use when we are sure we have a ThreadPoolConfig inside the

@@ -1,7 +1,9 @@
 package com.m3.octoparts.aggregator.handler
 
+import com.m3.octoparts.aggregator.PartRequestInfo
 import com.m3.octoparts.model.PartResponse
-import com.m3.octoparts.model.config._
+import com.m3.octoparts.model.config.ShortPartParam
+import com.twitter.zipkin.gen.Span
 
 import scala.concurrent.Future
 
@@ -16,10 +18,11 @@ import scala.concurrent.Future
  */
 trait Handler {
 
-  type HandlerArguments = Map[ShortPartParam, String]
+  type HandlerArguments = Map[ShortPartParam, Seq[String]]
 
   // Used primarily for creating a PartResponse, but also for logging purposes
   def partId: String
 
-  def process(arguments: HandlerArguments): Future[PartResponse]
+  def process(partRequestInfo: PartRequestInfo, arguments: HandlerArguments)(implicit parentSpan: Span): Future[PartResponse]
+
 }

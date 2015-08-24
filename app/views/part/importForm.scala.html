@@ -1,0 +1,33 @@
+@()(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
+
+@views.html.adminlayout(Messages("admin.import")) {
+
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/jquery.validationEngine.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/languages/jquery.validationEngine-@{lang.language}.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/jQuery-Validation-Engine/2.6.4/validationEngine.jquery.min.css"/>
+    <style type="text/css">
+    .file-input-wrapper { margin : 0 0 10px 0; }
+    #importEntry { padding-top : 15px; }
+    </style>
+
+    <script type="text/javascript" src="/js/bootstrap.file-input.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function(){
+        $('input[type=file]').bootstrapFileInput();
+        $('#jsonfile').addClass('validate[required]');
+        $('#importEntry').validationEngine({
+            prettySelect : true,
+            autoPositionUpdate: true,
+            promptPosition: 'inline',
+            validateNonVisibleFields: true
+        });
+    });
+    </script>
+} {
+        <h2>@Messages("admin.import.title")</h2>
+    @helper.form(action=controllers.routes.AdminController.doImportParts, 'id -> "importEntry", 'method -> "post", 'role -> "form", 'enctype -> "multipart/form-data") {
+        <input name="jsonfile" id="jsonfile" type="file" title="@Messages("admin.import.help")" data-filename-placement="inside">
+        <br /><br />
+        <input type="submit" class="btn btn-primary" />
+    }
+}

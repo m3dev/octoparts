@@ -1,7 +1,5 @@
 package com.m3.octoparts.model.config
 
-import com.m3.octoparts.repository.config.ConfigMapper
-
 /**
  * The base trait for our models.
  *
@@ -15,14 +13,5 @@ trait ConfigModel[A <: ConfigModel[A]] {
    * Identifier.
    */
   def id: Option[Long]
-
-  /**
-   * Used for easy access to a mapper of an object.
-   *
-   * For our purposes, it's much easier and faster to implement this in code within
-   * implementing classes than to use tricks like implicits (requires more boiler
-   * plate) and reflection (runtime cost)
-   */
-  def mapper: ConfigMapper[A]
 
 }

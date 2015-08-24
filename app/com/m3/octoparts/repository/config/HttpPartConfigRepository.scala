@@ -1,21 +1,23 @@
 package com.m3.octoparts.repository.config
 
-import com.m3.octoparts.http.HttpMethod
+import com.beachape.logging.LTSVLogger
+import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config._
 import scalikejdbc._
 import skinny.orm._
 import skinny.orm.feature.TimestampsFeature
-import skinny.util.LTSV
-import skinny.{ AbstractParamType, ParamType => SkinnyParamType }
+import skinny.orm.feature.associations.{ HasOneAssociation, HasManyAssociation }
+import skinny.{ ParamType => SkinnyParamType }
 
+import scala.collection.SortedSet
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
 object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with TimestampsFeature[HttpPartConfig] {
 
-  override lazy val defaultAlias = createAlias("http_part_config")
+  lazy val defaultAlias = createAlias("http_part_config")
 
-  override lazy val tableName = "http_part_config"
+  override val tableName = "http_part_config"
 
   protected val permittedFields = Seq(
     "partId" -> SkinnyParamType.String,
@@ -23,25 +25,23 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
     "uriToInterpolate" -> SkinnyParamType.String,
     "description" -> SkinnyParamType.String,
     "method" -> SkinnyParamType.String,
-    "additionalValidStatuses" -> IntSetParamType,
+    "additionalValidStatuses" -> ExtraParamType.IntSortedSetParamType,
+    "httpPoolSize" -> SkinnyParamType.Int,
+    "httpConnectionTimeout" -> ExtraParamType.FineDurationParamType,
+    "httpSocketTimeout" -> ExtraParamType.FineDurationParamType,
+    "httpDefaultEncoding" -> SkinnyParamType.String,
+    "httpProxy" -> SkinnyParamType.String,
     "deprecatedInFavourOf" -> SkinnyParamType.String,
     "cacheGroupId" -> SkinnyParamType.Long,
-    "cacheTtl" -> DurationParamType,
+    "cacheTtl" -> ExtraParamType.DurationParamType,
     "alertMailsEnabled" -> SkinnyParamType.Boolean,
     "alertAbsoluteThreshold" -> SkinnyParamType.Int,
     "alertPercentThreshold" -> SkinnyParamType.Double,
-    "alertInterval" -> DurationParamType,
-    "alertMailRecipients" -> SkinnyParamType.String
+    "alertInterval" -> ExtraParamType.DurationParamType,
+    "alertMailRecipients" -> SkinnyParamType.String,
+    "localContentsEnabled" -> SkinnyParamType.Boolean,
+    "localContents" -> SkinnyParamType.String
   )
-
-  case object DurationParamType extends AbstractParamType({
-    case d: Duration => d.toSeconds
-  })
-
-  case object IntSetParamType extends AbstractParamType({
-    // this will actually be a Set[Int] but the compiler complains about it.
-    case s: Set[_] => s.mkString(",")
-  })
 
   /**
    * Overridden version of .save to allow us to save nested children objects
@@ -55,14 +55,14 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
    */
   override def save(c: HttpPartConfig)(implicit s: DBSession = autoSession): Long = c.id.fold {
     val newId = createWithPermittedAttributes(permitted(c))
-    c.parameters.foreach(p => PartParamRepository.save(p.copy(httpPartConfigId = Some(newId.toLong))))
-    c.hystrixConfig.foreach(h => HystrixConfigRepository.save(h.copy(httpPartConfigId = Some(newId.toLong))))
+    c.parameters.foreach(p => PartParamRepository.save(p.copy(httpPartConfigId = Some(newId))))
+    c.hystrixConfig.foreach(h => HystrixConfigRepository.save(h.copy(httpPartConfigId = Some(newId))))
     saveCacheGroups(c.copy(id = Some(newId)))
-    info(LTSV.dump(
+    LTSVLogger.info(
       "Part" -> c.partId,
       "Action" -> "Updated",
       "Part data" -> c.toString
-    ))
+    )
     newId
   } {
     id =>
@@ -70,11 +70,11 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
       c.parameters.foreach(PartParamRepository.save)
       c.hystrixConfig.foreach(HystrixConfigRepository.save)
       saveCacheGroups(c)
-      info(LTSV.dump(
+      LTSVLogger.info(
         "Part" -> c.partId,
         "Action" -> "Inserted",
         "Part data" -> c.toString
-      ))
+      )
       id
   }
 
@@ -85,13 +85,13 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
     trying to use them with eager-loading because as of writing, the hasMany->hasManyThrough
     eager loading seems bugged
   */
-  lazy val paramsRef = hasMany[PartParam](
+  lazy val paramsRef: HasManyAssociation[HttpPartConfig] = hasMany[PartParam](
     many = PartParamRepository -> PartParamRepository.defaultAlias,
     // defines join condition by using aliases
     on = (c, p) => sqls.eq(c.id, p.httpPartConfigId),
     // function to merge associations to main entity
-    merge = (c, params) => c.copy(parameters = params.toSet)
-  )
+    merge = (c, params) => c.copy(parameters = params.to[SortedSet])
+  ).includes[PartParam]((hs, params) => hs.map(h => h.copy(parameters = params.filter(_.httpPartConfigId == h.id).to[SortedSet])))
 
   /*
     References the collection of CacheGroups that each HttpPartConfig has; note that you cannot
@@ -100,19 +100,19 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
 
     See https://github.com/skinny-framework/skinny-framework/commit/13a87c7a3f671c3c77535426ead117cf15e431a9
    */
-  lazy val cacheGroupsRef = hasManyThrough[HttpPartConfigCacheGroup, CacheGroup](
+  lazy val cacheGroupsRef: HasManyAssociation[HttpPartConfig] = hasManyThrough[HttpPartConfigCacheGroup, CacheGroup](
     through = HttpPartConfigCacheGroupRepository -> HttpPartConfigCacheGroupRepository.createAlias("httpPartTestGroupJoin"),
     throughOn = (m1: Alias[HttpPartConfig], m2: Alias[HttpPartConfigCacheGroup]) => sqls.eq(m1.id, m2.httpPartConfigId),
     many = CacheGroupRepository -> CacheGroupRepository.createAlias("cacheGroupJoin"),
     on = (m1: Alias[HttpPartConfigCacheGroup], m2: Alias[CacheGroup]) => sqls.eq(m1.cacheGroupId, m2.id),
-    merge = (part, cacheGroups) => part.copy(cacheGroups = cacheGroups.toSet)
+    merge = (part, cacheGroups) => part.copy(cacheGroups = cacheGroups.to[SortedSet])
   )
 
   /*
    This is the magic hasOne+includes definition that allows us to fetch a HttpPartConfig's HystrixConfig AND its
    ThreadPoolConfig at the same time without N+1 queries
     */
-  lazy val hystrixConfigRef = hasOneWithFk[HystrixConfig](
+  lazy val hystrixConfigRef: HasOneAssociation[HttpPartConfig] = hasOneWithFk[HystrixConfig](
     right = HystrixConfigRepository,
     fk = "httpPartConfigId",
     merge = (c, hc) => c.copy(hystrixConfig = hc)
@@ -148,6 +148,10 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
     description = rs.get(n.description),
     method = HttpMethod.withName(rs.string(n.method)),
     additionalValidStatuses = HttpPartConfig.parseValidStatuses(rs.get(n.additionalValidStatuses)),
+    httpPoolSize = rs.int(n.httpPoolSize),
+    httpConnectionTimeout = rs.long(n.httpConnectionTimeout).milliseconds,
+    httpSocketTimeout = rs.long(n.httpSocketTimeout).milliseconds,
+    httpDefaultEncoding = Charset.forName(rs.string(n.httpDefaultEncoding)),
     deprecatedInFavourOf = rs.get(n.deprecatedInFavourOf),
     cacheTtl = rs.longOpt(n.cacheTtl).map(_.seconds),
     alertMailsEnabled = rs.get(n.alertMailsEnabled),
@@ -155,6 +159,8 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
     alertPercentThreshold = rs.get(n.alertPercentThreshold),
     alertInterval = rs.long(n.alertInterval).seconds,
     alertMailRecipients = rs.get(n.alertMailRecipients),
+    localContentsEnabled = rs.get(n.localContentsEnabled),
+    localContents = rs.get(n.localContents),
     createdAt = rs.get(n.createdAt),
     updatedAt = rs.get(n.updatedAt)
   )

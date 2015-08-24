@@ -1,24 +1,20 @@
 package com.m3.octoparts.support.mocks
 
-import com.m3.octoparts.http.HttpMethod._
+import java.nio.charset.StandardCharsets
+
+import com.m3.octoparts.aggregator.PartRequestInfo
+import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.ParamType._
 import com.m3.octoparts.model.config._
-import com.m3.octoparts.support.db.RequiresDB
 import org.joda.time.DateTime
 
+import scala.collection.SortedSet
 import scala.concurrent.duration._
 
 /**
  * Trait to allow us to get a hold of mock versions of our case classes
- *
- * Note that RequiresDB is used here simply because SkinnyORM does
- * some tricky (pronounced nasty) stuff that essentially stops us from instantiating
- * the case classes that are tied to its CRUD mappers when we don't have a
- * JDBC connection O_O RequiresDB gives us this crucial connection.
- *
- * (Same reason for using defs and not vals)
  */
-trait ConfigDataMocks extends RequiresDB {
+trait ConfigDataMocks {
 
   val now = DateTime.now
 
@@ -36,15 +32,22 @@ trait ConfigDataMocks extends RequiresDB {
     partId = "something",
     owner = "somebody",
     uriToInterpolate = "http://random.com",
-    description = "",
-    method = Get,
-    parameters = Set(mockPartParam),
+    description = None,
+    method = HttpMethod.Get,
+    httpPoolSize = 5,
+    httpConnectionTimeout = 1.second,
+    httpSocketTimeout = 5.seconds,
+    httpDefaultEncoding = Charset.forName(StandardCharsets.US_ASCII.name),
+    httpProxy = Some("localhost:666"),
+    parameters = SortedSet(mockPartParam),
     cacheTtl = Some(60.seconds),
     alertMailsEnabled = true,
     alertAbsoluteThreshold = Some(1000),
     alertPercentThreshold = Some(33),
     alertInterval = 10.minutes,
     alertMailRecipients = Some("l-chan@m3.com"),
+    localContentsEnabled = true,
+    localContents = Some("{}"),
     updatedAt = now,
     createdAt = now
   )
@@ -52,9 +55,9 @@ trait ConfigDataMocks extends RequiresDB {
   def mockHystrixConfig = HystrixConfig(
     commandKey = "command",
     commandGroupKey = "GroupKey",
-    timeoutInMs = 50L,
-
+    timeout = 50.milliseconds,
     threadPoolConfig = Some(mockThreadConfig),
+    localContentsAsFallback = false,
     createdAt = now,
     updatedAt = now
   )
@@ -73,4 +76,40 @@ trait ConfigDataMocks extends RequiresDB {
     updatedAt = now
   )
 
+  def mockPartRequestInfo = PartRequestInfo(
+    requestMeta = mockRequestMeta,
+    partRequest = mockPartRequest,
+    noCache = false
+  )
+
+  def mockRequestMeta = RequestMeta(
+    id = "id",
+    serviceId = Some("serviceId"),
+    userId = Some("uesrId"),
+    sessionId = Some("sessionId"),
+    requestUrl = Some("https://example.com/"),
+    userAgent = Some("userAgent"),
+    timeout = Some(30.seconds)
+  )
+
+  def mockPartRequest = PartRequest(
+    partId = "partId",
+    id = Some("id"),
+    params = Nil
+  )
+
+  def mockPartResponse = PartResponse(
+    partId = "pardId",
+    id = "id",
+    cookies = Nil,
+    statusCode = Some(200),
+    mimeType = Some("text/plain"),
+    charset = Some("UTF-8"),
+    cacheControl = CacheControl.NotSet,
+    contents = Some("contents"),
+    warnings = Seq("warning"),
+    errors = Seq("errors"),
+    retrievedFromCache = false,
+    retrievedFromLocalContents = true
+  )
 }

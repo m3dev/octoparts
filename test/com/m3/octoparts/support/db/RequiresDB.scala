@@ -1,12 +1,14 @@
 package com.m3.octoparts.support.db
 
-import com.m3.octoparts.model.config._
+import java.sql.Connection
+
+import com.beachape.logging.LTSVLogger
 import org.flywaydb.core.Flyway
-import org.scalatest.{ BeforeAndAfter, Suite }
+import org.flywaydb.core.api.MigrationInfo
+import org.flywaydb.core.api.callback.FlywayCallback
+import org.scalatest.Suite
 import org.scalatestplus.play.OneAppPerSuite
-import play.api.Logger
 import scalikejdbc.ConnectionPool
-import skinny.orm.SkinnyMapperBase
 
 import scala.util.control.NonFatal
 
@@ -19,10 +21,41 @@ import scala.util.control.NonFatal
 trait RequiresDB extends Suite with OneAppPerSuite {
 
   lazy val flyway = {
-    val poolName = ConnectionPool.DEFAULT_NAME.name
-    val pool = ConnectionPool.get(Symbol(poolName))
     val flyway = new Flyway
-    flyway.setDataSource(pool.dataSource)
+    flyway.setCallbacks(new FlywayCallback {
+      def beforeInit(conn: Connection) = conn.setReadOnly(false)
+
+      def beforeRepair(conn: Connection) = conn.setReadOnly(false)
+
+      def beforeValidate(conn: Connection) = conn.setReadOnly(false)
+
+      def beforeInfo(conn: Connection) = conn.setReadOnly(false)
+
+      def beforeClean(conn: Connection) = conn.setReadOnly(false)
+
+      def beforeMigrate(conn: Connection) = conn.setReadOnly(false)
+
+      def beforeBaseline(conn: Connection) = conn.setReadOnly(false)
+
+      def beforeEachMigrate(conn: Connection, p2: MigrationInfo) = conn.setReadOnly(false)
+
+      def afterInfo(conn: Connection) = {}
+
+      def afterInit(conn: Connection) = {}
+
+      def afterRepair(conn: Connection) = {}
+
+      def afterValidate(conn: Connection) = {}
+
+      def afterEachMigrate(conn: Connection, p2: MigrationInfo) = {}
+
+      def afterMigrate(conn: Connection) = {}
+
+      def afterClean(conn: Connection) = {}
+
+      def afterBaseline(conn: Connection) = {}
+    })
+    flyway.setDataSource(ConnectionPool().dataSource)
     flyway.setPlaceholderPrefix("$flyway{")
     flyway
   }
@@ -47,7 +80,7 @@ trait RequiresDB extends Suite with OneAppPerSuite {
        */
       flyway.clean()
     } catch {
-      case NonFatal(e) => Logger.error(e.getMessage)
+      case NonFatal(e) => LTSVLogger.error(e)
     }
   }
 

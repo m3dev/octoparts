@@ -12,7 +12,7 @@
         </rollingPolicy>
 
         <encoder>
-            <pattern>%date %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
+            <pattern>time:%date\tlevel:%level\tthread:%thread\tlogger:%logger{10}\tlocation:%file:%line\thostname:${HOSTNAME}\t%msg%n</pattern>
         </encoder>
     </appender>
 
@@ -30,7 +30,7 @@
 
         <encoder>
             <!-- Date format is: 2006-10-20 14:06:49,812 -->
-            <pattern>time:%date\t%msg%n</pattern>
+            <pattern>time:%date\thostname:${HOSTNAME}\t%msg%n</pattern>
         </encoder>
     </appender>
 
@@ -48,7 +48,7 @@
 
         <encoder>
             <!-- Date format is: 2006-10-20 14:06:49,812 -->
-            <pattern>time:%date\t%msg%n</pattern>
+            <pattern>time:%date\thostname:${HOSTNAME}\t%msg%n</pattern>
         </encoder>
     </appender>
 
@@ -70,7 +70,7 @@
     </if>
 
     <!-- Make this info in production -->
-    <logger name="com.m3.octoparts" level="${LOG_LEVEL:-DEBUG}"/>
+    <logger name="application" level="${LOG_LEVEL:-DEBUG}"/>
 
     <!-- Hystrix metrics -->
     <logger name="HystrixMetrics" level="info" additivity="false">

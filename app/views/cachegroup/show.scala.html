@@ -1,0 +1,41 @@
+@(cacheGroup: com.m3.octoparts.model.config.CacheGroup)(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
+@views.html.adminlayout(Messages("cacheGroups.detail")) {
+} {
+    <h1>@Messages("cacheGroups.detail")</h1>
+    <h4><a href="@controllers.routes.AdminController.editCacheGroup(cacheGroup.name)" class="btn btn-primary">@Messages("edit")</a>
+        <a href="@controllers.routes.AdminController.confirmDeleteCacheGroup(cacheGroup.name)" class="btn btn-danger">@Messages("delete")</a>
+    </h4>
+    <dl>
+        <dt>@Messages("cacheGroups.name")</dt>
+        <dd>@cacheGroup.name</dd>
+        <dt>@Messages("cacheGroups.description")</dt>
+        <dd>@cacheGroup.description</dd>
+        <dt>@Messages("cacheGroups.owner")</dt>
+        <dd>@cacheGroup.owner</dd>
+    </dl>
+
+    @if(cacheGroup.httpPartConfigs.nonEmpty || cacheGroup.partParams.nonEmpty) {
+        <h2>@Messages("cacheGroups.dependency")</h2>
+            @if(cacheGroup.httpPartConfigs.nonEmpty) {
+                <h3>@Messages("cacheGroups.parts")</h3>
+                <ul>
+                @for(config <- cacheGroup.httpPartConfigs) {
+                    <li><a href="@controllers.routes.AdminController.showPart(config.partId)">@config.partId</a></li>
+                }
+                </ul>
+                @helper.form(action = controllers.routes.CacheController.invalidateCacheGroupParts(cacheGroup.name), 'method -> "post") {
+                    <input type="submit" value="@Messages("cacheGroups.flush")" class="btn btn-danger" />
+                }
+            }
+            @if(cacheGroup.partParams.nonEmpty) {
+                <h3>@Messages("cacheGroups.parameters")</h3>
+                <ul>
+                @for(param <- cacheGroup.partParams.toSeq; httpPartConfig <- param.httpPartConfig; paramId <- param.id) {
+                    <li><a href="@controllers.routes.AdminController.showPart(httpPartConfig.partId)">@httpPartConfig.partId</a>
+                        \ <a href="@controllers.routes.AdminController.editParam(httpPartConfig.partId, paramId)">@param.outputName</a>
+                    </li>
+                }
+                </ul>
+            }
+    }
+}

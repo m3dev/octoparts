@@ -1,6 +1,6 @@
 package controllers.support
 
-import com.m3.octoparts.auth.{ PrincipalSessionPersistence, OctopartsAuthPlugin, Principal }
+import com.m3.octoparts.auth.{ OctopartsAuthPlugin, PrincipalSessionPersistence }
 import org.scalatest.{ FlatSpec, Matchers }
 import org.scalatestplus.play.OneAppPerSuite
 import play.api.mvc.Action
@@ -12,7 +12,6 @@ import scala.concurrent.Future
 
 class AuthorizationCheckSupportSpec extends FlatSpec with Matchers with OneAppPerSuite
     with AuthenticationCheckSupport with AuthorizationCheckSupport {
-  import scala.concurrent.ExecutionContext.Implicits.global
 
   val authPlugin: Option[OctopartsAuthPlugin] = None
 
