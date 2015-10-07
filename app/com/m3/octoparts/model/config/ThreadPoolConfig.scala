@@ -13,11 +13,9 @@ case class ThreadPoolConfig(
     threadPoolKey: String,
     coreSize: Int = ThreadPoolConfig.defaultCoreSize,
     hystrixConfigs: Set[HystrixConfig] = Set.empty,
+    queueSize: Int = ThreadPoolConfig.defaultQueueSize,
     createdAt: DateTime,
     updatedAt: DateTime) extends ConfigModel[ThreadPoolConfig] {
-
-  // this setting is not yet available for users
-  def queueSize: Int = ThreadPoolConfig.defaultQueueSize
 
   /**
    * @return a sorted list of related [[HttpPartConfig]]
@@ -44,6 +42,7 @@ object ThreadPoolConfig {
   def fromJsonModel(config: JsonThreadPoolConfig): ThreadPoolConfig = {
     ThreadPoolConfig(
       threadPoolKey = config.threadPoolKey,
+      queueSize = config.queueSize,
       coreSize = config.coreSize,
       createdAt = DateTime.now,
       updatedAt = DateTime.now

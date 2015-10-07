@@ -531,7 +531,7 @@ class AdminControllerSpec extends FunSpec
     val adminController = new AdminController(cacheOps = DummyCacheOps, repository = repository)
     doReturn(Future.successful(76L)).when(repository).save(anyObject[ThreadPoolConfig]())(anyObject[ConfigMapper[ThreadPoolConfig]], anyObject[Span])
     val createThreadPool = adminController.createThreadPool(
-      FakeRequest().withFormUrlEncodedBody("threadPoolKey" -> "myNewThreadPool", "coreSize" -> "99")
+      FakeRequest().withFormUrlEncodedBody("threadPoolKey" -> "myNewThreadPool", "coreSize" -> "99", "queueSize" -> "987")
     )
     whenReady(createThreadPool) { result =>
       status(createThreadPool) should be(FOUND)
@@ -549,7 +549,7 @@ class AdminControllerSpec extends FunSpec
     doReturn(Future.successful(Some(tpc))).when(repository).findThreadPoolConfigById(anyLong())(anyObject[Span])
     doReturn(Future.successful(123L)).when(repository).save(anyObject[ThreadPoolConfig]())(anyObject[ConfigMapper[ThreadPoolConfig]], anyObject[Span])
 
-    val updateThreadPool = adminController.updateThreadPool(123L)(FakeRequest().withFormUrlEncodedBody("threadPoolKey" -> "myNewThreadPool", "coreSize" -> "99"))
+    val updateThreadPool = adminController.updateThreadPool(123L)(FakeRequest().withFormUrlEncodedBody("threadPoolKey" -> "myNewThreadPool", "queueSize" -> "512", "coreSize" -> "99"))
     whenReady(updateThreadPool) { result =>
       verify(repository).findThreadPoolConfigById(123L)
 

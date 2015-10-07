@@ -149,9 +149,8 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
         val tpc = ThreadPoolConfig.fromJsonModel(jtpc)
         tpc.threadPoolKey should be(jtpc.threadPoolKey)
         tpc.coreSize should be(jtpc.coreSize)
-        // This queueSize setting is not open yet
-        tpc.queueSize should be(ThreadPoolConfig.defaultQueueSize)
-        ThreadPoolConfig.toJsonModel(tpc) should be(jtpc.copy(queueSize = ThreadPoolConfig.defaultQueueSize))
+        tpc.queueSize should be(jtpc.queueSize)
+        ThreadPoolConfig.toJsonModel(tpc) shouldBe jtpc
     }
   }
 
@@ -160,11 +159,9 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
       jhc: json.HystrixConfig =>
         val hc = HystrixConfig.fromJsonModel(jhc)
         hc.timeout should be(jhc.timeout)
-        val ejtpc = jhc.threadPoolConfig.copy(queueSize = ThreadPoolConfig.defaultQueueSize)
-        hc.threadPoolConfig.map(ThreadPoolConfig.toJsonModel) should be(Some(ejtpc))
         hc.commandKey should be(jhc.commandKey)
         hc.commandGroupKey should be(jhc.commandGroupKey)
-        HystrixConfig.toJsonModel(hc) should be(jhc.copy(threadPoolConfig = ejtpc))
+        HystrixConfig.toJsonModel(hc) shouldBe jhc
     }
   }
 
@@ -202,7 +199,7 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
         hpc.uriToInterpolate should be(jhpc.uriToInterpolate)
         hpc.description should be(jhpc.description)
         hpc.method should be(jhpc.method)
-        val ejhc = jhpc.hystrixConfig.copy(threadPoolConfig = jhpc.hystrixConfig.threadPoolConfig.copy(queueSize = ThreadPoolConfig.defaultQueueSize))
+        val ejhc = jhpc.hystrixConfig
         hpc.hystrixConfig.map(HystrixConfig.toJsonModel) should be(Some(ejhc))
         hpc.additionalValidStatuses should equal(jhpc.additionalValidStatuses.to[SortedSet])
         hpc.parameters.map(PartParam.toJsonModel) should be(jhpc.parameters.to[SortedSet])
@@ -214,7 +211,7 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
         hpc.alertPercentThreshold should be(jhpc.alertMailSettings.alertPercentThreshold)
         hpc.alertInterval should be(jhpc.alertMailSettings.alertInterval)
         hpc.alertMailRecipients should be(jhpc.alertMailSettings.alertMailRecipients)
-        HttpPartConfig.toJsonModel(hpc) should be(jhpc.copy(hystrixConfig = ejhc))
+        HttpPartConfig.toJsonModel(hpc) shouldBe jhpc
     }
   }
 }

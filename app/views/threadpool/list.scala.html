@@ -22,6 +22,7 @@
             <tr>
                 <th>@Messages("threadPools.key")</th>
                 <th>@Messages("threadPools.coreSize")</th>
+                <th>@Messages("threadPools.queueSize")</th>
                 <th>@Messages("threadPools.members")</th>
                 <th>@Messages("action")</th>
             </tr>
@@ -31,6 +32,7 @@
             <tr>
                 <td><a href="@controllers.routes.AdminController.showThreadPool(tpc.id.get)">@tpc.threadPoolKey</a></td>
                 <td>@tpc.coreSize</td>
+                <td>@tpc.queueSize</td>
                 <td>@tpc.hystrixConfigs.size</td>
                 <td width="150px">
                     <a href="@controllers.routes.AdminController.editThreadPool(tpc.id.get)" class="btn btn-primary">@Messages("edit")</a>
