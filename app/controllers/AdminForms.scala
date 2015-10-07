@@ -235,7 +235,7 @@ object AdminForms {
     mapping(
       "threadPoolKey" -> text,
       "coreSize" -> number(min = 1),
-      "queueSize" -> number(min = 1)
+      "queueSize" -> number(min = 0)
     )(ThreadPoolData.apply)(ThreadPoolData.unapply)
   )
 
