@@ -55,7 +55,8 @@
             <label for="method" class="col-sm-2 control-label">@Messages("threadPools.queueSize")</label>
             <div class="row">
                 <div class="col-sm-5">
-                    <input name="queueSize" type="number" min="1" step="1" pattern="\d+" class="form-control validate[required]" value="@maybeTpc.map(_.queueSize).getOrElse(ThreadPoolConfig.defaultQueueSize)"/>
+                    <input name="queueSize" type="number" min="-1" step="1" pattern="\d+" class="form-control validate[required]" value="@maybeTpc.map(_.queueSize).getOrElse(ThreadPoolConfig.defaultQueueSize)"/>
+                    <p class="help-block">@Messages("threadPools.queueSizeExplanation")</p>
                 </div>
             </div>
         </div>

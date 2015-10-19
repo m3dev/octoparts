@@ -13,13 +13,16 @@ trait HystrixSetterSupport {
    * Given a HystrixArgument case class returns a HystrixCommand.Setter object
    */
   def setter(config: HystrixConfig): HystrixCommand.Setter = {
+    val threadPoolConfig = config.threadPoolConfigItem
     val threadPoolProperties = HystrixThreadPoolProperties.Setter().
-      withCoreSize(config.threadPoolConfigItem.coreSize).
-      withMaxQueueSize(config.threadPoolConfigItem.queueSize)
+      withCoreSize(threadPoolConfig.coreSize).
+      // Hystrix uses both of these for setting Queue size
+      withMaxQueueSize(threadPoolConfig.queueSize).
+      withQueueSizeRejectionThreshold(threadPoolConfig.queueSize)
 
     HystrixCommand.Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey(config.commandGroupKey)).
       andCommandKey(HystrixCommandKey.Factory.asKey(config.commandKey)).
-      andThreadPoolKey(HystrixThreadPoolKey.Factory.asKey(config.threadPoolConfigItem.threadPoolKey)).
+      andThreadPoolKey(HystrixThreadPoolKey.Factory.asKey(threadPoolConfig.threadPoolKey)).
       andThreadPoolPropertiesDefaults(threadPoolProperties).
       andCommandPropertiesDefaults(HystrixCommandProperties.Setter().
         withExecutionTimeoutInMilliseconds(config.timeout.toMillis.toInt).

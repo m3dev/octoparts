@@ -235,7 +235,7 @@ object AdminForms {
     mapping(
       "threadPoolKey" -> text,
       "coreSize" -> number(min = 1),
-      "queueSize" -> number(min = 0)
+      "queueSize" -> number(min = -1) // Hystrix says that if -1 is used, it will use a synchronous queue
     )(ThreadPoolData.apply)(ThreadPoolData.unapply)
   )
 
