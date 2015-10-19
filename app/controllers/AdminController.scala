@@ -353,7 +353,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
         flashError(routes.AdminController.newThreadPool, Messages("admin.validationErrors", formWithErrors.errors))
       }
     }, { data =>
-      val tpc = ThreadPoolConfig(threadPoolKey = data.threadPoolKey, coreSize = data.coreSize, createdAt = DateTime.now, updatedAt = DateTime.now)
+      val tpc = ThreadPoolConfig(threadPoolKey = data.threadPoolKey, coreSize = data.coreSize, queueSize = data.queueSize, createdAt = DateTime.now, updatedAt = DateTime.now)
       saveAndRedirect {
         repository.save(tpc)
       }(routes.AdminController.listThreadPools, id => routes.AdminController.showThreadPool(id))
@@ -368,7 +368,7 @@ class AdminController(cacheOps: CacheOps, repository: MutableConfigsRepository)(
           flashError(routes.AdminController.editThreadPool(id), Messages("admin.validationErrors", formWithErrors.errors))
         }
       }, { data =>
-        val updatedTpc = tpc.copy(threadPoolKey = data.threadPoolKey, coreSize = data.coreSize, updatedAt = DateTime.now)
+        val updatedTpc = tpc.copy(threadPoolKey = data.threadPoolKey, coreSize = data.coreSize, queueSize = data.queueSize, updatedAt = DateTime.now)
         saveAndRedirect {
           repository.save(updatedTpc)
         }(routes.AdminController.editThreadPool(id), _ => routes.AdminController.showThreadPool(id))

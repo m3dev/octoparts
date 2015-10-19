@@ -1,6 +1,7 @@
 package com.m3.octoparts.repository.config
 
 import java.nio.charset.StandardCharsets
+import java.sql.SQLException
 
 import com.m3.octoparts.model.HttpMethod._
 import com.m3.octoparts.model.config._
@@ -149,7 +150,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
 
   describe("hasOne HystrixConfig") {
 
-    def setup(implicit session: DBSession): Long = {
+    def setup(queueSize: Int = 500)(implicit session: DBSession): Long = {
       val partId = HttpPartConfigRepository.createWithAttributes(httpPartConfigMapWithDeprecation: _*)
       PartParamRepository.createWithAttributes(
         'httpPartConfigId -> partId,
@@ -159,7 +160,8 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
       )
       val threadPoolConfigId = ThreadPoolConfigRepository.createWithAttributes(
         'threadPoolKey -> "swimmingpool",
-        'coreSize -> 10
+        'coreSize -> 10,
+        'queueSize -> queueSize
       )
       HystrixConfigRepository.createWithAttributes(
         'httpPartConfigId -> partId,
@@ -173,7 +175,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
 
     it("should be possible to retrieve the HystrixConfig of a HttpPartConfig with the .joins method") {
       implicit session =>
-        val partId = setup(session)
+        val partId = setup()
         val config = HttpPartConfigRepository.joins(HttpPartConfigRepository.hystrixConfigRef).findById(partId).get
         val hystrixConfig = config.hystrixConfig.get
         hystrixConfig.timeout should be(3.seconds)
@@ -183,12 +185,25 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
 
     it("should be possible to retrieve the HystrixConfig of a HttpPartConfig, along with it's ThreadPoolConfig, using the .includes method") {
       implicit session =>
-        val partId = setup(session)
+        val partId = setup()
         val config = HttpPartConfigRepository.includes(HttpPartConfigRepository.hystrixConfigRef).findById(partId).get
         val hystrixConfig = config.hystrixConfig.get
         val Some(threadPoolConfig) = hystrixConfig.threadPoolConfig // will fail if not eager loaded
         threadPoolConfig.threadPoolKey should be("swimmingpool")
         threadPoolConfig.coreSize should be(10)
+        threadPoolConfig.queueSize should be(500)
+    }
+
+    it("should allow us to save with queueSize of -1") {
+      implicit session =>
+        setup(-1)
+    }
+
+    it("should not allow us to save if queueSize is less than -1") {
+      implicit session =>
+        intercept[SQLException] {
+          setup(-2)
+        }
     }
 
   }
@@ -200,7 +215,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
       PartParam(required = false, versioned = false, paramType = ParamType.Header, outputName = "myHeader", createdAt = DateTime.now, updatedAt = DateTime.now)
     )
 
-    lazy val threadPool = ThreadPoolConfig(threadPoolKey = "myThreadPool", coreSize = 5, createdAt = DateTime.now, updatedAt = DateTime.now)
+    lazy val threadPool = ThreadPoolConfig(threadPoolKey = "myThreadPool", coreSize = 5, queueSize = 500, createdAt = DateTime.now, updatedAt = DateTime.now)
 
     /*
       Inside a method that takes a session because we need to refer to a valid ThreadPoolConfig id when
@@ -252,6 +267,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
 
       observedThreadPoolConfig.threadPoolKey should be(threadPool.threadPoolKey)
       observedThreadPoolConfig.coreSize should be(threadPool.coreSize)
+      observedThreadPoolConfig.queueSize should be(threadPool.queueSize)
     }
 
     describe("to insert") {

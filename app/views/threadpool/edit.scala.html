@@ -1,4 +1,5 @@
 @(maybeTpc: Option[com.m3.octoparts.model.config.ThreadPoolConfig])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
+@import com.m3.octoparts.model.config.ThreadPoolConfig
 
 @title = @{
     maybeTpc match {
@@ -44,7 +45,18 @@
             <label for="method" class="col-sm-2 control-label">@Messages("threadPools.coreSize")</label>
             <div class="row">
                 <div class="col-sm-5">
-                    <input name="coreSize" type="number" min="1" step="1" pattern="\d+" class="form-control validate[required]" value="@maybeTpc.map(_.coreSize).getOrElse(5)"/>
+                    <input name="coreSize" type="number" min="1" step="1" pattern="\d+" class="form-control validate[required]" value="@maybeTpc.map(_.coreSize).getOrElse(ThreadPoolConfig.defaultCoreSize)"/>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <label for="method" class="col-sm-2 control-label">@Messages("threadPools.queueSize")</label>
+            <div class="row">
+                <div class="col-sm-5">
+                    <input name="queueSize" type="number" min="-1" step="1" pattern="\d+" class="form-control validate[required]" value="@maybeTpc.map(_.queueSize).getOrElse(ThreadPoolConfig.defaultQueueSize)"/>
+                    <p class="help-block">@Messages("threadPools.queueSizeExplanation")</p>
                 </div>
             </div>
         </div>

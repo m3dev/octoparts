@@ -15,7 +15,8 @@ object ThreadPoolConfigRepository extends ConfigMapper[ThreadPoolConfig] with Ti
 
   protected val permittedFields = Seq(
     "threadPoolKey" -> SkinnyParamType.String,
-    "coreSize" -> SkinnyParamType.Int
+    "coreSize" -> SkinnyParamType.Int,
+    "queueSize" -> SkinnyParamType.Int
   )
 
   lazy val hystrixConfigRef = hasMany[HystrixConfig](
@@ -30,6 +31,7 @@ object ThreadPoolConfigRepository extends ConfigMapper[ThreadPoolConfig] with Ti
     id = rs.get(n.id),
     threadPoolKey = rs.get(n.threadPoolKey),
     coreSize = rs.get(n.coreSize),
+    queueSize = rs.get(n.queueSize),
     createdAt = rs.get(n.createdAt),
     updatedAt = rs.get(n.updatedAt)
   )
