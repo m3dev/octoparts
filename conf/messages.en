@@ -114,6 +114,7 @@ threadPools.edit=Edit settings for thread pool {0}
 threadPools.key=Thread pool key
 threadPools.coreSize=Core size
 threadPools.queueSize=Queue size
+threadPools.queueSizeExplanation=-1 → no queue
 threadPools.members=Members
 
 cacheGroups.this=Cache group

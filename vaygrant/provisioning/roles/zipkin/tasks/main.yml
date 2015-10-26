@@ -54,6 +54,7 @@
 - name: Extract Zipkin Source (Zipkin Web only)
   command:
     unzip /tmp/zipkin-1.1.0-src.zip "zipkin-1.1.0/zipkin-web/*" -d /opt/zipkin
+    creates=/opt/zipkin
   sudo: yes
   sudo_user: zipkin
   tags: zipkin
@@ -61,6 +62,7 @@
 - name: Move Zipkin Web Source folder
   command:
     mv /opt/zipkin/zipkin-1.1.0/zipkin-web /opt/zipkin/zipkin-web
+    creates=/opt/zipkin/zipkin-web
   sudo: yes
   sudo_user: zipkin
   tags: zipkin

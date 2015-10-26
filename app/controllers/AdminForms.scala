@@ -229,12 +229,13 @@ object AdminForms {
     )(ParamData.apply)(ParamData.unapply)
   )
 
-  case class ThreadPoolData(threadPoolKey: String, coreSize: Int)
+  case class ThreadPoolData(threadPoolKey: String, coreSize: Int, queueSize: Int)
 
   val threadPoolForm = Form(
     mapping(
       "threadPoolKey" -> text,
-      "coreSize" -> number
+      "coreSize" -> number(min = 1),
+      "queueSize" -> number(min = -1) // Hystrix says that if -1 is used, it will use a synchronous queue
     )(ThreadPoolData.apply)(ThreadPoolData.unapply)
   )
 

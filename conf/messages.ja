@@ -113,6 +113,7 @@ threadPools.edit=「{0}」スレッドプール設定編集
 threadPools.key=スレッドプールキー
 threadPools.coreSize=コア数
 threadPools.queueSize=キュー数
+threadPools.queueSizeExplanation=-1 → キューなし
 threadPools.members=メンバーパーツ
 
 cacheGroups.this=キャッシュグループ
