@@ -97,7 +97,16 @@ object Common {
   private lazy val testSettings = inConfig(Test){
     Seq(
       parallelExecution := false,  // Avoid DB-related tests stomping on each other
-      testOptions += Tests.Argument("-oF") // full stack traces
+      testOptions ++= Seq(
+        Tests.Setup(
+        cl =>  //to prevent Substitute Logger issues with SLF4J
+          cl.loadClass("org.slf4j.LoggerFactory").
+            getMethod("getLogger",cl.loadClass("java.lang.String")).
+            invoke(null,"ROOT")
+
+        ),
+        Tests.Argument("-oF") // full stack traces
+      )
     )
   }
 }
