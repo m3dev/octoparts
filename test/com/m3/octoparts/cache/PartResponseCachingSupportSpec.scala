@@ -17,9 +17,15 @@ import com.m3.octoparts.model.config._
 import com.m3.octoparts.aggregator.PartRequestInfo
 import scala.concurrent.{ ExecutionContext, Future }
 import com.m3.octoparts.support.mocks.ConfigDataMocks
-import org.scalatest.concurrent.{ Eventually, ScalaFutures }
+import org.scalatest.concurrent.{ IntegrationPatience, Eventually, ScalaFutures }
 
-class PartResponseCachingSupportSpec extends FunSpec with Matchers with ScalaFutures with ConfigDataMocks with Eventually {
+class PartResponseCachingSupportSpec
+    extends FunSpec
+    with Matchers
+    with ScalaFutures
+    with ConfigDataMocks
+    with Eventually
+    with IntegrationPatience {
 
   implicit val emptySpan = new Span()
 
