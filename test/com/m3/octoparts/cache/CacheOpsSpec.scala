@@ -13,14 +13,20 @@ import com.m3.octoparts.model.{ CacheControl, PartResponse }
 import com.twitter.zipkin.gen.Span
 import org.joda.time.DateTimeUtils
 import org.scalatest._
-import org.scalatest.concurrent.{ Eventually, ScalaFutures }
+import org.scalatest.concurrent.{ IntegrationPatience, Eventually, ScalaFutures }
 import shade.memcached.Codec
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.postfixOps
 
-class CacheOpsSpec extends FunSpec with Matchers with ScalaFutures with Eventually with BeforeAndAfter {
+class CacheOpsSpec
+    extends FunSpec
+    with Matchers
+    with ScalaFutures
+    with Eventually
+    with BeforeAndAfter
+    with IntegrationPatience {
 
   after {
     DateTimeUtils.setCurrentMillisSystem() // put the system clock back to normal

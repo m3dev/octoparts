@@ -96,7 +96,7 @@ object Common {
 
   private lazy val testSettings = inConfig(Test){
     Seq(
-      parallelExecution := false,  // Avoid DB-related tests stomping on each other
+      parallelExecution in Test := false,  // Avoid DB-related tests stomping on each other
       testOptions += Tests.Argument("-oF") // full stack traces
     )
   }
