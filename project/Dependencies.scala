@@ -65,7 +65,7 @@ object Dependencies {
   val macwireMacros       = "com.softwaremill.macwire"  %% "macros"                       % macwireVersion
 
   // Swagger
-  val swaggerPlay         = "com.wordnik"               %% "swagger-play2"                % swaggerVersion
+  val swaggerPlay24       = "pl.matisoft"               %% "swagger-play24"               % "1.4" // Replace with Official version once 1.3.13 hits
   val swaggerAnnotations  = "com.wordnik"               % "swagger-annotations"           % swaggerVersion
 
   // Jackson
@@ -149,7 +149,7 @@ object Dependencies {
 
     // Play plugins
     playFlyway,
-    swaggerPlay,
+    swaggerPlay24,
 
     // Test
     playTest,

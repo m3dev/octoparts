@@ -8,18 +8,20 @@ import com.netflix.hystrix.strategy.HystrixPlugins
 import com.twitter.zipkin.gen.Span
 import org.apache.commons.lang3.StringUtils
 import org.flywaydb.play.{ PlayInitializer => FlywayPlayInitializer }
+import pl.matisoft.swagger.{ SwaggerPluginProvider, SwaggerModule }
 import scalikejdbc.PlayInitializer
 
 import scala.util.control.NonFatal
 import scala.concurrent.duration._
 
-trait BeforeStartupSupport {
+trait BeforeStartupSupport extends SwaggerScanSupport {
 
   protected def beforeStart(components: ApplicationComponents): Unit = {
     // Need to initialise the DB first before anything else is run
     initDB(components)
 
     setHystrixPropertiesStrategy()
+    initSwagger(components)
     startPeriodicTasks(components)
     checkForDodgyParts(components)
   }

@@ -4,6 +4,7 @@ import com.kenshoo.play.metrics.MetricsController
 import controllers.hystrix.HystrixController
 import controllers.system._
 import controllers._
+import pl.matisoft.swagger.ApiHelpController
 import play.api.i18n.I18nComponents
 import presentation.NavbarLinks
 import scala.concurrent.duration._

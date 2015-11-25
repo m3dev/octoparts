@@ -79,8 +79,8 @@ GET         /swagger-ui                                                         
 GET         /swagger-ui/                                                                        controllers.Assets.at(path = "/public/swagger-ui", file = "index.html")
 
 # Swagger - Root Resources Listing
-#GET         /api-docs                                                                           controllers.ApiHelpController.getResources
-#GET         /api-docs$path<.+>                                                                  controllers.ApiHelpController.getResource(path)
+GET         /api-docs                                                                           pl.matisoft.swagger.ApiHelpController.getResources
+GET         /api-docs$path<.+>                                                                  pl.matisoft.swagger.ApiHelpController.getResource(path)
 
 
 # System admin stuff
