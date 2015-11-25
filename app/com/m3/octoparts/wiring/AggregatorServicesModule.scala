@@ -9,7 +9,6 @@ import play.api.Play.current
 
 trait AggregatorServicesModule extends RepositoriesModule with AggregatorHandlersModule with ExecutionContextsModule { module =>
 
-  metrics
   private implicit lazy val ec = partsServiceContext
 
   lazy val partRequestServiceBase = new PartRequestService(
