@@ -7,9 +7,8 @@ import com.m3.octoparts.support.PlayAppSupport
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.MigrationInfo
 import org.flywaydb.core.api.callback.FlywayCallback
-import org.scalatest.{ Status, Args, Suite }
+import org.scalatest.Suite
 import scalikejdbc.ConnectionPool
-import scalikejdbc.config.DBs
 
 import scala.util.control.NonFatal
 
@@ -40,21 +39,21 @@ trait RequiresDB extends Suite with PlayAppSupport {
 
       def beforeEachMigrate(conn: Connection, p2: MigrationInfo) = conn.setReadOnly(false)
 
-      def afterInfo(conn: Connection) = {}
+      def afterInfo(conn: Connection) = conn.setReadOnly(false)
 
-      def afterInit(conn: Connection) = {}
+      def afterInit(conn: Connection) = conn.setReadOnly(false)
 
-      def afterRepair(conn: Connection) = {}
+      def afterRepair(conn: Connection) = conn.setReadOnly(false)
 
-      def afterValidate(conn: Connection) = {}
+      def afterValidate(conn: Connection) = conn.setReadOnly(false)
 
-      def afterEachMigrate(conn: Connection, p2: MigrationInfo) = {}
+      def afterEachMigrate(conn: Connection, p2: MigrationInfo) = conn.setReadOnly(false)
 
-      def afterMigrate(conn: Connection) = {}
+      def afterMigrate(conn: Connection) = conn.setReadOnly(false)
 
-      def afterClean(conn: Connection) = {}
+      def afterClean(conn: Connection) = conn.setReadOnly(false)
 
-      def afterBaseline(conn: Connection) = {}
+      def afterBaseline(conn: Connection) = conn.setReadOnly(false)
     })
     flyway.setDataSource(ConnectionPool().dataSource)
     flyway.setPlaceholderPrefix("$flyway{")

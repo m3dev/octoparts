@@ -20,7 +20,6 @@ import com.m3.octoparts.wiring.OctopartsApplicationLoader
  * This file holds a number of pre-made "test-harness" Specs for our own convenience
  */
 
-
 trait MetricsSupport {
 
   implicit lazy val metrics = new Metrics {
