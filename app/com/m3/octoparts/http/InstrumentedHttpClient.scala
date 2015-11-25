@@ -5,7 +5,7 @@ import java.nio.charset.Charset
 
 import com.beachape.logging.LTSVLogger
 import com.codahale.metrics.{ Gauge, MetricRegistry }
-import com.m3.octoparts.OctopartsMetrics
+import com.kenshoo.play.metrics.Metrics
 import com.m3.octoparts.model.config.HttpProxySettings
 import org.apache.http._
 import org.apache.http.client.HttpClient
@@ -39,7 +39,8 @@ class InstrumentedHttpClient(
   connectTimeout: FiniteDuration,
   socketTimeout: FiniteDuration,
   defaultEncoding: Charset,
-  mbProxySettings: Option[HttpProxySettings])
+  mbProxySettings: Option[HttpProxySettings],
+  metrics: Metrics)
     extends HttpClientLike
     with Closeable {
   import com.m3.octoparts.http.InstrumentedHttpClient._
@@ -110,7 +111,7 @@ class InstrumentedHttpClient(
       case (key, f) =>
         val gaugeName = registryName(key)
         try {
-          OctopartsMetrics.default.register(gaugeName, new Gauge[Int] {
+          metrics.defaultRegistry.register(gaugeName, new Gauge[Int] {
             def getValue = f(getTotalStats)
           })
         } catch {
@@ -121,7 +122,7 @@ class InstrumentedHttpClient(
     override def shutdown() = {
       super.shutdown()
       gauges.keys.foreach { key =>
-        OctopartsMetrics.default.remove(registryName(key))
+        metrics.defaultRegistry.remove(registryName(key))
       }
     }
   }
@@ -131,7 +132,7 @@ class InstrumentedHttpClient(
     private val registryName = MetricRegistry.name(classOf[HttpClient], name)
 
     override def execute(request: HttpRequest, conn: HttpClientConnection, context: HttpContext) = {
-      val timerContext = OctopartsMetrics.default.timer(registryName).time
+      val timerContext = metrics.defaultRegistry.timer(registryName).time
       try {
         super.execute(request, conn, context)
       } finally {
@@ -139,7 +140,7 @@ class InstrumentedHttpClient(
       }
     }
 
-    def close() = OctopartsMetrics.default.remove(registryName)
+    def close() = metrics.defaultRegistry.remove(registryName)
   }
 
   def close() = {

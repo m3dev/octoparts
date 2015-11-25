@@ -1,7 +1,6 @@
 package com.m3.octoparts.wiring
 
 import com.kenshoo.play.metrics.MetricsController
-import com.m3.octoparts.OctopartsMetrics
 import controllers.hystrix.HystrixController
 import controllers.system._
 import controllers._
@@ -51,5 +50,5 @@ trait ControllersModule extends AggregatorServicesModule with HystrixModule with
 
   lazy val defaultController = new Default
 
-  lazy val metricsController = new MetricsController(OctopartsMetrics)
+  lazy val metricsController = wire[MetricsController]
 }

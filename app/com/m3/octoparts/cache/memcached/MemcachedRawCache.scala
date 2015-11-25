@@ -1,5 +1,6 @@
 package com.m3.octoparts.cache.memcached
 
+import com.kenshoo.play.metrics.Metrics
 import com.m3.octoparts.cache.RawCache
 import com.m3.octoparts.future.RichFutureWithTiming._
 import com.twitter.zipkin.gen.Span
@@ -10,7 +11,7 @@ import scala.concurrent.duration.Duration
 /**
  * A Memcached implementation of [[RawCache]] using the Shade library.
  */
-class MemcachedRawCache(memcached: Memcached) extends RawCache {
+class MemcachedRawCache(memcached: Memcached)(implicit metrics: Metrics) extends RawCache {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def get[T](key: String)(implicit codec: Codec[T], parentSpan: Span) = {

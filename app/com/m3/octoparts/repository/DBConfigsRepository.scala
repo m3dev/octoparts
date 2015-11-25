@@ -3,6 +3,7 @@ package com.m3.octoparts.repository
 import com.beachape.logging.LTSVLogger
 import com.beachape.zipkin.FutureEnrichment._
 import com.beachape.zipkin.services.ZipkinServiceLike
+import com.kenshoo.play.metrics.Metrics
 import com.m3.octoparts.future.RichFutureWithTiming._
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.repository.config._
@@ -40,7 +41,11 @@ import scala.concurrent.{ ExecutionContext, Future, blocking }
  * In the first case, the session is the globally implicit session
  * The second allows to be explicit (for tests)
  */
-class DBConfigsRepository(zipkinServiceFactory: => ZipkinServiceLike, protected val executionContext: ExecutionContext) extends ImmutableDBRepository with MutableDBRepository with ConfigImporter {
+class DBConfigsRepository(zipkinServiceFactory: => ZipkinServiceLike,
+                          protected val executionContext: ExecutionContext)(implicit val metrics: Metrics)
+  extends ImmutableDBRepository
+  with MutableDBRepository
+  with ConfigImporter {
 
   implicit lazy val zipkinService: ZipkinServiceLike = zipkinServiceFactory
 }
@@ -50,6 +55,8 @@ trait ImmutableDBRepository extends ConfigsRepository {
   protected implicit def executionContext: ExecutionContext
 
   implicit def zipkinService: ZipkinServiceLike
+
+  implicit def metrics: Metrics
 
   private val zipkinSpanNameBase = "db-repo-read"
 
@@ -213,6 +220,7 @@ trait MutableDBRepository extends MutableConfigsRepository {
   protected implicit def executionContext: ExecutionContext
 
   implicit def zipkinService: ZipkinServiceLike
+  implicit def metrics: Metrics
   private val zipkinSpanNameBase = "db-repo-mutation"
 
   def save[A <: ConfigModel[A]: ConfigMapper](obj: A)(implicit parentSpan: Span): Future[Long] = {

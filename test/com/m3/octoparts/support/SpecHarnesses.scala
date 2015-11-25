@@ -1,5 +1,7 @@
 package com.m3.octoparts.support
 
+import com.codahale.metrics.{ SharedMetricRegistries, MetricRegistry }
+import com.kenshoo.play.metrics.Metrics
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.openqa.selenium.safari.SafariDriver
@@ -17,6 +19,16 @@ import com.m3.octoparts.wiring.OctopartsApplicationLoader
 /*
  * This file holds a number of pre-made "test-harness" Specs for our own convenience
  */
+
+
+trait MetricsSupport {
+
+  implicit lazy val metrics = new Metrics {
+    val defaultRegistry: MetricRegistry = SharedMetricRegistries.getOrCreate("sup-yo")
+    val toJson: String = "{ yes: false }"
+  }
+
+}
 
 /**
  * FunSpec w/ matchers, pre-loaded with a bunch of Future-related goodies

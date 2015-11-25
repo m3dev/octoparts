@@ -4,12 +4,16 @@ import java.net.InetAddress
 
 import com.beachape.zipkin.services.{ BraveZipkinService, NoopZipkinService, ZipkinServiceLike }
 import com.github.kristofa.brave.zipkin.ZipkinSpanCollector
+import com.kenshoo.play.metrics.MetricsImpl
 
 import com.m3.octoparts.logging.PartRequestLogger
 import play.api.Mode.Mode
 import play.api._
+import play.api.inject.ApplicationLifecycle
 
 import scala.util.{ Failure, Success, Try }
+
+import com.softwaremill.macwire._
 
 /*
  Random common stuff that doesn't belong in other modules
@@ -20,7 +24,11 @@ trait UtilsModule {
 
   def configuration: Configuration
 
-  /**
+  def applicationLifecycle: ApplicationLifecycle
+
+  implicit lazy val metrics = wire[MetricsImpl]
+
+  /*
    * Footgunney version of playConfig that throws if it can't find stuff
    */
   lazy val typesafeConfig = configuration.underlying
