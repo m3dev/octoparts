@@ -91,7 +91,7 @@ object Dependencies {
 
   val kenshoo             = "com.kenshoo"               %% "metrics-play"                 % "2.4.0_0.4.1"
 
-  val zipkinFutures       = "com.beachape"              %% "zipkin-futures-play"          % "0.2.0"
+  val zipkinFutures       = "com.beachape"              %% "zipkin-futures-play"          % "0.2.1"
 
   val withoutExcluded = { (m: ModuleID) =>
     m.excludeAll(
