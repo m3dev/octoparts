@@ -6,8 +6,6 @@ import controllers.Assets
 import play.api.ApplicationLoader.Context
 import play.api.BuiltInComponentsFromContext
 import play.api.i18n.I18nComponents
-import play.api.inject.{ NewInstanceInjector, SimpleInjector, Injector }
-import play.api.libs.Files.DefaultTemporaryFileCreator
 import play.api.libs.ws.ning.NingWSComponents
 import play.api.routing.Router
 

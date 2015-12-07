@@ -7,7 +7,7 @@ import com.m3.octoparts.model._
 import java.util.UUID
 import play.api.http.{ ContentTypeOf, Writeable }
 import play.api.mvc.Results.EmptyContent
-import play.api.{ Application, Logger }
+import play.api.Logger
 import play.api.libs.json._
 import play.api.libs.ws._
 
@@ -18,18 +18,20 @@ import com.m3.octoparts.model.config.json.HttpPartConfig
 import com.m3.octoparts.json.format.ConfigModel._ // For serdes of the models
 
 /**
- * Default Octoparts [[OctoClientLike]] implementation
+ * Default Octoparts [[OctoClientLike]] implementation.
  *
  * Has a rescuer method that tries its best to recover from all reasonable errors.
  *
+ * @param client WSClient instance to use with this Octoparts client
  * @param baseUrl The base URL of the Octoparts service you would like to hit with the instantiated client
  * @param clientTimeout The (HTTP) timeout that you would like this client to use. Note that sending [[AggregateRequest]]
  *                      will result in using the max of this parameter and the timeout on the request (if it exists)
  * @param extraWait Extra margin of wait time for timeouts. Defaults to 50 milliseconds.
  */
-class OctoClient(val baseUrl: String, protected val clientTimeout: FiniteDuration, protected val extraWait: FiniteDuration = 50.milliseconds)(implicit val octoPlayApp: Application) extends OctoClientLike {
-
-  private val client = WS.client
+class OctoClient(val client: WSClient,
+                 val baseUrl: String,
+                 protected val clientTimeout: FiniteDuration,
+                 protected val extraWait: FiniteDuration = 50.milliseconds) extends OctoClientLike {
 
   protected def wsRequestFor(url: String, timeout: FiniteDuration) = {
     client.url(url).withRequestTimeout((timeout + extraWait).toMillis.toInt)
