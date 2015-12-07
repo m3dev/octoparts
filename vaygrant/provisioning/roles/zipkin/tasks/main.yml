@@ -43,10 +43,6 @@
   file: path=/opt/zipkin state=directory owner=zipkin group=zipkin
   tags: zipkin
 
-- name: Make sure zipkin/zipkin-web directory exists
-  file: path=/opt/zipkin/zipkin-web state=directory owner=zipkin group=zipkin
-  tags: zipkin
-
 - name: Check if zipkin source extracted
   stat: path=/opt/zipkin/zipkin-1.1.0
   register: zipkin_source_stat
@@ -54,7 +50,7 @@
 - name: Extract Zipkin Source (Zipkin Web only)
   command:
     unzip /tmp/zipkin-1.1.0-src.zip "zipkin-1.1.0/zipkin-web/*" -d /opt/zipkin
-    creates=/opt/zipkin
+    creates=/opt/zipkin/zipkin-1.1.0/zipkin-web
   sudo: yes
   sudo_user: zipkin
   tags: zipkin
