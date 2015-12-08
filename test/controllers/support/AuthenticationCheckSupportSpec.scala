@@ -1,6 +1,6 @@
 package controllers.support
 
-import com.m3.octoparts.auth.{ PrincipalSessionPersistence, OctopartsAuthPlugin }
+import com.m3.octoparts.auth.{ PrincipalSessionPersistence, OctopartsAuthHandler }
 import com.m3.octoparts.support.PlayAppSupport
 import org.scalatest.{ FlatSpec, Matchers }
 import play.api.mvc.Action
@@ -12,7 +12,7 @@ import scala.concurrent.Future
 
 class AuthenticationCheckSupportSpec extends FlatSpec with Matchers with PlayAppSupport with AuthenticationCheckSupport {
 
-  val authPlugin: Option[OctopartsAuthPlugin] = None
+  val authHandler: Option[OctopartsAuthHandler] = None
 
   val action = Action.andThen(authenticationCheckFilter(_ => Future.successful(Redirect("/login")))).apply(req => Ok(s"Hi, ${req.principal.nickname}"))
 

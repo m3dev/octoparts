@@ -1,6 +1,7 @@
 package com.m3.octoparts.wiring
 
 import com.kenshoo.play.metrics.MetricsController
+import com.m3.octoparts.wiring.assembling.ApplicationComponents
 import controllers.hystrix.HystrixController
 import controllers.system._
 import controllers._
@@ -10,7 +11,12 @@ import presentation.NavbarLinks
 import scala.concurrent.duration._
 import com.softwaremill.macwire._
 
-trait ControllersModule extends AggregatorServicesModule with HystrixModule with I18nComponents with FiltersModule {
+trait ControllersModule
+    extends AggregatorServicesModule
+    with HystrixModule
+    with AuthHandlerModule
+    with I18nComponents
+    with FiltersModule { this: ApplicationComponents.Essentials =>
 
   lazy val partsController = {
     val requestTimeout = typesafeConfig.getInt("timeouts.asyncRequestTimeout").millis
@@ -43,7 +49,7 @@ trait ControllersModule extends AggregatorServicesModule with HystrixModule with
 
   lazy val hystrixController = new HystrixController()
 
-  lazy val authController = new AuthController
+  lazy val authController = wire[AuthController]
 
   lazy val apiHelpController = new ApiHelpController
 

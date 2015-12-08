@@ -1,2 +1,0 @@
-# If you have implemented an auth plugin, add it like this
-#5000:com.m3.openid.M3OpenIDAuthPlugin

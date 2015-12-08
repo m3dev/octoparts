@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets
 
 import com.beachape.logging.LTSVLogger
 import com.beachape.zipkin.ReqHeaderToSpanImplicit
+import com.m3.octoparts.auth.OctopartsAuthHandler
 import com.m3.octoparts.cache.CacheOps
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.model.config.json.{ HttpPartConfig => JsonHttpPartConfig }
@@ -29,6 +30,7 @@ import scala.util.control.NonFatal
 
 class AdminController(cacheOps: CacheOps,
                       repository: MutableConfigsRepository,
+                      val authHandler: Option[OctopartsAuthHandler],
                       val messagesApi: MessagesApi)(implicit val navbarLinks: NavbarLinks = NavbarLinks(None, None, None, None))
     extends Controller
     with AuthSupport

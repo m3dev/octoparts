@@ -1,6 +1,6 @@
 package controllers.support
 
-import com.m3.octoparts.auth.{ OctopartsAuthPlugin, PrincipalSessionPersistence }
+import com.m3.octoparts.auth.{ OctopartsAuthHandler, PrincipalSessionPersistence }
 import com.m3.octoparts.support.PlayAppSupport
 import org.scalatest.{ FlatSpec, Matchers }
 import play.api.mvc.Action
@@ -13,7 +13,7 @@ import scala.concurrent.Future
 class AuthorizationCheckSupportSpec extends FlatSpec with Matchers with PlayAppSupport
     with AuthenticationCheckSupport with AuthorizationCheckSupport {
 
-  val authPlugin: Option[OctopartsAuthPlugin] = None
+  val authHandler: Option[OctopartsAuthHandler] = None
 
   val acceptedRoles = Set("king", "duke")
 

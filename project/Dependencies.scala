@@ -165,7 +165,7 @@ object Dependencies {
     mockitoCore
   )
 
-  val authPluginDependencies = Seq(
+  val authHandlerDependencies = Seq(
     providedPlay,
     ltsvLogger
   )

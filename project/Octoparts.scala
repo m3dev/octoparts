@@ -20,16 +20,16 @@ object Octoparts extends Build {
   // -------------------------------------------------------
   lazy val app = Project(id = "octoparts", base = file("."), settings = playAppSettings)
     .enablePlugins(PlayScala)
-    .dependsOn(models, authPluginApi, playJsonFormats)
-    .aggregate(scalaWsClient, javaClient, models, authPluginApi, playJsonFormats)
+    .dependsOn(models, authHandlerApi, playJsonFormats)
+    .aggregate(scalaWsClient, javaClient, models, authHandlerApi, playJsonFormats)
 
   // -------------------------------------------------------
-  // Interface for authentication plugins
+  // Interface for authentication handling
   // -------------------------------------------------------
-  lazy val authPluginApi = nonPlayProject("auth-plugin-api")("plugins/auth-plugin-api")
+  lazy val authHandlerApi = nonPlayProject("auth-handler-api")("auth-handler-api")
     .settings(
-      name := "octoparts-auth-plugin-api",
-      libraryDependencies ++= Dependencies.authPluginDependencies
+      name := "octoparts-auth-handler-api",
+      libraryDependencies ++= Dependencies.authHandlerDependencies
     )
 
   // -------------------------------------------------------
