@@ -61,7 +61,7 @@ object Common {
       routesGenerator := InjectedRoutesGenerator,
       playDefaultPort := 9000,
       publishArtifact := false,
-      libraryDependencies ++= Dependencies.rootDependencies
+      libraryDependencies ++= (Dependencies.rootDependencies ++ Dependencies.playScalatestDependencies)
     )
 
 

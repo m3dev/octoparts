@@ -153,12 +153,9 @@ object Dependencies {
 
     // Test
     playTest,
-    scalatest,
-    scalatestPlay,
     scalacheck,
     groovy,
     scalikeJdbcTest,
-    mockitoCore,
     ws
   ).map(withoutExcluded)
 
