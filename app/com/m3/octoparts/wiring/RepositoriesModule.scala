@@ -12,8 +12,6 @@ trait RepositoriesModule extends CacheModule with HttpClientPoolModule with Exec
   private implicit lazy val ec = dbFetchExecutionContext
 
   lazy val configsRepository = {
-    import scala.concurrent.ExecutionContext.Implicits.global
-
     val localBuffer = configuration.getInt("memcached.configLocalBuffer")
 
     val mutableRepoCache = localBuffer match {
