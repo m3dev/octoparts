@@ -54,8 +54,6 @@ object Common {
   lazy val playAppSettings =
     commonSettings ++
     BuildInfo.settings ++
-    addConfDirToClasspathSettings ++
-    excludeConfFilesFromJarSettings ++
     sonatypeSettings ++
     Seq(
       routesGenerator := InjectedRoutesGenerator,
@@ -63,28 +61,6 @@ object Common {
       publishArtifact := false,
       libraryDependencies ++= (Dependencies.rootDependencies ++ Dependencies.playScalatestDependencies)
     )
-
-
-  private lazy val addConfDirToClasspathSettings = Seq(
-    // Add the contents of the /conf dir of an unzipped tarball to the start of the classpath
-    // so we can edit the config files of a deployed app.
-    // See https://github.com/playframework/playframework/issues/3473
-    scriptClasspath := "../conf" +: scriptClasspath.value
-  )
-
-
-  private lazy val excludeConfFilesFromJarSettings = Seq(
-    // Remove config files from the jar, because they conflict with the ones in the /conf directory.
-    // (e.g. Play finds both play.plugins files and loads all the plugins twice...)
-    // Note: a mapping is a (java.io.File, String) tuple
-    mappings in (Compile, packageBin) ~= { m =>
-      m.filterNot { case (from: java.io.File, _) =>
-        from.getName.endsWith(".conf") ||
-          from.getName.endsWith(".xml") ||
-          from.getName.endsWith(".plugins")
-      }
-    }
-  )
 
   private lazy val ideSettings = Seq(
     // Faster "sbt gen-idea"
