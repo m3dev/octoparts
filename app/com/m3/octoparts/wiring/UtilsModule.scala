@@ -36,7 +36,7 @@ trait UtilsModule {
   lazy val partsReqLogger: PartRequestLogger = PartRequestLogger
 
   implicit lazy val zipkinService: ZipkinServiceLike = {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import play.api.libs.concurrent.Execution.Implicits._
     if (mode == Mode.Test) {
       NoopZipkinService
     } else {
@@ -69,7 +69,7 @@ trait UtilsModule {
 
       }
       maybeService match {
-        case Some(Success(zipkinService)) => zipkinService
+        case Some(Success(instantiatedZipkinService)) => instantiatedZipkinService
         case Some(Failure(e)) => {
           Logger.error("Could not create the Zipkin service", e)
           NoopZipkinService
