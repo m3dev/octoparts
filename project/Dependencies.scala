@@ -75,8 +75,8 @@ object Dependencies {
 
   // Test
   val playTest            = "com.typesafe.play"         %% "play-test"                    % thePlayVersion      % Test
-  val scalatest           = "org.scalatest"             %% "scalatest"                    % "2.2.4"             % Test
-  val scalatestPlay       = "org.scalatestplus"         %% "play"                         % "1.4.0-M3"          % Test
+  val scalatest           = "org.scalatest"             %% "scalatest"                    % "2.2.5"             % Test
+  val scalatestPlay       = "org.scalatestplus"         %% "play"                         % "1.4.0-M4"          % Test
   val scalacheck          = "org.scalacheck"            %% "scalacheck"                   % "1.12.2"            % Test
   val groovy              = "org.codehaus.groovy"       % "groovy"                        % "2.4.1"             % Test
   val scalikeJdbcTest     = "org.scalikejdbc"           %% "scalikejdbc-test"             % scalikejdbcVersion  % Test
