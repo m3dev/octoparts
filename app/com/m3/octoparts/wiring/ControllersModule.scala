@@ -48,7 +48,7 @@ trait ControllersModule
 
   lazy val systemConfigController = wire[SystemConfigController]
 
-  lazy val hystrixController = new HystrixController()
+  lazy val hystrixController = new HystrixController(actorSystem = actorSystem)
 
   lazy val authController = wire[AuthController]
 

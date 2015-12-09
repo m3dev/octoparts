@@ -3,17 +3,16 @@ package controllers.hystrix
 import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 
+import akka.actor.ActorSystem
 import com.netflix.hystrix.contrib.metrics.eventstream.HystrixMetricsPoller
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 
 private class Streamer(
     poller: HystrixMetricsPoller, listener: MetricsAsJsonPollerListener, delay: FiniteDuration)(
-        implicit executionContext: ExecutionContext) {
+        implicit actorSystem: ActorSystem) {
 
-  import play.api.Play.current
-  import play.api.libs.concurrent.Akka.{ system => actorSystem }
+  import actorSystem.dispatcher
 
   poller.start()
 

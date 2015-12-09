@@ -1,7 +1,6 @@
 package com.m3.octoparts.future
 
 import akka.actor.ActorSystem
-import play.api.libs.concurrent.Akka
 import play.api.{ Mode, Play }
 
 import scala.concurrent.duration.FiniteDuration

@@ -1,8 +1,6 @@
 package com.m3.octoparts.wiring
 
 import akka.actor.ActorSystem
-import play.api.Play
-import play.api.libs.concurrent.Akka
 
 trait ExecutionContextsModule extends UtilsModule {
 

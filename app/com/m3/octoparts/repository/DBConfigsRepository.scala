@@ -8,8 +8,6 @@ import com.m3.octoparts.future.RichFutureWithTiming._
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.repository.config._
 import com.twitter.zipkin.gen.Span
-import play.api.Play
-import play.api.libs.concurrent.Akka
 import scalikejdbc._
 import skinny.orm.SkinnyCRUDMapper
 import skinny.orm.feature.CRUDFeatureWithId

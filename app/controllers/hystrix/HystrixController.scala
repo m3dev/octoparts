@@ -3,6 +3,7 @@ package controllers.hystrix
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicInteger
 
+import akka.actor.ActorSystem
 import com.netflix.config.DynamicPropertyFactory
 import com.netflix.hystrix.contrib.metrics.eventstream.HystrixMetricsPoller
 import play.api.libs.iteratee.Enumerator
@@ -11,12 +12,13 @@ import play.api.mvc._
 import scala.concurrent.duration._
 
 class HystrixController(
+  actorSystem: ActorSystem,
   defaultDelay: FiniteDuration = 1.second,
   pollerQueueSize: Int = 10000,
   defaultMaxClients: Int = 10)
     extends Controller {
 
-  import play.api.libs.concurrent.Execution.Implicits.defaultContext
+  import actorSystem.dispatcher
 
   private val maxClients = {
     DynamicPropertyFactory
@@ -50,7 +52,7 @@ class HystrixController(
     val listener = new MetricsAsJsonPollerListener(pollerQueueSize)
     val poller = new HystrixMetricsPoller(listener, delay.toMillis.toInt)
 
-    Enumerator.outputStream(new Streamer(poller, listener, delay).produce).onDoneEnumerating({
+    Enumerator.outputStream(new Streamer(poller, listener, delay)(actorSystem).produce).onDoneEnumerating({
       onDisconnect()
       poller.shutdown()
     })

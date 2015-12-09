@@ -4,9 +4,6 @@ import scala.concurrent.duration._
 import com.m3.octoparts.aggregator.service.{ PartsService, PartResponseLocalContentSupport, PartRequestService }
 import com.m3.octoparts.cache.PartResponseCachingSupport
 
-import play.api.libs.concurrent.Akka
-import play.api.Play.current
-
 trait AggregatorServicesModule extends RepositoriesModule with AggregatorHandlersModule with ExecutionContextsModule { module =>
 
   private implicit lazy val ec = partsServiceContext
