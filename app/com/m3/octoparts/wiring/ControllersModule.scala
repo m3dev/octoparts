@@ -29,14 +29,15 @@ trait ControllersModule
 
   lazy val cacheController = wire[CacheController]
 
-  lazy val adminController = wire[AdminController]
-
-  lazy val navbarLinks = NavbarLinks(
-    kibana = configuration.getString("urls.kibana"),
-    hystrixDashboard = configuration.getString("urls.hystrixDashboard"),
-    swaggerUI = configuration.getString("urls.swaggerUI"),
-    wiki = configuration.getString("urls.wiki")
-  )
+  lazy val adminController = {
+    implicit val navbarLinks = NavbarLinks(
+      kibana = configuration.getString("urls.kibana"),
+      hystrixDashboard = configuration.getString("urls.hystrixDashboard"),
+      swaggerUI = configuration.getString("urls.swaggerUI"),
+      wiki = configuration.getString("urls.wiki")
+    )
+    wire[AdminController]
+  }
 
   lazy val memcachedKeysToCheck = typesafeConfig.getInt("memcached.monitoring.randomChecks") match {
     case 0 => SingleMemcachedCacheKeyToCheck

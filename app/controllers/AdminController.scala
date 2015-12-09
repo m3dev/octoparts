@@ -31,7 +31,7 @@ import scala.util.control.NonFatal
 class AdminController(cacheOps: CacheOps,
                       repository: MutableConfigsRepository,
                       val authHandler: Option[OctopartsAuthHandler],
-                      val messagesApi: MessagesApi)(implicit val navbarLinks: NavbarLinks = NavbarLinks(None, None, None, None))
+                      val messagesApi: MessagesApi)(implicit val navbarLinks: NavbarLinks)
     extends Controller
     with AuthSupport
     with LoggingSupport

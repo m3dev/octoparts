@@ -29,6 +29,7 @@ import play.api.mvc.EssentialAction
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.mvc.Result
+import presentation.NavbarLinks
 
 import scala.collection.SortedSet
 import scala.concurrent.Future
@@ -110,6 +111,7 @@ class AdminControllerSpec extends FunSpec
     with RequiresDB {
 
   implicit val emptySpan = new Span()
+  implicit val emptyNav = NavbarLinks(None, None, None, None)
 
   protected val aGroup = "some group"
 
