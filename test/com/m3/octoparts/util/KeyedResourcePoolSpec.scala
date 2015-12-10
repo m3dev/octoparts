@@ -1,13 +1,13 @@
 package com.m3.octoparts.util
 
 import org.apache.commons.lang3.mutable.MutableBoolean
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
 import org.scalatest.{ FunSpec, Matchers }
 
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.Future
 
-class KeyedResourcePoolSpec extends FunSpec with Matchers with ScalaFutures {
+class KeyedResourcePoolSpec extends FunSpec with Matchers with ScalaFutures with IntegrationPatience {
 
   import scala.concurrent.ExecutionContext.Implicits.global
   import scala.language.reflectiveCalls
