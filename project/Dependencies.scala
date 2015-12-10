@@ -22,7 +22,7 @@ object Dependencies {
   val scalikejdbcVersion = "2.3.0"
   val swaggerVersion = "1.3.12"
   val jacksonVersion = "2.5.1"
-  val macwireVersion = "2.1.0"
+  val macwireVersion = "2.2.1"
 
   // Logging
   val logbackClassic      = "ch.qos.logback"            % "logback-classic"               % "1.1.3"
