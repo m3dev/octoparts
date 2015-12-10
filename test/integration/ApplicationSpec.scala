@@ -7,13 +7,29 @@ import play.api.test.Helpers._
 
 class ApplicationSpec extends FunSpec with PlayAppSupport with Matchers {
 
-  describe("/") {
-
-    it("should return OK") {
-      val result = route(FakeRequest(GET, "/")).get
-      contentAsString(result) should include("Parts</title>")
+  def shouldReturnOk(path: String, shouldContain: Option[String] = None): Unit = {
+    it(s"should return $OK for $path") {
+      val result = route(FakeRequest(GET, path)).get
+      status(result) shouldBe OK
+      shouldContain.foreach { s =>
+        contentAsString(result) should include(s)
+      }
     }
+  }
 
+  shouldReturnOk("/", Some("Parts</title>"))
+
+  shouldReturnOk("/hystrix.stream")
+
+  describe("system info paths") {
+
+    def systemPath(subPath: String) = s"/system/$subPath"
+
+    shouldReturnOk(systemPath("build"))
+    shouldReturnOk(systemPath("config"))
+    shouldReturnOk(systemPath("config/logger"))
+    shouldReturnOk(systemPath("healthcheck"))
+    shouldReturnOk(systemPath("metrics"))
   }
 
 }
