@@ -28,7 +28,7 @@ class ApplicationComponents(context: Context)
     with OpenIDComponents
     with NingWSComponents {
 
-  override lazy val configuration = withEnvConfig(context.initialConfiguration, context.environment.mode)
+  override lazy val configuration = withEnvConfig(context.initialConfiguration, environment)
 
   lazy val mode = context.environment.mode
 
