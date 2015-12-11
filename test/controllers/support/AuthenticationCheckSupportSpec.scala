@@ -1,19 +1,18 @@
 package controllers.support
 
-import com.m3.octoparts.auth.{ PrincipalSessionPersistence, AuthenticatedRequest, OctopartsAuthPlugin, Principal }
+import com.m3.octoparts.auth.{ PrincipalSessionPersistence, OctopartsAuthHandler }
+import com.m3.octoparts.support.PlayAppSupport
 import org.scalatest.{ FlatSpec, Matchers }
-import org.scalatestplus.play.OneAppPerSuite
-import play.api.mvc.{ Request, Action }
+import play.api.mvc.Action
 import play.api.mvc.Results._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.Future
 
-class AuthenticationCheckSupportSpec extends FlatSpec with Matchers with OneAppPerSuite with AuthenticationCheckSupport {
-  import scala.concurrent.ExecutionContext.Implicits.global
+class AuthenticationCheckSupportSpec extends FlatSpec with Matchers with PlayAppSupport with AuthenticationCheckSupport {
 
-  val authPlugin: Option[OctopartsAuthPlugin] = None
+  val authHandler: Option[OctopartsAuthHandler] = None
 
   val action = Action.andThen(authenticationCheckFilter(_ => Future.successful(Redirect("/login")))).apply(req => Ok(s"Hi, ${req.principal.nickname}"))
 

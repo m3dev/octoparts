@@ -6,11 +6,11 @@ resolvers ++= Seq(
 )
 
 // The Play plugin
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.3.10")
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.4.4")
 // scoverage for test coverage
 addSbtPlugin("org.scoverage" %% "sbt-scoverage" % "1.0.4")
 // to show transitive dependencies as a graph
-addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.7.4")
+addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.7.5")
 // for code formatting
 addSbtPlugin("com.typesafe.sbt" % "sbt-scalariform" % "1.3.0")
 // To check for outdated dependencies (run "sbt dependency-updates")

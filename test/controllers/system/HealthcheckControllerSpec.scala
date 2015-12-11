@@ -6,12 +6,12 @@ import com.m3.octoparts.cache.RawCache
 import com.m3.octoparts.hystrix.HystrixHealthReporter
 import com.m3.octoparts.model.config.HttpPartConfig
 import com.m3.octoparts.repository.ConfigsRepository
+import com.m3.octoparts.support.PlayAppSupport
 import com.m3.octoparts.support.mocks.ConfigDataMocks
 import com.twitter.zipkin.gen.Span
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
-import org.scalatestplus.play.OneAppPerSuite
 import play.api.libs.json.JsValue
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -27,7 +27,7 @@ class HealthcheckControllerSpec
     with MockitoSugar
     with BeforeAndAfterEach
     with JsonCheckSupport
-    with OneAppPerSuite
+    with PlayAppSupport
     with ConfigDataMocks {
 
   private implicit val emptySpan = new Span()

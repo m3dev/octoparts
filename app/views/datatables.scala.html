@@ -1,10 +1,10 @@
-@()(implicit lang: Lang)
+@()(implicit messages: Messages)
 
 @datatablesJsAndStyles()
 <script type="text/javascript">
 $(document).ready(function() {
 	$('table.dataTable').dataTable({
-        "language": {"url": '//cdn.datatables.net/plug-ins/f2c75b7247b/i18n/@{lang.toLocale.getDisplayLanguage(java.util.Locale.ENGLISH)}.json'},
+        "language": {"url": '//cdn.datatables.net/plug-ins/f2c75b7247b/i18n/@{messages.lang.toLocale.getDisplayLanguage(java.util.Locale.ENGLISH)}.json'},
         "jQueryUI": true,
         "stateSave": true,
         "pagingType": "full_numbers",

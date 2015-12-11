@@ -1,26 +1,23 @@
 package integration
 
-import org.openqa.selenium.htmlunit.HtmlUnitDriver
+import com.m3.octoparts.support.db.RequiresDB
+import com.m3.octoparts.support.{ PlayServerSupport, OneDIBrowserPerSuite }
 import org.scalatest.{ Matchers, FunSpec }
 import org.scalatest.selenium.{ Page => SeleniumPage }
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
-import org.scalatestplus.play.{ HtmlUnitFactory, OneBrowserPerSuite, OneServerPerSuite }
+import org.scalatestplus.play._
 
 class AdminSpec
     extends FunSpec
-    with OneServerPerSuite
-    with OneBrowserPerSuite
+    with PlayServerSupport
+    with OneDIBrowserPerSuite
+    with RequiresDB
     with HtmlUnitFactory
     with Matchers
     with ScalaFutures
     with IntegrationPatience {
 
-  val htmlunitDriver = webDriver.asInstanceOf[HtmlUnitDriver]
-  htmlunitDriver.setJavascriptEnabled(false)
-
-  def baseUrl: String = {
-    s"http://localhost:$port"
-  }
+  lazy val baseUrl: String = s"http://localhost:$port"
 
   object ThreadPoolAddPage extends SeleniumPage {
     val url: String = s"$baseUrl/admin/thread-pools/new"
@@ -37,9 +34,7 @@ class AdminSpec
       numberField("coreSize").value = s"$size"
       numberField("queueSize").value = s"$queueSize"
       submit()
-      eventually {
-        pageTitle should include("Thread pool details")
-      }
+      pageTitle should include("Thread pool details")
       val descriptors = findAll(TagNameQuery("dd"))
       descriptors.find(_.text == name) shouldBe 'defined
       descriptors.find(_.text == size.toString) shouldBe 'defined
@@ -47,4 +42,5 @@ class AdminSpec
     }
 
   }
+
 }

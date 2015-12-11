@@ -4,6 +4,7 @@ import java.util.UUID
 
 import com.m3.octoparts.model._
 import play.api.libs.json.Json
+import play.api.libs.ws.WS
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -28,7 +29,7 @@ object Sample {
   import AggregateResponseEnrichment._
 
   // Create a client
-  val octoClient = new OctoClient("http://octoparts/", clientTimeout = 1.second)
+  val octoClient = new OctoClient(WS.client, "http://octoparts/", clientTimeout = 1.second)
 
   implicit object rmb extends RequestMetaBuilder[Int] {
     def apply(userId: Int) = RequestMeta(

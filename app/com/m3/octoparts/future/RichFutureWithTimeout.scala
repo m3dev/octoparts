@@ -1,7 +1,6 @@
 package com.m3.octoparts.future
 
 import akka.actor.ActorSystem
-import play.api.libs.concurrent.Akka
 import play.api.{ Mode, Play }
 
 import scala.concurrent.duration.FiniteDuration
@@ -10,7 +9,7 @@ import scala.util.control.NonFatal
 
 object RichFutureWithTimeout {
 
-  private val actorSystem = Play.maybeApplication.fold(ActorSystem("future-timeout-actor-system"))(Akka.system(_))
+  private val actorSystem = ActorSystem("future-timeout-actor-system")
 
   /*
    * this execution context is dedicated to scheduling future timeouts

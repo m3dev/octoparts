@@ -1,6 +1,6 @@
 package controllers.support
 
-import com.m3.octoparts.auth.{ PrincipalSessionPersistence, OctopartsAuthPlugin, AuthenticatedRequest, Principal }
+import com.m3.octoparts.auth.{ PrincipalSessionPersistence, OctopartsAuthHandler, AuthenticatedRequest, Principal }
 import play.api.libs.json.Json
 import play.api.mvc.{ ActionFunction, Request, Result }
 

@@ -1,6 +1,6 @@
 package controllers.support
 
-import com.m3.octoparts.auth.OctopartsAuthPlugin
+import com.m3.octoparts.auth.OctopartsAuthHandler
 import com.beachape.logging.LTSVLogger
 import controllers.routes
 import play.api.{ Logger, Play }
@@ -17,18 +17,6 @@ trait AuthSupport
 
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
-  lazy val authPlugin: Option[OctopartsAuthPlugin] = Play.current.plugin[OctopartsAuthPlugin] match {
-    case Some(plugin) if plugin.enabled =>
-      LTSVLogger.info("Using auth plugin" -> plugin.getClass.getName)
-      Some(plugin)
-    case Some(disabledPlugin) =>
-      LTSVLogger.info("Skipping auth for admin UI because auth plugin disabled" -> disabledPlugin.getClass.getName)
-      None
-    case None =>
-      LTSVLogger.info("Msg" -> "No auth plugin found. Authentication/authorization for admin UI will be skipped.")
-      None
-  }
-
   /**
    * An action that requires the user to be authenticated.
    * If they are not authenticated:
@@ -36,7 +24,7 @@ trait AuthSupport
    *  - otherwise they will be automatically logged in as a guest.
    */
   lazy val AuthenticatedAction = {
-    authPlugin.fold {
+    authHandler.fold {
       // No enabled auth plugin, so skip authentication and create a dummy principal
       Action andThen autoAuthenticateRequest
     } { plugin =>
@@ -51,7 +39,7 @@ trait AuthSupport
    * Note that if there is no enabled auth plugin, authorization is skipped.
    */
   lazy val AuthorizedAction = {
-    authPlugin.fold {
+    authHandler.fold {
       // No enabled auth plugin, so skip authorization
       AuthenticatedAction
     } { plugin =>

@@ -2,6 +2,7 @@ package com.m3.octoparts.http
 
 import java.nio.charset.Charset
 
+import com.kenshoo.play.metrics.Metrics
 import com.m3.octoparts.http.HttpClientPool.HttpPartConfigClientKey
 import com.m3.octoparts.model.config.{ HttpPartConfig, HttpProxySettings }
 import com.m3.octoparts.util.KeyedResourcePool
@@ -13,7 +14,7 @@ import scala.util.Try
  * A pool to manage HTTP clients.
  * Holds one HTTP client per partId.
  */
-class HttpClientPool extends KeyedResourcePool[HttpPartConfigClientKey, HttpClientLike] {
+class HttpClientPool(metrics: Metrics) extends KeyedResourcePool[HttpPartConfigClientKey, HttpClientLike] {
 
   protected def makeNew(key: HttpPartConfigClientKey) = new InstrumentedHttpClient(
     name = key.partId,
@@ -21,7 +22,9 @@ class HttpClientPool extends KeyedResourcePool[HttpPartConfigClientKey, HttpClie
     connectTimeout = key.httpConnectionTimeout,
     socketTimeout = key.httpSocketTimeout,
     defaultEncoding = key.httpDefaultEncoding,
-    mbProxySettings = key.httpProxySettings)
+    mbProxySettings = key.httpProxySettings,
+    metrics = metrics
+  )
 
   protected def onRemove(value: HttpClientLike) = value match {
     case cl: AutoCloseable => Try {

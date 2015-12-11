@@ -9,7 +9,7 @@ trait AuthenticationCheckSupport {
 
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
-  def authPlugin: Option[OctopartsAuthPlugin]
+  def authHandler: Option[OctopartsAuthHandler]
 
   /**
    * An action refiner that acts like a filter, checking whether the user is authenticated.
@@ -34,7 +34,7 @@ trait AuthenticationCheckSupport {
   }
 
   private def extractPrincipal(request: Request[_]): Future[Option[Principal]] = {
-    authPlugin.fold {
+    authHandler.fold {
       // No auth plugin, so do it the default way, using Play session cookie
       Future.successful(PrincipalSessionPersistence.extractPrincipalFromPlaySession(request.session))
     } { plugin =>

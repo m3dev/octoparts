@@ -3,11 +3,11 @@ package com.m3.octoparts.support.db
 import java.sql.Connection
 
 import com.beachape.logging.LTSVLogger
+import com.m3.octoparts.support.PlayAppSupport
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.MigrationInfo
 import org.flywaydb.core.api.callback.FlywayCallback
 import org.scalatest.Suite
-import org.scalatestplus.play.OneAppPerSuite
 import scalikejdbc.ConnectionPool
 
 import scala.util.control.NonFatal
@@ -18,7 +18,7 @@ import scala.util.control.NonFatal
  * It extends OneAppPerSuite so that we use the Play app's Scalikejdbc connection pool,
  * thereby connecting to the correct DB (as configured in application.test.conf).
  */
-trait RequiresDB extends Suite with OneAppPerSuite {
+trait RequiresDB extends Suite with PlayAppSupport {
 
   lazy val flyway = {
     val flyway = new Flyway
@@ -39,29 +39,26 @@ trait RequiresDB extends Suite with OneAppPerSuite {
 
       def beforeEachMigrate(conn: Connection, p2: MigrationInfo) = conn.setReadOnly(false)
 
-      def afterInfo(conn: Connection) = {}
+      def afterInfo(conn: Connection) = conn.setReadOnly(false)
 
-      def afterInit(conn: Connection) = {}
+      def afterInit(conn: Connection) = conn.setReadOnly(false)
 
-      def afterRepair(conn: Connection) = {}
+      def afterRepair(conn: Connection) = conn.setReadOnly(false)
 
-      def afterValidate(conn: Connection) = {}
+      def afterValidate(conn: Connection) = conn.setReadOnly(false)
 
-      def afterEachMigrate(conn: Connection, p2: MigrationInfo) = {}
+      def afterEachMigrate(conn: Connection, p2: MigrationInfo) = conn.setReadOnly(false)
 
-      def afterMigrate(conn: Connection) = {}
+      def afterMigrate(conn: Connection) = conn.setReadOnly(false)
 
-      def afterClean(conn: Connection) = {}
+      def afterClean(conn: Connection) = conn.setReadOnly(false)
 
-      def afterBaseline(conn: Connection) = {}
+      def afterBaseline(conn: Connection) = conn.setReadOnly(false)
     })
     flyway.setDataSource(ConnectionPool().dataSource)
     flyway.setPlaceholderPrefix("$flyway{")
     flyway
   }
-
-  // Start the Scalikejdbc connection pool
-  //DBs.setupAll()
 
   /**
    * Method to tear down the entire database corresponding to this environment
@@ -90,4 +87,5 @@ trait RequiresDB extends Suite with OneAppPerSuite {
   def migrate(): Int = {
     flyway.migrate()
   }
+
 }

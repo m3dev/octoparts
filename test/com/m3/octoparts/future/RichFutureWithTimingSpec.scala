@@ -32,8 +32,7 @@ class RichFutureWithTimingSpec extends FlatSpec with Matchers with ScalaFutures 
         val tt = Duration.fromNanos(nowNanos - result).toMillis
 
         // the actual time (=delay between starting the future and calling the f) should be slightly over 100
-        tt should be >= 100L
-        tt should be < 120L
+        tt shouldBe 110L +- 25
 
         // the recorded time (=known to the f) should be slightly over (the actual time - the delay before starting the timer)
         duration.toMillis should be >= (tt - delayBeforeStartTiming)

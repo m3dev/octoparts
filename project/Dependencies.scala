@@ -1,6 +1,6 @@
 import sbt._
 import sbt.Keys._
-import play.Play.autoImport._
+import play.sbt.Play.autoImport._
 
 object Dependencies {
 
@@ -19,10 +19,10 @@ object Dependencies {
   // http-client 4.4 has an unsolved issue which affects us critically: https://issues.apache.org/jira/browse/HTTPCLIENT-1609
   // Stay on 4.3.x until this is fixed.
   val httpClientVersion = "4.3.6"
-  val scalikejdbcVersion = "2.2.5"
+  val scalikejdbcVersion = "2.3.0"
   val swaggerVersion = "1.3.12"
   val jacksonVersion = "2.5.1"
-  val macwireVersion = "1.0.5"
+  val macwireVersion = "2.2.1"
 
   // Logging
   val logbackClassic      = "ch.qos.logback"            % "logback-classic"               % "1.1.3"
@@ -47,10 +47,10 @@ object Dependencies {
 
   // DB
   val postgres            = "org.postgresql"            % "postgresql"                    % "9.4-1201-jdbc41"   % Runtime
-  val skinnyOrm           = "org.skinny-framework"      %% "skinny-orm"                   % "1.3.15"
+  val skinnyOrm           = "org.skinny-framework"      %% "skinny-orm"                   % "2.0.1"
   val scalikeJdbc         = "org.scalikejdbc"           %% "scalikejdbc"                  % scalikejdbcVersion
   val scalikeJdbcConfig   = "org.scalikejdbc"           %% "scalikejdbc-config"           % scalikejdbcVersion
-  val scalikeJdbcPlay     = "org.scalikejdbc"           %% "scalikejdbc-play-plugin"      % "2.3.6"
+  val scalikeJdbcPlay     = "org.scalikejdbc"           %% "scalikejdbc-play-initializer" % "2.4.3"
   val dbcp2               = "org.apache.commons"        % "commons-dbcp2"                 % "2.1"
 
   // Memcached
@@ -58,16 +58,14 @@ object Dependencies {
   val spyMemcached        = "net.spy"                   % "spymemcached"                  % "2.11.6"
 
   // Play plugins
-  val playFlyway          = "com.github.tototoshi"      %% "play-flyway"                  % "1.2.1"
-  val metricsPlay         = "com.kenshoo"               %% "metrics-play"                 % "2.3.0_0.1.8"
+  val playFlyway          = "org.flywaydb"              %% "flyway-play"                  % "2.2.0"
   val providedPlay        = "com.typesafe.play"         %% "play"                         % thePlayVersion      % Provided
 
   // DI
   val macwireMacros       = "com.softwaremill.macwire"  %% "macros"                       % macwireVersion
-  val macwireRuntime      = "com.softwaremill.macwire"  %% "runtime"                      % macwireVersion
 
   // Swagger
-  val swaggerPlay         = "com.wordnik"               %% "swagger-play2"                % swaggerVersion
+  val swaggerPlay24       = "pl.matisoft"               %% "swagger-play24"               % "1.4" // Replace with Official version once 1.3.13 hits
   val swaggerAnnotations  = "com.wordnik"               % "swagger-annotations"           % swaggerVersion
 
   // Jackson
@@ -77,11 +75,12 @@ object Dependencies {
 
   // Test
   val playTest            = "com.typesafe.play"         %% "play-test"                    % thePlayVersion      % Test
-  val scalatest           = "org.scalatest"             %% "scalatest"                    % "2.2.4"             % Test
-  val scalatestPlay       = "org.scalatestplus"         %% "play"                         % "1.2.0"             % Test
+  val scalatest           = "org.scalatest"             %% "scalatest"                    % "2.2.5"             % Test
+  val scalatestPlay       = "org.scalatestplus"         %% "play"                         % "1.4.0-M4"          % Test
   val scalacheck          = "org.scalacheck"            %% "scalacheck"                   % "1.12.2"            % Test
   val groovy              = "org.codehaus.groovy"       % "groovy"                        % "2.4.1"             % Test
   val scalikeJdbcTest     = "org.scalikejdbc"           %% "scalikejdbc-test"             % scalikejdbcVersion  % Test
+  val mockitoCore         =  "org.mockito"              % "mockito-core"                  % "1.10.19"           % Test
 
   // Misc utils
   val commonsValidator    = "commons-validator"         % "commons-validator"             % "1.4.1"             % Runtime
@@ -90,7 +89,9 @@ object Dependencies {
   val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.6"
   val findbugs            = "com.google.code.findbugs"  % "jsr305"                        % "3.0.0"
 
-  val zipkinFutures       = "com.beachape"              %% "zipkin-futures-play"          % "0.1.1"
+  val kenshoo             = "com.kenshoo"               %% "metrics-play"                 % "2.4.0_0.4.1"
+
+  val zipkinFutures       = "com.beachape"              %% "zipkin-futures-play"          % "0.2.1"
 
   val withoutExcluded = { (m: ModuleID) =>
     m.excludeAll(
@@ -138,34 +139,33 @@ object Dependencies {
     zipkinFutures,
 
     // Misc utils
+    kenshoo,
     commonsValidator,
     jta,
     scalaUri,
 
     // DI
     macwireMacros,
-    macwireRuntime,
 
     // Play plugins
     playFlyway,
-    metricsPlay,
-    swaggerPlay,
+    swaggerPlay24,
 
     // Test
     playTest,
-    scalatest,
-    scalatestPlay,
     scalacheck,
     groovy,
-    scalikeJdbcTest
+    scalikeJdbcTest,
+    ws
   ).map(withoutExcluded)
 
   val playScalatestDependencies = Seq(
     scalatest,
-    scalatestPlay
+    scalatestPlay,
+    mockitoCore
   )
 
-  val authPluginDependencies = Seq(
+  val authHandlerDependencies = Seq(
     providedPlay,
     ltsvLogger
   )
@@ -191,8 +191,7 @@ object Dependencies {
     scalatest
   )
 
-  // TODO when bumping to Play 2.4, depend on play-json instead of ws
-  val playJsonFormatsDependencies = playScalatestDependencies :+ ws
+  val playJsonFormatsDependencies = playScalatestDependencies :+ json
 
   val scalaWsClientDependencies = playScalatestDependencies :+ ws
 }

@@ -14,11 +14,11 @@ import com.twitter.zipkin.gen.Span
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpUriRequest
 import org.scalatest._
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
 
 import scala.concurrent.Future
 
-class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures {
+class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures with IntegrationPatience {
 
   private val mockPartId = "mock"
   private val stringToInterpolate = "http://mock.com/${path1}/${path2}"
