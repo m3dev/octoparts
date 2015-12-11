@@ -17,10 +17,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.network :forwarded_port, guest: 9000, host: 9000 # For accessing octoparts
   config.vm.network :forwarded_port, guest: 8080, host: 8080 # For accessing hystrix-dashboard from host
   config.vm.network :forwarded_port, guest: 8085, host: 8085 # For accessing zipkin-web from host
-  config.vm.network :forwarded_port, guest: 8443, host: 8443
+  config.vm.network :forwarded_port, guest: 8443, host: 8443 # For allowing port 8443 access to Hystrix from host
   config.vm.network :forwarded_port, guest: 5432, host: 5432 # PSQL
   config.vm.network :forwarded_port, guest: 11211, host: 11211 # Memcached
-  config.vm.network :forwarded_port, guest: 5005, host: 5005 # for debugging
+  config.vm.network :forwarded_port, guest: 5005, host: 5005 # for JVM debugging
   config.vm.network :forwarded_port, guest: 9200, host: 9200 # Elasticsearch
   config.vm.network :forwarded_port, guest: 80, host: 5080 # Kibana @ nginx
 

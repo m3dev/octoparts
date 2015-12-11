@@ -22,7 +22,9 @@ script:
   - sbt coverage test
   - find $HOME/.sbt -name "*.lock" -type f -delete && find $HOME/.ivy2/cache -name "*[\[\]\(\)]*.properties" -type f -delete
 
-after_success: sbt coverageAggregate coveralls
+after_success:
+  - sbt coverageReport
+  - sbt coverageAggregate coveralls
 
 sudo: false
 
