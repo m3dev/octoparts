@@ -43,7 +43,7 @@ class CacheOpsSpec
   case class CacheStuff(cache: RawCache, latestVersionCache: LatestVersionCache, client: MemcachedCacheOps)
 
   def createCacheStuff: CacheStuff = {
-    val rawCache = new InMemoryRawCache()
+    val rawCache = new InMemoryRawCache(NoopZipkinService)
     val cache = new MemcachedCache(rawCache, MemcachedKeyGenerator)
     val latestVersionCache = new InMemoryLatestVersionCache(100000)
     val client = new MemcachedCacheOps(cache, latestVersionCache)
@@ -157,7 +157,7 @@ class CacheOpsSpec
 
   it("should show a CacheException when the cache is down") {
     val cacheStuff = createCacheStuff
-    val rawCache = new InMemoryRawCache() {
+    val rawCache = new InMemoryRawCache(NoopZipkinService) {
       override def get[T](key: String)(implicit codec: Codec[T], parentSpan: Span): Future[Option[T]] = Future.failed(new IOException)
     }
     val cache = new MemcachedCache(rawCache, MemcachedKeyGenerator)

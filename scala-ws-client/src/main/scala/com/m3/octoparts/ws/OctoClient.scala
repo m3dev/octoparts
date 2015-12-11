@@ -7,7 +7,7 @@ import com.m3.octoparts.model._
 import java.util.UUID
 import play.api.http.{ ContentTypeOf, Writeable }
 import play.api.mvc.Results.EmptyContent
-import play.api.{ Application, Logger }
+import play.api.Logger
 import play.api.libs.json._
 import play.api.libs.ws._
 
@@ -18,19 +18,24 @@ import com.m3.octoparts.model.config.json.HttpPartConfig
 import com.m3.octoparts.json.format.ConfigModel._ // For serdes of the models
 
 /**
- * Default Octoparts [[OctoClientLike]] implementation
+ * Default Octoparts [[OctoClientLike]] implementation.
  *
  * Has a rescuer method that tries its best to recover from all reasonable errors.
  *
+ * @param client WSClient instance to use with this Octoparts client
  * @param baseUrl The base URL of the Octoparts service you would like to hit with the instantiated client
  * @param clientTimeout The (HTTP) timeout that you would like this client to use. Note that sending [[AggregateRequest]]
  *                      will result in using the max of this parameter and the timeout on the request (if it exists)
  * @param extraWait Extra margin of wait time for timeouts. Defaults to 50 milliseconds.
  */
-class OctoClient(val baseUrl: String, protected val clientTimeout: FiniteDuration, protected val extraWait: FiniteDuration = 50.milliseconds)(implicit val octoPlayApp: Application) extends OctoClientLike {
+class OctoClient(val client: WSClient,
+                 val baseUrl: String,
+                 protected val clientTimeout: FiniteDuration,
+                 protected val extraWait: FiniteDuration = 50.milliseconds) extends OctoClientLike {
 
-  protected def wsHolderFor(url: String, timeout: FiniteDuration) =
-    WS.url(url).withRequestTimeout((timeout + extraWait).toMillis.toInt)
+  protected def wsRequestFor(url: String, timeout: FiniteDuration) = {
+    client.url(url).withRequestTimeout((timeout + extraWait).toMillis.toInt)
+  }
 
   protected def rescuer[A](defaultReturn: => A): PartialFunction[Throwable, A] = {
     case JsResultException(e) => {
@@ -61,9 +66,9 @@ trait OctoClientLike {
   def baseUrl: String
 
   /**
-   * Returns a [[play.api.libs.ws.WSRequestHolder]] for a given a URL string
+   * Returns a [[play.api.libs.ws.WSRequest]] for a given a URL string
    */
-  protected def wsHolderFor(url: String, timeout: FiniteDuration): WSRequestHolder
+  protected def wsRequestFor(url: String, timeout: FiniteDuration): WSRequest
 
   /**
    * The client-wide timeout
@@ -152,7 +157,7 @@ trait OctoClientLike {
    * @param partIds a list of partIds in specific to retrieve endpoint info for.
    */
   def listEndpoints(partIds: String*)(implicit ec: ExecutionContext): Future[Seq[HttpPartConfig]] = {
-    wsHolderFor(urlFor(ListEndpoints), clientTimeout)
+    wsRequestFor(urlFor(ListEndpoints), clientTimeout)
       .withQueryString(partIds.map(n => partIdFilterName -> n): _*)
       .get()
       .map(resp => resp.json.as[Seq[HttpPartConfig]])
@@ -223,7 +228,7 @@ trait OctoClientLike {
    * @param headers headers to send along with the request
    */
   protected def wsPost[A](url: String, timeout: FiniteDuration, body: A, headers: Seq[(String, String)] = Nil)(implicit wrt: Writeable[A], ct: ContentTypeOf[A]): Future[WSResponse] = {
-    wsHolderFor(url, timeout)
+    wsRequestFor(url, timeout)
       .withHeaders(headers: _*)
       .post(body)
   }

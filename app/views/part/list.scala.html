@@ -1,4 +1,4 @@
-@(parts: scala.collection.SortedSet[presentation.HttpPartConfigView])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang, req: RequestHeader)
+@(parts: scala.collection.SortedSet[presentation.HttpPartConfigView])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, messages: Messages)
 
 @views.html.adminlayout(Messages("parts.list")) {
     <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.css" />
@@ -20,7 +20,7 @@
         var selectNone = $("#select-none");
         var downloadForm = $("#download-form");
         var table = tableObject.DataTable({
-            "language": {"url": '//cdn.datatables.net/plug-ins/f2c75b7247b/i18n/@{lang.toLocale.getDisplayLanguage(java.util.Locale.ENGLISH)}.json'},
+            "language": {"url": '//cdn.datatables.net/plug-ins/f2c75b7247b/i18n/@{messages.lang.toLocale.getDisplayLanguage(java.util.Locale.ENGLISH)}.json'},
             "jQueryUI": true,
             "stateSave": true,
             "pagingType": "full_numbers",
@@ -181,7 +181,7 @@
                     <a href="@partView.tryItLink" class="btn btn-default">@Messages("parts.tryIt")</a>
                     <a href="@partView.detailLink" class="btn btn-success">@Messages("detail")</a>
                     <a href="@partView.editLink" class="btn btn-primary">@Messages("edit")</a>
-					<form action="@controllers.routes.AdminController.copyPart(partView.partId)" method="post">
+                    <form action="@controllers.routes.AdminController.copyPart(partView.partId)" method="post">
                         <input type="submit" value="@Messages("duplicate")" class="btn btn-info" />
                     </form>
                     <a href="@controllers.routes.AdminController.confirmDeletePart(partView.partId)" class="btn btn-danger">@Messages("delete")</a>

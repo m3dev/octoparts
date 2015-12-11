@@ -3,19 +3,18 @@ package com.m3.octoparts.repository
 import com.beachape.logging.LTSVLogger
 import com.beachape.zipkin.FutureEnrichment._
 import com.beachape.zipkin.services.ZipkinServiceLike
+import com.kenshoo.play.metrics.Metrics
 import com.m3.octoparts.future.RichFutureWithTiming._
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.repository.config._
 import com.twitter.zipkin.gen.Span
-import play.api.Play
-import play.api.libs.concurrent.Akka
 import scalikejdbc._
 import skinny.orm.SkinnyCRUDMapper
 import skinny.orm.feature.CRUDFeatureWithId
 import skinny.orm.feature.associations.Association
 
 import scala.collection.SortedSet
-import scala.concurrent.{ Future, blocking }
+import scala.concurrent.{ ExecutionContext, Future, blocking }
 
 /**
  * DAO for SkinnyCRUDMapper-based persistence for dependency configs (HttpPartConfig),
@@ -40,19 +39,22 @@ import scala.concurrent.{ Future, blocking }
  * In the first case, the session is the globally implicit session
  * The second allows to be explicit (for tests)
  */
-class DBConfigsRepository(implicit val zipkinService: ZipkinServiceLike) extends ImmutableDBRepository with MutableDBRepository with ConfigImporter
+class DBConfigsRepository(zipkinServiceFactory: => ZipkinServiceLike,
+                          protected val executionContext: ExecutionContext)(implicit val metrics: Metrics)
+  extends ImmutableDBRepository
+  with MutableDBRepository
+  with ConfigImporter {
 
-object DBContext {
-
-  // A separate ExecutionContext to avoid starving the global one with blocking DB operations
-  implicit val dbFetchExecutionContext = Akka.system(Play.current).dispatchers.lookup("contexts.db")
-
+  implicit lazy val zipkinService: ZipkinServiceLike = zipkinServiceFactory
 }
 
 trait ImmutableDBRepository extends ConfigsRepository {
-  import DBContext._
+
+  protected implicit def executionContext: ExecutionContext
 
   implicit def zipkinService: ZipkinServiceLike
+
+  implicit def metrics: Metrics
 
   private val zipkinSpanNameBase = "db-repo-read"
 
@@ -187,13 +189,14 @@ trait ImmutableDBRepository extends ConfigsRepository {
    */
   private[repository] def getAllWithSession[A: Ordering](mapper: CRUDFeatureWithId[Long, A],
                                                          joins: Seq[Association[_]] = Nil,
-                                                         includes: Seq[Association[_]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[SortedSet[A]] = Future {
-    blocking {
-      val ret = mapper.joins(joins: _*).includes(includes: _*).findAll().to[SortedSet]
-      LTSVLogger.debug("Table" -> mapper.tableName, "Retrieved records" -> ret.size.toString)
-      ret
-    }
-  }.measure("DB_GET")
+                                                         includes: Seq[Association[_]] = Nil)(implicit session: DBSession = ReadOnlyAutoSession): Future[SortedSet[A]] =
+    Future {
+      blocking {
+        val ret = mapper.joins(joins: _*).includes(includes: _*).findAll().to[SortedSet]
+        LTSVLogger.debug("Table" -> mapper.tableName, "Retrieved records" -> ret.size.toString)
+        ret
+      }
+    }.measure("DB_GET")
 
   /**
    * Gets all the records from a table according to a where clause and logs the number of records retrieved
@@ -211,9 +214,11 @@ trait ImmutableDBRepository extends ConfigsRepository {
 }
 
 trait MutableDBRepository extends MutableConfigsRepository {
-  import com.m3.octoparts.repository.DBContext._
+
+  protected implicit def executionContext: ExecutionContext
 
   implicit def zipkinService: ZipkinServiceLike
+  implicit def metrics: Metrics
   private val zipkinSpanNameBase = "db-repo-mutation"
 
   def save[A <: ConfigModel[A]: ConfigMapper](obj: A)(implicit parentSpan: Span): Future[Long] = {

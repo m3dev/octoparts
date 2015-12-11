@@ -8,7 +8,7 @@ import play.api.mvc.{ Action, Controller }
 /**
  * A controller that simply prints the BuildInfo object as json
  */
-object BuildInfoController extends Controller {
+class BuildInfoController extends Controller {
 
   def showBuildInfo = Action {
     val json = Json.obj(

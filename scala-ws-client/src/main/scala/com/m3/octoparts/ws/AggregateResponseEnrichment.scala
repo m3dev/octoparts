@@ -6,7 +6,6 @@ import com.m3.octoparts.model.{ AggregateResponse, PartResponse }
 import org.apache.commons.lang3.{ StringUtils, SystemUtils }
 import play.api.Logger
 import play.api.data.validation.ValidationError
-import play.api.i18n.Messages
 import play.api.libs.json._
 
 import scala.util.{ Failure, Success, Try }
@@ -169,9 +168,7 @@ object AggregateResponseEnrichment {
   private def jsonErrorMsg(errors: Seq[(JsPath, Seq[ValidationError])]): String = {
     errors.map {
       case (jsPath, validationErrors) => {
-        val validationErrorMsg = validationErrors.map { validationError =>
-          Messages(validationError.message, validationError.args)
-        }.mkString(",")
+        val validationErrorMsg = validationErrors.map(_.message).mkString(",")
         s"error at: $jsPath reason: $validationErrorMsg"
       }
     }.mkString("; ")

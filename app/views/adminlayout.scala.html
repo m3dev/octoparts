@@ -1,4 +1,4 @@
-@(title: String)(meta: Html)(body: Html)(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, lang: Lang)
+@(title: String)(meta: Html)(body: Html)(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, messages: Messages)
 @import com.m3.octoparts.BuildInfo
 @import org.joda.time.DateTime
 @import play.api.Play
@@ -6,7 +6,7 @@
 
 <!DOCTYPE html>
 
-<html lang="@lang.language">
+<html lang="@messages.lang.language">
     <head>
         <title>[@Play.current.configuration.getString("application.env").getOrElse("dev")] @title</title>
 
@@ -47,7 +47,7 @@
             height: 70px;
             background-color: #f5f5f5;">
             <div class="container">
-                <p class="text-muted">@BuildInfo.name @BuildInfo.version, built at @(new DateTime(BuildInfo.buildTime).toString("yyyy-MM-dd HH:mm:ss")) with Scala @BuildInfo.scalaVersion, locale: @lang.toLocale</p>
+                <p class="text-muted">@BuildInfo.name @BuildInfo.version, built at @(new DateTime(BuildInfo.buildTime).toString("yyyy-MM-dd HH:mm:ss")) with Scala @BuildInfo.scalaVersion, locale: @messages.lang.toLocale</p>
                 <p class="text-muted">Branch: @BuildInfo.gitBranch, HEAD: @BuildInfo.gitHEAD</p>
             </div>
         </div>

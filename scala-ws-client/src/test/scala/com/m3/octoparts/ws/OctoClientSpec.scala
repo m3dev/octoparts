@@ -49,13 +49,13 @@ class OctoClientSpec
       mockWSResp
     }
 
-    def mockWSHolder(fWSRespPost: Future[WSResponse], fWSRespGet: Future[WSResponse]): WSRequestHolder = {
-      val mockWS = mock[WSRequestHolder]
+    def mockWSHolder(fWSRespPost: Future[WSResponse], fWSRespGet: Future[WSResponse]): WSRequest = {
+      val mockWS = mock[WSRequest]
       when(mockWS.withQueryString(anyVararg())).thenReturn(mockWS)
       when(mockWS.get()).thenReturn(fWSRespGet)
       when(mockWS.withHeaders(anyVararg())).thenReturn(mockWS)
-      when(mockWS.post(anyObject[JsValue])(anyObject(), anyObject())).thenReturn(fWSRespPost)
-      when(mockWS.post(anyObject[EmptyContent])(anyObject(), anyObject())).thenReturn(fWSRespPost)
+      when(mockWS.post(anyObject[JsValue])(anyObject())).thenReturn(fWSRespPost)
+      when(mockWS.post(anyObject[EmptyContent])(anyObject())).thenReturn(fWSRespPost)
       mockWS
     }
 
@@ -124,12 +124,12 @@ class OctoClientSpec
       mockSubjectWithHolder(respPost, respGet)._2
     }
 
-    def mockSubjectWithHolder(respPost: Future[WSResponse], respGet: Future[WSResponse]): (WSRequestHolder, OctoClientLike) = {
+    def mockSubjectWithHolder(respPost: Future[WSResponse], respGet: Future[WSResponse]): (WSRequest, OctoClientLike) = {
       val holder = mockWSHolder(respPost, respGet)
       val client = new OctoClientLike {
         val baseUrl = "http://bobby.com/"
         protected val clientTimeout = 10.seconds
-        def wsHolderFor(url: String, timeout: FiniteDuration): WSRequestHolder = holder
+        def wsRequestFor(url: String, timeout: FiniteDuration): WSRequest = holder
         def rescuer[A](obj: => A) = PartialFunction.empty
         protected def rescueAggregateResponse: AggregateResponse = emptyReqResponse
         protected def rescueHttpPartConfigs: Seq[HttpPartConfig] = Seq.empty
@@ -222,7 +222,7 @@ class OctoClientSpec
 
       val mockWSH = mockWSHolder(respPost, respGet)
       def mockWSHolderCreator = {
-        val creator = mock[Function[String, WSRequestHolder]]
+        val creator = mock[Function[String, WSRequest]]
         when(creator.apply(anyString())).thenReturn(mockWSH)
         creator
       }
@@ -231,7 +231,7 @@ class OctoClientSpec
         val wsHolderCreator = mockWSHolderCreator
         val subject = new OctoClientLike {
           val baseUrl = "http://bobby.com"
-          def wsHolderFor(url: String, timeout: FiniteDuration): WSRequestHolder = wsHolderCreator.apply(url)
+          def wsRequestFor(url: String, timeout: FiniteDuration): WSRequest = wsHolderCreator.apply(url)
           protected def rescuer[A](obj: => A): PartialFunction[Throwable, A] = PartialFunction.empty
           protected val clientTimeout = 10.seconds
           protected def rescueAggregateResponse = emptyReqResponse

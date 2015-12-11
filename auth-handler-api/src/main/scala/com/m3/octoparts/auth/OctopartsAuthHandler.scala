@@ -6,7 +6,7 @@ import play.api.mvc.{ Request, Result }
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * Authentication plugin for Octoparts should implement this trait.
+ * Authentication handler for Octoparts should implement this trait.
  *
  * e.g.
  *
@@ -32,7 +32,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  *   }
  * }}}
  */
-trait OctopartsAuthPlugin extends Plugin {
+trait OctopartsAuthHandler {
 
   /**
    * What action to take when a request is not authenticated, e.g. redirect to an authentication server.

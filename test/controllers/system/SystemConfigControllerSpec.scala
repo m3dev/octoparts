@@ -1,8 +1,8 @@
 package controllers.system
 
+import com.m3.octoparts.support.PlayAppSupport
 import com.typesafe.config.ConfigFactory
 import org.scalatest.{ FlatSpec, Matchers }
-import org.scalatestplus.play.OneAppPerSuite
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
@@ -10,9 +10,9 @@ class SystemConfigControllerSpec
     extends FlatSpec
     with Matchers
     with JsonCheckSupport
-    with OneAppPerSuite {
+    with PlayAppSupport {
 
-  private def toLines(s: String): List[String] = s.trim.stripMargin.split(Array('\r', '\n')).toList.filter {
+  private def toLines(s: String): List[String] = s.trim.stripMargin.split(System.getProperty("line.separator")).toList.filter {
     _.nonEmpty
   }
 

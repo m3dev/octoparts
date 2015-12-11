@@ -7,8 +7,7 @@ import com.m3.octoparts.cache.dummy.{ DummyCacheOps, DummyCache, DummyRawCache, 
 import com.m3.octoparts.cache.key.MemcachedKeyGenerator
 import com.m3.octoparts.cache.memcached.{ MemcachedCacheOps, MemcachedCache, InMemoryRawCache, MemcachedRawCache }
 import com.m3.octoparts.cache.versioning.InMemoryLatestVersionCache
-import com.m3.octoparts.cache.{ LoggingRawCache, RawCache }
-import play.api.Play
+import com.m3.octoparts.cache.LoggingRawCache
 import shade.memcached.{ AuthConfiguration, Memcached, Protocol, Configuration => ShadeConfig }
 
 import scala.concurrent.ExecutionContext
@@ -17,12 +16,11 @@ import com.softwaremill.macwire._
 
 trait CacheModule extends UtilsModule {
 
-  private lazy val cacheExecutor: ExecutionContext = {
-    val config = Play.configuration.underlying
+  private implicit lazy val cacheExecutor: ExecutionContext = {
 
     val namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("cache-%d").build()
-    val poolSize = config.getInt("caching.pool.size")
-    val queueSize = config.getInt("caching.queue.size")
+    val poolSize = typesafeConfig.getInt("caching.pool.size")
+    val queueSize = typesafeConfig.getInt("caching.queue.size")
     val queue: BlockingQueue[Runnable] = new ArrayBlockingQueue[Runnable](queueSize)
 
     ExecutionContext.fromExecutor(
@@ -33,7 +31,7 @@ trait CacheModule extends UtilsModule {
     if (cachingDisabled) {
       DummyLatestVersionCache
     } else {
-      val maxInMemoryLVCKeys = playConfig.getLong("caching.versionCachingSize").getOrElse(100000L)
+      val maxInMemoryLVCKeys = configuration.getLong("caching.versionCachingSize").getOrElse(100000L)
       new InMemoryLatestVersionCache(maxInMemoryLVCKeys)
     }
   }
@@ -42,15 +40,15 @@ trait CacheModule extends UtilsModule {
     DummyRawCache
   } else {
     val cache = if (useInMemoryCache) {
-      new InMemoryRawCache()(cacheExecutor, zipkinService)
+      new InMemoryRawCache(zipkinService)(cacheExecutor)
     } else {
       val hostPort = typesafeConfig.getString("memcached.host")
       val timeout = typesafeConfig.getInt("memcached.timeout").millis
       // should be one of "Text" or "Binary"
       val protocol = typesafeConfig.getString("memcached.protocol")
       val auth = for {
-        user <- playConfig.getString("memcached.user")
-        password <- playConfig.getString("memcached.password")
+        user <- configuration.getString("memcached.user")
+        password <- configuration.getString("memcached.password")
       } yield AuthConfiguration(user, password)
 
       val shade = Memcached(ShadeConfig(
@@ -86,8 +84,8 @@ trait CacheModule extends UtilsModule {
     }
   }
 
-  lazy val cachingDisabled = playConfig.getBoolean("caching.disabled").getOrElse(false)
+  lazy val cachingDisabled = configuration.getBoolean("caching.disabled").getOrElse(false)
 
-  lazy val useInMemoryCache = playConfig.getBoolean("caching.inmemory").getOrElse(false)
+  lazy val useInMemoryCache = configuration.getBoolean("caching.inmemory").getOrElse(false)
 
 }

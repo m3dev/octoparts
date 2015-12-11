@@ -2,6 +2,7 @@ package com.m3.octoparts.repository
 
 import com.beachape.zipkin.services.NoopZipkinService
 import com.m3.octoparts.repository.config._
+import com.m3.octoparts.support.MetricsSupport
 import com.twitter.zipkin.gen.Span
 import org.scalatest._
 import com.m3.octoparts.support.db._
@@ -11,12 +12,17 @@ import org.scalatest.concurrent.ScalaFutures
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class DBConfigsRepositorySpec extends fixture.FlatSpec with DBSuite with Matchers with ConfigDataMocks with ScalaFutures {
+class DBConfigsRepositorySpec
+    extends fixture.FlatSpec
+    with DBSuite
+    with Matchers
+    with ConfigDataMocks
+    with ScalaFutures
+    with MetricsSupport {
 
   implicit val p = PatienceConfig(timeout = 5 seconds)
-  implicit val zipkinService = NoopZipkinService
   implicit val emptySpan = new Span()
-  lazy val dbConfigRepo = new DBConfigsRepository()
+  lazy val dbConfigRepo = new DBConfigsRepository(NoopZipkinService, scala.concurrent.ExecutionContext.global)
 
   behavior of "DBConfigsRepository"
 

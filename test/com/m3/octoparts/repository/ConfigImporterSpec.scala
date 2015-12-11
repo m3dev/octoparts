@@ -3,16 +3,23 @@ package com.m3.octoparts.repository
 import com.beachape.zipkin.services.NoopZipkinService
 import com.m3.octoparts.model.config.HttpPartConfig
 import com.m3.octoparts.repository.config.{ ThreadPoolConfigRepository, HystrixConfigRepository }
+import com.m3.octoparts.support.MetricsSupport
 import com.m3.octoparts.support.db.DBSuite
 import com.m3.octoparts.support.mocks.ConfigDataMocks
 import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
 import org.scalatest.{ Matchers, fixture }
 
-class ConfigImporterSpec extends fixture.FlatSpec with DBSuite with Matchers with ConfigDataMocks with ScalaFutures with IntegrationPatience {
+class ConfigImporterSpec
+    extends fixture.FlatSpec
+    with DBSuite
+    with Matchers
+    with ConfigDataMocks
+    with ScalaFutures
+    with IntegrationPatience
+    with MetricsSupport {
 
   def completeCfg(partId: String) = mockHttpPartConfig.copy(partId = partId, hystrixConfig = Some(mockHystrixConfig.copy(commandKey = partId)))
-  implicit val zipkinService = NoopZipkinService
-  lazy val dbConfigRepo = new DBConfigsRepository()
+  lazy val dbConfigRepo = new DBConfigsRepository(NoopZipkinService, scala.concurrent.ExecutionContext.global)
 
   it should "not import more than 1 config per partId" in {
     implicit session =>
