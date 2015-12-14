@@ -7,7 +7,7 @@ import org.apache.http.client.methods.HttpHead
 import org.scalatest.{ FunSpec, Matchers }
 import scala.concurrent.duration._
 
-class InstrumentedHttpClientHttpClientSpec extends FunSpec with Matchers with MetricsSupport {
+class InstrumentedHttpClientSpec extends FunSpec with Matchers with MetricsSupport {
 
   it("should not fail (only warn) if 2 clients share the same name") {
     val clients = for (i <- 1 to 2) yield {
