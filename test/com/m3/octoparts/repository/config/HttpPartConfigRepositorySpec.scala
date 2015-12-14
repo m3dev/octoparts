@@ -27,7 +27,10 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
     'httpDefaultEncoding -> StandardCharsets.UTF_8.name()
   )
 
-  val httpPartConfigMapWithDeprecation = httpPartConfigMap :+ ('deprecatedInFavourOf -> Some("theNewHotness"))
+  val httpPartConfigMapWithDeprecation = httpPartConfigMap ++ Seq(
+    'deprecatedInFavourOf -> Some("theNewHotness"),
+    'httpProxy -> Some("http://testproxy:8080")
+  )
 
   // ---- Helper functions ----
   private def createCacheGroup(howMany: Int)(implicit session: DBSession): SortedSet[CacheGroup] = {
@@ -69,6 +72,7 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
         config.uriToInterpolate should be("http://skysports.com/fooball")
         config.method should be(Get)
         config.deprecatedInFavourOf should be(Some("theNewHotness"))
+        config.httpProxy should be(Some("http://testproxy:8080"))
     }
 
   }
