@@ -50,11 +50,17 @@ class OctopartsApiBuilder(@Nonnull apiRootUrl: String, @Nullable serviceId: Stri
    * @param userAgent optional user agent
    * @param requestUrl optional request URL
    * @param timeoutMs This value is enforced in the octoparts server.
+   * @param proxyId proxy Id defined in Octoparts' configuration, taken from HTTP header 'X-OCTOPARTS-PROXY-ID'
    */
-  def newRequest(@Nullable userId: String, @Nullable sessionId: String, @Nullable userAgent: String, @Nullable requestUrl: String, @Nullable timeoutMs: java.lang.Long): RequestBuilder = {
+  def newRequest(@Nullable userId: String, @Nullable sessionId: String, @Nullable userAgent: String, @Nullable requestUrl: String, @Nullable timeoutMs: java.lang.Long, @Nullable proxyId: String): RequestBuilder = {
     val timeoutOpt = if (timeoutMs == null) None else Some(timeoutMs.longValue().millis)
-    val requestMeta = RequestMeta(UUID.randomUUID.toString, Option(serviceId), Option(userId), Option(sessionId), Option(requestUrl), Option(userAgent), timeoutOpt)
+    val requestMeta = RequestMeta(UUID.randomUUID.toString, Option(serviceId), Option(userId), Option(sessionId), Option(requestUrl), Option(userAgent), timeoutOpt, Option(proxyId))
     new RequestBuilder(requestMeta)
+  }
+
+  /** for backward compatibility */
+  def newRequest(@Nullable userId: String, @Nullable sessionId: String, @Nullable userAgent: String, @Nullable requestUrl: String, @Nullable timeoutMs: java.lang.Long): RequestBuilder = {
+    newRequest(userId, sessionId, userAgent, requestUrl, timeoutMs, null);
   }
 
   @varargs private[client] def toHttp(aggregateRequest: AggregateRequest, additionalHeaders: (String, String)*) = {
