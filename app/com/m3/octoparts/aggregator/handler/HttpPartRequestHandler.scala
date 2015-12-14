@@ -98,7 +98,7 @@ trait HttpPartRequestHandler extends Handler {
       AggregateRequestIdHeader -> partRequestInfo.requestMeta.id,
       PartRequestIdHeader -> partRequestInfo.partRequestId,
       PartIdHeader -> partRequestInfo.partRequest.partId
-    )
+    ) ++ partRequestInfo.requestMeta.proxyId.map { case s => ProxyIdHeader -> s }
   }
 
   /**
@@ -178,6 +178,7 @@ object HttpPartRequestHandler {
   val AggregateRequestIdHeader = "X-OCTOPARTS-PARENT-REQUEST-ID"
   val PartRequestIdHeader = "X-OCTOPARTS-REQUEST-ID"
   val PartIdHeader = "X-OCTOPARTS-PART-ID"
+  val ProxyIdHeader = "X-OCTOPARTS-PROXY-ID"
 
   /**
    * A regex for matching "${...}" placeholders in strings

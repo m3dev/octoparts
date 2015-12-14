@@ -1,6 +1,6 @@
 @(part: presentation.HttpPartConfigView)(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, messages: Messages)
 
-@metaProps = @{Seq("serviceId", "userId", "sessionId", "requestUrl", "userAgent")}
+@metaProps = @{Seq("serviceId", "userId", "sessionId", "requestUrl", "userAgent", "proxyId")}
 
 @requiredCls(paramView: presentation.ParamView)= {if (required) "required" else "optional"}
 

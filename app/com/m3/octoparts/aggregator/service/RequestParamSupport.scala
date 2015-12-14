@@ -71,7 +71,8 @@ trait RequestParamSupport {
       "meta.serviceId" -> meta.serviceId,
       "meta.sessionId" -> meta.sessionId,
       "meta.userAgent" -> meta.userAgent,
-      "meta.userId" -> meta.userId
+      "meta.userId" -> meta.userId,
+      "meta.proxyId" -> meta.proxyId
     )
     value <- mbValue
   } yield {

@@ -8,10 +8,13 @@ trait AggregatorServicesModule extends RepositoriesModule with AggregatorHandler
 
   private implicit lazy val ec = partsServiceContext
 
+  import scala.collection.JavaConverters._
+
   lazy val partRequestServiceBase = new PartRequestService(
     configsRepository,
     httpHandlerFactory,
-    zipkinService
+    zipkinService,
+    proxyConfig
   ) with PartResponseCachingSupport with PartResponseLocalContentSupport {
     val cacheOps = module.cacheOps
   }
@@ -24,4 +27,13 @@ trait AggregatorServicesModule extends RepositoriesModule with AggregatorHandler
     )
   }
 
+  private[this] lazy val proxyConfig: Map[String, String] = {
+    val config = configuration.getConfigSeq("proxies")
+    val list = for {
+      proxy <- config.getOrElse(Seq())
+      id <- proxy.getString("id")
+      url <- proxy.getString("url")
+    } yield (id -> url)
+    Map(list: _*)
+  }
 }
