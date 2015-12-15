@@ -17,6 +17,10 @@ trait HandlerMocks {
     val partId = "voidHandler"
     def process(pri: PartRequestInfo, args: HandlerArguments)(implicit span: Span) = Future.successful(PartResponse(partId, partId, contents = Some("it worked")))
   }
+  def mockVoidProxyHandler(proxy: Option[String]) = new Handler {
+    val partId = "voidProxyHandler"
+    def process(pri: PartRequestInfo, args: HandlerArguments)(implicit span: Span) = Future.successful(PartResponse(partId, partId, contents = Some(s"it worked with proxy ${proxy}")))
+  }
   val mockErrorHandler = new Handler {
     val partId = "errorHandler"
     def process(pri: PartRequestInfo, args: HandlerArguments)(implicit span: Span) = Future.failed(new RuntimeException)
@@ -28,6 +32,10 @@ trait HandlerMocks {
   val mockVoidHttpHandlerFactory = new HttpHandlerFactory {
     implicit val zipkinService = NoopZipkinService
     override def makeHandler(ci: HttpPartConfig) = mockVoidHandler
+  }
+  val mockVoidHttpProxyHandlerFactory = new HttpHandlerFactory {
+    implicit val zipkinService = NoopZipkinService
+    override def makeHandler(ci: HttpPartConfig) = mockVoidProxyHandler(ci.httpProxy)
   }
   val mockErrorHttpHandlerFactory = new HttpHandlerFactory {
     implicit val zipkinService = NoopZipkinService

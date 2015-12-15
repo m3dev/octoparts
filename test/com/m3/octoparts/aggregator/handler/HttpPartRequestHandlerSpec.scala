@@ -92,6 +92,33 @@ class HttpPartRequestHandlerSpec extends FunSpec with Matchers with ScalaFutures
         }
       }
     }
+    describe("shold pass proper headers") {
+      val proxyIdHeader = "X-OCTOPARTS-PROXY-ID"
+      val okResponse = HttpResponse(status = HttpStatus.SC_OK, message = "OK", mimeType = Some("text/plain"), body = Some("default"))
+      val client = new HttpClientLike {
+        def retrieve(request: HttpUriRequest) = {
+          val body = request.getHeaders(proxyIdHeader).map(h => s"${h.getName}: ${h.getValue}").mkString("\n")
+          okResponse.copy(body = Some(body))
+        }
+      }
+      describe("when proxy override is enabled") {
+        it("should include 'X-OCTOPARTS-PROXY-ID' in headers") {
+          val handler = handlerWithHttpClient(client)
+          val pReqProxy = partRequestInfo.copy(requestMeta = partRequestInfo.requestMeta.copy(proxyId = Some("proxy")))
+          whenReady(handler.process(pReqProxy, Map.empty)) {
+            partResp => partResp.contents should be(Some("X-OCTOPARTS-PROXY-ID: proxy"))
+          }
+        }
+      }
+      describe("when proxy override is not used") {
+        it("should not include 'X-OCTOPARTS-PROXY-ID' in headers") {
+          val handler = handlerWithHttpClient(client)
+          whenReady(handler.process(partRequestInfo, Map.empty)) {
+            partResp => partResp.contents should be(Some(""))
+          }
+        }
+      }
+    }
   }
 
   describe("#createBlockingHttpRetrieve") {

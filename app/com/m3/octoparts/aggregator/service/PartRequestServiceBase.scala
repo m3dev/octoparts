@@ -26,6 +26,8 @@ trait PartRequestServiceBase extends RequestParamSupport {
 
   def handlerFactory: HttpHandlerFactory
 
+  def proxyDefinition(proxyId: String): Option[String] = None
+
   /**
    * The primary method responsible for processing a PartRequest into a Future[PartResponse]
    *
@@ -84,7 +86,9 @@ trait PartRequestServiceBase extends RequestParamSupport {
    * @return Future[PartResponse], which includes adding deprecation notices
    */
   protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): Future[PartResponse] = {
-    val handler = handlerFactory.makeHandler(ci)
+    val proxyOverride = partRequestInfo.requestMeta.proxyId.flatMap { case id => proxyDefinition(id) }
+    val proxyOverriddenConfig = ci.copy(httpProxy = proxyOverride orElse ci.httpProxy)
+    val handler = handlerFactory.makeHandler(proxyOverriddenConfig)
     val fResp = handler.process(partRequestInfo, params)
     fResp.map {
       resp =>

@@ -23,7 +23,8 @@ case class RequestMeta(
   @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty sessionId: Option[String] = None,
   @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty requestUrl: Option[String] = None,
   @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty userAgent: Option[String] = None,
-  @(ApiModelProperty @field)(required = false, dataType = "integer", value = "in ms")@BeanProperty timeout: Option[FiniteDuration] = None)
+  @(ApiModelProperty @field)(required = false, dataType = "integer", value = "in ms")@BeanProperty timeout: Option[FiniteDuration] = None,
+  @(ApiModelProperty @field)(required = false, dataType = "String")@BeanProperty proxyId: Option[String] = None)
 
 /**
  * A request for a given part. One of more of these can be combined into a single AggregateRequest.

@@ -12,5 +12,9 @@ import scala.concurrent.ExecutionContext
 class PartRequestService(
   val repository: ConfigsRepository,
   val handlerFactory: HttpHandlerFactory,
-  implicit val zipkinService: ZipkinServiceLike)(implicit val executionContext: ExecutionContext)
-    extends PartRequestServiceBase
+  implicit val zipkinService: ZipkinServiceLike,
+  proxyDefinitions: Map[String, String])(implicit val executionContext: ExecutionContext)
+    extends PartRequestServiceBase {
+
+  override def proxyDefinition(proxyId: String): Option[String] = proxyDefinitions.get(proxyId)
+}

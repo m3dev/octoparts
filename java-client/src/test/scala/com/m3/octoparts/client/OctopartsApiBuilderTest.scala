@@ -32,6 +32,11 @@ class OctopartsApiBuilderTest extends FunSpec with BeforeAndAfterAll with Matche
     JListWrapper(ningrequest.getHeaders.get("a")).toSeq shouldBe Seq("b")
   }
 
+  it("should handle proxy-id meta") {
+    val request = apiBuilder.newRequest("123", "cafebabe", null, "/index.jsp", 456L, "test1")
+    request.build.requestMeta.proxyId should be(Some("test1"))
+  }
+
   it("should escape var arguments, handling nulls") {
     OctopartsApiBuilder.formatWithUriEscape("%s", " ") should be("%20")
     OctopartsApiBuilder.formatWithUriEscape("%s%s", " ", " ") should be("%20%20")

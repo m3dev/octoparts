@@ -22,4 +22,10 @@ caching {
   inmemory = true
 }
 
+proxies = [
+  # The mapping from meta.proxyId (taken from X-OCTOPARTS-PROXY-ID HTTP header) to proxy URL
+  { id: "proxy1", url: "http://proxy1:8080" },
+  { id: "proxy2", url: "http://proxy2:8080" },
+]
+
 swagger.api.basepath="http://localhost:9000"

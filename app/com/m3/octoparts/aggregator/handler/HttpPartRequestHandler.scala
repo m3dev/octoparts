@@ -87,18 +87,18 @@ trait HttpPartRequestHandler extends Handler {
       }
       val headers = {
         collectHeaders(hArgs) ++
-          buildTracingHeaders(partRequestInfo) ++
+          buildOctopartsHeaders(partRequestInfo) ++
           tracingSpan.fold(Map.empty[String, String])(zipkinService.spanToIdsMap)
       }
     }
   }
 
-  private def buildTracingHeaders(partRequestInfo: PartRequestInfo): Seq[(String, String)] = {
+  private def buildOctopartsHeaders(partRequestInfo: PartRequestInfo): Seq[(String, String)] = {
     Seq(
       AggregateRequestIdHeader -> partRequestInfo.requestMeta.id,
       PartRequestIdHeader -> partRequestInfo.partRequestId,
       PartIdHeader -> partRequestInfo.partRequest.partId
-    )
+    ) ++ partRequestInfo.requestMeta.proxyId.map { s => ProxyIdHeader -> s }
   }
 
   /**
@@ -178,6 +178,7 @@ object HttpPartRequestHandler {
   val AggregateRequestIdHeader = "X-OCTOPARTS-PARENT-REQUEST-ID"
   val PartRequestIdHeader = "X-OCTOPARTS-REQUEST-ID"
   val PartIdHeader = "X-OCTOPARTS-PART-ID"
+  val ProxyIdHeader = "X-OCTOPARTS-PROXY-ID"
 
   /**
    * A regex for matching "${...}" placeholders in strings
