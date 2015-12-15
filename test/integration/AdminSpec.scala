@@ -116,6 +116,16 @@ class AdminSpec
     }
   }
 
+  case class CacheGroupDeletePage(cacheGroupName: String) extends SeleniumPage {
+    val url: String = s"$baseUrl/admin/cache-groups/$cacheGroupName/delete"
+
+    def delete() = {
+      find(TagNameQuery("input")).filter(_.attribute("value").contains("Delete")).foreach(clickOn)
+    }
+
+    def cancel() = click on linkText("Cancel")
+  }
+
   def uniqueId = java.util.UUID.randomUUID
 
   describe("adding a thread pool") {
@@ -228,6 +238,42 @@ class AdminSpec
         val descriptors = findAll(TagNameQuery("dd")).toSeq
         descriptors.find(_.text == newName) shouldBe 'defined
       }
+
+    }
+
+    describe("the delete CacheGroup page") {
+
+      it("should redirect me to the cache group list page if no such cache group can be found") {
+        goTo(CacheGroupDeletePage("whassaaaaap"))
+        currentUrl shouldBe CacheGroupListPage.url
+      }
+
+      it("should allow me to reach the delete page") {
+        val groupName = CacheGroupAddPage.createCacheGroup
+        goTo(CacheGroupDeletePage(groupName))
+        pageTitle should include("Delete")
+      }
+
+      it("should allow me to cancel, returning me back to the list page for cache groups") {
+        val groupName = CacheGroupAddPage.createCacheGroup
+        val deletePage = CacheGroupDeletePage(groupName)
+        goTo(deletePage)
+        deletePage.cancel()
+        currentUrl shouldBe CacheGroupListPage.url
+        val descriptors = findAll(TagNameQuery("td")).toSeq
+        descriptors.find(_.text == groupName) shouldBe 'defined
+      }
+
+      it("should allow me to proceed with deletion, deleting the group and returning me back to the list page for cache groups") {
+        val groupName = CacheGroupAddPage.createCacheGroup
+        val deletePage = CacheGroupDeletePage(groupName)
+        goTo(deletePage)
+        deletePage.delete()
+        currentUrl shouldBe CacheGroupListPage.url
+        val descriptors = findAll(TagNameQuery("td")).toSeq
+        descriptors.find(_.text == groupName) should not be 'defined
+      }
+
     }
 
   }
