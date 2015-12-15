@@ -87,18 +87,18 @@ trait HttpPartRequestHandler extends Handler {
       }
       val headers = {
         collectHeaders(hArgs) ++
-          buildTracingHeaders(partRequestInfo) ++
+          buildOctopartsHeaders(partRequestInfo) ++
           tracingSpan.fold(Map.empty[String, String])(zipkinService.spanToIdsMap)
       }
     }
   }
 
-  private def buildTracingHeaders(partRequestInfo: PartRequestInfo): Seq[(String, String)] = {
+  private def buildOctopartsHeaders(partRequestInfo: PartRequestInfo): Seq[(String, String)] = {
     Seq(
       AggregateRequestIdHeader -> partRequestInfo.requestMeta.id,
       PartRequestIdHeader -> partRequestInfo.partRequestId,
       PartIdHeader -> partRequestInfo.partRequest.partId
-    ) ++ partRequestInfo.requestMeta.proxyId.map { case s => ProxyIdHeader -> s }
+    ) ++ partRequestInfo.requestMeta.proxyId.map { s => ProxyIdHeader -> s }
   }
 
   /**
