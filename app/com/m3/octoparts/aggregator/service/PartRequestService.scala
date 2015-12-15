@@ -13,7 +13,7 @@ class PartRequestService(
   val repository: ConfigsRepository,
   val handlerFactory: HttpHandlerFactory,
   implicit val zipkinService: ZipkinServiceLike,
-  val proxyDefinitions: Map[String, String] = Map())(implicit val executionContext: ExecutionContext)
+  proxyDefinitions: Map[String, String])(implicit val executionContext: ExecutionContext)
     extends PartRequestServiceBase {
 
   override def proxyDefinition(proxyId: String): Option[String] = proxyDefinitions.get(proxyId)

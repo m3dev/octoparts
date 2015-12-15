@@ -54,7 +54,7 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
       case "void" => voidHandler
       case _ => throw new RuntimeException
     }
-  }, NoopZipkinService)
+  }, NoopZipkinService, Map.empty)
   private val partsService = new PartsService(partsRequestService)
 
   private val controller = new PartsController(partsService, configsRepository, 10 seconds, true, actorSystem, NoopZipkinService)
