@@ -78,7 +78,7 @@ class AdminSpec
     }
   }
 
-  def PartEditPage(partId: String): SeleniumPage = new SeleniumPage {
+  case class PartEditPage(partId: String) extends SeleniumPage {
     val url: String = s"$baseUrl/admin/parts/$partId/edit"
   }
 
@@ -99,6 +99,20 @@ class AdminSpec
       textField("description").value = "whatevs"
       submit()
       name
+    }
+  }
+
+  case class CacheGroupShowPage(cacheGroupName: String) extends SeleniumPage {
+    val url: String = s"$baseUrl/admin/cache-groups/$cacheGroupName/show"
+  }
+
+  case class CacheGroupEditPage(cacheGroupName: String) extends SeleniumPage {
+    val url: String = s"$baseUrl/admin/cache-groups/$cacheGroupName/edit"
+
+    def updateWithName(name: String) = {
+      goTo(this)
+      textField("name").value = name
+      submit()
     }
   }
 
@@ -178,6 +192,41 @@ class AdminSpec
         val newCacheGroupName = CacheGroupAddPage.createCacheGroup
         goTo(CacheGroupListPage)
         pageSource should include(newCacheGroupName)
+      }
+
+    }
+
+    describe("the show CacheGroup page") {
+
+      it("should redirect me to the cache group list page if no such cache group can be found") {
+        goTo(CacheGroupShowPage("boyakasha"))
+        currentUrl shouldBe CacheGroupListPage.url
+      }
+
+      it("should show me a cache group if the cache group exists") {
+        val name = CacheGroupAddPage.createCacheGroup
+        goTo(CacheGroupShowPage(name))
+        pageTitle should include("Cache group details")
+        val descriptors = findAll(TagNameQuery("dd")).toSeq
+        descriptors.find(_.text == name) shouldBe 'defined
+      }
+
+    }
+
+    describe("the edit CacheGroup page") {
+
+      it("should redirect me to the cache group list page if no such cache group can be found") {
+        goTo(CacheGroupEditPage("boyakasha"))
+        currentUrl shouldBe CacheGroupListPage.url
+      }
+
+      it("should allow me to edit a cache group") {
+        val oldName = CacheGroupAddPage.createCacheGroup
+        val newName = s"$oldName - updated"
+        CacheGroupEditPage(oldName).updateWithName(newName)
+        pageTitle should include("Cache group details")
+        val descriptors = findAll(TagNameQuery("dd")).toSeq
+        descriptors.find(_.text == newName) shouldBe 'defined
       }
     }
 
