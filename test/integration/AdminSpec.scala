@@ -183,9 +183,15 @@ class AdminSpec
 
     describe("the listing page") {
 
-      it("should work fine") {
+      it("should work fine and display all the existing groups") {
+        // create a few CacheGroups
+        val groupNames = (1 to 5).map(_ => CacheGroupAddPage.createCacheGroup)
         goTo(CacheGroupListPage)
         pageTitle should include("Cache groups")
+        val rows = findAll(TagNameQuery("td")).toSeq
+        groupNames.foreach { groupName =>
+          rows.find(_.text == groupName) shouldBe 'defined
+        }
       }
 
       it("should have a button for creating a new cache group") {
