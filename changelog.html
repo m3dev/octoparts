@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <!-- Use title if it's in the page YAML frontmatter -->
+    <title>Changelog | Octoparts</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=h">
+
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+
+    <script src="js/vendor/modernizr-2.6.1.min.js"></script>
+
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body>
+    <!--[if lt IE 7]>
+        <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
+    <![endif]-->
+
+    <a href="https://github.com/m3dev/octoparts"><img style="position: absolute; top: 0; right: 0; border: 0; z-index: 100" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
+
+    <div class="container">
+      <div class="row">
+
+        <div class="col-md-3">
+          <div id="sidebar">
+            <div class="sidebar-logo">
+<a href="./">                  <img width="220px" src="img/octo_logo1.png" />
+</a>            </div>
+
+            <ul class="nav nav-pills nav-stacked">
+              <li ><a href="getting-started.html">Getting started</a></a></li>
+              <li ><a href="http-api.html">HTTP API</a></a></li>
+              <li ><a href="caching.html">Caching</a></a></li>
+              <li ><a href="timeouts.html">Timeouts</a></a></li>
+              <li ><a href="logging-visualization.html">Logging & Visualization</a></a></li>
+              <li ><a href="internals.html">Internals</a></a></li>
+              <li ><a href="runtime-info.html">Runtime info</a></a></li>
+              <li ><a href="alert-mails.html">Alert mails</a></a></li>
+              <li class='active'><a href="changelog.html">Changelog</a></a></li>
+              <li ><a href="contributing.html">Contributing</a></a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-md-9">
+          <h1>Changelog</h1>
+          <h3>v2.6</h3>
+
+<p>We are proud to announce that we have successfully upgraded to Play 2.4.x, &ldquo;Damiya&rdquo;. Although the last few Play releases were generally straightforward to upgrade to,
+with 2.4, the Play team made a lot of big changes to the framework, resulting in a lot of fixes and performance improvements. Some of the changes that are more relevant
+to Octoparts include:</p>
+
+<ul>
+<li>Dependency injection out of the box. (Octoparts continues to make use of compile-time DI for correctness and performance)</li>
+<li>Combination of previously separate thread pools into the Play default thread pool</li>
+<li>Migration of components out of the Global singleton for easier mocking and better reasonability</li>
+</ul>
+
+<p>After performing the upgrade, we deployed it into our test and QA environments and carefully monitored it for problems. When we found none, we used Siege to stress test the latest Play 2.3.x-based version of Octoparts against the Play 2.4.x-based version.  The following results were obtained from 10 mins of Sieging using a payload equivalent to one that would request data for the M3.com homepage for signed-in users, with 100 concurrent requests, and zero delay on a 2Ghz Corei7 (Haswell) Macbook Pro with 8GB RAM:</p>
+
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th></th>
+      <th>Play 2.3.x based</th>
+      <th>Play 2.4.x based</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr> <th scope=row>JVisualVM</th>
+      <td>
+        <div class="screenshot screenshot-border">
+
+<a target="_blank" href="img/opqa1_play23.png">              <img class="img-constrained" src="img/opqa1_play23.png" />
+</a>
+        </div>
+      </td>
+      <td>
+        <div class="screenshot screenshot-border">
+
+<a target="_blank" href="img/opqa1_play24.png">              <img class="img-constrained" src="img/opqa1_play24.png" />
+</a>
+        </div>
+      </td>
+    </tr>
+    <tr> <th scope=row>Transactions</th>
+      <td>24317 hits</td>
+      <td>25024 hits</td>
+    </tr>
+    <tr><th scope=row>Availability</th>
+      <td>99.93 %</td>
+      <td>100.00 %</td>
+    </tr>
+    <tr><th scope=row>Elapsed time</th>
+      <td>599.44 secs</td>
+      <td>598.99 secs</td>
+    </tr>
+    <tr><th scope=row>Data transferred</th>
+      <td>145.70 MB</td>
+      <td>149.84 MB</td>
+    </tr>
+    <tr><th scope=row>Response time</th>
+      <td>1.96 secs</td>
+      <td>1.89 secs</td>
+    </tr>
+    <tr><th scope=row>Transaction rate</th>
+      <td>40.57 trans/sec</td>
+      <td>41.78 trans/sec</td>
+    </tr>
+    <tr><th scope=row>Throughput</th>
+      <td>0.24 MB/sec</td>
+      <td>0.25 MB/sec</td>
+    </tr>
+    <tr><th scope=row>Concurrency</th>
+      <td>79.49</td>
+      <td>79.04</td>
+    </tr>
+    <tr><th scope=row>Successful transactions</th>
+      <td>24317</td>
+      <td>25024</td>
+    </tr>
+    <tr><th scope=row>Failed transactions</th>
+      <td>16</td>
+      <td>0</td>
+    </tr>
+    <tr><th scope=row>Longest transaction</th>
+      <td>12.03 secs</td>
+      <td>3.19 secs</td>
+    </tr>
+    <tr><th scope=row>Shortest transaction</th>
+      <td>0.06 secs</td>
+      <td>0.06 secs</td>
+    </tr>
+  </tbody>
+</table>
+
+<h4>Discussion</h4>
+
+<p>Overall, there is a slight improvement in response time, and in resource usage under stress (if anything, performance under stress improved because there is a lower tendency to hit 100% CPU usage peaks), with Siege reporting fewer failures (99.93% availability with Play 2.3 version versus 100% availability with Play 2.4). Thanks to Play 2.4&rsquo;s thread pool optimisation, we are using ~200 less threads at peak than with 2.3.x.</p>
+
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h4>Made by M3</h4>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <ul class="list-inline site-footer-link-list">
+                <li>
+                  <a href="https://github.com/m3dev/octoparts">GitHub repo</a>
+                </li>
+                <li>
+                  <a href="http://m3dev.github.io/">M3Dev</a>
+                </li>
+                <li>
+                  <a href="http://at.m3.com/job">We're hiring!</a>
+                </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.8.0.min.js"><\/script>')</script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="js/plugins.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+    <script>
+        var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
+        (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+        s.parentNode.insertBefore(g,s)}(document,'script'));
+    </script>
+  </body>
+</html>

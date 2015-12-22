@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <!-- Use title if it's in the page YAML frontmatter -->
+    <title>Timeouts | Octoparts</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=h">
+
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+
+    <script src="js/vendor/modernizr-2.6.1.min.js"></script>
+
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body>
+    <!--[if lt IE 7]>
+        <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
+    <![endif]-->
+
+    <a href="https://github.com/m3dev/octoparts"><img style="position: absolute; top: 0; right: 0; border: 0; z-index: 100" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
+
+    <div class="container">
+      <div class="row">
+
+        <div class="col-md-3">
+          <div id="sidebar">
+            <div class="sidebar-logo">
+<a href="./">                  <img width="220px" src="img/octo_logo1.png" />
+</a>            </div>
+
+            <ul class="nav nav-pills nav-stacked">
+              <li ><a href="getting-started.html">Getting started</a></a></li>
+              <li ><a href="http-api.html">HTTP API</a></a></li>
+              <li ><a href="caching.html">Caching</a></a></li>
+              <li class='active'><a href="timeouts.html">Timeouts</a></a></li>
+              <li ><a href="logging-visualization.html">Logging & Visualization</a></a></li>
+              <li ><a href="internals.html">Internals</a></a></li>
+              <li ><a href="runtime-info.html">Runtime info</a></a></li>
+              <li ><a href="alert-mails.html">Alert mails</a></a></li>
+              <li ><a href="changelog.html">Changelog</a></a></li>
+              <li ><a href="contributing.html">Contributing</a></a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-md-9">
+          <h1>Timeouts</h1>
+          <h2>Timeout types</h2>
+
+<p>In Octoparts, there are 2 types of timeouts:</p>
+
+<ol>
+<li><code>HystrixCommand</code> timeout, which allows Octoparts to fail fast and shed load in an isolated manner for each registered endpoint.</li>
+<li>Request timeout, which allows Octoparts (and subsequently the service that invokes Octoparts) to guarantee responsiveness.</li>
+</ol>
+
+<h3>Hystrix timeout</h3>
+
+<h4>Octoparts and Hystrix</h4>
+
+<p>Octoparts wraps all requests to registered backend endpoints in a <a href="https://netflix.github.io/Hystrix/javadoc/index.html?com/netflix/hystrix/HystrixCommand.html"><code>HystrixCommand</code></a> object, which is a construct used to run a block of (usually blocking) code and return the result asynchronously in a resilient and responsive fashion (to learn more about Hystrix and all the benefits of using it, read the <a href="https://github.com/Netflix/Hystrix/wiki">Hystrix wiki</a>).</p>
+
+<p>Part of the constructor arguments of a <code>HystrixCommand</code> is a timeout value in milliseconds, which defines how long the block of code inside the command has to finish processing.</p>
+
+<h4>HystrixCommand processing</h4>
+
+<p>Once a <code>HystrixCommand</code> is instantiated with our backend endpoint call as the block of code to be run, we invoke the command, getting back an asynchronous<code>Future</code> result.</p>
+
+<p><em>However</em>, in the Hystrix world, the command is executed synchronously (using a thread from another threadpool). If the command takes longer than the timeout duration to finish, Hystrix will cause the <code>Future</code> return value to be a <code>TimeoutException</code> and returns the thread back to the threadpool.</p>
+
+<h3>Request timeout</h3>
+
+<p>Octoparts allows you to specify, on a per <code>AggregateRequest</code> level, the maximum duration you want the server to &ldquo;wait&rdquo; before replying with an <code>AggregateResponse</code>. This is done by specifying a value in the optional <code>timeoutMs</code> field in the <code>requestMeta</code> field of an <code>AggregateResponse</code>. <em>However</em>, by default, there is 5 second value specified for <code>maximumAggReqTimeout</code>, and the lower value between what is specified in <code>timeoutMs</code> and <code>maximumAggReqTimeout</code> is used as the timeout duration for a given request.</p>
+
+<p>During the processing of an <code>AggregateRequest</code>, each <code>PartRequest</code> is processed asynchronously in parallel (as specified in <a href="internals.html">Internals</a>), and those that don&rsquo;t complete within the aforementioned timeout duration are completed using a TimedoutException (those that finish processing within the duration are left alone).</p>
+
+<p>Those familiar with Scala may want to checkout our <code>RichFutureWithTimeout</code> enrichment to see how this is done without blocking our request thread.</p>
+
+<h2>Motivation for having 2 types of timeouts</h2>
+
+<p>Asides from the two types serving 2 different functional requirements, the separation our timeouts allow us to do something cool: even if a request timeout has occured for a given <code>PartRequest</code>, so long as the corresponding <code>HystrixCommand</code> hasn&rsquo;t timed out, we can cache the eventual result of the <code>HystrixCommand</code> so that the next time the same <code>PartRequest</code> is processed by Octoparts, we have a chance of getting a cache hit, which allows us to respond immediately. For more details, see <a href="caching.html">Caching</a></p>
+
+<p><strong>Next</strong>: Read about <a href="logging-visualization.html">Logging &amp; Visualization</a></p>
+
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h4>Made by M3</h4>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <ul class="list-inline site-footer-link-list">
+                <li>
+                  <a href="https://github.com/m3dev/octoparts">GitHub repo</a>
+                </li>
+                <li>
+                  <a href="http://m3dev.github.io/">M3Dev</a>
+                </li>
+                <li>
+                  <a href="http://at.m3.com/job">We're hiring!</a>
+                </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.8.0.min.js"><\/script>')</script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="js/plugins.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+    <script>
+        var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
+        (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+        s.parentNode.insertBefore(g,s)}(document,'script'));
+    </script>
+  </body>
+</html>

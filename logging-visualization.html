@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <!-- Use title if it's in the page YAML frontmatter -->
+    <title>Logging & Visualization | Octoparts</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=h">
+
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+
+    <script src="js/vendor/modernizr-2.6.1.min.js"></script>
+
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body>
+    <!--[if lt IE 7]>
+        <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
+    <![endif]-->
+
+    <a href="https://github.com/m3dev/octoparts"><img style="position: absolute; top: 0; right: 0; border: 0; z-index: 100" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
+
+    <div class="container">
+      <div class="row">
+
+        <div class="col-md-3">
+          <div id="sidebar">
+            <div class="sidebar-logo">
+<a href="./">                  <img width="220px" src="img/octo_logo1.png" />
+</a>            </div>
+
+            <ul class="nav nav-pills nav-stacked">
+              <li ><a href="getting-started.html">Getting started</a></a></li>
+              <li ><a href="http-api.html">HTTP API</a></a></li>
+              <li ><a href="caching.html">Caching</a></a></li>
+              <li ><a href="timeouts.html">Timeouts</a></a></li>
+              <li class='active'><a href="logging-visualization.html">Logging & Visualization</a></a></li>
+              <li ><a href="internals.html">Internals</a></a></li>
+              <li ><a href="runtime-info.html">Runtime info</a></a></li>
+              <li ><a href="alert-mails.html">Alert mails</a></a></li>
+              <li ><a href="changelog.html">Changelog</a></a></li>
+              <li ><a href="contributing.html">Contributing</a></a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-md-9">
+          <h1>Logging & Visualization</h1>
+          <h2>Pretty graphs</h2>
+
+<p>Asides from performance and resilience benefits, routing backend services through Octoparts gives you the benefit of effortlessly* having the metrics for all of them in one place. Visualisations are available in <a href="http://www.elasticsearch.org/overview/kibana/">Kibana</a> and/or <a href="https://github.com/Netflix/Hystrix/tree/master/hystrix-dashboard">Hystrix dashboard</a> and/or <a href="https://twitter.github.io/zipkin/">Zipkin</a>.</p>
+
+<p>*Some assembly is required.</p>
+
+<h2>Kibana</h2>
+
+<div class="screenshot">
+<a target="_blank" href="img/kibana_dashboard.png">    <img width="500px" src="img/kibana_dashboard.png" />
+</a></div>
+
+<p>Octoparts is configured to log metadata for all backend endpoint requests. This includes when a request occured, endpoint id, cache hit or miss, and response time. It also logs Hystrix statuses for the endpoint separately, showing whether the circuit was open or closed, error counts, and average execution time.</p>
+
+<p>This data is logged in LTSV format and we will use Fluentd to help us get the data from our Octoparts nodes to Elasticsearch so it is accessible from Kibana.</p>
+
+<h3>1. Set up Fluentd on each Octoparts node</h3>
+
+<p>If you already know how to set up Fluentd, feel free to do it Your Way.</p>
+
+<ol>
+<li>Install the <code>td-agent</code> package</li>
+<li>Install the <code>libcurl-devel</code> package</li>
+<li>Install the <code>fluent-plugin-elasticsearch</code> gem: <code>$ fluent-gem install fluent-plugin-elasticsearch</code> <strong>Note:</strong> this is <code>fluent-gem install</code> <em>not</em> <code>gem install</code></li>
+<li>Create a temp log directory at <code>/etc/td-agent/tmp</code></li>
+<li>Add a config Fluentd config file at <code>/etc/td-agent/td-agent.conf</code> with the following contents</li>
+</ol>
+<pre><code class="highlight plaintext">  ## You will want to substitute your actual Octoparts log directory, Elasticsearch host, and
+  ## Elasticsearch host port in the appropriate placeholders below.
+
+  ####
+  ## Output descriptions:
+  ##
+
+  ## match tag=debug.** and dump to console
+  &lt;match debug.**&gt;
+    type stdout
+  &lt;/match&gt;
+
+  ####
+  ## Source descriptions:
+  ##
+
+  &lt;source&gt;
+    type tail
+    format ltsv
+    path {{ octoparts_log_dir }}/hystrix-metrics.log
+    pos_file /etc/td-agent/tmp/hystrix-metrics.pos
+    tag octoparts.hystrix
+    time_key time
+  &lt;/source&gt;
+
+  &lt;source&gt;
+    type tail
+    format ltsv
+    path {{ octoparts_log_dir }}/part-requests.log
+    pos_file /etc/td-agent/tmp/part-requests.pos
+    tag octoparts.partrequests
+    time_key time
+  &lt;/source&gt;
+
+  &lt;match octoparts.hystrix&gt;
+    type elasticsearch
+    host {{ elasticsearch_host }}
+    port {{ elasticsearch_port }}
+    type_name metrics
+    logstash_format true
+    logstash_prefix octoparts_hystrix
+    flush_interval 5s
+    utc_index false # Convert UTC timestamps to Japanese timezone
+  &lt;/match&gt;
+
+  &lt;match octoparts.partrequests&gt;
+    type elasticsearch
+    host {{ elasticsearch_host }}
+    port {{ elasticsearch_port }}
+    type_name partrequests
+    logstash_format true
+    logstash_prefix octoparts_partrequests
+    flush_interval 5s
+    utc_index false # Convert UTC timestamps to Japanese timezone
+  &lt;/match&gt;
+</code></pre>
+
+<ol>
+<li>Make sure the td-agent service is running (e.g.<code>service td-agent start</code>)</li>
+</ol>
+
+<h3>2. Install Elasticsearch</h3>
+
+<p>You can install Elasticsearch using your distro&rsquo;s package manager or <a href="http://www.elasticsearch.org/overview/elkdownloads/">the Elasticsearch official way</a>. Just make sure it&rsquo;s running before proceeding.</p>
+
+<h3>3. Install Kibana</h3>
+
+<p>The <a href="https://github.com/elasticsearch/kibana#installation">official instructions</a> are fairly straightforward and easy to follow. After you&rsquo;ve gone through them, you should have a working Kibana deployment that can query your Octoparts log data stored in Elasticsearch and show nice pretty graphs.</p>
+
+<h2>Hystrix dashboard</h2>
+
+<div class="screenshot screenshot-border">
+<a target="_blank" href="img/hystrix_dashboard.png">    <img width="500px" src="img/hystrix_dashboard.png" />
+</a></div>
+
+<p>To visualise the real-time Hystrix data stream, we recommend using the <a href="https://github.com/Netflix/Hystrix/tree/master/hystrix-dashboard">Hystrix dashboard</a> made by the Netflix team. The installation, which consists of installing Tomcat and deploying their prepackaged WAR file, is fairly simple and can be found <a href="https://github.com/Netflix/Hystrix/wiki/Dashboard#installation-of-dashboard">on their Github wiki</a></p>
+
+<p>Once the dashboard has been deployed, open a browser and go to where you&rsquo;ve deployed it. At the Hystrix Dashboard greeting splash page, input your Octoparts web app address followed by <code>/hystrix.stream</code> (e.g. &ldquo;http://octoparts/hystrix.stream&rdquo;) into the top-most box and hit the &ldquo;Monitor Stream&rdquo; button. The next page will be blank until one of your endpoints is invoked.</p>
+
+<h3>Octoparts cluster</h3>
+
+<p>If you have a cluster of Octoparts web apps running, you will need to aggregate the data streams from all your Octoparts nodes and feed an aggregated data stream to the Hystrix dashboard. Fortunately, <a href="https://github.com/Netflix/Turbine">Turbine</a> (also made by Netflix) does exactly this.</p>
+
+<p>The installation instructions for Turbine are located on their <a href="https://github.com/Netflix/Turbine/wiki/Getting-Started#get-turbine-installed">wiki</a>, so we won&rsquo;t repeat them here. We will say though, that we had no problems installing the Turbine WAR in the same Tomcat container installation as the Hystrix dashboard mentioned above.</p>
+
+<h2>Zipkin</h2>
+
+<div class="screenshot screenshot-border">
+<a target="_blank" href="img/zipkin-dashboard.png">    <img width="500px" src="img/zipkin-dashboard.png" />
+</a></div>
+
+<p>Assuming you have Zipkin set up (if you don&rsquo;t, check out the official <a href="https://twitter.github.io/zipkin/Quickstart.html">Quickstart guide</a>), you can have Octoparts send Server/Client Sent/Received events to your Zipkin collector by setting <code>OCTOPARTS_ZIPKIN_HOST</code> and <code>OCTOPARTS_ZIPKIN_PORT</code> environment variables.</p>
+
+<p>Spans logged to Zipkin will include:
+- Overall server request times
+- Memcached access times
+- DB access times
+- HTTP request wait times</p>
+
+<p>Octoparts will also play nice with the rest of your Zipkin-enabled infrastructure, meaning it will properly respect Zipkin ids sent to it in HTTP headers (it will set the parent-id of it&rsquo;s Server Spans to be the client span id sent to it and maintain the same trace-id) and it will forward Zipkin headers to any HTTP endpoints it calls. This ensures that you can have 1 big trace from beginning to end, allowing you to pinpoint/track bottlenecks in your distributed systems.</p>
+
+<p><strong>Next</strong>: Read about <a href="internals.html">Octoparts&rsquo; Internals</a></p>
+
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h4>Made by M3</h4>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <ul class="list-inline site-footer-link-list">
+                <li>
+                  <a href="https://github.com/m3dev/octoparts">GitHub repo</a>
+                </li>
+                <li>
+                  <a href="http://m3dev.github.io/">M3Dev</a>
+                </li>
+                <li>
+                  <a href="http://at.m3.com/job">We're hiring!</a>
+                </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.8.0.min.js"><\/script>')</script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="js/plugins.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+    <script>
+        var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
+        (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+        s.parentNode.insertBefore(g,s)}(document,'script'));
+    </script>
+  </body>
+</html>

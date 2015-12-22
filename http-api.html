@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <!-- Use title if it's in the page YAML frontmatter -->
+    <title>HTTP API | Octoparts</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=h">
+
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+
+    <script src="js/vendor/modernizr-2.6.1.min.js"></script>
+
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body>
+    <!--[if lt IE 7]>
+        <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
+    <![endif]-->
+
+    <a href="https://github.com/m3dev/octoparts"><img style="position: absolute; top: 0; right: 0; border: 0; z-index: 100" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
+
+    <div class="container">
+      <div class="row">
+
+        <div class="col-md-3">
+          <div id="sidebar">
+            <div class="sidebar-logo">
+<a href="./">                  <img width="220px" src="img/octo_logo1.png" />
+</a>            </div>
+
+            <ul class="nav nav-pills nav-stacked">
+              <li ><a href="getting-started.html">Getting started</a></a></li>
+              <li class='active'><a href="http-api.html">HTTP API</a></a></li>
+              <li ><a href="caching.html">Caching</a></a></li>
+              <li ><a href="timeouts.html">Timeouts</a></a></li>
+              <li ><a href="logging-visualization.html">Logging & Visualization</a></a></li>
+              <li ><a href="internals.html">Internals</a></a></li>
+              <li ><a href="runtime-info.html">Runtime info</a></a></li>
+              <li ><a href="alert-mails.html">Alert mails</a></a></li>
+              <li ><a href="changelog.html">Changelog</a></a></li>
+              <li ><a href="contributing.html">Contributing</a></a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-md-9">
+          <h1>HTTP API</h1>
+          <p>The REST API of Octoparts is relatively small. Those already familiar with <a href="http://swagger.wordnik.com/">Swagger</a> can simply head to the built-in Swagger documentation, which is hosted at <a href="http://octoparts.herokuapp.com/swagger-ui">octoparts.herokuapp.com/swagger-ui</a>.</p>
+
+<h2>Basic overview</h2>
+
+<p>The API consists of endpoints for the following:</p>
+
+<ul>
+<li>registered backend endpoints discovery</li>
+<li>registered backend endpoints invocation</li>
+<li>cache invalidation</li>
+</ul>
+
+<h3>Discovery</h3>
+
+<p>The discovery endpoint is used for programmatically discovering the backend endpoints that have been registered in a given Octoparts deployment. The response is a list of registered endpoints, with each item showing what URL will be hit with, what parameters are registered to it, what HTTP method will be used when it is invoked, as well as cache-related settings.</p>
+
+<h3>Invocation</h3>
+
+<p>This is likely going to be your most-often used Octoparts endpoint. It is the endpoint that you will do a POST to in order to invoke your registered endpoints.</p>
+
+<h4>AggregateRequest</h4>
+
+<p>The POST body should be an <code>AggregateRequest</code>, which has a list of <code>PartRequest</code>s. Each <code>PartRequest</code> corresponds to a single invocation of a registered endpoint and contains all the necessary parameters required.</p>
+
+<h4>AggregateResponse</h4>
+
+<p>The response from this endpoint will be an <code>AggregateResponse</code>, which has a list of <code>PartResponse</code>s, each one corresponding to the response that each invoked registered endpoint has sent in response to a <code>PartRequest</code>.</p>
+
+<p>Ways to use an <code>AggregateResponse</code> include:</p>
+
+<ul>
+<li>Ignoring it (maybe you don&rsquo;t care about the response)</li>
+<li>Map/filter over the list of <code>PartResponse</code>s to get information</li>
+</ul>
+
+<h4>A note about IDs</h4>
+
+<p>For every <code>PartRequest</code>, you must supply the <code>partId</code>. This is the ID that is registered in the admin UI, e.g. <code>UserProfile</code>, and tells Octoparts which endpoint it should invoke.</p>
+
+<p>Also, you can optionally specify an <code>id</code> for the <code>PartRequest</code>. This is a unique ID for that <em>request</em>, as opposed to the ID of the <em>endpoint</em> that it&rsquo;s calling, which is useful if you want to invoke the same endpoint multiple times in the same aggregate request.</p>
+
+<p>For example, say that you want to display a message sent from user 123 to user 456, so you want both users&rsquo; profile information. In this case you would send two part requests that would look something like this (in Scala):</p>
+<pre><code class="highlight scala"><span class="nc">Seq</span><span class="o">(</span>
+  <span class="nc">PartRequest</span><span class="o">(</span><span class="n">partId</span> <span class="k">=</span> <span class="s">"UserProfile"</span><span class="o">,</span> 
+              <span class="n">id</span> <span class="k">=</span> <span class="nc">Some</span><span class="o">(</span><span class="s">"profile_123"</span><span class="o">),</span> 
+              <span class="n">params</span> <span class="k">=</span> <span class="nc">Seq</span><span class="o">(</span><span class="nc">PartRequestParam</span><span class="o">(</span><span class="s">"uid"</span><span class="o">,</span> <span class="s">"123"</span><span class="o">))),</span>
+  <span class="nc">PartRequest</span><span class="o">(</span><span class="n">partId</span> <span class="k">=</span> <span class="s">"UserProfile"</span><span class="o">,</span> 
+              <span class="n">id</span> <span class="k">=</span> <span class="nc">Some</span><span class="o">(</span><span class="s">"profile_456"</span><span class="o">),</span> 
+              <span class="n">params</span> <span class="k">=</span> <span class="nc">Seq</span><span class="o">(</span><span class="nc">PartRequestParam</span><span class="o">(</span><span class="s">"uid"</span><span class="o">,</span> <span class="s">"456"</span><span class="o">)))</span>
+<span class="o">)</span>
+</code></pre>
+
+<p>If you don&rsquo;t specify an <code>id</code> for a <code>PartRequest</code>, it will automatically be set to be the same as the <code>partId</code>.</p>
+
+<p>When the <code>AggregateResponse</code> comes back and you want to extract a particular <code>PartResponse</code>, you can look it up using the <code>id</code> you specified on the <code>PartRequest</code>:</p>
+<pre><code class="highlight scala"><span class="k">val</span> <span class="n">user123profile</span> <span class="k">=</span> <span class="n">aggResp</span><span class="o">.</span><span class="n">findPart</span><span class="o">(</span><span class="s">"profile_123"</span><span class="o">)</span>
+</code></pre>
+
+<h3>Code samples</h3>
+
+<h4>Scala client example</h4>
+<pre><code class="highlight scala"><span class="c1">// Build an AggregateRequest to send to Octoparts
+</span><span class="k">val</span> <span class="n">aggregateRequest</span> <span class="k">=</span> <span class="nc">AggregateRequest</span><span class="o">(</span>
+  <span class="n">requestMeta</span> <span class="k">=</span> <span class="nc">RequestMeta</span><span class="o">(</span>
+    <span class="c1">// Most of these fields are optional
+</span>    <span class="n">id</span> <span class="k">=</span> <span class="nc">UUID</span><span class="o">.</span><span class="n">randomUUID</span><span class="o">().</span><span class="n">toString</span><span class="o">,</span>
+    <span class="n">serviceId</span> <span class="k">=</span> <span class="nc">Some</span><span class="o">(</span><span class="s">"frontend"</span><span class="o">),</span>
+    <span class="n">userId</span> <span class="k">=</span> <span class="nc">Some</span><span class="o">(</span><span class="s">"123"</span><span class="o">),</span>
+    <span class="n">requestUrl</span> <span class="k">=</span> <span class="nc">Some</span><span class="o">(</span><span class="s">"http://www.m3.com/foo"</span><span class="o">),</span>
+    <span class="n">timeoutMs</span> <span class="k">=</span> <span class="nc">Some</span><span class="o">(</span><span class="mi">500L</span><span class="o">)</span>
+  <span class="o">),</span>
+  <span class="n">requests</span> <span class="k">=</span> <span class="nc">Seq</span><span class="o">(</span>
+    <span class="c1">// A list of the endpoints you want to call, with parameters to send
+</span>    <span class="nc">PartRequest</span><span class="o">(</span><span class="n">partId</span> <span class="k">=</span> <span class="s">"UserProfile"</span><span class="o">,</span> <span class="n">params</span> <span class="k">=</span> <span class="nc">Seq</span><span class="o">(</span><span class="nc">PartRequestParam</span><span class="o">(</span><span class="s">"uid"</span><span class="o">,</span> <span class="s">"123"</span><span class="o">))),</span>
+    <span class="nc">PartRequest</span><span class="o">(</span><span class="n">partId</span> <span class="k">=</span> <span class="s">"LatestNews"</span><span class="o">,</span> <span class="n">params</span> <span class="k">=</span> <span class="nc">Seq</span><span class="o">(</span><span class="nc">PartRequestParam</span><span class="o">(</span><span class="s">"limit"</span><span class="o">,</span> <span class="s">"10"</span><span class="o">)))</span>
+  <span class="o">)</span>
+<span class="o">)</span>
+
+<span class="c1">// Send the request, get back a Future
+</span><span class="k">val</span> <span class="n">fResp</span><span class="k">:</span> <span class="kt">Future</span><span class="o">[</span><span class="kt">AggregateResponse</span><span class="o">]</span> <span class="k">=</span> <span class="n">octoClient</span><span class="o">.</span><span class="n">invoke</span><span class="o">(</span><span class="n">aggregateRequest</span><span class="o">)</span>
+</code></pre>
+
+<h4>Java client example</h4>
+<pre><code class="highlight java"><span class="c1">// Build an AggregateRequest to Send to Octoparts.</span>
+<span class="c1">// Arguments (all optional and therefore nullable): </span>
+<span class="c1">// user ID, session ID, user agent, requested URL, timeout (ms)</span>
+<span class="n">RequestBuilder</span> <span class="n">request</span> <span class="o">=</span> <span class="n">apiBuilder</span><span class="o">.</span><span class="na">newRequest</span><span class="o">(</span>
+    <span class="s">"123"</span><span class="o">,</span> <span class="s">"mySessionId"</span><span class="o">,</span> <span class="s">"myUserAgent"</span><span class="o">,</span> <span class="s">"http://www.m3.com/foo"</span><span class="o">,</span> <span class="mi">500L</span><span class="o">);</span>
+<span class="n">request</span><span class="o">.</span><span class="na">newPart</span><span class="o">(</span><span class="s">"UserProfile"</span><span class="o">,</span> <span class="kc">null</span><span class="o">).</span><span class="na">addParam</span><span class="o">(</span><span class="s">"uid"</span><span class="o">,</span> <span class="s">"123"</span><span class="o">).</span><span class="na">build</span><span class="o">();</span>
+<span class="n">request</span><span class="o">.</span><span class="na">newPart</span><span class="o">(</span><span class="s">"LatestNews"</span><span class="o">,</span> <span class="kc">null</span><span class="o">).</span><span class="na">addParam</span><span class="o">(</span><span class="s">"limit"</span><span class="o">,</span> <span class="s">"10"</span><span class="o">).</span><span class="na">addParam</span><span class="o">(</span><span class="s">"foo"</span><span class="o">,</span> <span class="s">"bar"</span><span class="o">).</span><span class="na">build</span><span class="o">();</span>
+
+<span class="c1">// Send the request, get back a Future</span>
+<span class="n">Future</span><span class="o">&lt;</span><span class="n">ResponseWrapper</span><span class="o">&gt;</span> <span class="n">future</span> <span class="o">=</span> <span class="n">apiBuilder</span><span class="o">.</span><span class="na">submit</span><span class="o">(</span><span class="n">request</span><span class="o">.</span><span class="na">build</span><span class="o">());</span>
+
+<span class="c1">// For convenience, block on the future if you want to</span>
+<span class="n">ResponseWrapper</span> <span class="n">responseWrapper</span> <span class="o">=</span> <span class="n">FutureResponseHandler</span><span class="o">.</span><span class="na">awaitResponse</span><span class="o">(</span><span class="n">future</span><span class="o">,</span> <span class="mi">1000L</span><span class="o">);</span>
+
+<span class="c1">// Note: The Java client doesn't include any helpers for JSON deserialization</span>
+<span class="n">String</span> <span class="n">userProfileJson</span> <span class="o">=</span> <span class="n">responseWrapper</span><span class="o">.</span><span class="na">getPartResponse</span><span class="o">(</span><span class="s">"UserProfile"</span><span class="o">).</span><span class="na">getContents</span><span class="o">(</span><span class="s">""</span><span class="o">);</span>
+<span class="n">String</span> <span class="n">latestNewsJson</span> <span class="o">=</span> <span class="n">responseWrapper</span><span class="o">.</span><span class="na">getPartResponse</span><span class="o">(</span><span class="s">"part2"</span><span class="o">).</span><span class="na">getContents</span><span class="o">(</span><span class="s">"[]"</span><span class="o">);</span>
+</code></pre>
+
+<p>The cache invalidation endpoints allow you to invalidate the cached responses stored in Octoparts.  They allow you to invalidate caches by backend endpoint name, endpoint name with parameter name-value pair, cache group name, and cache group name with parameter value.</p>
+
+<p>For information on what this means in detail, see the <a href="caching.html">Caching page</a>.</p>
+
+<h3>Code samples</h3>
+
+<h4>Scala client examples</h4>
+<pre><code class="highlight scala"><span class="c1">// Flush user 123's profile data from the cache.
+// Returns true if everything went OK.
+</span><span class="k">val</span> <span class="n">fResult</span><span class="k">:</span> <span class="kt">Future</span><span class="o">[</span><span class="kt">Boolean</span><span class="o">]</span> <span class="k">=</span> <span class="n">octoClient</span><span class="o">.</span><span class="n">invalidateCacheFor</span><span class="o">(</span><span class="s">"UserProfile"</span><span class="o">,</span> <span class="s">"uid"</span><span class="o">,</span> <span class="s">"123"</span><span class="o">)</span>
+</code></pre>
+
+<h4>Java client examples</h4>
+<pre><code class="highlight java"><span class="c1">// Flush user 123's profile data from the cache.</span>
+<span class="c1">// Returns true if everything went OK.</span>
+<span class="n">Future</span><span class="o">&lt;</span><span class="n">Boolean</span><span class="o">&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">apiBuilder</span><span class="o">.</span><span class="na">invalidateCacheFor</span><span class="o">(</span><span class="s">"UserProfile"</span><span class="o">,</span> <span class="s">"uid"</span><span class="o">,</span> <span class="s">"123"</span><span class="o">);</span>
+</code></pre>
+
+<h2>API clients</h2>
+
+<p>While you&rsquo;re free to use the HTTP API directly, we also provide a couple of API clients.</p>
+
+<h3>Java client</h3>
+
+<p>This client is actually implemented mostly in Scala, but it provides seamless Java interop. It&rsquo;s based on the <a href="https://github.com/AsyncHttpClient/async-http-client">Ning AsyncHttpClient</a>.</p>
+
+<p>See <a href="https://github.com/m3dev/octoparts/blob/master/java-client/src/test/java/com/m3/octoparts/Sample.java">here</a> for an example of how to use it in your application.</p>
+
+<p>Maven:</p>
+<pre><code class="highlight plaintext">&lt;dependency&gt;
+  &lt;groupId&gt;com.m3&lt;/groupId&gt;
+  &lt;artifactId&gt;octoparts-java-client_2.11&lt;/artifactId&gt;
+  &lt;version&gt;2.4.1&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+
+<div class='panel panel-default'><div class='panel-heading'>Note</div><div class='panel-body'>    We cross-build the Java client against both Scala 2.10 and 2.11, in case you already have a <code>scala-library.jar</code> on your classpath. Change the artifactId to <code>octoparts-java-client_2.10</code> if you prefer.
+</div></div>
+
+<h3>Scala WS client</h3>
+
+<p>This is a Scala client, designed to be used within a Play application. It uses the Play WS library for its HTTP calls. </p>
+
+<p>See <a href="https://github.com/m3dev/octoparts/blob/master/scala-ws-client/src/test/scala/com/m3/octoparts/ws/Sample.scala">here</a> for an example of how to use it in your application.</p>
+
+<p>SBT:</p>
+<pre><code class="highlight plaintext">libraryDependencies ++= Seq(
+  "com.m3" %% "octoparts-scala-ws-client" % "2.4.1"
+)
+</code></pre>
+
+<p>Just like the Java client, we cross-publish for Scala 2.10 and 2.11.</p>
+
+<p><strong>Next</strong>: Read about <a href="caching.html">Caching</a></p>
+
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h4>Made by M3</h4>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <ul class="list-inline site-footer-link-list">
+                <li>
+                  <a href="https://github.com/m3dev/octoparts">GitHub repo</a>
+                </li>
+                <li>
+                  <a href="http://m3dev.github.io/">M3Dev</a>
+                </li>
+                <li>
+                  <a href="http://at.m3.com/job">We're hiring!</a>
+                </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.8.0.min.js"><\/script>')</script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="js/plugins.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+    <script>
+        var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
+        (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+        s.parentNode.insertBefore(g,s)}(document,'script'));
+    </script>
+  </body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <!-- Use title if it's in the page YAML frontmatter -->
+    <title>Contributing | Octoparts</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=h">
+
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+
+    <script src="js/vendor/modernizr-2.6.1.min.js"></script>
+
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body>
+    <!--[if lt IE 7]>
+        <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
+    <![endif]-->
+
+    <a href="https://github.com/m3dev/octoparts"><img style="position: absolute; top: 0; right: 0; border: 0; z-index: 100" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
+
+    <div class="container">
+      <div class="row">
+
+        <div class="col-md-3">
+          <div id="sidebar">
+            <div class="sidebar-logo">
+<a href="./">                  <img width="220px" src="img/octo_logo1.png" />
+</a>            </div>
+
+            <ul class="nav nav-pills nav-stacked">
+              <li ><a href="getting-started.html">Getting started</a></a></li>
+              <li ><a href="http-api.html">HTTP API</a></a></li>
+              <li ><a href="caching.html">Caching</a></a></li>
+              <li ><a href="timeouts.html">Timeouts</a></a></li>
+              <li ><a href="logging-visualization.html">Logging & Visualization</a></a></li>
+              <li ><a href="internals.html">Internals</a></a></li>
+              <li ><a href="runtime-info.html">Runtime info</a></a></li>
+              <li ><a href="alert-mails.html">Alert mails</a></a></li>
+              <li ><a href="changelog.html">Changelog</a></a></li>
+              <li class='active'><a href="contributing.html">Contributing</a></a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-md-9">
+          <h1>Contributing</h1>
+          <h2>Octoparts Contributor Guidelines</h2>
+
+<h3>Funny names</h3>
+
+<p>If you look around our codebase, you may find places where we use the word &ldquo;part&rdquo; to refer to what we call a &ldquo;backend endpoint&rdquo; in most of our documentation. This is bad naming, but one with historical reasons: when we started building Octoparts, it was with the intention of grabbing &ldquo;parts&rdquo; of a page from other services, thus an endpoint corresponded roughly with a &ldquo;part&rdquo;.</p>
+
+<p>We <em>do</em> plan on renaming our models and references but until then, stay alert!</p>
+
+<h3>Reporting Issues</h3>
+
+<p>If you wish to report an issue for Octoparts, please ensure you have done the following things:</p>
+
+<ul>
+<li>If it is a documentation issue with a simple fix, don&rsquo;t raise an issue, just edit the documentation yourself directly in GitHub and submit a pull request. <em>Note</em> the documentation repository is <a href="https://github.com/m3dev/octoparts-site">https://github.com/m3dev/octoparts-site</a></li>
+<li>If you have a feature request, please raise an issue in the Github Issues tracker first.  It may be that Octoparts already provides something to achieve what you want to achieve, and raising an issue first allows us to catch that before you waste your time implementing something.</li>
+<li>If you think you have found a bug, please raise an issue.  Please be as specific as possible, including sample code that reproduces the problem, stack traces if there are any exceptions thrown, and versions of Octoparts, OS, JVM, etc.</li>
+</ul>
+
+<h3>Contributor Workflow</h3>
+
+<p>This is the process for a contributor to contribute to Octoparts.</p>
+
+<ol>
+<li>Fork this repository.</li>
+<li>Follow <a href="http://nvie.com/posts/a-successful-git-branching-model/">Gitflow procedures</a>.</li>
+<li>Ensure that your contribution meets the following guidelines:
+
+<ol>
+<li>Live up to the current code standard:
+
+<ul>
+<li>Not violate <a href="http://programmer.97things.oreilly.com/wiki/index.php/Don%27t_Repeat_Yourself">DRY</a>.</li>
+<li><a href="http://programmer.97things.oreilly.com/wiki/index.php/The_Boy_Scout_Rule">Boy Scout Rule</a> needs to have been applied.</li>
+</ul></li>
+<li>Regardless if the code introduces new features or fixes bugs or regressions, it must have comprehensive tests.</li>
+<li>The code should be well documented, and where sensible, include Scaladocs.</li>
+<li>Implementation-wise, the following things should be avoided as much as possible:
+
+<ul>
+<li>Global state</li>
+<li>Public mutable state</li>
+<li>Implicit conversions</li>
+<li>ThreadLocal</li>
+<li>Locks</li>
+<li>Casting</li>
+<li>Introducing new, heavy external dependencies</li>
+</ul></li>
+</ol></li>
+<li>Submit a pull request.</li>
+</ol>
+
+<p>If the pull request does not meet the above requirements, then it will be rejected until it does.</p>
+
+<h3>Licence</h3>
+
+<p>By contributing your code, you agree to license your contribution under the terms of the <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache Licence v2</a></p>
+
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h4>Made by M3</h4>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <ul class="list-inline site-footer-link-list">
+                <li>
+                  <a href="https://github.com/m3dev/octoparts">GitHub repo</a>
+                </li>
+                <li>
+                  <a href="http://m3dev.github.io/">M3Dev</a>
+                </li>
+                <li>
+                  <a href="http://at.m3.com/job">We're hiring!</a>
+                </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.8.0.min.js"><\/script>')</script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="js/plugins.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+    <script>
+        var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
+        (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+        s.parentNode.insertBefore(g,s)}(document,'script'));
+    </script>
+  </body>
+</html>

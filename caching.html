@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <!-- Use title if it's in the page YAML frontmatter -->
+    <title>Caching | Octoparts</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=h">
+
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+
+    <script src="js/vendor/modernizr-2.6.1.min.js"></script>
+
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body>
+    <!--[if lt IE 7]>
+        <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
+    <![endif]-->
+
+    <a href="https://github.com/m3dev/octoparts"><img style="position: absolute; top: 0; right: 0; border: 0; z-index: 100" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
+
+    <div class="container">
+      <div class="row">
+
+        <div class="col-md-3">
+          <div id="sidebar">
+            <div class="sidebar-logo">
+<a href="./">                  <img width="220px" src="img/octo_logo1.png" />
+</a>            </div>
+
+            <ul class="nav nav-pills nav-stacked">
+              <li ><a href="getting-started.html">Getting started</a></a></li>
+              <li ><a href="http-api.html">HTTP API</a></a></li>
+              <li class='active'><a href="caching.html">Caching</a></a></li>
+              <li ><a href="timeouts.html">Timeouts</a></a></li>
+              <li ><a href="logging-visualization.html">Logging & Visualization</a></a></li>
+              <li ><a href="internals.html">Internals</a></a></li>
+              <li ><a href="runtime-info.html">Runtime info</a></a></li>
+              <li ><a href="alert-mails.html">Alert mails</a></a></li>
+              <li ><a href="changelog.html">Changelog</a></a></li>
+              <li ><a href="contributing.html">Contributing</a></a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-md-9">
+          <h1>Caching</h1>
+          <p>Octoparts caches the following information in <a href="http://memcached.org/">Memcached</a>:</p>
+
+<ul>
+<li>Responses from API calls</li>
+<li>The configuration data that is stored in the DB</li>
+</ul>
+
+<h3>Memcached configuration</h3>
+
+<p>Octoparts uses Memcached in a non-blocking and highly parallel way, and does so using <a href="https://code.google.com/p/spymemcached/wiki/Optimizations">Spymemcached</a>, which <a href="https://code.google.com/p/spymemcached/wiki/Optimizations#Multi-get_Escalation">optimises multiaccesses for the same keys into a single multi-get</a>.</p>
+
+<p>Since Spymemcached <a href="https://github.com/couchbase/spymemcached/commit/b406daa1c6c4d5d7d2f49f0f8fc91cdc4a0c4d75">caps the number of multi-get items due to optimisation to 4096</a>, it might be a good idea to use this number as the <code>-R</code> parameter you pass to your Memcached daemon, which is <a href="http://linux.die.net/man/1/memcached">the option that sets the maximum amount of requests a server processes from a single connection without yielding</a>. To find the optimum <code>-R</code> would require extensive testing and benchmarking in your particular environment.</p>
+
+<h3>Versioning</h3>
+
+<p>In order to provide powerful support for cache invalidation, Octoparts maintains version information at the level of</p>
+
+<ul>
+<li>individual API endpoints (e.g. the <code>getUserProfile</code> endpoint)</li>
+<li>particular values of parameters for a given endpoint (e.g. &lsquo;get me the user profile where userId = 123&rsquo;)</li>
+</ul>
+
+<p>This allows us to invalidate cached data at two different scopes.</p>
+
+<ol>
+<li><p>By increasing the version of the <code>getUserProfile</code> part, any API responses cached with the previous version will be invalidated.</p></li>
+<li><p>By increasing the version of the <code>(partId = getUserProfile, userId = 123)</code> tuple, we can invalidate any cached versions of that endpoint&rsquo;s response for that particular user.</p></li>
+</ol>
+
+<div class='panel panel-default'><div class='panel-heading'>Note</div><div class='panel-body'>  When we invalidate a cached value, we never actually remove it from the cache. We rely on Memcached&rsquo;s LRU behaviour to eventually discard unneeded data.
+</div></div>
+
+<p>The version information is also stored in Memcached so that it can be shared across all Octoparts instances, in order to improve the cache hit rate. It is also cached in-memory on each instance for performance reasons.</p>
+
+<h3>Cache groups</h3>
+
+<p>Sometimes, when one piece of data changes, you want to invalidate a number of cached API responses in one go. For example, if a user of your site gains an activity point for performing some action, you may want to invalidate all data that was generated based on the user&rsquo;s out-of-date activity point count.</p>
+
+<p>Octoparts provides support for this with the concept of cache groups. Every API endpoint or parameter can be a member of one or more cache groups. One call to the Octoparts cache invalidation API will flush the cache for all members of the given group.</p>
+
+<p>For example, say we have three API endpoints that take <code>userId</code> parameters:</p>
+
+<ul>
+<li><code>getUserProfile(userId)</code></li>
+<li><code>getUserActivityPointCount(userId)</code></li>
+<li><code>getUserPremiumStatus(userId)</code></li>
+</ul>
+
+<p>Assume that each of these <code>userId</code> parameters has been registered with the <code>userActivityPoints</code> cache group.</p>
+
+<p>When user 123&rsquo;s activity point count changes, just make one request to</p>
+<pre><code class="highlight plaintext">/cache/invalidate/cacheGroup/userActivityPoints/params/123
+</code></pre>
+
+<p>Cached data from all three APIs relating to that user will be invalidated.</p>
+
+<h3>Cache headers</h3>
+
+<p>Octoparts supports a number of cache-related HTTP headers when communicating both with clients (i.e. frontends) and with backend APIS.</p>
+
+<h4>Clients</h4>
+
+<ul>
+<li><code>Cache-Control: no-cache</code></li>
+</ul>
+
+<p>If the client sets this header when performing an aggregate request, Octoparts will guarantee not to return any API responses that were retrieved from the cache.</p>
+
+<h4>Backend APIs</h4>
+
+<ul>
+<li><code>Cache-Control: no-store</code></li>
+</ul>
+
+<p>If this header is set on an API response, Octoparts will guarantee not to insert the response into the cache. Note, however, that if the response already happens to be present in the cache, Octoparts will not remove it.</p>
+
+<ul>
+<li><code>Cache-Control: max-age=3600</code></li>
+</ul>
+
+<p>If <code>max-age</code> is set, Octoparts will cache the response with the given TTL (in seconds). However, if a TTL is also set in the admin screen for that endpoint, the shorter of the two TTLs will be used.</p>
+
+<p>Note that if the response can be revalidated (i.e. it has an <code>ETag</code> or <code>Last-Modified</code> header), then the <code>max-age</code> value will NOT be used to decide the cache TTL. The TTL value set in the admin screen (which may be eternal) will be used unconditionally.</p>
+
+<ul>
+<li><code>ETag</code>, <code>Last-Modified</code></li>
+</ul>
+
+<p>If one or more of these headers are set, Octoparts will store their values together with the response itself in the cache.</p>
+
+<p>The next time Octoparts looks up the response in the cache, it will contact the backend API again in order to validate that the cached response is not stale. It will send <code>If-None-Match</code> and/or <code>If-Modified-Since</code> headers. If the backend responds with <code>304 Not Modified</code>, Octoparts will return the cached response to the client. Otherwise it will cache the new response and return it to the client.</p>
+
+<p>Note that if the the response also included a <code>max-age</code> directive, revalidation will not occur until after this period has elapsed. For example, if the backend response had both an <code>ETag</code> and a <code>max-age</code> of 60 seconds, Octoparts will treat the response as fresh for 60 seconds. During the first 60 seconds it will not bother to revalidate the response, but after 60 seconds have elapsed it will start revalidating using the <code>ETag</code> value.</p>
+
+<h4>Revalidation and TTL reset</h4>
+
+<p>If Octoparts revalidates a cached response using <code>If-None-Match</code> and/or <code>If-Modified-Since</code> headers and the backend responds with a <code>304 Not Modified</code>, Octoparts will return the cached response to the client and then re-insert that cached response into the cache, thereby extending its TTL.</p>
+
+<p>Note that this means a value can stay in the cache indefinitely, as long as it gets requested and revalidated often enough.</p>
+
+<p>For example, say you have registered an endpoint and set the TTL to 60 seconds in the admin screen. At a given point in time you make a request, and the response comes back with an <code>ETag</code>. This response is inserted into the cache.</p>
+
+<p>30 seconds later you request the same endpoint with the same parameters. The response is retrieved from the cache, and revalidated using the <code>ETag</code> value. The backend responds with a <code>304 Not Modified</code>, so the response is returned to the client. Its cache TTL is then reset to 60 seconds, so it will not expire until 90 seconds after the original request.</p>
+
+<div class="screenshot">
+<a target="_blank" href="img/cache_ttl_reset.png">    <img width="500px" src="img/cache_ttl_reset.png" />
+</a></div>
+
+<p>However, the following exception should be noted: if the response has a <code>max-age</code> directive, then ETag revalidation will not begin until after the <code>max-age</code> has expired. In the above example, if there was also a <code>max-age</code> of more than 60 seconds then ETag revalidation would not occur, so the TTL would never be extended.</p>
+
+<h4>Summary</h4>
+
+<p>The interaction between the configured TTL and various cache control headers can get pretty confusing, so here&rsquo;s a summary of how Octoparts behaves in various situations.</p>
+
+<p>Key:</p>
+
+<ul>
+<li>Configured TTL = the endpoint&rsquo;s cache TTL value configured using the admin UI</li>
+<li><code>max-age</code> = the value of the <code>Cache-Control: max-age</code> header set on the backend response</li>
+<li><code>ETag</code>/<code>Last-Modified</code> = whether one of these headers is present in the backend response</li>
+<li>Memcached TTL = the actual TTL value used when inserting the response into Memcached</li>
+<li>Revalidates = whether (and when) Octoparts revalidates a cached response against the backend</li>
+</ul>
+
+<table class="table table-striped table-bordered table-hover">
+  <thead>
+      <tr>
+        <th>Configured TTL</th>
+        <th><code>max-age</code></th>
+        <th><code>ETag</code>/<code>Last-Modified</code></th>
+        <th>Memcached TTL</th>
+        <th>Revalidates</th>
+        <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>-</ta>
+      <td>-</td>
+      <td>Will not cache</td>
+      <td>n/a</td>
+      <td>Setting the cache TTL to 0 disables caching completely</td>
+    </tr>
+    <tr>
+      <td>None</td>
+      <td>None</ta>
+      <td>Not present</td>
+      <td>30 days</td>
+      <td>No</td>
+      <td>30 days = infinity, because we never learned to count higher than 30</td>
+    </tr>
+    <tr>
+      <td>a</td>
+      <td>None</ta>
+      <td>Not present</td>
+      <td>a</td>
+      <td>No</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>None</td>
+      <td>b</ta>
+      <td>Not present</td>
+      <td>b</td>
+      <td>No</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>a</td>
+      <td>b</ta>
+      <td>Not present</td>
+      <td>min(a, b)</td>
+      <td>No</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>None</td>
+      <td>None</ta>
+      <td>Present</td>
+      <td>None</td>
+      <td>Always</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>a</td>
+      <td>None</ta>
+      <td>Present</td>
+      <td>a</td>
+      <td>Always</td>
+      <td>TTL can be reset. See discussion above.</td>
+    </tr>
+    <tr>
+      <td>None</td>
+      <td>b</ta>
+      <td>Present</td>
+      <td>None</td>
+      <td>After b</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>a</td>
+      <td>b</ta>
+      <td>Present</td>
+      <td>a</td>
+      <td>After b</td>
+      <td>TTL can be reset. See discussion above.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Internals</h3>
+
+<p>This flowchart shows the gory details of how Octoparts looks up an API response in the cache.</p>
+
+<div class="screenshot">
+<a target="_blank" href="img/cache-lookup-sequence.png">    <img width="500px" src="img/cache-lookup-sequence.png" />
+</a></div>
+
+<p><strong>Next</strong>: Read about <a href="timeouts.html">Timeouts</a></p>
+
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h4>Made by M3</h4>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <ul class="list-inline site-footer-link-list">
+                <li>
+                  <a href="https://github.com/m3dev/octoparts">GitHub repo</a>
+                </li>
+                <li>
+                  <a href="http://m3dev.github.io/">M3Dev</a>
+                </li>
+                <li>
+                  <a href="http://at.m3.com/job">We're hiring!</a>
+                </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.8.0.min.js"><\/script>')</script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="js/plugins.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+    <script>
+        var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
+        (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+        s.parentNode.insertBefore(g,s)}(document,'script'));
+    </script>
+  </body>
+</html>

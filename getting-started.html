@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <!-- Use title if it's in the page YAML frontmatter -->
+    <title>Getting started | Octoparts</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=h">
+
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+
+    <script src="js/vendor/modernizr-2.6.1.min.js"></script>
+
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body>
+    <!--[if lt IE 7]>
+        <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
+    <![endif]-->
+
+    <a href="https://github.com/m3dev/octoparts"><img style="position: absolute; top: 0; right: 0; border: 0; z-index: 100" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
+
+    <div class="container">
+      <div class="row">
+
+        <div class="col-md-3">
+          <div id="sidebar">
+            <div class="sidebar-logo">
+<a href="./">                  <img width="220px" src="img/octo_logo1.png" />
+</a>            </div>
+
+            <ul class="nav nav-pills nav-stacked">
+              <li class='active'><a href="getting-started.html">Getting started</a></a></li>
+              <li ><a href="http-api.html">HTTP API</a></a></li>
+              <li ><a href="caching.html">Caching</a></a></li>
+              <li ><a href="timeouts.html">Timeouts</a></a></li>
+              <li ><a href="logging-visualization.html">Logging & Visualization</a></a></li>
+              <li ><a href="internals.html">Internals</a></a></li>
+              <li ><a href="runtime-info.html">Runtime info</a></a></li>
+              <li ><a href="alert-mails.html">Alert mails</a></a></li>
+              <li ><a href="changelog.html">Changelog</a></a></li>
+              <li ><a href="contributing.html">Contributing</a></a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-md-9">
+          <h1>Getting started</h1>
+          <h2>Get Octoparts</h2>
+
+<p>Simply clone the GitHub repository.</p>
+<pre><code class="highlight plaintext">git clone git@github.com:m3dev/octoparts.git
+</code></pre>
+
+<h2>Configure for your development environment</h2>
+
+<p>By default Octoparts is setup to use environment variables for much of its configuration. This is kind of annoying when running it on your development machine, so we recommend you create an <code>application.dev.conf</code> file where you can override some settings.</p>
+
+<p>We provide a sample file at <code>/conf/application.dev.conf.sample</code>, so use that as a guide.</p>
+<pre><code class="highlight plaintext">cd octoparts/conf
+cp application.dev.conf.sample application.dev.conf
+</code></pre>
+
+<h2>Run Octoparts on your local machine</h2>
+
+<h3>Using Vagrant</h3>
+
+<p>The simplest way to set up a development environment for Octoparts is to use Vagrant. A Vagrantfile is included in the Git repository.</p>
+
+<p>We assume that you have the following installed already:</p>
+
+<ol>
+<li><a href="https://www.virtualbox.org">Virtualbox</a></li>
+<li><a href="http://www.vagrantup.com/">Vagrant</a></li>
+<li><a href="http://www.ansible.com/get-started">Ansible</a></li>
+</ol>
+
+<p>Note that the directory holding the Vagrant file is called <code>vaygrant</code> (with a &lsquo;y&rsquo;). This is a matter of personal choice, not a typo! :)</p>
+<pre><code class="highlight plaintext">cd octoparts/vaygrant
+vagrant up
+</code></pre>
+
+<p>This will set up a virtual machine and use a set of Ansible playbooks to perform the following provisioning:</p>
+
+<ul>
+<li>Install Java 8</li>
+<li>Install Postgresql and set up a DB for Octoparts</li>
+<li>Install Tomcat (for the Hystrix dashboard)</li>
+<li>Install memcached</li>
+<li>Install fluentd (to forward logs from Octoparts to Elasticsearch)</li>
+<li>Install Elasticsearch (to store the logs for display on Kibana)</li>
+<li>Install nginx and Kibana (to display dashboards)</li>
+</ul>
+
+<p>The first time you run this, it will have to download the world, so it will take a long time. Go away and make a cup of coffee.</p>
+
+<p>Once provisioning is complete, SSH into the machine.</p>
+<pre><code class="highlight plaintext">vagrant ssh
+</code></pre>
+
+<p>The Octoparts folder is mounted at <code>/parts</code>, so <code>cd</code> to there and start the Play server.</p>
+<pre><code class="highlight plaintext">cd /parts
+./sbt run
+</code></pre>
+
+<p>Again, the first time this runs, it will take a long time to download dependencies.</p>
+
+<p>Once the server starts, open your browser and access <a target="_blank" href="http://localhost:9000/admin">http://localhost:9000/admin</a>. If all has gone well, you should see the Octoparts admin UI.</p>
+
+<h3>By hand</h3>
+
+<p>If you don&rsquo;t want to use Vagrant, setting up a minimal environment by hand is pretty simple.</p>
+
+<h4>Java</h4>
+
+<p>Octoparts requires Java 8 in order to run.</p>
+
+<h4>Postgresql</h4>
+
+<p>Assuming you already have Postgresl installed and running, create a Postgresql DB and user.</p>
+<pre><code class="highlight plaintext">createuser -DRS octoparts_app
+createdb -EUTF-8 -Ooctoparts_app octoparts
+</code></pre>
+
+<p>Don&rsquo;t forget to update <code>/conf/application.dev.conf</code> to match whatever DB password you set.</p>
+
+<h4>Memcached (optional)</h4>
+
+<p>If you want to use Memcached, just make sure it is running and then update your configuration file to tell Octoparts to use it.</p>
+<pre><code class="highlight plaintext">caching {
+  inmemory = false
+}
+memcached {
+  host = "localhost:11211"
+}
+</code></pre>
+
+<h4>Start the server</h4>
+<pre><code class="highlight plaintext">cd octoparts
+./sbt run
+</code></pre>
+
+<p>The first time this runs, it will take a long time to download dependencies.</p>
+
+<p>Once the server starts, open your browser and access <a target="_blank" href="http://localhost:9000/admin">http://localhost:9000/admin</a>. If all has gone well, you should see the Octoparts admin UI.</p>
+
+<h2>Register your first endpoint</h2>
+
+<p>Let&rsquo;s register an endpoint using the admin UI. For our sample endpoint we&rsquo;ll use <a href="jsontest.com">http://jsontest.com</a>&rsquo;s JSON echo API.</p>
+
+<p>First we need to create a thread pool. This pool will be used to execute all HTTP requests to our endpoint.</p>
+
+<p>Click &#39;Thread pools&rsquo; in the navbar, then click the &#39;Create a new thread pool&rsquo; button. Give your thread pool a name and press &#39;Submit&rsquo;.</p>
+
+<p>Next, click &#39;Create a new part&rsquo; in the navbar and fill in the form as shown in the screenshot below. (Any fields not shown in the screenshot can be left blank.)</p>
+
+<div class="screenshot screenshot-border">
+<a target="_blank" href="img/create_new_part.png">      <img width="500px" src="img/create_new_part.png" />
+</a></div>
+
+<p>Note the endpoint&rsquo;s URL: <code>http://echo.jsontest.com/foo/${fooValue}</code>. The <code>${fooValue}</code> is a placeholder that can be substituted with a client-supplied value when the endpoint is called.</p>
+
+<p>Now we&rsquo;ll register a parameter so that we can dynamically change the value of this placeholder.</p>
+
+<p>On the endpoint&rsquo;s detail page, click the <code>Create a new parameter</code> button and fill in the form as shown in the following screenshot.</p>
+
+<div class="screenshot screenshot-border">
+<a target="_blank" href="img/create_new_param.png">      <img width="500px" src="img/create_new_param.png" />
+</a></div>
+
+<p>Note that we set the parameter&rsquo;s type to <code>path</code>, because we want to insert the parameter&rsquo;s value into the endpoint&rsquo;s URL. Parameter values can also be passed as URL query parameters, headers, cookies, etc.</p>
+
+<h2>Test your endpoint</h2>
+
+<p>Now we&rsquo;re ready to try our new endpoint! On the endpoint&rsquo;s detail page, click the &#39;Try it!&rsquo; button. </p>
+
+<p>Fill in a value for the <code>fooValue</code> parameter and click the &#39;Send&rsquo; button.</p>
+
+<p>If all went well, you should see a JSON response that looks something like this:</p>
+<pre><code class="highlight json"><span class="p">{</span><span class="w">
+    </span><span class="s2">"responseMeta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tryIt-1409293933838"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"processTime"</span><span class="p">:</span><span class="w"> </span><span class="mi">235</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="s2">"responses"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"partId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"echo"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"echo"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"cookies"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+            </span><span class="s2">"statusCode"</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"mimeType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"application/json"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"charset"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ISO-8859-1"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"cacheControl"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="s2">"noCache"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="s2">"contents"</span><span class="p">:</span><span class="w"> </span><span class="s2">"{\"foo\": \"bar\"}\n"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"errors"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+            </span><span class="s2">"retrievedFromCache"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Congratulations, you&rsquo;ve successfully created and tested your first endpoint!</p>
+
+<h2>What&rsquo;s next?</h2>
+
+<p>If you used Vagrant to install, you can instantly check out various services related to the endpoint you just made.</p>
+
+<ul>
+<li>Kibana - <a target="_blank" href="http://localhost:5080/kibana-3.0.1/index.html#/dashboard/file/guided.json">Sample Dashboard</a></li>
+<li>Hystrix - <a target="_blank" href="http://localhost:8080/dashboard/monitor/monitor.html?stream=http%3A%2F%2Flocalhost%3A9000%2Fhystrix.stream">Sample Dashboard</a></li>
+</ul>
+
+<p><strong>Next</strong>: Read about <a href="http-api.html">Octoparts&rsquo; HTTP API</a></p>
+
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h4>Made by M3</h4>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <ul class="list-inline site-footer-link-list">
+                <li>
+                  <a href="https://github.com/m3dev/octoparts">GitHub repo</a>
+                </li>
+                <li>
+                  <a href="http://m3dev.github.io/">M3Dev</a>
+                </li>
+                <li>
+                  <a href="http://at.m3.com/job">We're hiring!</a>
+                </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.8.0.min.js"><\/script>')</script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="js/plugins.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+    <script>
+        var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
+        (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+        s.parentNode.insertBefore(g,s)}(document,'script'));
+    </script>
+  </body>
+</html>

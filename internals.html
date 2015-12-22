@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <!-- Use title if it's in the page YAML frontmatter -->
+    <title>Internals | Octoparts</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=h">
+
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+
+    <script src="js/vendor/modernizr-2.6.1.min.js"></script>
+
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body>
+    <!--[if lt IE 7]>
+        <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
+    <![endif]-->
+
+    <a href="https://github.com/m3dev/octoparts"><img style="position: absolute; top: 0; right: 0; border: 0; z-index: 100" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
+
+    <div class="container">
+      <div class="row">
+
+        <div class="col-md-3">
+          <div id="sidebar">
+            <div class="sidebar-logo">
+<a href="./">                  <img width="220px" src="img/octo_logo1.png" />
+</a>            </div>
+
+            <ul class="nav nav-pills nav-stacked">
+              <li ><a href="getting-started.html">Getting started</a></a></li>
+              <li ><a href="http-api.html">HTTP API</a></a></li>
+              <li ><a href="caching.html">Caching</a></a></li>
+              <li ><a href="timeouts.html">Timeouts</a></a></li>
+              <li ><a href="logging-visualization.html">Logging & Visualization</a></a></li>
+              <li class='active'><a href="internals.html">Internals</a></a></li>
+              <li ><a href="runtime-info.html">Runtime info</a></a></li>
+              <li ><a href="alert-mails.html">Alert mails</a></a></li>
+              <li ><a href="changelog.html">Changelog</a></a></li>
+              <li ><a href="contributing.html">Contributing</a></a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-md-9">
+          <h1>Internals</h1>
+          <h3>Moving pieces</h3>
+
+<p>Octoparts is composed of the following components:</p>
+
+<ul>
+<li>Web app built on the <a href="https://www.playframework.com/">Playframework</a>
+
+<ul>
+<li>Wraps calls to registered endpoints in <a href="https://github.com/Netflix/Hystrix">Hystrix</a> <a href="http://netflix.github.io/Hystrix/javadoc/index.html?com/netflix/hystrix/HystrixCommand.html">commands</a> to guarantee resilience and responsiveness</li>
+<li>Caches endpoint configuration metadata and endpoint results to either EhCached or Memcached</li>
+</ul></li>
+<li><a href="https://github.com/Netflix/Hystrix/tree/master/hystrix-dashboard">Hystrix dashboard</a> for Hystrix stream visualisation, deployed in Tomcat
+
+<ul>
+<li>If multiple Octoparts nodes are used, <a href="https://github.com/Netflix/Turbine/wiki/Getting-Started">Turbine</a> is required for aggregating the Hystrix streams into a single stream to be consumed by the dashboard</li>
+</ul></li>
+<li><a href="http://www.elasticsearch.org/overview/kibana/">Kibana</a> for visualising log entry data
+
+<ul>
+<li>Log data from each Octoparts node is collected and aggregated via <a href="http://www.fluentd.org/">fluentd</a> and stored in <a href="http://www.elasticsearch.org/">Elasticsearch</a></li>
+</ul></li>
+<li><a href="alert-mails.html">Alert Mailer</a> that queries the aforementioned Elasticsearch datastore to monitor errors rates and, if errors surpass configured thresholds, sends alert emails</li>
+</ul>
+
+<h3>Process flow</h3>
+
+<div class="screenshot">
+<a target="_blank" href="img/req_resp_flow.png">    <img width="500px" alt="Request to response process flow diagram" src="img/req_resp_flow.png" />
+</a></div>
+
+<p>When a POST request is sent to the <a href="http://localhost:9000/swagger-ui/#!/1/Dependencies_invocation">endpoints invocation API</a> (TODO: point to deployed Octoparts swagger), it goes through the following process:</p>
+
+<ol>
+<li>The request body is parsed into a JSON object.</li>
+<li>The JSON object is deserialised into an <code>AggregateRequest</code> object.</li>
+<li>The <code>AggregateRequest</code> is processed:
+
+<ol>
+<li>The <code>RequestMeta</code> for the request is extracted to identify common shareable data and to ensure we process the request within the requested timeout duration.</li>
+<li>The <code>PartRequest</code>s contained inside are processed asynchronously in parallel:
+
+<ol>
+<li>Find the configured endpoint data (HTTP address to hit, parameters, cache) that matches the partId of the <code>PartRequest</code>. If none can be found, return an error for this particular <code>PartRequest</code> explaining that the partId provided is not supported.</li>
+<li>If there is a suitable cached <code>PartResponse</code> for the <code>PartRequest</code> (i.e. one that matches all the parameters and is not stale according to the corresponding endpoint configuration; see <a href="caching.html">Caching</a> for more details), return it.</li>
+<li>If there isn&rsquo;t a suitable cached response, wrap an HTTP request to the backend endpoint in a Hystrix Command with the proper thread pool and invoke it. Using the response from the command, generate and cache a PartResponse.</li>
+</ol></li>
+</ol></li>
+<li>All the <code>PartResponse</code>s are gathered into a single <code>AggregateResponse</code> object. <em>Note:</em> <code>PartRequest</code>s that take longer than the default or requested timeout duration to process are mapped to a <code>PartResponse</code> with a timeout error (for more details, see <a href="timeouts.html">Timeouts</a>)</li>
+<li>The <code>AggregateResponse</code> is serialised into a JSON object</li>
+<li>The JSON object is sent as a string in the body of the HTTP response</li>
+</ol>
+
+<p><strong>Next</strong>: Read about <a href="runtime-info.html">Runtime Info</a></p>
+
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h4>Made by M3</h4>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <ul class="list-inline site-footer-link-list">
+                <li>
+                  <a href="https://github.com/m3dev/octoparts">GitHub repo</a>
+                </li>
+                <li>
+                  <a href="http://m3dev.github.io/">M3Dev</a>
+                </li>
+                <li>
+                  <a href="http://at.m3.com/job">We're hiring!</a>
+                </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.8.0.min.js"><\/script>')</script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="js/plugins.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+    <script>
+        var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
+        (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+        s.parentNode.insertBefore(g,s)}(document,'script'));
+    </script>
+  </body>
+</html>

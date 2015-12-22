@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <!-- Use title if it's in the page YAML frontmatter -->
+    <title>Runtime info | Octoparts</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=h">
+
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+
+    <script src="js/vendor/modernizr-2.6.1.min.js"></script>
+
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body>
+    <!--[if lt IE 7]>
+        <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
+    <![endif]-->
+
+    <a href="https://github.com/m3dev/octoparts"><img style="position: absolute; top: 0; right: 0; border: 0; z-index: 100" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
+
+    <div class="container">
+      <div class="row">
+
+        <div class="col-md-3">
+          <div id="sidebar">
+            <div class="sidebar-logo">
+<a href="./">                  <img width="220px" src="img/octo_logo1.png" />
+</a>            </div>
+
+            <ul class="nav nav-pills nav-stacked">
+              <li ><a href="getting-started.html">Getting started</a></a></li>
+              <li ><a href="http-api.html">HTTP API</a></a></li>
+              <li ><a href="caching.html">Caching</a></a></li>
+              <li ><a href="timeouts.html">Timeouts</a></a></li>
+              <li ><a href="logging-visualization.html">Logging & Visualization</a></a></li>
+              <li ><a href="internals.html">Internals</a></a></li>
+              <li class='active'><a href="runtime-info.html">Runtime info</a></a></li>
+              <li ><a href="alert-mails.html">Alert mails</a></a></li>
+              <li ><a href="changelog.html">Changelog</a></a></li>
+              <li ><a href="contributing.html">Contributing</a></a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-md-9">
+          <h1>Runtime info</h1>
+          <p>Octoparts provides several endpoints that give you useful run-time insights.</p>
+
+<h3>Health check</h3>
+
+<p><code>GET ${basePath}/system/healthcheck</code></p>
+
+<p>Example response:</p>
+<pre><code class="highlight json"><span class="p">{</span><span class="w">
+    </span><span class="s2">"colour"</span><span class="p">:</span><span class="w"> </span><span class="s2">"GREEN"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"statuses"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="s2">"db"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"ok"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DB looks fine"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="s2">"hystrix"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"ok"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"openCircuits"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>The main purpose of this endpoint is to provide an easy way for Octoparts to be monitored by other tools.</p>
+
+<p>In the JSON response, the <code>colour</code> field will either be <code>GREEN</code> or <code>YELLOW</code>, and the <code>statuses</code> field contains a JSON object with database and Hystrix health information. If there is something not quite right with either the database (e.g. database can&rsquo;t be reached) or Hystrix (there is an open circuit), the <code>colour</code> attribute will be <code>YELLOW</code>, otherwise it will be <code>GREEN</code>.</p>
+
+<h3>Metrics</h3>
+
+<p><code>GET ${basePath}/system/metrics</code></p>
+
+<p>Example response:</p>
+<pre><code class="highlight json"><span class="w">
+</span><span class="p">{</span><span class="w">
+  </span><span class="s2">"version"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"3.0.0"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"gauges"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"PS-MarkSweep.count"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"value"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="s2">"PS-MarkSweep.time"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"value"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">281</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="s2">"PS-Scavenge.count"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"value"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">109</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="s2">"PS-Scavenge.time"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"value"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">996</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="s2">"blocked.count"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"value"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="err">..</span><span class="w">
+  </span><span class="s2">"meters"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"com.kenshoo.play.metrics.MetricsFilter.200"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"count"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">555</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"m15_rate"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mf">0.001991333965898442</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"m1_rate"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mf">0.0025771066425380267</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"m5_rate"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mf">0.002672119320980551</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"mean_rate"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mf">0.003249095840244962</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"units"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"events/second"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+ </span><span class="err">...</span><span class="w">
+  </span><span class="s2">"timers"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"com.kenshoo.play.metrics.MetricsFilter.requestTimer"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"count"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">716</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"max"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mf">1.0150450180000001</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"mean"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mf">0.14267013129411768</span><span class="p">,</span><span class="w">
+      </span><span class="err">...</span><span class="w">
+      </span><span class="s2">"duration_units"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"seconds"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"rate_units"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"calls/second"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>The JSON response of this endpoint provides useful JVM information as well as Play-specific HTTP request instrumentation metrics.</p>
+
+<p>The hard work is being done by the <a href="https://github.com/kenshoo/metrics-play">Kenshoo metrics-play library</a>, which in turn is using the <a href="https://dropwizard.github.io/metrics/3.1.0/">Dropwizard Metrics library</a>.</p>
+
+<h3>Configuration</h3>
+
+<p><code>GET ${basePath}/system/config</code></p>
+
+<p>Example response:</p>
+<pre><code class="highlight json"><span class="p">{</span><span class="w">
+    </span><span class="s2">"akka"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="s2">"actor"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"creation-timeout"</span><span class="p">:</span><span class="w"> </span><span class="s2">"20s"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"debug"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="s2">"autoreceive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"off"</span><span class="p">,</span><span class="w">
+                </span><span class="s2">"event-stream"</span><span class="p">:</span><span class="w"> </span><span class="s2">"off"</span><span class="p">,</span><span class="w">
+                </span><span class="s2">"fsm"</span><span class="p">:</span><span class="w"> </span><span class="s2">"off"</span><span class="p">,</span><span class="w">
+                </span><span class="s2">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="s2">"off"</span><span class="p">,</span><span class="w">
+          </span><span class="err">...</span><span class="w">
+    </span><span class="err">}</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"caching"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="s2">"disabled"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"inmemory"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"pool"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"size"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="s2">"queue"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"size"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">256</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+    </span><span class="err">...</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>The JSON response from this endpoint is the fully-resolved Typesafe config that is currently being used by the running application. No more sleuthing required to check for proper configuration !</p>
+
+<h3>Build info</h3>
+
+<p><code>GET ${basePath}/system/build</code></p>
+
+<p>Example response:</p>
+<pre><code class="highlight json"><span class="p">{</span><span class="w">
+    </span><span class="s2">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.2"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"scala_version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.11.5"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"build_time_millis"</span><span class="p">:</span><span class="w"> </span><span class="mi">1410158241558</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"build_time_pretty"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2014-09-08 15:37:21"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"git_branch"</span><span class="p">:</span><span class="w"> </span><span class="s2">"develop"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"git_tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+    </span><span class="s2">"git_head"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2e8c6f00ea8ac7d5de5e131c13ff07a5c4cf18e8"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>As the path implies, this endpoint provides build-time information, in JSON form.</p>
+
+<p><strong>Next</strong>: Read about <a href="alert-mails.html">Alert Mails</a></p>
+
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h4>Made by M3</h4>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <ul class="list-inline site-footer-link-list">
+                <li>
+                  <a href="https://github.com/m3dev/octoparts">GitHub repo</a>
+                </li>
+                <li>
+                  <a href="http://m3dev.github.io/">M3Dev</a>
+                </li>
+                <li>
+                  <a href="http://at.m3.com/job">We're hiring!</a>
+                </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.8.0.min.js"><\/script>')</script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="js/plugins.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+    <script>
+        var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
+        (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+        s.parentNode.insertBefore(g,s)}(document,'script'));
+    </script>
+  </body>
+</html>
