@@ -7,12 +7,23 @@ import org.openqa.selenium.support.ui.Select
 
 trait PagesSupport { this: OneDIBrowserPerSuite with PlayServerSupport =>
 
+  type ThreadPoolId = Long
+
   lazy val baseUrl: String = s"http://localhost:$port"
 
+  object ThreadPoolListPage extends SeleniumPage {
+    val url: String = s"$baseUrl/admin/thread-pools"
+  }
+
+  case class ThreadPoolShowPage(threadPoolId: ThreadPoolId) extends SeleniumPage {
+    val url: String = s"$baseUrl/admin/thread-pools/$threadPoolId/show"
+  }
+
   object ThreadPoolAddPage extends SeleniumPage {
+
     val url: String = s"$baseUrl/admin/thread-pools/new"
 
-    def createThreadPool: ThreadPoolConfig = {
+    def createThreadPool: (ThreadPoolId, ThreadPoolConfig) = {
       val name = s"my little pool $uniqueId"
       val size = 10
       val queueSize = 500
@@ -21,9 +32,30 @@ trait PagesSupport { this: OneDIBrowserPerSuite with PlayServerSupport =>
       numberField("coreSize").value = s"$size"
       numberField("queueSize").value = s"$queueSize"
       submit()
-      ThreadPoolConfig(name, size, queueSize)
+      val id = currentUrl.split("/").init.last.toLong
+      (id, ThreadPoolConfig(name, size, queueSize))
     }
 
+  }
+
+  case class ThreadPoolDeletePage(threadPoolId: ThreadPoolId) extends SeleniumPage {
+    val url: String = s"$baseUrl/admin/thread-pools/$threadPoolId/delete"
+
+    def delete() = {
+      find(TagNameQuery("input")).filter(_.attribute("value").contains("Delete")).foreach(clickOn)
+    }
+
+    def cancel() = click on linkText("Cancel")
+  }
+
+  case class ThreadPoolEditPage(threadPoolId: ThreadPoolId) extends SeleniumPage {
+    val url: String = s"$baseUrl/admin/thread-pools/$threadPoolId/edit"
+
+    def updateWithName(name: String) = {
+      goTo(this)
+      textField("threadPoolKey").value = name
+      submit()
+    }
   }
 
   object PartAddPage extends SeleniumPage {
