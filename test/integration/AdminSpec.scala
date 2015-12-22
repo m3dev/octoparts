@@ -100,6 +100,18 @@ class AdminSpec
         val descriptors = findAll(TagNameQuery("td")).toSeq
         descriptors.find(_.text == threadPoolName) should not be 'defined
       }
+
+      it("should prevent me from deleting a thread pool that is currently assigned to a Part") {
+        val (threadPoolId, threadPool) = ThreadPoolAddPage.createThreadPool
+        PartAddPage.createPart(threadPool)
+        val deletePage = ThreadPoolDeletePage(threadPoolId)
+        goTo(deletePage)
+        deletePage.delete()
+        currentUrl shouldBe ThreadPoolListPage.url
+        val descriptors = findAll(TagNameQuery("td")).toSeq
+        descriptors.find(_.text == threadPool.threadPoolKey) shouldBe 'defined
+      }
+
     }
 
   }
