@@ -1,7 +1,6 @@
 package com.m3.octoparts.support.db
 
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.fixture.Suite
+import org.scalatest.{ Status, Args, BeforeAndAfterAll, fixture }
 
 /**
  * Trait that supports easy usage of the DB when running tests. Mix into
@@ -11,10 +10,15 @@ import org.scalatest.fixture.Suite
  * Ensures that the test database is torn down and migrated to start with.
  * Each test "fixture" is wrapped in a transaction
  */
-trait DBSuite extends AutoRollback2 with BeforeAndAfterAll with RequiresDB { this: Suite =>
+trait DBSuite extends AutoRollback2 with BeforeAndAfterAll with RequiresDB { this: fixture.Suite =>
 
   override def beforeAll(): Unit = {
     tearDown()
     migrate()
   }
+
+  /*
+   * No-op abstract override to resolve multiple definitions of run in extended traits
+   */
+  abstract override def run(testName: Option[String], args: Args): Status = super.run(testName, args)
 }

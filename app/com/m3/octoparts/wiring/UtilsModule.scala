@@ -4,9 +4,9 @@ import java.net.InetAddress
 
 import com.beachape.zipkin.services.{ BraveZipkinService, NoopZipkinService, ZipkinServiceLike }
 import com.github.kristofa.brave.zipkin.ZipkinSpanCollector
-import com.kenshoo.play.metrics.MetricsImpl
 
 import com.m3.octoparts.logging.PartRequestLogger
+import com.m3.octoparts.util.OctoMetricsImpl
 import play.api.Mode.Mode
 import play.api._
 import play.api.inject.ApplicationLifecycle
@@ -26,7 +26,7 @@ trait UtilsModule {
 
   def applicationLifecycle: ApplicationLifecycle
 
-  implicit lazy val metrics = wire[MetricsImpl]
+  implicit lazy val metrics = wire[OctoMetricsImpl]
 
   /*
    * Footgunney version of playConfig that throws if it can't find stuff

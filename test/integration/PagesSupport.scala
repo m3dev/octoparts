@@ -65,15 +65,15 @@ trait PagesSupport { this: OneDIBrowserPerSuite with PlayServerSupport =>
                           connectionPoolSize: Int,
                           commandKey: String,
                           commandKeyGroup: String,
-                          proxy: String)
+                          proxy: Option[String])
 
     val url: String = s"$baseUrl/admin/parts/new"
 
-    def createPart(threadPoolConfig: ThreadPoolConfig): PartConfig = {
+    def createPart(threadPoolConfig: ThreadPoolConfig, addProxy: Boolean = true): PartConfig = {
       val ThreadPoolConfig(threadPoolName, coreSize, _) = threadPoolConfig
       goTo(PartAddPage)
       val partId = s"my little part $uniqueId"
-      val url = "http://beachape.com"
+      val url = "https://beachape.com"
       val connectionPoolSize = 5
       val commandKey = s"part_key_$uniqueId"
       val commandKeyGroup = s"part_group_$uniqueId"
@@ -83,7 +83,9 @@ trait PagesSupport { this: OneDIBrowserPerSuite with PlayServerSupport =>
       numberField("httpSettings.httpPoolSize").value = connectionPoolSize.toString
       textField("hystrixConfig.commandKey").value = commandKey
       textField("hystrixConfig.commandGroupKey").value = commandKeyGroup
-      textField("httpSettings.httpProxy").value = proxy
+      if (addProxy) {
+        textField("httpSettings.httpProxy").value = proxy
+      }
       val threadPoolDropdown = new Select(webDriver.findElement(IdQuery("hystrixConfig_threadPoolConfigId").by))
       threadPoolDropdown.selectByVisibleText(s"$threadPoolName (core size: $coreSize)")
       submit()
@@ -93,7 +95,7 @@ trait PagesSupport { this: OneDIBrowserPerSuite with PlayServerSupport =>
         connectionPoolSize = connectionPoolSize,
         commandKey = commandKey,
         commandKeyGroup = commandKeyGroup,
-        proxy = proxy
+        proxy = if (addProxy) Some(proxy) else None
       )
     }
   }

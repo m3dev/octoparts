@@ -36,7 +36,7 @@ class AdminSpec
     describe("the show Thread Pool page") {
 
       it("should redirect me to the thread poollist page if no such thread pool can be found") {
-        goTo(ThreadPoolShowPage(3))
+        goTo(ThreadPoolShowPage(35415151413L))
         currentUrl shouldBe ThreadPoolListPage.url
       }
 
@@ -53,7 +53,7 @@ class AdminSpec
     describe("the edit ThreadPool page") {
 
       it("should redirect me to the thread pool list page if no such thread pool can be found") {
-        goTo(ThreadPoolEditPage(3))
+        goTo(ThreadPoolEditPage(313451515143L))
         currentUrl shouldBe ThreadPoolListPage.url
       }
 
@@ -71,7 +71,7 @@ class AdminSpec
     describe("deleting a thread pool") {
 
       it("should redirect me to the thread pool list page if no such thread pool can be found") {
-        goTo(ThreadPoolDeletePage(3))
+        goTo(ThreadPoolDeletePage(98979))
         currentUrl shouldBe ThreadPoolListPage.url
       }
 
@@ -121,7 +121,7 @@ class AdminSpec
     describe("adding a Part") {
 
       it("should work and redirect me to the part show page") {
-        val PartAddPage.PartConfig(partId, url, connectionPoolSize, commandKey, commandKeyGroup, proxy) = PartAddPage.createPart(ThreadPoolAddPage.createThreadPool._2)
+        val PartAddPage.PartConfig(partId, url, connectionPoolSize, commandKey, commandKeyGroup, Some(proxy)) = PartAddPage.createPart(ThreadPoolAddPage.createThreadPool._2)
         pageTitle should include("Part details")
         val descriptors = findAll(TagNameQuery("dd")).toSeq
         Seq(partId, url, connectionPoolSize, commandKey, commandKeyGroup, proxy).foreach { v =>

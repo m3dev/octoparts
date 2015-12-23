@@ -20,7 +20,7 @@ object Octoparts extends Build {
   // -------------------------------------------------------
   lazy val app = Project(id = "octoparts", base = file("."), settings = playAppSettings)
     .enablePlugins(PlayScala)
-    .dependsOn(models, authHandlerApi, playJsonFormats)
+    .dependsOn(models, authHandlerApi, playJsonFormats, scalaWsClient % "test->compile")
     .aggregate(scalaWsClient, javaClient, models, authHandlerApi, playJsonFormats)
 
   // -------------------------------------------------------

@@ -10,6 +10,7 @@ import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.repository.MutableConfigsRepository
 import com.m3.octoparts.repository.config._
+import com.m3.octoparts.support.{ FutureFunSpec, PlayAppSupport }
 import com.m3.octoparts.support.db.RequiresDB
 import com.m3.octoparts.support.mocks.ConfigDataMocks
 import com.twitter.zipkin.gen.Span
@@ -103,12 +104,11 @@ class AdminControllerCompanionSpec extends FunSpec with Matchers with ConfigData
   }
 }
 
-class AdminControllerSpec extends FunSpec
-    with Matchers
-    with ScalaFutures
-    with IntegrationPatience
+class AdminControllerSpec
+    extends FutureFunSpec
     with ConfigDataMocks
-    with RequiresDB {
+    with RequiresDB
+    with PlayAppSupport {
 
   implicit val emptySpan = new Span()
   implicit val emptyNav = NavbarLinks(None, None, None, None)
