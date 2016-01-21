@@ -36,7 +36,7 @@ class AdminSpec
     describe("the show Thread Pool page") {
 
       it("should redirect me to the thread poollist page if no such thread pool can be found") {
-        goTo(ThreadPoolShowPage(35415151413L))
+        goTo(ThreadPoolShowPage(Long.MaxValue))
         currentUrl shouldBe ThreadPoolListPage.url
       }
 
@@ -53,7 +53,7 @@ class AdminSpec
     describe("the edit ThreadPool page") {
 
       it("should redirect me to the thread pool list page if no such thread pool can be found") {
-        goTo(ThreadPoolEditPage(313451515143L))
+        goTo(ThreadPoolEditPage(Long.MaxValue))
         currentUrl shouldBe ThreadPoolListPage.url
       }
 
@@ -71,7 +71,7 @@ class AdminSpec
     describe("deleting a thread pool") {
 
       it("should redirect me to the thread pool list page if no such thread pool can be found") {
-        goTo(ThreadPoolDeletePage(98979))
+        goTo(ThreadPoolDeletePage(Long.MaxValue))
         currentUrl shouldBe ThreadPoolListPage.url
       }
 
