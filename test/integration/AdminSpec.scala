@@ -121,7 +121,8 @@ class AdminSpec
     describe("adding a Part") {
 
       it("should work and redirect me to the part show page") {
-        val PartAddPage.PartConfig(partId, url, connectionPoolSize, commandKey, commandKeyGroup, Some(proxy)) = PartAddPage.createPart(ThreadPoolAddPage.createThreadPool._2)
+        val (_, threadPoolConfig) = ThreadPoolAddPage.createThreadPool
+        val PartAddPage.PartConfig(partId, url, connectionPoolSize, commandKey, commandKeyGroup, Some(proxy)) = PartAddPage.createPart(threadPoolConfig)
         pageTitle should include("Part details")
         val descriptors = findAll(TagNameQuery("dd")).toSeq
         Seq(partId, url, connectionPoolSize, commandKey, commandKeyGroup, proxy).foreach { v =>
@@ -140,7 +141,8 @@ class AdminSpec
       }
 
       it("should send me to the part show page after successful editing") {
-        val PartAddPage.PartConfig(partId, _, _, _, _, _) = PartAddPage.createPart(ThreadPoolAddPage.createThreadPool._2)
+        val (_, threadPoolConfig) = ThreadPoolAddPage.createThreadPool
+        val PartAddPage.PartConfig(partId, _, _, _, _, _) = PartAddPage.createPart(threadPoolConfig)
         goTo(PartEditPage(partId))
         currentUrl should endWith("/edit")
         val newUrl = "http://new-hotness.com"
