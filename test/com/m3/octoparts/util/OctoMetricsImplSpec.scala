@@ -1,18 +1,30 @@
 package com.m3.octoparts.util
 
-import com.codahale.metrics.JvmAttributeGaugeSet
-import com.codahale.metrics.jvm.{ GarbageCollectorMetricSet, MemoryUsageGaugeSet, ThreadStatesGaugeSet }
+import com.codahale.metrics.MetricRegistry
 import com.m3.octoparts.support.PlayAppSupport
 import org.scalatest.{ BeforeAndAfterEach, Matchers, FunSpec }
+import play.api.Configuration
 import scala.collection.JavaConverters._
 
 class OctoMetricsImplSpec extends FunSpec with Matchers with PlayAppSupport with BeforeAndAfterEach {
+
+  lazy val subject = {
+    // Force metrics.jvm to be true
+    val config = appComponents.configuration ++ Configuration.from(Map("metrics.jvm" -> true))
+    new OctoMetricsImpl(appComponents.applicationLifecycle, config)
+  }
 
   override protected def afterEach(): Unit = {
     subject.onStop()
   }
 
-  lazy val subject = new OctoMetricsImpl(appComponents.applicationLifecycle, appComponents.configuration)
+  private def ensureJvmMetrics(metricRegistry: MetricRegistry): Unit = {
+    val metricNames = metricRegistry.getNames.asScala
+    val expectedMetricNames = Seq("jvm.attribute", "jvm.gc", "jvm.memory", "jvm.threads")
+    expectedMetricNames.foreach { metricName =>
+      metricNames.find(_.contains(metricName)) shouldBe 'defined
+    }
+  }
 
   describe("#onStart") {
 
@@ -20,23 +32,17 @@ class OctoMetricsImplSpec extends FunSpec with Matchers with PlayAppSupport with
       subject.onStart()
     }
 
-    it("should work with consecutive calls") {
+    it("should not throw with consecutive calls") {
       subject.onStart()
       subject.onStart()
     }
 
-    it("should work if metrics were already registered") {
+    it("should work if metrics were already set up") {
       val registry = subject.defaultRegistry
-      registry.register("jvm.attribute", new JvmAttributeGaugeSet())
-      registry.register("jvm.gc", new GarbageCollectorMetricSet())
-      registry.register("jvm.memory", new MemoryUsageGaugeSet())
-      registry.register("jvm.threads", new ThreadStatesGaugeSet())
+      subject.setupJvmMetrics(registry)
+      ensureJvmMetrics(registry)
       subject.onStart()
-      val metricNames = registry.getNames.asScala
-      metricNames.find(_.contains("jvm.attribute")) shouldBe 'defined
-      metricNames.find(_.contains("jvm.gc")) shouldBe 'defined
-      metricNames.find(_.contains("jvm.memory")) shouldBe 'defined
-      metricNames.find(_.contains("jvm.threads")) shouldBe 'defined
+      ensureJvmMetrics(registry)
     }
 
   }
