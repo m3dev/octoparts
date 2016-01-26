@@ -20,7 +20,16 @@ object Octoparts extends Build {
   // -------------------------------------------------------
   lazy val app = Project(id = "octoparts", base = file("."), settings = playAppSettings)
     .enablePlugins(PlayScala)
-    .dependsOn(models, authHandlerApi, playJsonFormats)
+    .dependsOn(models, authHandlerApi, playJsonFormats, scalaWsClient % "test->compile")
+    /*
+     * The "test->compile" above adds a test-mode dependency in the current project definition (root app in this
+     * case); in particular the ScalaWsClient project is to be in a compiled state before running tests in root.
+     *
+     * The reason I added this was to allow us to integration test the root project (Octoparts app)
+     * using the ScalaWsClient.
+     *
+     * For more info see: http://www.scala-sbt.org/0.13/docs/Multi-Project.html#Per-configuration+classpath+dependencies
+    */
     .aggregate(scalaWsClient, javaClient, models, authHandlerApi, playJsonFormats)
 
   // -------------------------------------------------------

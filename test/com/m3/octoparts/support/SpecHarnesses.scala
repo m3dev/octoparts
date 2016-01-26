@@ -30,16 +30,9 @@ trait MetricsSupport {
 }
 
 /**
- * FunSpec w/ matchers, pre-loaded with a bunch of Future-related goodies
+ * Base trait for any kind of spec that needs an Application or any of its components
  */
-trait FutureFunSpec extends FunSpec with Matchers with ScalaFutures with IntegrationPatience
-
-/**
- * Allows you to have one running compile-time DI app through-out a suite.
- *
- * DI components for the app can be accessed via the applicationBuilder member
- */
-trait PlayAppSupport extends SuiteMixin { this: Suite =>
+trait TestAppComponents {
 
   // Override as necessary
   lazy val context: ApplicationLoader.Context = {
@@ -59,6 +52,20 @@ trait PlayAppSupport extends SuiteMixin { this: Suite =>
 
   lazy val actorSystem = appComponents.actorSystem
 
+}
+
+/**
+ * FunSpec w/ matchers, pre-loaded with a bunch of Future-related goodies
+ */
+trait FutureFunSpec extends FunSpec with Matchers with ScalaFutures with IntegrationPatience
+
+/**
+ * Allows you to have one running compile-time DI app through-out a suite.
+ *
+ * DI components for the app can be accessed via the applicationBuilder member
+ */
+trait PlayAppSupport extends SuiteMixin with TestAppComponents { this: Suite =>
+
   abstract override def run(testName: Option[String], args: Args): Status = {
     Play.start(app)
     try {
@@ -76,7 +83,17 @@ trait PlayAppSupport extends SuiteMixin { this: Suite =>
 
 }
 
-trait PlayServerSupport extends SuiteMixin with PlayAppSupport { this: Suite =>
+/**
+ * Be careful not to extend PlayAppSupport here or in any spec that uses this trait, because the run method will invoke
+ * super.run.
+ *
+ * This is a problem because TestServer.start() calls Play.start, passing its Play application, and
+ * so does PlayAppSupport's run method. When Play.start(app) is called twice with the same app,
+ * <em>shutdown is called on the same app</em>, meaning various components will get shut down, leading
+ * to funny things like failure to enqueue events on the Akka scheduler timer due to the timer having
+ * been shut down before it has ever been used.
+ */
+trait PlayServerSupport extends SuiteMixin with TestAppComponents { this: Suite =>
 
   /**
    * Implicit `PortNumber` instance that wraps `port`. The value returned from `portNumber.value`

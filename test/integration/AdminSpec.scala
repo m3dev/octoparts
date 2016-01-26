@@ -18,15 +18,100 @@ class AdminSpec
     with PagesSupport
     with IntegrationPatience {
 
-  describe("adding a thread pool") {
+  describe("Thread Pool administration") {
 
-    it("should work and redirect me to the show page") {
-      val ThreadPoolConfig(name, size, queueSize) = ThreadPoolAddPage.createThreadPool
-      pageTitle should include("Thread pool details")
-      val descriptors = findAll(TagNameQuery("dd")).toSeq
-      descriptors.find(_.text == name) shouldBe 'defined
-      descriptors.find(_.text == size.toString) shouldBe 'defined
-      descriptors.find(_.text == queueSize.toString) shouldBe 'defined
+    describe("adding a thread pool") {
+
+      it("should work and redirect me to the show page") {
+        val (_, ThreadPoolConfig(name, size, queueSize)) = ThreadPoolAddPage.createThreadPool
+        pageTitle should include("Thread pool details")
+        val descriptors = findAll(TagNameQuery("dd")).toSeq
+        descriptors.find(_.text == name) shouldBe 'defined
+        descriptors.find(_.text == size.toString) shouldBe 'defined
+        descriptors.find(_.text == queueSize.toString) shouldBe 'defined
+      }
+
+    }
+
+    describe("the show Thread Pool page") {
+
+      it("should redirect me to the thread poollist page if no such thread pool can be found") {
+        goTo(ThreadPoolShowPage(Long.MaxValue))
+        currentUrl shouldBe ThreadPoolListPage.url
+      }
+
+      it("should show me a thread pool if it exists") {
+        val (threadPoolId, ThreadPoolConfig(threadPoolName, _, _)) = ThreadPoolAddPage.createThreadPool
+        goTo(ThreadPoolShowPage(threadPoolId))
+        pageTitle should include("Thread pool details")
+        val descriptors = findAll(TagNameQuery("dd")).toSeq
+        descriptors.find(_.text == threadPoolName) shouldBe 'defined
+      }
+
+    }
+
+    describe("the edit ThreadPool page") {
+
+      it("should redirect me to the thread pool list page if no such thread pool can be found") {
+        goTo(ThreadPoolEditPage(Long.MaxValue))
+        currentUrl shouldBe ThreadPoolListPage.url
+      }
+
+      it("should allow me to edit a Thread pool") {
+        val (threadPoolId, ThreadPoolConfig(oldName, _, _)) = ThreadPoolAddPage.createThreadPool
+        val newName = s"$oldName - updated"
+        ThreadPoolEditPage(threadPoolId).updateWithName(newName)
+        pageTitle should include("Thread pool details")
+        val descriptors = findAll(TagNameQuery("dd")).toSeq
+        descriptors.find(_.text == newName) shouldBe 'defined
+      }
+
+    }
+
+    describe("deleting a thread pool") {
+
+      it("should redirect me to the thread pool list page if no such thread pool can be found") {
+        goTo(ThreadPoolDeletePage(Long.MaxValue))
+        currentUrl shouldBe ThreadPoolListPage.url
+      }
+
+      it("should allow me to reach the delete page") {
+        val (threadPoolId, _) = ThreadPoolAddPage.createThreadPool
+        goTo(ThreadPoolDeletePage(threadPoolId))
+        pageTitle should include("Delete")
+      }
+
+      it("should allow me to cancel, returning me back to the list page for thread pools") {
+        val (threadPoolId, ThreadPoolConfig(threadPoolName, _, _)) = ThreadPoolAddPage.createThreadPool
+        val deletePage = ThreadPoolDeletePage(threadPoolId)
+        goTo(deletePage)
+        deletePage.cancel()
+        currentUrl shouldBe ThreadPoolListPage.url
+        val descriptors = findAll(TagNameQuery("td")).toSeq
+        descriptors.find(_.text == threadPoolName) shouldBe 'defined
+      }
+
+      it("should allow me to proceed with deletion, deleting the pool and returning me back to the list page for thread pools") {
+        val (threadPoolId, ThreadPoolConfig(threadPoolName, _, _)) = ThreadPoolAddPage.createThreadPool
+        val deletePage = ThreadPoolDeletePage(threadPoolId)
+        goTo(deletePage)
+        deletePage.delete()
+        currentUrl shouldBe ThreadPoolListPage.url
+        val descriptors = findAll(TagNameQuery("td")).toSeq
+        descriptors.find(_.text == threadPoolName) should not be 'defined
+      }
+
+      it("should prevent me from deleting a thread pool that is currently assigned to a Part") {
+        val (threadPoolId, threadPool) = ThreadPoolAddPage.createThreadPool
+        PartAddPage.createPart(threadPool)
+        val deletePage = ThreadPoolDeletePage(threadPoolId)
+        goTo(deletePage)
+        deletePage.delete()
+        currentUrl shouldBe ThreadPoolListPage.url
+        val descriptors = findAll(TagNameQuery("td")).toSeq
+        descriptors.find(_.text == threadPool.threadPoolKey) shouldBe 'defined
+      }
+
     }
 
   }
@@ -36,7 +121,8 @@ class AdminSpec
     describe("adding a Part") {
 
       it("should work and redirect me to the part show page") {
-        val PartAddPage.PartConfig(partId, url, connectionPoolSize, commandKey, commandKeyGroup, proxy) = PartAddPage.createPart(ThreadPoolAddPage.createThreadPool)
+        val (_, threadPoolConfig) = ThreadPoolAddPage.createThreadPool
+        val PartAddPage.PartConfig(partId, url, connectionPoolSize, commandKey, commandKeyGroup, Some(proxy)) = PartAddPage.createPart(threadPoolConfig)
         pageTitle should include("Part details")
         val descriptors = findAll(TagNameQuery("dd")).toSeq
         Seq(partId, url, connectionPoolSize, commandKey, commandKeyGroup, proxy).foreach { v =>
@@ -55,7 +141,8 @@ class AdminSpec
       }
 
       it("should send me to the part show page after successful editing") {
-        val PartAddPage.PartConfig(partId, _, _, _, _, _) = PartAddPage.createPart(ThreadPoolAddPage.createThreadPool)
+        val (_, threadPoolConfig) = ThreadPoolAddPage.createThreadPool
+        val PartAddPage.PartConfig(partId, _, _, _, _, _) = PartAddPage.createPart(threadPoolConfig)
         goTo(PartEditPage(partId))
         currentUrl should endWith("/edit")
         val newUrl = "http://new-hotness.com"

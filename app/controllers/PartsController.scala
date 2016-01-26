@@ -64,7 +64,7 @@ class PartsController(
         Future.successful(BadRequest("Unrecognized request object"))
       },
       aggregateRequest => {
-        val noCache = readClientCacheHeaders && request.headers.get(HeaderConstants.CACHE_CONTROL) == Some(HeaderConstants.CACHE_CONTROL_NO_CACHE)
+        val noCache = readClientCacheHeaders && request.headers.get(HeaderConstants.CACHE_CONTROL).contains(HeaderConstants.CACHE_CONTROL_NO_CACHE)
         logAggregateRequest(aggregateRequest, noCache)
         val fAggregateResponse = partsService.processParts(aggregateRequest, noCache).trace("aggregate-response-processing")
         withRequestTimeout(fAggregateResponse).trace("aggregate-response-processing-with-timeout")
