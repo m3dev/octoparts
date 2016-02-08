@@ -14,10 +14,12 @@ import scala.util.control.NonFatal
 /**
  * Trait to support tearing down and setting up the test DB.
  *
- * It extends OneAppPerSuite so that we use the Play app's Scalikejdbc connection pool,
- * thereby connecting to the correct DB (as configured in application.test.conf).
+ * Currently private to the [support] package because assumes that it is mixed into a test suite
+ * that ensures an app will be lazily set up so the stateful ConnectionPool singleton is initalised.
+ *
+ *
  */
-trait RequiresDB extends Suite {
+private[support] trait RequiresDB extends Suite {
 
   lazy val flyway = {
     val flyway = new Flyway

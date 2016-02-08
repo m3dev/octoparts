@@ -107,7 +107,6 @@ class AdminControllerCompanionSpec extends FunSpec with Matchers with ConfigData
 class AdminControllerSpec
     extends FutureFunSpec
     with ConfigDataMocks
-    with RequiresDB
     with PlayAppSupport {
 
   implicit val emptySpan = new Span()

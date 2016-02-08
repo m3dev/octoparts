@@ -2,6 +2,7 @@ package com.m3.octoparts.support
 
 import com.codahale.metrics.{ SharedMetricRegistries, MetricRegistry }
 import com.kenshoo.play.metrics.Metrics
+import com.m3.octoparts.support.db.{ RequiresDB, DBSuite }
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.openqa.selenium.safari.SafariDriver
@@ -64,7 +65,7 @@ trait FutureFunSpec extends FunSpec with Matchers with ScalaFutures with Integra
  *
  * DI components for the app can be accessed via the applicationBuilder member
  */
-trait PlayAppSupport extends SuiteMixin with TestAppComponents { this: Suite =>
+trait PlayAppSupport extends SuiteMixin with TestAppComponents with RequiresDB { this: Suite =>
 
   abstract override def run(testName: Option[String], args: Args): Status = {
     Play.start(app)
@@ -93,7 +94,7 @@ trait PlayAppSupport extends SuiteMixin with TestAppComponents { this: Suite =>
  * to funny things like failure to enqueue events on the Akka scheduler timer due to the timer having
  * been shut down before it has ever been used.
  */
-trait PlayServerSupport extends SuiteMixin with TestAppComponents { this: Suite =>
+trait PlayServerSupport extends SuiteMixin with TestAppComponents with RequiresDB { this: Suite =>
 
   /**
    * Implicit `PortNumber` instance that wraps `port`. The value returned from `portNumber.value`
@@ -113,6 +114,7 @@ trait PlayServerSupport extends SuiteMixin with TestAppComponents { this: Suite 
    * Invokes `start` on a new `TestServer` created with the `FakeApplication` provided by `app` and the
    * port number defined by `port`, places the `FakeApplication` and port number into the `ConfigMap` under the keys
    * `org.scalatestplus.play.app` and `org.scalatestplus.play.port`, respectively, to make
+   *
    * them available to nested suites; calls `super.run`; and lastly ensures the `FakeApplication and test server are stopped after
    * all tests and nested suites have completed.
    *
@@ -138,7 +140,12 @@ trait PlayServerSupport extends SuiteMixin with TestAppComponents { this: Suite 
   }
 }
 
-trait OneDIBrowserPerSuite extends SuiteMixin with WebBrowser with Eventually with IntegrationPatience with BrowserFactory { this: Suite =>
+trait OneDIBrowserPerSuite
+    extends SuiteMixin
+    with WebBrowser
+    with Eventually
+    with IntegrationPatience
+    with BrowserFactory { this: Suite =>
 
   /**
    * Override this to your needs
