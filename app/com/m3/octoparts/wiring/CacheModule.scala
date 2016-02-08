@@ -51,12 +51,13 @@ trait CacheModule extends UtilsModule {
         password <- configuration.getString("memcached.password")
       } yield AuthConfiguration(user, password)
 
-      val shade = Memcached(ShadeConfig(
-        addresses = hostPort,
-        operationTimeout = timeout,
-        protocol = Protocol.withName(protocol),
-        authentication = auth
-      ), cacheExecutor)
+      val shade = Memcached(
+        ShadeConfig(
+          addresses = hostPort,
+          operationTimeout = timeout,
+          protocol = Protocol.withName(protocol),
+          authentication = auth
+        ))(cacheExecutor)
 
       new LoggingRawCache(new MemcachedRawCache(shade))(cacheExecutor)
     }

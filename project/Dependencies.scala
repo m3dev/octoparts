@@ -15,10 +15,8 @@ object Dependencies {
 
   val thePlayVersion = play.core.PlayVersion.current
   val slf4jVersion = "1.7.10"
-  val hystrixVersion = "1.4.1"
-  // http-client 4.4 has an unsolved issue which affects us critically: https://issues.apache.org/jira/browse/HTTPCLIENT-1609
-  // Stay on 4.3.x until this is fixed.
-  val httpClientVersion = "4.3.6"
+  val hystrixVersion = "1.4.23"
+  val httpClientVersion = "4.5.1"
   val scalikejdbcVersion = "2.3.0"
   val swaggerVersion = "1.3.12"
   val jacksonVersion = "2.5.1"
@@ -37,13 +35,13 @@ object Dependencies {
   // Hystrix
   val hystrixCore         = "com.netflix.hystrix"       % "hystrix-core"                  % hystrixVersion
   val hystrixStream       = "com.netflix.hystrix"       % "hystrix-metrics-event-stream"  % hystrixVersion
-  val rxJavaScala         = "io.reactivex"              %% "rxscala"                      % "0.24.0" // compatible with the rxjava (1.0.7) used in hystrix-core. Check again if you change.
+  val rxJavaScala         = "io.reactivex"              %% "rxscala"                      % "0.26.0" // compatible with the rxjava (1.1.0) used in hystrix-core. Check again if you change.
 
   // HTTP clients
-  val asyncHttpClient     = "com.ning"                  % "async-http-client"             % "1.9.11" // not upgrading because play-ws uses this version
+  val asyncHttpClient     = "com.ning"                  % "async-http-client"             % "1.9.21" // not upgrading because play-ws uses this version
   val httpClient          = "org.apache.httpcomponents" % "httpclient"                    % httpClientVersion
   val httpClientCache     = "org.apache.httpcomponents" % "httpclient-cache"              % httpClientVersion
-  val metricsHttpClient   = "io.dropwizard.metrics"     % "metrics-httpclient"            % "3.1.1"
+  val metricsHttpClient   = "io.dropwizard.metrics"     % "metrics-httpclient"            % "3.1.2"
 
   // DB
   val postgres            = "org.postgresql"            % "postgresql"                    % "9.4-1201-jdbc41"   % Runtime
@@ -51,11 +49,10 @@ object Dependencies {
   val scalikeJdbc         = "org.scalikejdbc"           %% "scalikejdbc"                  % scalikejdbcVersion
   val scalikeJdbcConfig   = "org.scalikejdbc"           %% "scalikejdbc-config"           % scalikejdbcVersion
   val scalikeJdbcPlay     = "org.scalikejdbc"           %% "scalikejdbc-play-initializer" % "2.4.3"
-  val dbcp2               = "org.apache.commons"        % "commons-dbcp2"                 % "2.1"
+  val dbcp2               = "org.apache.commons"        % "commons-dbcp2"                 % "2.1.1"
 
   // Memcached
-  val shade               = "com.bionicspirit"          %% "shade"                        % "1.6.0"
-  val spyMemcached        = "net.spy"                   % "spymemcached"                  % "2.11.6"
+  val shade               = "com.bionicspirit"          %% "shade"                        % "1.7.2"
 
   // Play plugins
   val playFlyway          = "org.flywaydb"              %% "flyway-play"                  % "2.2.0"
@@ -75,12 +72,12 @@ object Dependencies {
 
   // Test
   val playTest            = "com.typesafe.play"         %% "play-test"                    % thePlayVersion      % Test
-  val scalatest           = "org.scalatest"             %% "scalatest"                    % "2.2.5"             % Test
-  val scalatestPlay       = "org.scalatestplus"         %% "play"                         % "1.4.0-M4"          % Test
+  val scalatest           = "org.scalatest"             %% "scalatest"                    % "2.2.6"             % Test
+  val scalatestPlay       = "org.scalatestplus"         %% "play"                         % "1.4.0"            % Test
   val scalacheck          = "org.scalacheck"            %% "scalacheck"                   % "1.12.2"            % Test
-  val groovy              = "org.codehaus.groovy"       % "groovy"                        % "2.4.1"             % Test
+  val groovy              = "org.codehaus.groovy"       %  "groovy"                       % "2.4.1"             % Test
   val scalikeJdbcTest     = "org.scalikejdbc"           %% "scalikejdbc-test"             % scalikejdbcVersion  % Test
-  val mockitoCore         =  "org.mockito"              % "mockito-core"                  % "1.10.19"           % Test
+  val mockitoCore         = "org.mockito"               % "mockito-core"                  % "1.10.19"           % Test
 
   // Misc utils
   val commonsValidator    = "commons-validator"         % "commons-validator"             % "1.4.1"             % Runtime
@@ -133,7 +130,6 @@ object Dependencies {
 
     // Memcached
     shade,
-    spyMemcached,
 
     // Zipkin
     zipkinFutures,
