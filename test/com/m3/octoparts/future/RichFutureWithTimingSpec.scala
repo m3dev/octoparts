@@ -1,6 +1,7 @@
 package com.m3.octoparts.future
 
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.{ Millis, Span }
 import org.scalatest.{ FlatSpec, Matchers }
 
 import scala.concurrent.Future
@@ -8,6 +9,9 @@ import scala.concurrent.duration.Duration
 
 class RichFutureWithTimingSpec extends FlatSpec with Matchers with ScalaFutures {
   import scala.concurrent.ExecutionContext.Implicits.global
+
+  // Not quite IntegrationPatience but long enough to avoid problems on slower machines
+  override implicit val patienceConfig: PatienceConfig = PatienceConfig(Span(500, Millis))
 
   behavior of "RichFutureWithTiming"
 
@@ -44,4 +48,5 @@ class RichFutureWithTimingSpec extends FlatSpec with Matchers with ScalaFutures 
       result should be("OK")
     }
   }
+
 }
