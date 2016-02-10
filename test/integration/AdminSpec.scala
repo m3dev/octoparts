@@ -11,7 +11,6 @@ class AdminSpec
     extends FunSpec
     with PlayServerSupport
     with OneDIBrowserPerSuite
-    with RequiresDB
     with HtmlUnitFactory
     with Matchers
     with ScalaFutures

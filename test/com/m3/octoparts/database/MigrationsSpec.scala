@@ -1,9 +1,9 @@
 package com.m3.octoparts.database
 
+import com.m3.octoparts.support.PlayAppSupport
 import org.scalatest.FunSpec
-import com.m3.octoparts.support.db.RequiresDB
 
-class MigrationsSpec extends FunSpec with RequiresDB {
+class MigrationsSpec extends FunSpec with PlayAppSupport {
 
   describe("Running migrations") {
     describe("from an empty database") {
