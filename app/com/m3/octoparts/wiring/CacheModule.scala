@@ -8,7 +8,7 @@ import com.m3.octoparts.cache.key.MemcachedKeyGenerator
 import com.m3.octoparts.cache.memcached.{ MemcachedCacheOps, MemcachedCache, InMemoryRawCache, MemcachedRawCache }
 import com.m3.octoparts.cache.versioning.InMemoryLatestVersionCache
 import com.m3.octoparts.cache.LoggingRawCache
-import shade.memcached.{ AuthConfiguration, Memcached, Protocol, Configuration => ShadeConfig }
+import shade.memcached.{ Configuration => ShadeConfig, FailureMode, AuthConfiguration, Memcached, Protocol }
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -56,7 +56,8 @@ trait CacheModule extends UtilsModule {
           addresses = hostPort,
           operationTimeout = timeout,
           protocol = Protocol.withName(protocol),
-          authentication = auth
+          authentication = auth,
+          failureMode = FailureMode.Redistribute
         ))(cacheExecutor)
 
       new LoggingRawCache(new MemcachedRawCache(shade))(cacheExecutor)
