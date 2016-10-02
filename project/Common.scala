@@ -45,7 +45,7 @@ object Common {
     commonSettings ++
     Publishing.settings ++
     Seq(
-      crossScalaVersions := Seq("2.10.5", Version.theScalaVersion),
+      crossScalaVersions := Seq("2.10.6", Version.theScalaVersion),
       crossVersion := CrossVersion.binary
     )
 

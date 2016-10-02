@@ -6,8 +6,13 @@ import Common._
  * @param projectName Name of the project
  * @param baseFile Where the base of the project is, defaults to a directory from root named the same as projectName
  */
-def nonPlayProject(projectName: String)(baseFile: String = projectName): Project =
-  Project(id = projectName, base = file(baseFile), settings = nonPlayAppSettings).settings(name := projectName)
+def nonPlayProject(projectName: String)(baseFile: String = projectName): Project = {
+  Project(
+    id = projectName,
+    base = file(baseFile),
+    settings = nonPlayAppSettings
+  ).settings(name := projectName)
+}
 
 // -------------------------------------------------------
 // Play app
