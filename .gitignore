@@ -64,3 +64,5 @@ tmp
 
 # Development environment files
 conf/application.dev.conf
+
+.ensime*

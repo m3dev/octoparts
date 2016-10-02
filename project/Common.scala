@@ -20,6 +20,7 @@ object Common {
     version := Version.octopartsVersion,
     scalaVersion := Version.theScalaVersion,
     shellPrompt  := ShellPrompt.buildShellPrompt,
+    scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xlint"),
     updateOptions := updateOptions.value
       .withCircularDependencyLevel(CircularDependencyLevel.Error)
       .withCachedResolution(true)
