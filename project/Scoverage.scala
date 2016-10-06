@@ -1,7 +1,7 @@
 import sbt.Keys._
 import sbt.Tests
 import scoverage.ScoverageSbtPlugin._
-import ScoverageKeys._
+import scoverage.ScoverageKeys._
 
 object Scoverage {
 

@@ -20,6 +20,7 @@ object Common {
     version := Version.octopartsVersion,
     scalaVersion := Version.theScalaVersion,
     shellPrompt  := ShellPrompt.buildShellPrompt,
+    scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xlint"),
     updateOptions := updateOptions.value
       .withCircularDependencyLevel(CircularDependencyLevel.Error)
       .withCachedResolution(true)
@@ -44,7 +45,7 @@ object Common {
     commonSettings ++
     Publishing.settings ++
     Seq(
-      crossScalaVersions := Seq("2.10.5", Version.theScalaVersion),
+      crossScalaVersions := Seq("2.10.6", Version.theScalaVersion),
       crossVersion := CrossVersion.binary
     )
 
