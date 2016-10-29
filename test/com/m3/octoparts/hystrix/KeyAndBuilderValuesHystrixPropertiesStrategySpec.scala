@@ -28,10 +28,12 @@ class KeyAndBuilderValuesHystrixPropertiesStrategySpec extends FunSpec with Matc
 
       val properties1 = HystrixPropertiesFactory.getCommandProperties(
         commandKey,
-        HystrixCommandProperties.Setter().withExecutionTimeoutInMilliseconds(300))
+        HystrixCommandProperties.Setter().withExecutionTimeoutInMilliseconds(300)
+      )
       val properties2 = HystrixPropertiesFactory.getCommandProperties(
         commandKey,
-        HystrixCommandProperties.Setter().withExecutionTimeoutInMilliseconds(600))
+        HystrixCommandProperties.Setter().withExecutionTimeoutInMilliseconds(600)
+      )
       properties1.executionTimeoutInMilliseconds.get should be(300)
       properties2.executionTimeoutInMilliseconds.get should be(600)
     }

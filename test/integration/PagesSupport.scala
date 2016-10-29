@@ -60,12 +60,14 @@ trait PagesSupport { this: OneDIBrowserPerSuite with PlayServerSupport =>
 
   object PartAddPage extends SeleniumPage {
 
-    case class PartConfig(partId: String,
-                          url: String,
-                          connectionPoolSize: Int,
-                          commandKey: String,
-                          commandKeyGroup: String,
-                          proxy: Option[String])
+    case class PartConfig(
+      partId: String,
+      url: String,
+      connectionPoolSize: Int,
+      commandKey: String,
+      commandKeyGroup: String,
+      proxy: Option[String]
+    )
 
     val url: String = s"$baseUrl/admin/parts/new"
 

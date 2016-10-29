@@ -6,5 +6,6 @@ import com.m3.octoparts.model.config.ShortPartParam
 case class PartCacheKey(
   partId: String,
   versions: Seq[Version],
-  paramValues: Map[ShortPartParam, Seq[String]])
+  paramValues: Map[ShortPartParam, Seq[String]]
+)
     extends CacheKey

@@ -9,9 +9,11 @@ trait CacheDirectiveGenerator {
   /**
    * Generate a cache directive, i.e. all the information the cache client needs to lookup/insert a PartResponse.
    */
-  def generateDirective(partId: String,
-                        params: Map[ShortPartParam, Seq[String]],
-                        cacheConfig: CacheConfig): CacheDirective
+  def generateDirective(
+    partId: String,
+    params: Map[ShortPartParam, Seq[String]],
+    cacheConfig: CacheConfig
+  ): CacheDirective
 }
 
 object CacheDirectiveGenerator extends CacheDirectiveGenerator {

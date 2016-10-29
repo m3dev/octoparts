@@ -14,11 +14,13 @@ import scala.concurrent.duration._
 
 object AdminForms {
 
-  case class AlertMailData(enabled: Boolean,
-                           interval: Option[Int],
-                           absoluteThreshold: Option[Int],
-                           percentThreshold: Option[BigDecimal],
-                           recipients: Option[String])
+  case class AlertMailData(
+    enabled: Boolean,
+    interval: Option[Int],
+    absoluteThreshold: Option[Int],
+    percentThreshold: Option[BigDecimal],
+    recipients: Option[String]
+  )
 
   case class PartData(
       partId: String,
@@ -29,7 +31,8 @@ object AdminForms {
       ttl: Option[Int],
       cacheGroupNames: Seq[String],
       alertMailData: AlertMailData,
-      localContentsConfig: LocalContentsConfig) {
+      localContentsConfig: LocalContentsConfig
+  ) {
     data =>
 
     /** Create a brand new HttpPartConfig using the data input into the form */
@@ -117,7 +120,8 @@ object AdminForms {
         httpConnectionTimeoutInMs = part.httpConnectionTimeout.toMillis.toInt,
         httpSocketTimeoutInMs = part.httpSocketTimeout.toMillis.toInt,
         httpDefaultEncoding = part.httpDefaultEncoding.name,
-        httpProxy = part.httpProxy),
+        httpProxy = part.httpProxy
+      ),
       hystrixConfig = HystrixConfigData(
         commandKey = part.hystrixConfigItem.commandKey,
         commandGroupKey = part.hystrixConfigItem.commandGroupKey,
@@ -136,7 +140,8 @@ object AdminForms {
       ),
       localContentsConfig = LocalContentsConfig(
         enabled = part.localContentsEnabled,
-        contents = part.localContents)
+        contents = part.localContents
+      )
     )
 
     private def trimPartId(original: String): String = {
@@ -189,7 +194,8 @@ object AdminForms {
 
   case class LocalContentsConfig(
     enabled: Boolean,
-    contents: Option[String])
+    contents: Option[String]
+  )
 
   case class HttpConfigData(
     uri: String,
@@ -199,14 +205,16 @@ object AdminForms {
     httpConnectionTimeoutInMs: Int,
     httpSocketTimeoutInMs: Int,
     httpDefaultEncoding: String,
-    httpProxy: Option[String])
+    httpProxy: Option[String]
+  )
 
   case class HystrixConfigData(
     commandKey: String,
     commandGroupKey: String,
     timeoutInMs: Int,
     threadPoolConfigId: Long,
-    localContentsAsFallback: Boolean)
+    localContentsAsFallback: Boolean
+  )
 
   case class ParamData(
     outputName: String,
@@ -215,7 +223,8 @@ object AdminForms {
     paramType: String,
     required: Boolean,
     versioned: Boolean,
-    cacheGroupNames: Seq[String])
+    cacheGroupNames: Seq[String]
+  )
 
   val paramForm = Form(
     mapping(

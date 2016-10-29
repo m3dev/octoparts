@@ -28,7 +28,8 @@ case class PartParam(
     inputNameOverride: Option[String] = None,
     cacheGroups: SortedSet[CacheGroup] = SortedSet.empty,
     createdAt: DateTime,
-    updatedAt: DateTime) extends ConfigModel[PartParam] {
+    updatedAt: DateTime
+) extends ConfigModel[PartParam] {
 
   /**
    * This is the key used to look for a value inside the PartRequest

@@ -21,5 +21,6 @@ class SimpleHttpPartRequestHandler(
   val uriToInterpolate: String,
   val httpMethod: HttpMethod.Value,
   val additionalValidStatuses: SortedSet[Int],
-  val hystrixExecutor: HystrixExecutor)(implicit val executionContext: ExecutionContext, implicit val zipkinService: ZipkinServiceLike)
+  val hystrixExecutor: HystrixExecutor
+)(implicit val executionContext: ExecutionContext, implicit val zipkinService: ZipkinServiceLike)
     extends HttpPartRequestHandler

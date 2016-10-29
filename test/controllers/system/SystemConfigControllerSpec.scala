@@ -21,7 +21,8 @@ class SystemConfigControllerSpec
       """
         |foo.bar = "a"
         |foo.baz = 123
-      """.stripMargin)
+      """.stripMargin
+    )
     val controller = new SystemConfigController(config)
     val result = controller.showSystemConfig.apply(FakeRequest())
     toLines(contentAsString(result)) should equal(toLines(
@@ -30,7 +31,8 @@ class SystemConfigControllerSpec
         |        "bar" : "a",
         |        "baz" : 123
         |    }
-        |}"""))
+        |}"""
+    ))
   }
 
   it should "try its best to mask passwords" in {
@@ -40,7 +42,8 @@ class SystemConfigControllerSpec
         |foo.baz.bing.hoge = "hello"
         |foo.baz.bing.password = "another secret"
         |foo.password.wow = "don't mask me!"
-      """.stripMargin)
+      """.stripMargin
+    )
     val controller = new SystemConfigController(config)
     val result = controller.showSystemConfig.apply(FakeRequest())
     checkJson(result) {

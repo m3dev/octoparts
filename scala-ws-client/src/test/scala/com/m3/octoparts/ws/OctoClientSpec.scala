@@ -85,10 +85,12 @@ class OctoClientSpec
         threadPoolConfig = ThreadPoolConfig(
           threadPoolKey = "testThreadPool",
           coreSize = 2,
-          queueSize = 256),
+          queueSize = 256
+        ),
         commandKey = "command",
         commandGroupKey = "GroupKey",
-        localContentsAsFallback = false),
+        localContentsAsFallback = false
+      ),
       additionalValidStatuses = Set(302),
       httpPoolSize = 20,
       httpConnectionTimeout = 1.second,
@@ -103,7 +105,8 @@ class OctoClientSpec
           outputName = "userId",
           inputNameOverride = None,
           cacheGroups = Set.empty
-        )),
+        )
+      ),
       deprecatedInFavourOf = None,
       cacheGroups = Set.empty,
       cacheTtl = Some(60 seconds),
@@ -113,7 +116,8 @@ class OctoClientSpec
         alertPercentThreshold = Some(33.0),
         alertInterval = 10 minutes,
         alertMailRecipients = Some("l-chan@m3.com")
-      ))
+      )
+    )
 
     val mockWSRespPost = jsonAsWSResponse(Json.toJson(mockAggResp))
     val mockWSRespGet = jsonAsWSResponse(Json.toJson(Seq(mockListing)))
@@ -250,7 +254,8 @@ class OctoClientSpec
           implicit val reqMetaB = RequestMetaBuilder.from[Int](i => RequestMeta(id = i.toString))
           Future.sequence(Seq(
             subject.invoke(mockAggReq),
-            subject.invoke(3, Seq(PartRequest("hi")))))
+            subject.invoke(3, Seq(PartRequest("hi")))
+          ))
         }("http://bobby.com/octoparts/2", 2)
       }
 

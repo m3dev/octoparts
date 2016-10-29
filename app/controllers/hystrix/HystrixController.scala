@@ -15,7 +15,8 @@ class HystrixController(
   actorSystem: ActorSystem,
   defaultDelay: FiniteDuration = 1.second,
   pollerQueueSize: Int = 10000,
-  defaultMaxClients: Int = 10)
+  defaultMaxClients: Int = 10
+)
     extends Controller {
 
   import actorSystem.dispatcher

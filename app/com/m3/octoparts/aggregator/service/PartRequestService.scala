@@ -12,5 +12,6 @@ import scala.concurrent.ExecutionContext
 class PartRequestService(
   val repository: ConfigsRepository,
   val handlerFactory: HttpHandlerFactory,
-  implicit val zipkinService: ZipkinServiceLike)(implicit val executionContext: ExecutionContext)
+  implicit val zipkinService: ZipkinServiceLike
+)(implicit val executionContext: ExecutionContext)
     extends PartRequestServiceBase

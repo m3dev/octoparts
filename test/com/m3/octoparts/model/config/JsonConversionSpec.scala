@@ -77,7 +77,8 @@ class JsonConversionSpec extends FunSpec with Matchers with Checkers with Genera
         outputName = outputName,
         description = description,
         inputNameOverride = inputNameOverride,
-        cacheGroups = cacheGroups.toSet)
+        cacheGroups = cacheGroups.toSet
+      )
     }
   }
 

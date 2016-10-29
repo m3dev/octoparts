@@ -41,7 +41,8 @@ object HystrixMetricsLogger extends HystrixCommandMetricsRepository with LTSVLog
     execTimeMsMedian: Int,
     execTimeMs95: Int,
     execTimeMs99: Int,
-    execTimeMs998: Int): Unit = {
+    execTimeMs998: Int
+  ): Unit = {
 
     info(
       "commandName" -> commandName,

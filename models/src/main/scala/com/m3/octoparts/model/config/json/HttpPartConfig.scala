@@ -29,7 +29,8 @@ case class HttpPartConfig(
   @(ApiModelProperty @field)(dataType = "integer", required = false, allowableValues = "range[0, Infinity]", value = "in ms") cacheTtl: Option[FiniteDuration] = Some(Duration.Zero),
   alertMailSettings: AlertMailSettings,
   @(ApiModelProperty @field)(required = true) localContentsEnabled: Boolean = false,
-  @(ApiModelProperty @field)(dataType = "string", required = false) localContents: Option[String] = None)
+  @(ApiModelProperty @field)(dataType = "string", required = false) localContents: Option[String] = None
+)
 
 object HttpPartConfig {
   implicit val order: Ordering[HttpPartConfig] = Ordering.by(_.partId)

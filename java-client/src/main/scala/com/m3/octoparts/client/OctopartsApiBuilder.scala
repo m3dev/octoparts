@@ -38,8 +38,7 @@ class OctopartsApiBuilder(@Nonnull apiRootUrl: String, @Nullable serviceId: Stri
   private val asyncHttpClient = new AsyncHttpClient(asyncHttpClientConfig)
 
   def this(@Nonnull apiRootUrl: String, @Nullable serviceId: String) = this(apiRootUrl, serviceId,
-    new AsyncHttpClientConfig.Builder().setCompressionEnforced(true).setFollowRedirect(false).setAllowPoolingConnections(true).setMaxRequestRetry(0).build
-  )
+    new AsyncHttpClientConfig.Builder().setCompressionEnforced(true).setFollowRedirect(false).setAllowPoolingConnections(true).setMaxRequestRetry(0).build)
 
   def close() = asyncHttpClient.close()
 

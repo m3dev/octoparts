@@ -8,5 +8,6 @@ package com.m3.octoparts.cache.versioning
 case class VersionedParamKey(
   partId: String,
   paramName: String,
-  value: String)
+  value: String
+)
 

@@ -21,7 +21,8 @@ class AuthorizationCheckSupportSpec extends FlatSpec with Matchers with PlayAppS
     andThen(authenticationCheckFilter(_ => Future.successful(Unauthorized))).
     andThen(authorizationCheckFilter(
       req => Future.successful(req.principal.roles.toSet.intersect(acceptedRoles).nonEmpty),
-      _ => Future.successful(Forbidden))).
+      _ => Future.successful(Forbidden)
+    )).
     apply(req => Ok(s"Hi, ${req.principal.nickname}"))
 
   it should "forbid an unauthorized user" in {

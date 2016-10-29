@@ -43,6 +43,7 @@ object HttpClientPool {
       httpConnectionTimeout = part.httpConnectionTimeout,
       httpSocketTimeout = part.httpSocketTimeout,
       httpDefaultEncoding = part.httpDefaultEncoding.underlying,
-      httpProxySettings = part.httpProxySettings)
+      httpProxySettings = part.httpProxySettings
+    )
   }
 }

@@ -57,10 +57,10 @@ object PartParamRepository extends ConfigMapper[PartParam] with TimestampsFeatur
     manyFk = "cacheGroupId",
     merge = (param, cacheGroups) => param.copy(cacheGroups = cacheGroups.to[SortedSet])
   ).includes[CacheGroup](
-      (params, cacheGroups) => params.map { param =>
-        param.copy(cacheGroups = cacheGroups.filter(_.partParams.exists(_.id == param.id)).to[SortedSet])
-      }
-    )
+    (params, cacheGroups) => params.map { param =>
+      param.copy(cacheGroups = cacheGroups.filter(_.partParams.exists(_.id == param.id)).to[SortedSet])
+    }
+  )
 
   // initializes the default references
   {

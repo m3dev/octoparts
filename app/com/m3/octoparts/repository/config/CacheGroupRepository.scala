@@ -37,12 +37,12 @@ object CacheGroupRepository extends ConfigMapper[CacheGroup] with TimestampsFeat
     manyFk = "httpPartConfigId",
     merge = (group, partConfigs) => group.copy(httpPartConfigs = partConfigs.to[SortedSet])
   ).includes[HttpPartConfig] {
-      (cacheGroups, partConfigs) =>
-        cacheGroups.map {
-          cacheGroup =>
-            cacheGroup.copy(httpPartConfigs = partConfigs.filter(_.cacheGroups.map(_.id).contains(cacheGroup.id)).to[SortedSet])
-        }
-    } // DO NOT tack on .byDefault here
+    (cacheGroups, partConfigs) =>
+      cacheGroups.map {
+        cacheGroup =>
+          cacheGroup.copy(httpPartConfigs = partConfigs.filter(_.cacheGroups.map(_.id).contains(cacheGroup.id)).to[SortedSet])
+      }
+  } // DO NOT tack on .byDefault here
 
   // We need to use this verbose form to help SkinnyORM NOT to bump into weird table alias collision errors
   lazy val partParamsRef: HasManyAssociation[CacheGroup] = hasManyThrough[PartParamCacheGroup, PartParam](
@@ -52,12 +52,12 @@ object CacheGroupRepository extends ConfigMapper[CacheGroup] with TimestampsFeat
     on = (m1: Alias[PartParamCacheGroup], m2: Alias[PartParam]) => sqls.eq(m1.partParamId, m2.id),
     merge = (cacheGroup, params) => cacheGroup.copy(partParams = params.to[SortedSet])
   ).includes[PartParam] {
-      (cacheGroups, partParams) =>
-        cacheGroups.map {
-          cacheGroup =>
-            cacheGroup.copy(partParams = partParams.filter(_.cacheGroups.map(_.id).contains(cacheGroup.id)).to[SortedSet])
-        }
-    }
+    (cacheGroups, partParams) =>
+      cacheGroups.map {
+        cacheGroup =>
+          cacheGroup.copy(partParams = partParams.filter(_.cacheGroups.map(_.id).contains(cacheGroup.id)).to[SortedSet])
+      }
+  }
 
   /**
    * Shortcut for retrieving CacheGroups along with children

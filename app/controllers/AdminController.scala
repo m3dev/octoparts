@@ -28,10 +28,12 @@ import scala.concurrent.Future
 import scala.util.{ Success, Failure, Try }
 import scala.util.control.NonFatal
 
-class AdminController(cacheOps: CacheOps,
-                      repository: MutableConfigsRepository,
-                      val authHandler: Option[OctopartsAuthHandler],
-                      val messagesApi: MessagesApi)(implicit val navbarLinks: NavbarLinks)
+class AdminController(
+  cacheOps: CacheOps,
+  repository: MutableConfigsRepository,
+  val authHandler: Option[OctopartsAuthHandler],
+  val messagesApi: MessagesApi
+)(implicit val navbarLinks: NavbarLinks)
     extends Controller
     with AuthSupport
     with LoggingSupport
@@ -263,7 +265,8 @@ class AdminController(cacheOps: CacheOps,
             description = data.description.filterNot(_.isEmpty),
             cacheGroups = cacheGroups,
             createdAt = DateTime.now,
-            updatedAt = DateTime.now)
+            updatedAt = DateTime.now
+          )
           saveAndRedirect {
             saveParamAndClearPartResponseCache(partId, param)
           }(routes.AdminController.newParam(partId), id => routes.AdminController.showPart(partId))
@@ -289,7 +292,8 @@ class AdminController(cacheOps: CacheOps,
               inputNameOverride = data.inputNameOverride.filterNot(_.isEmpty),
               description = data.description.filterNot(_.isEmpty),
               cacheGroups = cacheGroups,
-              updatedAt = DateTime.now)
+              updatedAt = DateTime.now
+            )
             saveAndRedirect {
               saveParamAndClearPartResponseCache(partId, newParam)
             }(routes.AdminController.editParam(partId, paramId), _ => routes.AdminController.showPart(partId))

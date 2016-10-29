@@ -9,8 +9,11 @@ import com.netflix.hystrix.contrib.metrics.eventstream.HystrixMetricsPoller
 import scala.concurrent.duration.FiniteDuration
 
 private class Streamer(
-    poller: HystrixMetricsPoller, listener: MetricsAsJsonPollerListener, delay: FiniteDuration)(
-        implicit actorSystem: ActorSystem) {
+    poller: HystrixMetricsPoller, listener: MetricsAsJsonPollerListener, delay: FiniteDuration
+)(
+    implicit
+    actorSystem: ActorSystem
+) {
 
   import actorSystem.dispatcher
 
