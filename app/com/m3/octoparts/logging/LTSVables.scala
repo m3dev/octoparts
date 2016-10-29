@@ -50,7 +50,9 @@ object LTSVables extends LogUtil {
    * If we need more, add more of these
    */
   implicit def pairsLTSVable[A: LTSVable, B: LTSVable]: LTSVable[(A, B)] = new LTSVable[(A, B)] {
-    def toPairs(o: (A, B)): Seq[(String, Any)] = implicitly[LTSVable[A]].toPairs(o._1) ++ implicitly[LTSVable[B]].toPairs(o._2)
+    def toPairs(o: (A, B)): Seq[(String, Any)] =
+      implicitly[LTSVable[A]].toPairs(o._1) ++
+        implicitly[LTSVable[B]].toPairs(o._2)
   }
 
 }

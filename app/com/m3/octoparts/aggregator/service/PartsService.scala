@@ -20,7 +20,8 @@ class PartsService(
   val partRequestLogger: PartRequestLogger = PartRequestLogger,
   maximumAggReqTimeout: FiniteDuration = 5.seconds
 )(implicit val executionContext: ExecutionContext)
-    extends PartServiceErrorHandler with LogUtil {
+    extends PartServiceErrorHandler
+    with LogUtil {
 
   import com.m3.octoparts.logging.LTSVables._
 
@@ -38,7 +39,10 @@ class PartsService(
    * @param aggregateRequest AggregateRequest
    * @return Future[AggregateResponse]
    */
-  def processParts(aggregateRequest: AggregateRequest, noCache: Boolean = false)(implicit parentSpan: Span): Future[AggregateResponse] = {
+  def processParts(
+    aggregateRequest: AggregateRequest,
+    noCache: Boolean = false
+  )(implicit parentSpan: Span): Future[AggregateResponse] = {
     val requestMeta = aggregateRequest.requestMeta
     val aReqTimeout: FiniteDuration = requestMeta.timeout.getOrElse(maximumAggReqTimeout) min maximumAggReqTimeout
     val partsResponsesFutures = aggregateRequest.requests.map {
@@ -69,7 +73,11 @@ class PartsService(
     }
   }
 
-  private def logPartResponse(requestMeta: RequestMeta, partResponse: PartResponse, responseMs: Long): Unit = partResponse match {
+  private def logPartResponse(
+    requestMeta: RequestMeta,
+    partResponse: PartResponse,
+    responseMs: Long
+  ): Unit = partResponse match {
     case pResp if pResp.errors.nonEmpty => partRequestLogger.logFailure(pResp.partId, requestMeta.id, requestMeta.serviceId, pResp.statusCode)
     case pResp if pResp.retrievedFromCache => partRequestLogger.logSuccess(pResp.partId, requestMeta.id, requestMeta.serviceId, cacheHit = true, responseMs)
     case pResp => partRequestLogger.logSuccess(pResp.partId, requestMeta.id, requestMeta.serviceId, cacheHit = false, responseMs)

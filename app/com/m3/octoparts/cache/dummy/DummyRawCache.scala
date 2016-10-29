@@ -9,9 +9,19 @@ import scala.concurrent.duration.Duration
 
 object DummyRawCache extends RawCache {
 
-  def get[T](key: String)(implicit codec: Codec[T], parentSpan: Span): Future[Option[T]] = Future.successful(None)
+  def get[T](
+    key: String
+  )(implicit
+    codec: Codec[T],
+    parentSpan: Span): Future[Option[T]] = Future.successful(None)
 
-  def set[T](key: String, value: T, exp: Duration)(implicit codec: Codec[T], parentSpan: Span): Future[Unit] = Future.successful(())
+  def set[T](
+    key: String,
+    value: T,
+    exp: Duration
+  )(implicit
+    codec: Codec[T],
+    parentSpan: Span): Future[Unit] = Future.successful(())
 
   def close(): Unit = {}
 

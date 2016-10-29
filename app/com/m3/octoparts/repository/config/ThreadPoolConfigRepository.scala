@@ -7,7 +7,9 @@ import skinny.{ ParamType => SkinnyParamType }
 
 import scala.collection.SortedSet
 
-object ThreadPoolConfigRepository extends ConfigMapper[ThreadPoolConfig] with TimestampsFeature[ThreadPoolConfig] {
+object ThreadPoolConfigRepository
+    extends ConfigMapper[ThreadPoolConfig]
+    with TimestampsFeature[ThreadPoolConfig] {
 
   lazy val defaultAlias = createAlias("thread_pool_config")
 
@@ -25,7 +27,11 @@ object ThreadPoolConfigRepository extends ConfigMapper[ThreadPoolConfig] with Ti
     on = (t, h) => sqls.eq(t.id, h.threadPoolConfigId),
     // function to merge associations to main entity
     merge = (tpc, hcs) => tpc.copy(hystrixConfigs = hcs.toSet)
-  ).includes[HystrixConfig]((tpcs, hcs) => tpcs.map(tpc => tpc.copy(hystrixConfigs = hcs.filter(_.threadPoolConfigId == tpc.id).toSet)))
+  ).includes[HystrixConfig] { (tpcs, hcs) =>
+    tpcs.map(tpc => tpc.copy(
+      hystrixConfigs = hcs.filter(_.threadPoolConfigId == tpc.id).toSet
+    ))
+  }
 
   def extract(rs: WrappedResultSet, n: ResultName[ThreadPoolConfig]) = ThreadPoolConfig(
     id = rs.get(n.id),

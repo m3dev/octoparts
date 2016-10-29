@@ -10,8 +10,18 @@ import scala.concurrent.duration.Duration
 
 object DummyCache extends Cache {
 
-  def get[T](key: CacheKey)(implicit codec: Codec[T], parentSpan: Span): Future[Option[T]] = Future.successful(None)
+  def get[T](
+    key: CacheKey
+  )(implicit
+    codec: Codec[T],
+    parentSpan: Span): Future[Option[T]] = Future.successful(None)
 
-  def put[T](key: CacheKey, v: T, ttl: Option[Duration])(implicit codec: Codec[T], parentSpan: Span): Future[Unit] = Future.successful(())
+  def put[T](
+    key: CacheKey,
+    v: T,
+    ttl: Option[Duration]
+  )(implicit
+    codec: Codec[T],
+    parentSpan: Span): Future[Unit] = Future.successful(())
 
 }

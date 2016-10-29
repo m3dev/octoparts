@@ -41,8 +41,7 @@ class InstrumentedHttpClient(
   defaultEncoding: Charset,
   mbProxySettings: Option[HttpProxySettings],
   metrics: Metrics
-)
-    extends HttpClientLike
+) extends HttpClientLike
     with Closeable {
   import com.m3.octoparts.http.InstrumentedHttpClient._
 

@@ -20,33 +20,45 @@ object PrincipalSessionPersistence {
    * Look up the Principal object in the Play session and deserialize it from Json
    */
   def extractPrincipalFromPlaySession(session: Session): Option[Principal] = {
-    session.get(SessionKey).flatMap { sessionValue =>
-      Try(Json.parse(sessionValue)) match {
-        case Failure(e) =>
-          LTSVLogger.warn("Rejecting invalid principal found in session (not valid json)" -> sessionValue)
-          None
-        case Success(json) =>
-          json.validate[Principal] match {
-            case JsError(_) =>
-              LTSVLogger.warn("Rejecting invalid principal found in session (unexpected json)" -> sessionValue)
-              None
-            case JsSuccess(principal, _) =>
-              // Everything's OK
-              Some(principal)
-          }
+    session.get(SessionKey)
+      .flatMap { sessionValue =>
+        Try(Json.parse(sessionValue)) match {
+          case Failure(e) =>
+            LTSVLogger.warn(
+              "Rejecting invalid principal found in session (not valid json)" -> sessionValue
+            )
+            None
+          case Success(json) =>
+            json.validate[Principal] match {
+              case JsError(_) =>
+                LTSVLogger.warn(
+                  "Rejecting invalid principal found in session (unexpected json)" -> sessionValue
+                )
+                None
+              case JsSuccess(principal, _) =>
+                // Everything's OK
+                Some(principal)
+            }
+        }
       }
-    }
   }
 
   /**
    * Persist the Principal in the Play session cookie
    */
-  def savePrincipalToPlaySession(request: Request[_], result: Result, principal: Principal): Result =
+  def savePrincipalToPlaySession(
+    request: Request[_],
+    result: Result,
+    principal: Principal
+  ): Result =
     result.addingToSession(SessionKey -> Json.toJson(principal).toString)(request)
 
   /**
    * Delete the Principal object from the Play session cookie
    */
-  def deletePrincipalFromPlaySession(request: Request[_], result: Result): Result = result.removingFromSession(SessionKey)(request)
+  def deletePrincipalFromPlaySession(
+    request: Request[_],
+    result: Result
+  ): Result = result.removingFromSession(SessionKey)(request)
 
 }

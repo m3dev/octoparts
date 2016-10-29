@@ -7,7 +7,9 @@ private[client] object OKResponseExtractor {
   private final val Log = LoggerFactory.getLogger(classOf[OKResponseExtractor])
 }
 
-private[client] class OKResponseExtractor(uri: String) extends AsyncCompletionHandler[java.lang.Boolean] {
+private[client] class OKResponseExtractor(
+    uri: String
+) extends AsyncCompletionHandler[java.lang.Boolean] {
 
   import com.m3.octoparts.client.OKResponseExtractor._
 

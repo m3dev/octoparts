@@ -17,7 +17,11 @@ trait CacheDirectiveGenerator {
 }
 
 object CacheDirectiveGenerator extends CacheDirectiveGenerator {
-  def generateDirective(partId: String, params: Map[ShortPartParam, Seq[String]], cacheConfig: CacheConfig): CacheDirective = {
+  def generateDirective(
+    partId: String,
+    params: Map[ShortPartParam, Seq[String]],
+    cacheConfig: CacheConfig
+  ): CacheDirective = {
     // for version param keys, only single-value parameters are supported.
     val strParams = params.map {
       case (shortPartParam, values) =>

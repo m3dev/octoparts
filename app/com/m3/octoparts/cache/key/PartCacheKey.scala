@@ -7,5 +7,4 @@ case class PartCacheKey(
   partId: String,
   versions: Seq[Version],
   paramValues: Map[ShortPartParam, Seq[String]]
-)
-    extends CacheKey
+) extends CacheKey

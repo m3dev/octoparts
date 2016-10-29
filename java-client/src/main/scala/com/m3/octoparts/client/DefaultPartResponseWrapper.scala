@@ -9,7 +9,9 @@ private[client] object DefaultPartResponseWrapper {
   private val Log = LoggerFactory.getLogger(classOf[DefaultPartResponseWrapper])
 }
 
-private[client] case class DefaultPartResponseWrapper(partResponse: PartResponse) extends PartResponseWrapper {
+private[client] case class DefaultPartResponseWrapper(
+    partResponse: PartResponse
+) extends PartResponseWrapper {
 
   import com.m3.octoparts.client.DefaultPartResponseWrapper._
 
@@ -20,7 +22,9 @@ private[client] case class DefaultPartResponseWrapper(partResponse: PartResponse
   /**
    * @param defaultContents what to return if there were no contents
    */
-  def getContents(defaultContents: String) = partResponse.contents.filter(_.length > 0 && partResponse.errors.isEmpty).getOrElse(defaultContents)
+  def getContents(defaultContents: String) =
+    partResponse.contents.filter(_.length > 0 &&
+      partResponse.errors.isEmpty).getOrElse(defaultContents)
 
   def getCookies = WrapAsJava.seqAsJavaList(partResponse.cookies)
 

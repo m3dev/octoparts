@@ -14,7 +14,10 @@ import scala.util.control.NonFatal
  * This implementation of Metrics overrides onStart to perform onStop cleanups first before proceeding with
  * other onStart duties
  */
-class OctoMetricsImpl(lifecycle: ApplicationLifecycle, configuration: Configuration) extends MetricsImpl(lifecycle, configuration) {
+class OctoMetricsImpl(
+    lifecycle: ApplicationLifecycle,
+    configuration: Configuration
+) extends MetricsImpl(lifecycle, configuration) {
 
   override def onStart(): ObjectMapper = {
     try {

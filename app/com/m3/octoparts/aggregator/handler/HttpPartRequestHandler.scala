@@ -21,8 +21,7 @@ import scala.util.matching.Regex
  * Trait describing a handler for processing of generic HTTP PartRequestInfo requests
  * that correspond to an external dependency
  */
-trait HttpPartRequestHandler extends Handler {
-  handler =>
+trait HttpPartRequestHandler extends Handler { self =>
 
   import HttpPartRequestHandler._
 
@@ -53,7 +52,10 @@ trait HttpPartRequestHandler extends Handler {
    * @param hArgs Preparsed HystrixArguments
    * @return Future[PartResponse]
    */
-  def process(partRequestInfo: PartRequestInfo, hArgs: HandlerArguments)(implicit parentSpan: Span): Future[PartResponse] = {
+  def process(
+    partRequestInfo: PartRequestInfo,
+    hArgs: HandlerArguments
+  )(implicit parentSpan: Span): Future[PartResponse] = {
     TracedFuture("Http request", "partId" -> partRequestInfo.partRequest.partId) { maybeSpan =>
       hystrixExecutor.future(
         createBlockingHttpRetrieve(partRequestInfo, hArgs, maybeSpan).retrieve(),
@@ -77,9 +79,13 @@ trait HttpPartRequestHandler extends Handler {
    * @param tracingSpan [[Span]] generated for tracing; the details of this will be forwarded as headers
    * @return a command object that will perform an HTTP request on demand
    */
-  def createBlockingHttpRetrieve(partRequestInfo: PartRequestInfo, hArgs: HandlerArguments, tracingSpan: Option[Span]): BlockingHttpRetrieve = {
+  def createBlockingHttpRetrieve(
+    partRequestInfo: PartRequestInfo,
+    hArgs: HandlerArguments,
+    tracingSpan: Option[Span]
+  ): BlockingHttpRetrieve = {
     new BlockingHttpRetrieve {
-      val httpClient = handler.httpClient
+      val httpClient = self.httpClient
       def method = httpMethod
       val uri = new URI(buildUri(hArgs).toString(UriConfig.conservative))
       val maybeBody = hArgs.collectFirst {

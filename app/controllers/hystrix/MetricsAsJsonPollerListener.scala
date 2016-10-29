@@ -4,8 +4,9 @@ import java.util.concurrent.atomic.AtomicReference
 
 import com.netflix.hystrix.contrib.metrics.eventstream.HystrixMetricsPoller
 
-private class MetricsAsJsonPollerListener(queueSize: Int)
-    extends HystrixMetricsPoller.MetricsAsJsonPollerListener {
+private class MetricsAsJsonPollerListener(
+    queueSize: Int
+) extends HystrixMetricsPoller.MetricsAsJsonPollerListener {
 
   private val metrics = new AtomicReference[Seq[String]](Nil)
 
@@ -20,11 +21,9 @@ private class MetricsAsJsonPollerListener(queueSize: Int)
 
   def handleJsonMetric(json: String): Unit = updateMetrics {
     oldMetrics =>
-      {
-        val newMetrics = oldMetrics :+ json
-        if (newMetrics.size >= queueSize) throw new IllegalStateException("Queue full")
-        newMetrics
-      }
+      val newMetrics = oldMetrics :+ json
+      if (newMetrics.size >= queueSize) throw new IllegalStateException("Queue full")
+      newMetrics
   }
 
   def poll: Seq[String] = flushMetrics match {

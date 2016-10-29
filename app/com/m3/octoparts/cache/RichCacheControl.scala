@@ -11,7 +11,9 @@ object RichCacheControl {
   /**
    * Enrich model cacheControl because we do not want joda or httpclient to be dependency of the exported models.
    */
-  implicit class RichCacheControlOps(val cacheControl: CacheControl) extends AnyVal {
+  implicit class RichCacheControlOps(
+      val cacheControl: CacheControl
+  ) extends AnyVal {
 
     def shouldRevalidate = cacheControl.noCache || (cacheControl.canRevalidate && hasExpired)
 
@@ -30,4 +32,3 @@ object RichCacheControl {
 
   }
 }
-

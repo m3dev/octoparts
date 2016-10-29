@@ -10,7 +10,9 @@ trait HystrixHealthReporter {
 
 }
 
-object HystrixHealthReporter extends HystrixHealthReporter with HystrixCommandMetricsRepository {
+object HystrixHealthReporter
+    extends HystrixHealthReporter
+    with HystrixCommandMetricsRepository {
 
   /**
    * Get a list of all command keys whose circuit breakers are currently open

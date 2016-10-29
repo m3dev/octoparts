@@ -9,11 +9,27 @@ import play.api.Logger
  */
 trait PartRequestLogger {
 
-  def logSuccess(partId: String, parentRequestId: String, serviceId: Option[String], cacheHit: Boolean, responseMs: Long): Unit
+  def logSuccess(
+    partId: String,
+    parentRequestId: String,
+    serviceId: Option[String],
+    cacheHit: Boolean,
+    responseMs: Long
+  ): Unit
 
-  def logFailure(partId: String, parentRequestId: String, serviceId: Option[String], statusCode: Option[Int]): Unit
+  def logFailure(
+    partId: String,
+    parentRequestId: String,
+    serviceId: Option[String],
+    statusCode: Option[Int]
+  ): Unit
 
-  def logTimeout(partId: String, parentRequestId: String, serviceId: Option[String], timeoutMs: Long): Unit
+  def logTimeout(
+    partId: String,
+    parentRequestId: String,
+    serviceId: Option[String],
+    timeoutMs: Long
+  ): Unit
 
 }
 
@@ -21,7 +37,13 @@ object PartRequestLogger extends PartRequestLogger with LTSVLoggerLike {
 
   val underlyingLogger = Logger("PartRequests").underlyingLogger
 
-  def logSuccess(partId: String, parentRequestId: String, serviceId: Option[String], cacheHit: Boolean, responseMs: Long): Unit = {
+  def logSuccess(
+    partId: String,
+    parentRequestId: String,
+    serviceId: Option[String],
+    cacheHit: Boolean,
+    responseMs: Long
+  ): Unit = {
     val hitOrMiss = if (cacheHit) "hit" else "miss"
     info(
       "partId" -> partId,
@@ -32,7 +54,12 @@ object PartRequestLogger extends PartRequestLogger with LTSVLoggerLike {
     )
   }
 
-  def logFailure(partId: String, parentRequestId: String, serviceId: Option[String], statusCode: Option[Int]): Unit = {
+  def logFailure(
+    partId: String,
+    parentRequestId: String,
+    serviceId: Option[String],
+    statusCode: Option[Int]
+  ): Unit = {
     info(
       "partId" -> partId,
       "result" -> "failure",
@@ -42,7 +69,12 @@ object PartRequestLogger extends PartRequestLogger with LTSVLoggerLike {
     )
   }
 
-  def logTimeout(partId: String, parentRequestId: String, serviceId: Option[String], timeoutMs: Long): Unit = {
+  def logTimeout(
+    partId: String,
+    parentRequestId: String,
+    serviceId: Option[String],
+    timeoutMs: Long
+  ): Unit = {
     info(
       "partId" -> partId,
       "result" -> "timeout",
@@ -51,4 +83,5 @@ object PartRequestLogger extends PartRequestLogger with LTSVLoggerLike {
       "timeoutMs" -> timeoutMs
     )
   }
+
 }

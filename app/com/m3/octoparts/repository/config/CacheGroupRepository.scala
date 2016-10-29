@@ -9,7 +9,9 @@ import skinny.{ ParamType => SkinnyParamType }
 
 import scala.collection.SortedSet
 
-object CacheGroupRepository extends ConfigMapper[CacheGroup] with TimestampsFeature[CacheGroup] {
+object CacheGroupRepository
+    extends ConfigMapper[CacheGroup]
+    with TimestampsFeature[CacheGroup] {
 
   protected val permittedFields = Seq(
     "owner" -> SkinnyParamType.String,
@@ -36,12 +38,12 @@ object CacheGroupRepository extends ConfigMapper[CacheGroup] with TimestampsFeat
     throughFk = "cacheGroupId",
     manyFk = "httpPartConfigId",
     merge = (group, partConfigs) => group.copy(httpPartConfigs = partConfigs.to[SortedSet])
-  ).includes[HttpPartConfig] {
-    (cacheGroups, partConfigs) =>
-      cacheGroups.map {
-        cacheGroup =>
-          cacheGroup.copy(httpPartConfigs = partConfigs.filter(_.cacheGroups.map(_.id).contains(cacheGroup.id)).to[SortedSet])
-      }
+  ).includes[HttpPartConfig] { (cacheGroups, partConfigs) =>
+    cacheGroups.map { cacheGroup =>
+      cacheGroup.copy(
+        httpPartConfigs = partConfigs.filter(_.cacheGroups.map(_.id).contains(cacheGroup.id)).to[SortedSet]
+      )
+    }
   } // DO NOT tack on .byDefault here
 
   // We need to use this verbose form to help SkinnyORM NOT to bump into weird table alias collision errors
@@ -51,12 +53,12 @@ object CacheGroupRepository extends ConfigMapper[CacheGroup] with TimestampsFeat
     many = PartParamRepository -> PartParamRepository.createAlias("partParamJoin2"),
     on = (m1: Alias[PartParamCacheGroup], m2: Alias[PartParam]) => sqls.eq(m1.partParamId, m2.id),
     merge = (cacheGroup, params) => cacheGroup.copy(partParams = params.to[SortedSet])
-  ).includes[PartParam] {
-    (cacheGroups, partParams) =>
-      cacheGroups.map {
-        cacheGroup =>
-          cacheGroup.copy(partParams = partParams.filter(_.cacheGroups.map(_.id).contains(cacheGroup.id)).to[SortedSet])
-      }
+  ).includes[PartParam] { (cacheGroups, partParams) =>
+    cacheGroups.map { cacheGroup =>
+      cacheGroup.copy(
+        partParams = partParams.filter(_.cacheGroups.map(_.id).contains(cacheGroup.id)).to[SortedSet]
+      )
+    }
   }
 
   /**

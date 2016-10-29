@@ -19,7 +19,7 @@ import scala.util.Try
  * @param localContents the static contents which is used instead of actual contents of this part
  */
 case class HttpPartConfig(
-  id: Option[Long] = None, // None means that the record is new
+    id: Option[Long] = None, // None means that the record is new
     partId: String,
     owner: String,
     description: Option[String],

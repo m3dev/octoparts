@@ -21,7 +21,9 @@ object RichFutureWithTimeout {
     case NonFatal(e) if Play.maybeApplication.fold(false)(_.mode == Mode.Test) => actorSystem.dispatcher
   }
 
-  implicit class RichFutureWithTimeoutOps[A](val f: Future[A]) extends AnyVal {
+  implicit class RichFutureWithTimeoutOps[A](
+      val f: Future[A]
+  ) extends AnyVal {
 
     /**
      * An enrichment method for Future[A] that allows us to specify an

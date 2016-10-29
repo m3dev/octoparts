@@ -53,8 +53,18 @@ trait PartRequestServiceBase extends RequestParamSupport {
    */
   private def unsupported(pReq: PartRequestInfo): Future[PartResponse] = {
     val partId = pReq.partRequest.partId
-    LTSVLogger.warn("Request Id" -> pReq.requestMeta.id, "Requested PartId" -> partId, "Error" -> "not found")
-    Future.successful(PartResponse(partId, pReq.partRequestId, errors = Seq(unsupportedMsg(partId))))
+    LTSVLogger.warn(
+      "Request Id" -> pReq.requestMeta.id,
+      "Requested PartId" -> partId,
+      "Error" -> "not found"
+    )
+    Future.successful(
+      PartResponse(
+        partId,
+        pReq.partRequestId,
+        errors = Seq(unsupportedMsg(partId))
+      )
+    )
   }
 
   private[service] def unsupportedMsg(partId: String) = s"PartId $partId is unsupported"
@@ -83,7 +93,11 @@ trait PartRequestServiceBase extends RequestParamSupport {
    *           trait, but may be used for decorator purposes in Stackable traits.
    * @return Future[PartResponse], which includes adding deprecation notices
    */
-  protected def processWithConfig(ci: HttpPartConfig, partRequestInfo: PartRequestInfo, params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): Future[PartResponse] = {
+  protected def processWithConfig(
+    ci: HttpPartConfig,
+    partRequestInfo: PartRequestInfo,
+    params: Map[ShortPartParam, Seq[String]]
+  )(implicit parentSpan: Span): Future[PartResponse] = {
     val handler = handlerFactory.makeHandler(ci)
     val fResp = handler.process(partRequestInfo, params)
     fResp.map {
@@ -93,10 +107,16 @@ trait PartRequestServiceBase extends RequestParamSupport {
     }
   }
 
-  private def handleDeprecation(ci: HttpPartConfig, resp: PartResponse): PartResponse = ci.deprecatedInFavourOf.collect {
+  private def handleDeprecation(
+    ci: HttpPartConfig,
+    resp: PartResponse
+  ): PartResponse = ci.deprecatedInFavourOf.collect {
     case newPartId if newPartId.length > 0 =>
       resp.copy(warnings = resp.warnings :+ deprecationMsg(ci.partId, newPartId))
   }.getOrElse(resp)
 
-  private[service] def deprecationMsg(oldPartId: String, newPartId: String) = s"Please use $newPartId instead of $oldPartId"
+  private[service] def deprecationMsg(
+    oldPartId: String,
+    newPartId: String
+  ) = s"Please use $newPartId instead of $oldPartId"
 }

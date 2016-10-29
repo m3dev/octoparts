@@ -5,7 +5,10 @@ import com.m3.octoparts.cache.memcached.MemcachedCache
 import com.m3.octoparts.repository.{ DBConfigsRepository, MutableCachingRepository }
 import scala.concurrent.duration._
 
-trait RepositoriesModule extends CacheModule with HttpClientPoolModule with ExecutionContextsModule {
+trait RepositoriesModule
+    extends CacheModule
+    with HttpClientPoolModule
+    with ExecutionContextsModule {
 
   import com.softwaremill.macwire._
 

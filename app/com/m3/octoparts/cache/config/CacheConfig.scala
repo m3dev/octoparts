@@ -8,7 +8,7 @@ import scala.concurrent.duration.Duration
  * in order to create a cache directive for the part request.
  */
 case class CacheConfig(
-  ttl: Option[Duration] = None,
+    ttl: Option[Duration] = None,
     versionedParams: Seq[String] = Nil
 ) {
   // caching is enabled if the TTL is not <= 0
@@ -18,4 +18,3 @@ case class CacheConfig(
 object CacheConfig {
   val NoCache = CacheConfig()
 }
-

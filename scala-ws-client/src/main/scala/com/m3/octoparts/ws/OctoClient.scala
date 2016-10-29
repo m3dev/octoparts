@@ -29,7 +29,7 @@ import com.m3.octoparts.json.format.ConfigModel._ // For serdes of the models
  * @param extraWait Extra margin of wait time for timeouts. Defaults to 50 milliseconds.
  */
 class OctoClient(
-  val client: WSClient,
+    val client: WSClient,
     val baseUrl: String,
     protected val clientTimeout: FiniteDuration,
     protected val extraWait: FiniteDuration = 50.milliseconds

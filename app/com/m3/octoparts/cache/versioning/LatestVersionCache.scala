@@ -52,11 +52,17 @@ trait LatestVersionCache {
   /**
    * Update the latest known cache version for the given parameter value
    */
-  def updateParamVersion(versionedParamKey: VersionedParamKey, version: Version): Unit
+  def updateParamVersion(
+    versionedParamKey: VersionedParamKey,
+    version: Version
+  ): Unit
 
   /**
    * Update the latest known cache version for the given part
    */
-  def updatePartVersion(partId: PartId, version: Version): Unit
+  def updatePartVersion(
+    partId: PartId,
+    version: Version
+  ): Unit
 
 }

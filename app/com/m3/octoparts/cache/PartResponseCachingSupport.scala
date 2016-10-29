@@ -19,7 +19,10 @@ private[cache] object PartResponseCachingSupport {
   /**
    * @return The response to use (between the cached one and the new one). Will use new one <=> the new one is not a 304.
    */
-  private[cache] def selectLatest(newPartResponse: PartResponse, existingPartResponse: PartResponse): PartResponse = {
+  private[cache] def selectLatest(
+    newPartResponse: PartResponse,
+    existingPartResponse: PartResponse
+  ): PartResponse = {
     val is304 = newPartResponse.statusCode.fold(false) {
       _.intValue == HttpStatus.SC_NOT_MODIFIED
     }
@@ -50,19 +53,27 @@ trait PartResponseCachingSupport extends PartRequestServiceBase {
       val futureMaybeFromCache =
         cacheOps.putIfAbsent(directive)(super.processWithConfig(ci, partRequestInfo, params))
           .recoverWith(onCacheFailure(ci, partRequestInfo, params))
-          .trace("retrieve-part-response-from-cache-or-else", "partId" -> ci.partId)
-      futureMaybeFromCache.flatMap {
-        partResponse =>
-          // at this point, the response may come from cache and be stale.
+          .trace(
+            "retrieve-part-response-from-cache-or-else",
+            "partId" -> ci.partId
+          )
+      futureMaybeFromCache
+        // at this point, the response may come from cache and be stale.
+        .flatMap { partResponse =>
           if (shouldRevalidate(partResponse)) {
-            revalidate(partResponse, directive, ci, partRequestInfo, params).trace("part-response-cache-revalidation")
+            revalidate(
+              partResponse,
+              directive,
+              ci,
+              partRequestInfo,
+              params
+            ).trace("part-response-cache-revalidation")
           } else {
             Future.successful(partResponse)
           }
-      }.map {
+        }
         // Replace the ID with the one specified in the current request
-        partResponse => partResponse.copy(id = partRequestInfo.partRequestId)
-      }
+        .map { partResponse => partResponse.copy(id = partRequestInfo.partRequestId) }
     }
   }
 
@@ -74,9 +85,16 @@ trait PartResponseCachingSupport extends PartRequestServiceBase {
     case ce: CacheException => {
       ce.getCause match {
         case te: shade.TimeoutException =>
-          LTSVLogger.warn("Memcached error" -> "timed out", "cache key" -> ce.key.toString)
+          LTSVLogger.warn(
+            "Memcached error" -> "timed out",
+            "cache key" -> ce.key.toString
+          )
         case other =>
-          LTSVLogger.error(other, "Memcached error" -> other.getClass.getSimpleName, "cache key" -> ce.key.toString)
+          LTSVLogger.error(
+            other,
+            "Memcached error" -> other.getClass.getSimpleName,
+            "cache key" -> ce.key.toString
+          )
       }
       super.processWithConfig(ci, partRequestInfo, params)
     }

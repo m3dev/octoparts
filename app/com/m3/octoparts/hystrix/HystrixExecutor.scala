@@ -5,7 +5,9 @@ import com.netflix.hystrix.HystrixCommand
 
 import scala.concurrent.Future
 
-case class HystrixExecutor(config: HttpPartConfig) extends HystrixSetterSupport {
+case class HystrixExecutor(
+    config: HttpPartConfig
+) extends HystrixSetterSupport {
 
   /**
    * Returns a Future result of the block passed, run within the context

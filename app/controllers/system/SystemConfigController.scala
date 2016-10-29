@@ -15,7 +15,9 @@ import scala.collection.convert.Wrappers.{ JListWrapper, JSetWrapper }
  * This is the config calculated from merging the defaults with any environment-specific overrides.
  * It has all system properties and environment variables resolved to their appropriate variables.
  */
-class SystemConfigController(config: TSConfig) extends Controller {
+class SystemConfigController(
+    config: TSConfig
+) extends Controller {
 
   def showSystemConfig = Action { request =>
     val maskedConfig = maskPasswords(config)
@@ -39,10 +41,12 @@ class SystemConfigController(config: TSConfig) extends Controller {
 
   private def maskPasswords(config: TSConfig): TSConfig = {
     val passwordPaths = JSetWrapper(config.entrySet).collect {
-      case entry: java.util.Map.Entry[String, _] if entry.getKey.split('.').last == "password" => entry.getKey
+      case entry: java.util.Map.Entry[String, _] if entry.getKey.split('.').last == "password" =>
+        entry.getKey
     }
-    passwordPaths.foldLeft(config) { (cfg, path) => cfg.withValue(path, ConfigValueFactory.fromAnyRef("****", "masked password")) }
+    passwordPaths.foldLeft(config) { (cfg, path) =>
+      cfg.withValue(path, ConfigValueFactory.fromAnyRef("****", "masked password"))
+    }
   }
 
 }
-

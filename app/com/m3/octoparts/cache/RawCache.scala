@@ -20,7 +20,8 @@ trait RawCache {
   /**
    * Fetches a value from the cache store.
    *
-   * @return Some(value) in case the key is available, or None otherwise (doesn't throw exception on key missing)
+   * @return Some(value) in case the key is available,
+   * * or None otherwise (doesn't throw exception on key missing)
    */
   def get[T](key: String)(implicit codec: Codec[T], parentSpan: Span): Future[Option[T]]
 
@@ -29,7 +30,11 @@ trait RawCache {
    *
    * The TTL can be Duration.Inf (infinite duration).
    */
-  def set[T](key: String, value: T, ttl: Duration)(implicit codec: Codec[T], parentSpan: Span): Future[Unit]
+  def set[T](
+    key: String,
+    value: T,
+    ttl: Duration
+  )(implicit codec: Codec[T], parentSpan: Span): Future[Unit]
 
   /**
    * Shutdown and clean up any resources.

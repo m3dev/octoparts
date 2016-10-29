@@ -19,7 +19,8 @@ trait PartResponseLocalContentSupport extends PartRequestServiceBase {
       Future.successful(createPartResponse(ci, partRequestInfo))
     } else {
       super.processWithConfig(ci, partRequestInfo, params).map { pr =>
-        if (pr.statusCode.contains(Status.SERVICE_UNAVAILABLE) && ci.hystrixConfigItem.localContentsAsFallback) createPartResponse(ci, partRequestInfo)
+        if (pr.statusCode.contains(Status.SERVICE_UNAVAILABLE) &&
+          ci.hystrixConfigItem.localContentsAsFallback) createPartResponse(ci, partRequestInfo)
         else pr
       }
     }

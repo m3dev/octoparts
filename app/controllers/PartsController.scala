@@ -34,8 +34,7 @@ class PartsController(
   readClientCacheHeaders: Boolean,
   val actorSystem: ActorSystem,
   implicit val zipkinService: ZipkinServiceLike
-)
-    extends Controller
+) extends Controller
     with LoggingSupport
     with PartListFilterSupport
     with ReqHeaderToSpanImplicit
@@ -60,18 +59,25 @@ class PartsController(
     name = "body"
   )))
   def retrieveParts = Action.async(BodyParsers.parse.json) { implicit request =>
-    request.body.validate[AggregateRequest].fold[Future[Result]](
-      errors => {
-        warnRc("Body" -> request.body.toString, "Errors" -> errors.toString)
-        Future.successful(BadRequest("Unrecognized request object"))
-      },
-      aggregateRequest => {
-        val noCache = readClientCacheHeaders && request.headers.get(HeaderConstants.CACHE_CONTROL).contains(HeaderConstants.CACHE_CONTROL_NO_CACHE)
-        logAggregateRequest(aggregateRequest, noCache)
-        val fAggregateResponse = partsService.processParts(aggregateRequest, noCache).trace("aggregate-response-processing")
-        withRequestTimeout(fAggregateResponse).trace("aggregate-response-processing-with-timeout")
-      }
-    )
+    request.body.validate[AggregateRequest]
+      .fold[Future[Result]](
+        errors => {
+          warnRc(
+            "Body" -> request.body.toString,
+            "Errors" -> errors.toString
+          )
+          Future.successful(BadRequest("Unrecognized request object"))
+        },
+        aggregateRequest => {
+          val noCache = readClientCacheHeaders &&
+            request.headers.get(HeaderConstants.CACHE_CONTROL).contains(HeaderConstants.CACHE_CONTROL_NO_CACHE)
+          logAggregateRequest(aggregateRequest, noCache)
+          val fAggregateResponse = partsService.processParts(aggregateRequest, noCache)
+            .trace("aggregate-response-processing")
+          withRequestTimeout(fAggregateResponse)
+            .trace("aggregate-response-processing-with-timeout")
+        }
+      )
   }
 
   @ApiOperation(
@@ -109,7 +115,10 @@ class PartsController(
     )
   }
 
-  private def logAggregateRequest(aggregateRequest: AggregateRequest, noCache: Boolean)(implicit request: RequestHeader): Unit = {
+  private def logAggregateRequest(
+    aggregateRequest: AggregateRequest,
+    noCache: Boolean
+  )(implicit request: RequestHeader): Unit = {
     val logData = Seq(
       "requestId" -> aggregateRequest.requestMeta.id,
       "noCache" -> noCache.toString,
@@ -131,7 +140,13 @@ class PartsController(
     val fConfigs = ids match {
       case Nil => configsRepository.findAllConfigs().trace("find-all-configs")
       case partIds => {
-        val fParts = partIds.map(partId => configsRepository.findConfigByPartId(partId).trace("find-config-by-part-ids", "ids" -> partId))
+        val fParts = partIds.map { partId =>
+          configsRepository.findConfigByPartId(partId)
+            .trace(
+              "find-config-by-part-ids",
+              "ids" -> partId
+            )
+        }
         Future.sequence(fParts).map(_.flatten)
       }
     }

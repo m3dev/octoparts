@@ -56,12 +56,16 @@ class AdminController(
    */
 
   def listParts = AuthorizedAction.async { implicit req =>
-    val partsView: Future[SortedSet[HttpPartConfigView]] = repository.findAllConfigs().map { _.map(HttpPartConfigView(_)) }
+    val partsView: Future[SortedSet[HttpPartConfigView]] =
+      repository.findAllConfigs()
+        .map { _.map(HttpPartConfigView(_)) }
     partsView.map(ps => Ok(views.html.part.list(ps)))
   }
 
   def showPart(partId: String) = AuthorizedAction.async { implicit req =>
-    findAndUsePart(partId) { part => Future.successful(Ok(views.html.part.show(HttpPartConfigView(part)))) }
+    findAndUsePart(partId) { part =>
+      Future.successful(Ok(views.html.part.show(HttpPartConfigView(part))))
+    }
   }
 
   def newPart = AuthorizedAction.async { implicit req =>
@@ -88,17 +92,23 @@ class AdminController(
     form.fold({ formWithErrors =>
       showPartForm(formWithErrors, None, Messages("form.hasErrors"))
     }, { data =>
-      repository.findAllCacheGroupsByName(data.cacheGroupNames: _*).flatMap { cacheGroups =>
-        val part = data.toNewHttpPartConfig(owner = req.principal.nickname, cacheGroups = cacheGroups)
-        repository.save(part).map { id =>
-          Found(controllers.routes.AdminController.showPart(part.partId).url)
-        }.recoverWith {
-          case NonFatal(e) =>
-            // Problem with save: display form again with an error message
-            errorRc(e)
-            showPartForm(form, None, extractMessage(e))
+      repository.findAllCacheGroupsByName(data.cacheGroupNames: _*)
+        .flatMap { cacheGroups =>
+          val part = data.toNewHttpPartConfig(
+            owner = req.principal.nickname,
+            cacheGroups = cacheGroups
+          )
+          repository.save(part)
+            .map { id =>
+              Found(controllers.routes.AdminController.showPart(part.partId).url)
+            }
+            .recoverWith {
+              case NonFatal(e) =>
+                // Problem with save: display form again with an error message
+                errorRc(e)
+                showPartForm(form, None, extractMessage(e))
+            }
         }
-      }
     })
   }
 
@@ -109,19 +119,22 @@ class AdminController(
       form.fold({ formWithErrors =>
         showPartForm(formWithErrors, Some(part), Messages("form.hasErrors"))
       }, { data =>
-        repository.findAllCacheGroupsByName(data.cacheGroupNames: _*).flatMap { cacheGroups =>
-          val updatedPart = data.toUpdatedHttpPartConfig(part, cacheGroups)
-          val saveResult = repository.save(updatedPart)
-          saveResult.onComplete(_ => if (shouldBustCache(part, updatedPart)) cacheOps.increasePartVersion(partId))
-          saveResult.map { id =>
-            Found(controllers.routes.AdminController.showPart(updatedPart.partId).url)
-          }.recoverWith {
-            case NonFatal(e) =>
-              // Problem with save: display form again with an error message
-              errorRc(e)
-              showPartForm(form, Some(part), extractMessage(e))
+        repository.findAllCacheGroupsByName(data.cacheGroupNames: _*)
+          .flatMap { cacheGroups =>
+            val updatedPart = data.toUpdatedHttpPartConfig(part, cacheGroups)
+            val saveResult = repository.save(updatedPart)
+            saveResult.onComplete(_ => if (shouldBustCache(part, updatedPart)) cacheOps.increasePartVersion(partId))
+            saveResult
+              .map { id =>
+                Found(controllers.routes.AdminController.showPart(updatedPart.partId).url)
+              }
+              .recoverWith {
+                case NonFatal(e) =>
+                  // Problem with save: display form again with an error message
+                  errorRc(e)
+                  showPartForm(form, Some(part), extractMessage(e))
+              }
           }
-        }
       })
     }
   }
@@ -129,25 +142,33 @@ class AdminController(
   def copyPart(partId: String) = AuthorizedAction.async { implicit req =>
     infoRc
     findAndUsePart(partId) { part =>
-      repository.findAllConfigs().flatMap { allParts =>
-        val existingPartIds = allParts.map(_.partId)
-        val existingCommandKeys = allParts.flatMap(_.hystrixConfig).map(_.commandKey)
-        val newPart = part.copy(
-          id = None,
-          parameters = part.parameters.map(_.copy(id = None)),
-          hystrixConfig = part.hystrixConfig.map(c => c.copy(id = None, commandKey = AdminController.makeNewName(c.commandKey, existingCommandKeys))),
-          partId = AdminController.makeNewName(part.partId, existingPartIds),
-          owner = req.principal.nickname
-        )
-        saveAndRedirect(repository.save(newPart))(routes.AdminController.listParts, _ => routes.AdminController.editPart(newPart.partId))
-      }
+      repository.findAllConfigs()
+        .flatMap { allParts =>
+          val existingPartIds = allParts.map(_.partId)
+          val existingCommandKeys = allParts.flatMap(_.hystrixConfig).map(_.commandKey)
+          val newPart = part.copy(
+            id = None,
+            parameters = part.parameters.map(_.copy(id = None)),
+            hystrixConfig = part.hystrixConfig.map(c => c.copy(
+              id = None,
+              commandKey = AdminController.makeNewName(c.commandKey, existingCommandKeys)
+            )),
+            partId = AdminController.makeNewName(part.partId, existingPartIds),
+            owner = req.principal.nickname
+          )
+          saveAndRedirect(repository.save(newPart))(routes.AdminController.listParts, _ => routes.AdminController.editPart(newPart.partId))
+        }
     }
   }
 
   def confirmDeletePart(partId: String) = AuthorizedAction.async { implicit req =>
     infoRc
     findAndUsePart(partId) { part =>
-      Future.successful(Ok(views.html.confirmDelete("admin.delete.part", part.partId, routes.AdminController.listParts.url)))
+      Future.successful(Ok(views.html.confirmDelete(
+        "admin.delete.part",
+        part.partId,
+        routes.AdminController.listParts.url
+      )))
     }
   }
 
@@ -166,20 +187,39 @@ class AdminController(
     Ok(views.html.part.importForm())
   }
 
-  private def importFlashReport(extractedConfigs: Seq[JsonHttpPartConfig], insertedPartIds: Seq[String])(implicit req: RequestHeader): Flash = {
+  private def importFlashReport(
+    extractedConfigs: Seq[JsonHttpPartConfig],
+    insertedPartIds: Seq[String]
+  )(implicit req: RequestHeader): Flash = {
     val flashInfo = if (insertedPartIds.nonEmpty) {
-      Map(BootstrapFlashStyles.success.toString -> Messages("admin.import.successful", insertedPartIds.size, extractedConfigs.size, insertedPartIds.mkString(", ")))
+      Map(BootstrapFlashStyles.success.toString -> Messages(
+        "admin.import.successful",
+        insertedPartIds.size,
+        extractedConfigs.size,
+        insertedPartIds.mkString(", ")
+      ))
     } else Map.empty[String, String]
 
-    val notInsertedPartIds = for (config <- extractedConfigs if !insertedPartIds.contains(config.partId)) yield config.partId
+    val notInsertedPartIds = {
+      for (
+        config <- extractedConfigs if !insertedPartIds.contains(config.partId)
+      ) yield config.partId
+    }
     val flashWarn = if (notInsertedPartIds.nonEmpty) {
-      Map(BootstrapFlashStyles.warning.toString -> Messages("admin.import.failed", notInsertedPartIds.size, extractedConfigs.size, notInsertedPartIds.mkString(", ")))
+      Map(BootstrapFlashStyles.warning.toString -> Messages(
+        "admin.import.failed",
+        notInsertedPartIds.size,
+        extractedConfigs.size,
+        notInsertedPartIds.mkString(", ")
+      ))
     } else Map.empty[String, String]
 
     Flash(flashWarn ++ flashInfo)
   }
 
-  private def extractDataFromImportFile(jsonFile: FilePart[Files.TemporaryFile])(implicit req: RequestHeader): Seq[JsonHttpPartConfig] = {
+  private def extractDataFromImportFile(
+    jsonFile: FilePart[Files.TemporaryFile]
+  )(implicit req: RequestHeader): Seq[JsonHttpPartConfig] = {
     import com.m3.octoparts.json.format.ConfigModel._
     val fileContentType = for {
       contentType <- jsonFile.contentType
@@ -203,27 +243,35 @@ class AdminController(
   def doImportParts() = AuthorizedAction.async(parse.multipartFormData) { implicit req =>
     infoRc
     try {
-      req.body.file("jsonfile").fold(Future.successful(BadRequest("Import file not provided"))) { jsonFile =>
-        val extractedConfigs = extractDataFromImportFile(jsonFile)
-        if (extractedConfigs.isEmpty) {
-          Future.successful(Found(routes.AdminController.showImportParts().url).flashing(BootstrapFlashStyles.warning.toString -> Messages("admin.import.none")))
-        } else {
-          repository.importConfigs(extractedConfigs).map {
-            insertedPartIds =>
-              val flash = importFlashReport(extractedConfigs, insertedPartIds)
-              Found(routes.AdminController.listParts().url).flashing(flash)
-          }.recover {
-            case NonFatal(e) => handleException(e, routes.AdminController.showImportParts())
+      req.body.file("jsonfile")
+        .fold(Future.successful(BadRequest("Import file not provided"))) { jsonFile =>
+          val extractedConfigs = extractDataFromImportFile(jsonFile)
+          if (extractedConfigs.isEmpty) {
+            Future.successful(
+              Found(routes.AdminController.showImportParts().url)
+                .flashing(BootstrapFlashStyles.warning.toString -> Messages("admin.import.none"))
+            )
+          } else {
+            repository.importConfigs(extractedConfigs)
+              .map { insertedPartIds =>
+                val flash = importFlashReport(extractedConfigs, insertedPartIds)
+                Found(routes.AdminController.listParts().url)
+                  .flashing(flash)
+              }
+              .recover {
+                case NonFatal(e) => handleException(e, routes.AdminController.showImportParts())
+              }
           }
         }
-      }
     } catch {
       case NonFatal(e) => Future.successful(handleException(e, routes.AdminController.showImportParts()))
     }
   }
 
   def testPart(partId: String) = AuthorizedAction.async { implicit req =>
-    findAndUsePart(partId) { part => Future.successful(Ok(views.html.part.test(HttpPartConfigView(part)))) }
+    findAndUsePart(partId) { part =>
+      Future.successful(Ok(views.html.part.test(HttpPartConfigView(part))))
+    }
   }
 
   /*
@@ -232,19 +280,42 @@ class AdminController(
 
   def newParam(partId: String) = AuthorizedAction.async { implicit req =>
     findAndUsePart(partId) { part =>
-      repository.findAllCacheGroups().map { cgs =>
-        Ok(views.html.param.edit(AdminForms.paramForm, partId = part.partId, cacheGroups = cgs, maybeParam = None))
-      }
+      repository.findAllCacheGroups()
+        .map { cgs =>
+          Ok(views.html.param.edit(
+            AdminForms.paramForm,
+            partId = part.partId,
+            cacheGroups = cgs,
+            maybeParam = None
+          ))
+        }
     }
   }
 
-  def editParam(partId: String, paramId: Long) = AuthorizedAction.async { implicit req =>
+  def editParam(
+    partId: String,
+    paramId: Long
+  ) = AuthorizedAction.async { implicit req =>
     findAndUseParam(partId, paramId) { param =>
-      repository.findAllCacheGroups().map { allCacheGroups =>
-        val paramData = ParamData(param.outputName, param.inputNameOverride, param.description, param.paramType.toString, param.required, param.versioned, param.cacheGroups.toSeq.map(_.name))
-        val paramFormWithDefaults = AdminForms.paramForm.fill(paramData)
-        Ok(views.html.param.edit(form = paramFormWithDefaults, partId = partId, cacheGroups = allCacheGroups, maybeParam = Some(ParamView(param))))
-      }
+      repository.findAllCacheGroups()
+        .map { allCacheGroups =>
+          val paramData = ParamData(
+            param.outputName,
+            param.inputNameOverride,
+            param.description,
+            param.paramType.toString,
+            param.required,
+            param.versioned,
+            param.cacheGroups.toSeq.map(_.name)
+          )
+          val paramFormWithDefaults = AdminForms.paramForm.fill(paramData)
+          Ok(views.html.param.edit(
+            form = paramFormWithDefaults,
+            partId = partId,
+            cacheGroups = allCacheGroups,
+            maybeParam = Some(ParamView(param))
+          ))
+        }
     }
   }
 
@@ -252,38 +323,16 @@ class AdminController(
     infoRc
     findAndUsePart(partId) { part =>
       paramForm.bindFromRequest.fold({ formWithErrors =>
-        Future.successful(flashError(routes.AdminController.newParam(partId), Messages("admin.validationErrors", formWithErrors.errors)))
-      }, { data =>
-        repository.findAllCacheGroupsByName(data.cacheGroupNames: _*).flatMap { cacheGroups =>
-          val param = PartParam(
-            httpPartConfigId = part.id,
-            required = data.required,
-            versioned = data.versioned,
-            paramType = ParamType.withName(data.paramType),
-            outputName = data.outputName,
-            inputNameOverride = data.inputNameOverride.filterNot(_.isEmpty),
-            description = data.description.filterNot(_.isEmpty),
-            cacheGroups = cacheGroups,
-            createdAt = DateTime.now,
-            updatedAt = DateTime.now
+        Future.successful(
+          flashError(
+            routes.AdminController.newParam(partId),
+            Messages("admin.validationErrors", formWithErrors.errors)
           )
-          saveAndRedirect {
-            saveParamAndClearPartResponseCache(partId, param)
-          }(routes.AdminController.newParam(partId), id => routes.AdminController.showPart(partId))
-        }
-      })
-    }
-  }
-
-  def updateParam(partId: String, paramId: Long) = AuthorizedAction.async { implicit req =>
-    infoRc
-    findAndUsePart(partId) { part =>
-      paramForm.bindFromRequest.fold({ formWithErrors =>
-        Future.successful(flashError(routes.AdminController.editParam(partId, paramId), Messages("admin.validationErrors", formWithErrors.errors)))
+        )
       }, { data =>
-        findAndUseParam(partId, paramId) { param =>
-          repository.findAllCacheGroupsByName(data.cacheGroupNames: _*).flatMap { cacheGroups =>
-            val newParam = param.copy(
+        repository.findAllCacheGroupsByName(data.cacheGroupNames: _*)
+          .flatMap { cacheGroups =>
+            val param = PartParam(
               httpPartConfigId = part.id,
               required = data.required,
               versioned = data.versioned,
@@ -292,18 +341,58 @@ class AdminController(
               inputNameOverride = data.inputNameOverride.filterNot(_.isEmpty),
               description = data.description.filterNot(_.isEmpty),
               cacheGroups = cacheGroups,
+              createdAt = DateTime.now,
               updatedAt = DateTime.now
             )
             saveAndRedirect {
-              saveParamAndClearPartResponseCache(partId, newParam)
-            }(routes.AdminController.editParam(partId, paramId), _ => routes.AdminController.showPart(partId))
+              saveParamAndClearPartResponseCache(partId, param)
+            }(routes.AdminController.newParam(partId), id => routes.AdminController.showPart(partId))
           }
+      })
+    }
+  }
+
+  def updateParam(
+    partId: String,
+    paramId: Long
+  ) = AuthorizedAction.async { implicit req =>
+    infoRc
+    findAndUsePart(partId) { part =>
+      paramForm.bindFromRequest.fold({ formWithErrors =>
+        Future.successful(
+          flashError(
+            routes.AdminController.editParam(partId, paramId),
+            Messages("admin.validationErrors", formWithErrors.errors)
+          )
+        )
+      }, { data =>
+        findAndUseParam(partId, paramId) { param =>
+          repository.findAllCacheGroupsByName(data.cacheGroupNames: _*)
+            .flatMap { cacheGroups =>
+              val newParam = param.copy(
+                httpPartConfigId = part.id,
+                required = data.required,
+                versioned = data.versioned,
+                paramType = ParamType.withName(data.paramType),
+                outputName = data.outputName,
+                inputNameOverride = data.inputNameOverride.filterNot(_.isEmpty),
+                description = data.description.filterNot(_.isEmpty),
+                cacheGroups = cacheGroups,
+                updatedAt = DateTime.now
+              )
+              saveAndRedirect {
+                saveParamAndClearPartResponseCache(partId, newParam)
+              }(routes.AdminController.editParam(partId, paramId), _ => routes.AdminController.showPart(partId))
+            }
         }
       })
     }
   }
 
-  def copyParam(partId: String, paramId: Long) = AuthorizedAction.async { implicit req =>
+  def copyParam(
+    partId: String,
+    paramId: Long
+  ) = AuthorizedAction.async { implicit req =>
     infoRc
     findAndUsePart(partId) { part =>
       findAndUseParam(partId, paramId) { param =>
@@ -312,20 +401,36 @@ class AdminController(
           val otherParamNamesWithSameType = part.parameters.collect {
             case otherParam if otherParam.paramType == param.paramType => otherParam.outputName
           }
-          saveParamAndClearPartResponseCache(partId, param.copy(id = None, outputName = AdminController.makeNewName(param.outputName, otherParamNamesWithSameType)))
+          saveParamAndClearPartResponseCache(
+            partId,
+            param.copy(
+              id = None,
+              outputName = AdminController.makeNewName(param.outputName, otherParamNamesWithSameType)
+            )
+          )
         }(routes.AdminController.showPart(partId))
       }
     }
   }
 
-  def confirmDeleteParam(partId: String, paramId: Long) = AuthorizedAction.async { implicit req =>
+  def confirmDeleteParam(
+    partId: String,
+    paramId: Long
+  ) = AuthorizedAction.async { implicit req =>
     infoRc
     findAndUseParam(partId, paramId) { param =>
-      Future.successful(Ok(views.html.confirmDelete("admin.delete.param", param.inputName, routes.AdminController.showPart(partId).url)))
+      Future.successful(Ok(views.html.confirmDelete(
+        "admin.delete.param",
+        param.inputName,
+        routes.AdminController.showPart(partId).url
+      )))
     }
   }
 
-  def deleteParam(partId: String, paramId: Long) = AuthorizedAction.async { implicit req =>
+  def deleteParam(
+    partId: String,
+    paramId: Long
+  ) = AuthorizedAction.async { implicit req =>
     infoRc
     findAndUsePart(partId) { part =>
       simpleSaveAndRedirect {
@@ -341,7 +446,8 @@ class AdminController(
    */
 
   def listThreadPools = AuthorizedAction.async { implicit req =>
-    repository.findAllThreadPoolConfigs().map(tpcs => Ok(views.html.threadpool.list(tpcs)))
+    repository.findAllThreadPoolConfigs()
+      .map(tpcs => Ok(views.html.threadpool.list(tpcs)))
   }
 
   def newThreadPool = AuthorizedAction { implicit req =>
@@ -360,10 +466,19 @@ class AdminController(
     infoRc
     threadPoolForm.bindFromRequest.fold({ formWithErrors =>
       Future.successful {
-        flashError(routes.AdminController.newThreadPool, Messages("admin.validationErrors", formWithErrors.errors))
+        flashError(
+          routes.AdminController.newThreadPool,
+          Messages("admin.validationErrors", formWithErrors.errors)
+        )
       }
     }, { data =>
-      val tpc = ThreadPoolConfig(threadPoolKey = data.threadPoolKey, coreSize = data.coreSize, queueSize = data.queueSize, createdAt = DateTime.now, updatedAt = DateTime.now)
+      val tpc = ThreadPoolConfig(
+        threadPoolKey = data.threadPoolKey,
+        coreSize = data.coreSize,
+        queueSize = data.queueSize,
+        createdAt = DateTime.now,
+        updatedAt = DateTime.now
+      )
       saveAndRedirect {
         repository.save(tpc)
       }(routes.AdminController.listThreadPools, id => routes.AdminController.showThreadPool(id))
@@ -375,10 +490,18 @@ class AdminController(
     findAndUseThreadPool(id) { tpc =>
       threadPoolForm.bindFromRequest.fold({ formWithErrors =>
         Future.successful {
-          flashError(routes.AdminController.editThreadPool(id), Messages("admin.validationErrors", formWithErrors.errors))
+          flashError(
+            routes.AdminController.editThreadPool(id),
+            Messages("admin.validationErrors", formWithErrors.errors)
+          )
         }
       }, { data =>
-        val updatedTpc = tpc.copy(threadPoolKey = data.threadPoolKey, coreSize = data.coreSize, queueSize = data.queueSize, updatedAt = DateTime.now)
+        val updatedTpc = tpc.copy(
+          threadPoolKey = data.threadPoolKey,
+          coreSize = data.coreSize,
+          queueSize = data.queueSize,
+          updatedAt = DateTime.now
+        )
         saveAndRedirect {
           repository.save(updatedTpc)
         }(routes.AdminController.editThreadPool(id), _ => routes.AdminController.showThreadPool(id))
@@ -389,7 +512,11 @@ class AdminController(
   def confirmDeleteThreadPool(id: Long) = AuthorizedAction.async { implicit req =>
     infoRc
     findAndUseThreadPool(id) { tpc =>
-      Future.successful(Ok(views.html.confirmDelete("admin.delete.threadPool", tpc.threadPoolKey, routes.AdminController.listThreadPools.url)))
+      Future.successful(Ok(views.html.confirmDelete(
+        "admin.delete.threadPool",
+        tpc.threadPoolKey,
+        routes.AdminController.listThreadPools.url
+      )))
     }
   }
 
@@ -405,7 +532,8 @@ class AdminController(
    */
 
   def listCacheGroups = AuthorizedAction.async { implicit req =>
-    repository.findAllCacheGroups().map(cgs => Ok(views.html.cachegroup.list(cgs)))
+    repository.findAllCacheGroups()
+      .map(cgs => Ok(views.html.cachegroup.list(cgs)))
   }
 
   def newCacheGroup = AuthorizedAction { implicit req =>
@@ -424,11 +552,20 @@ class AdminController(
     infoRc
     cacheGroupForm.bindFromRequest.fold({ formWithErrors =>
       Future.successful {
-        flashError(routes.AdminController.newCacheGroup, Messages("admin.validationErrors", formWithErrors.errors))
+        flashError(
+          routes.AdminController.newCacheGroup,
+          Messages("admin.validationErrors", formWithErrors.errors)
+        )
       }
     }, { data =>
       val owner = req.principal.nickname // Make the logged-in user the owner
-      val cacheGroup = CacheGroup(name = data.name, description = data.description, owner = owner, createdAt = DateTime.now, updatedAt = DateTime.now)
+      val cacheGroup = CacheGroup(
+        name = data.name,
+        description = data.description,
+        owner = owner,
+        createdAt = DateTime.now,
+        updatedAt = DateTime.now
+      )
       saveAndRedirect {
         repository.save(cacheGroup)
       }(routes.AdminController.newCacheGroup, id => routes.AdminController.showCacheGroup(cacheGroup.name))
@@ -440,13 +577,23 @@ class AdminController(
     findAndUseCacheGroup(name) { cg =>
       cacheGroupForm.bindFromRequest.fold({ formWithErrors =>
         Future.successful {
-          flashError(routes.AdminController.editCacheGroup(name), Messages("admin.validationErrors", formWithErrors.errors))
+          flashError(
+            routes.AdminController.editCacheGroup(name),
+            Messages("admin.validationErrors", formWithErrors.errors)
+          )
         }
       }, { data =>
-        val updatedCacheGroup = cg.copy(name = data.name, description = data.description, updatedAt = DateTime.now)
+        val updatedCacheGroup = cg.copy(
+          name = data.name,
+          description = data.description,
+          updatedAt = DateTime.now
+        )
         saveAndRedirect {
           repository.save(updatedCacheGroup)
-        }(routes.AdminController.editCacheGroup(name), _ => routes.AdminController.showCacheGroup(updatedCacheGroup.name))
+        }(
+          routes.AdminController.editCacheGroup(name),
+          _ => routes.AdminController.showCacheGroup(updatedCacheGroup.name)
+        )
       })
     }
   }
@@ -454,7 +601,11 @@ class AdminController(
   def confirmDeleteCacheGroup(name: String) = AuthorizedAction.async { implicit req =>
     infoRc
     findAndUseCacheGroup(name) { cg =>
-      Future.successful(Ok(views.html.confirmDelete("admin.delete.cacheGroup", cg.name, routes.AdminController.listCacheGroups.url)))
+      Future.successful(Ok(views.html.confirmDelete(
+        "admin.delete.cacheGroup",
+        cg.name,
+        routes.AdminController.listCacheGroups.url
+      )))
     }
   }
 
@@ -469,7 +620,9 @@ class AdminController(
    * Helper methods
    */
 
-  private def findAndUsePart(partId: String)(f: HttpPartConfig => Future[Result])(implicit req: RequestHeader): Future[Result] = {
+  private def findAndUsePart(partId: String)(
+    f: HttpPartConfig => Future[Result]
+  )(implicit req: RequestHeader): Future[Result] = {
     repository.findConfigByPartId(partId).flatMap { maybePart =>
       maybePart.map(f).getOrElse {
         Future.successful(handlePartNotFound(partId))
@@ -477,39 +630,80 @@ class AdminController(
     }
   }
 
-  private def findAndUseParam(partId: String, paramId: Long)(f: PartParam => Future[Result])(implicit req: RequestHeader): Future[Result] = {
-    repository.findParamById(paramId).flatMap { maybeParam =>
-      maybeParam.map { param =>
-        // Sanity check: Check parent's partId matches what was supplied in URL
-        if (param.httpPartConfig.exists(_.partId != partId)) {
-          warnRc("Param ID" -> paramId.toString, "Error" -> "not found")
-          Future.successful(flashError(routes.AdminController.showPart(partId), Messages("admin.partParameterMismatch", paramId, partId)))
-        } else {
-          f(param)
+  private def findAndUseParam(
+    partId: String,
+    paramId: Long
+  )(f: PartParam => Future[Result])(implicit req: RequestHeader): Future[Result] = {
+    repository.findParamById(paramId)
+      .flatMap { maybeParam =>
+        maybeParam.map { param =>
+          // Sanity check: Check parent's partId matches what was supplied in URL
+          if (param.httpPartConfig.exists(_.partId != partId)) {
+            warnRc(
+              "Param ID" -> paramId.toString,
+              "Error" -> "not found"
+            )
+            Future.successful(
+              flashError(
+                routes.AdminController.showPart(partId),
+                Messages("admin.partParameterMismatch", paramId, partId)
+              )
+            )
+          } else {
+            f(param)
+          }
+        } getOrElse {
+          warnRc(
+            "Param ID" -> paramId.toString,
+            "Error" -> "not found"
+          )
+          Future.successful(
+            flashError(
+              routes.AdminController.showPart(partId),
+              Messages("admin.parameterNotFound", paramId)
+            )
+          )
         }
-      } getOrElse {
-        warnRc("Param ID" -> paramId.toString, "Error" -> "not found")
-        Future.successful(flashError(routes.AdminController.showPart(partId), Messages("admin.parameterNotFound", paramId)))
       }
-    }
   }
 
-  private def findAndUseThreadPool(id: Long)(f: (ThreadPoolConfig) => Future[Result])(implicit req: RequestHeader): Future[Result] = {
-    repository.findThreadPoolConfigById(id).flatMap { maybeTpc =>
-      maybeTpc.map(f).getOrElse {
-        warnRc("Thread Pool ID" -> id.toString, "Error" -> "not found")
-        Future.successful(flashError(routes.AdminController.listThreadPools, Messages("admin.threadPoolNotFound", id)))
+  private def findAndUseThreadPool(id: Long)(
+    f: (ThreadPoolConfig) => Future[Result]
+  )(implicit req: RequestHeader): Future[Result] = {
+    repository.findThreadPoolConfigById(id)
+      .flatMap { maybeTpc =>
+        maybeTpc.map(f).getOrElse {
+          warnRc(
+            "Thread Pool ID" -> id.toString,
+            "Error" -> "not found"
+          )
+          Future.successful(
+            flashError(
+              routes.AdminController.listThreadPools,
+              Messages("admin.threadPoolNotFound", id)
+            )
+          )
+        }
       }
-    }
   }
 
-  private def findAndUseCacheGroup(name: String)(f: (CacheGroup) => Future[Result])(implicit req: RequestHeader): Future[Result] = {
+  private def findAndUseCacheGroup(name: String)(
+    f: (CacheGroup) => Future[Result]
+  )(implicit req: RequestHeader): Future[Result] = {
     for {
       mbCacheGroup <- repository.findCacheGroupByName(name)
       result <- mbCacheGroup match {
         case None => {
-          warnRc("Cache group name" -> name, "Error" -> "not found")
-          Future.successful(flashError(routes.AdminController.listCacheGroups, Messages("admin.cacheGroupNotFound", name)))
+          warnRc(
+            "Cache group name" -> name,
+            "Error" -> "not found"
+          )
+          Future.successful(
+            flashError(
+              routes.AdminController.listCacheGroups,
+              Messages("admin.cacheGroupNotFound", name)
+            )
+          )
         }
         case Some(cacheGroup) => f(cacheGroup)
       }
@@ -524,9 +718,17 @@ class AdminController(
    * @param maybePart the part, if user is editing an existing part
    * @param errorMsgs Error messages to show as a flash, if any
    */
-  private def showPartForm(form: Form[PartData], maybePart: Option[HttpPartConfig], errorMsgs: String*)(implicit req: RequestHeader): Future[Result] = {
+  private def showPartForm(
+    form: Form[PartData],
+    maybePart: Option[HttpPartConfig],
+    errorMsgs: String*
+  )(implicit req: RequestHeader): Future[Result] = {
     form.errors.foreach {
-      error => LTSVLogger.debug("key" -> error.key, "Form validation error" -> Messages(error.message, error.args: _*))
+      error =>
+        LTSVLogger.debug(
+          "key" -> error.key,
+          "Form validation error" -> Messages(error.message, error.args: _*)
+        )
     }
     val fTps = repository.findAllThreadPoolConfigs()
     val fCgs = repository.findAllCacheGroups()
@@ -546,8 +748,14 @@ class AdminController(
   }
 
   private def handlePartNotFound(partId: String)(implicit req: RequestHeader): Result = {
-    warnRc("Part" -> partId, "Error" -> "not found")
-    flashError(routes.AdminController.listParts, Messages("admin.partNotFound", partId))
+    warnRc(
+      "Part" -> partId,
+      "Error" -> "not found"
+    )
+    flashError(
+      routes.AdminController.listParts,
+      Messages("admin.partNotFound", partId)
+    )
   }
 
   /**
@@ -558,7 +766,9 @@ class AdminController(
    * @param redirect where to redirect after completion
    * @tparam R result type of saving the object
    */
-  private def simpleSaveAndRedirect[R](updater: => Future[R])(redirect: => Call)(implicit req: RequestHeader): Future[Result] = {
+  private def simpleSaveAndRedirect[R](
+    updater: => Future[R]
+  )(redirect: => Call)(implicit req: RequestHeader): Future[Result] = {
     saveAndRedirect[R](updater)(redirect, { _ => redirect })
   }
 
@@ -572,7 +782,9 @@ class AdminController(
    * @param onSuccess function to decide where to redirect to, based on the result of the successful save
    * @tparam R result type of saving the object
    */
-  private def saveAndRedirect[R](updater: => Future[R])(onError: => Call, onSuccess: R => Call)(implicit req: RequestHeader): Future[Result] = {
+  private def saveAndRedirect[R](
+    updater: => Future[R]
+  )(onError: => Call, onSuccess: R => Call)(implicit req: RequestHeader): Future[Result] = {
     updater map { result =>
       Found(onSuccess(result).url)
     } recover {
@@ -580,16 +792,25 @@ class AdminController(
     }
   }
 
-  private def handleException(e: Throwable, redirectTo: Call)(implicit req: RequestHeader): Result = {
+  private def handleException(
+    e: Throwable,
+    redirectTo: Call
+  )(implicit req: RequestHeader): Result = {
     errorRc(e)
     flashError(redirectTo, extractMessage(e))
   }
 
-  private def flashError(redirectTo: Call, errorMsg: String): Result = {
+  private def flashError(
+    redirectTo: Call,
+    errorMsg: String
+  ): Result = {
     Found(redirectTo.url).flashing(BootstrapFlashStyles.danger.toString -> errorMsg)
   }
 
-  private def saveParamAndClearPartResponseCache(partId: String, param: PartParam)(implicit parentSpan: Span): Future[Long] = {
+  private def saveParamAndClearPartResponseCache(
+    partId: String,
+    param: PartParam
+  )(implicit parentSpan: Span): Future[Long] = {
     val saveResult = repository.save(param)
     saveResult.onComplete(_ => if (shouldBustCache(param)) cacheOps.increasePartVersion(partId))
     saveResult
@@ -604,7 +825,11 @@ object AdminController {
    * Creates a unique name, by appending `suffix` until the result is not in `reservedNames`.
    */
   @tailrec
-  private[controllers] def makeNewName(currentName: String, reservedNames: String => Boolean, suffix: String = "_"): String = {
+  private[controllers] def makeNewName(
+    currentName: String,
+    reservedNames: String => Boolean,
+    suffix: String = "_"
+  ): String = {
     if (!reservedNames(currentName)) {
       currentName
     } else {
@@ -630,8 +855,12 @@ object AdminController {
     messages.mkString("; ")
   }
 
-  def shouldBustCache(beforeEndpoint: HttpPartConfig, afterEndpoint: HttpPartConfig): Boolean = {
-    def hasChangedOn[A](accessorGet: HttpPartConfig => A) = accessorGet(beforeEndpoint) != accessorGet(afterEndpoint)
+  def shouldBustCache(
+    beforeEndpoint: HttpPartConfig,
+    afterEndpoint: HttpPartConfig
+  ): Boolean = {
+    def hasChangedOn[A](accessorGet: HttpPartConfig => A) =
+      accessorGet(beforeEndpoint) != accessorGet(afterEndpoint)
     def cacheTTLReduced: Boolean =
       hasChangedOn(_.cacheTtl) &&
         ((beforeEndpoint.cacheTtl, afterEndpoint.cacheTtl) match {

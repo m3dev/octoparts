@@ -23,6 +23,9 @@ trait Handler {
   // Used primarily for creating a PartResponse, but also for logging purposes
   def partId: String
 
-  def process(partRequestInfo: PartRequestInfo, arguments: HandlerArguments)(implicit parentSpan: Span): Future[PartResponse]
+  def process(
+    partRequestInfo: PartRequestInfo,
+    arguments: HandlerArguments
+  )(implicit parentSpan: Span): Future[PartResponse]
 
 }

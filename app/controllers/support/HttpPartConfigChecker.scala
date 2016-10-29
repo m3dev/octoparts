@@ -13,8 +13,16 @@ trait HttpPartConfigChecker {
 }
 
 object HttpPartConfigChecker {
-  lazy val checks = Seq(QueryParamInterpolation, MissingPathParam, PathParamNoInterp, PathParamOption, WhitespaceInUri) ++
-    (if (Play.current.configuration.getString("application.env").contains("production")) Seq(AlertEmailOff) else Nil)
+  lazy val checks = Seq(
+    QueryParamInterpolation,
+    MissingPathParam,
+    PathParamNoInterp,
+    PathParamOption,
+    WhitespaceInUri
+  ) ++ (
+    if (Play.current.configuration.getString("application.env").contains("production")) Seq(AlertEmailOff)
+    else Nil
+  )
   def apply(httpPartConfig: HttpPartConfig)(implicit messages: Messages): Seq[String] = {
     checks.flatMap(_.warnings(httpPartConfig))
   }
@@ -40,7 +48,9 @@ object MissingPathParam extends HttpPartConfigChecker {
     val pathParamValues = hpc.parameters.toSeq.collect {
       case pp: PartParam if pp.paramType == ParamType.Path => pp.outputName -> foundMark
     }.toMap
-    val interpolated = HttpPartRequestHandler.interpolate(hpc.uriToInterpolate) { from: String => pathParamValues.getOrElse(from, s"$missingMark$from$missingMark") }
+    val interpolated = HttpPartRequestHandler.interpolate(hpc.uriToInterpolate) { from: String =>
+      pathParamValues.getOrElse(from, s"$missingMark$from$missingMark")
+    }
 
     def missingParameters(in: String, from: Int = 0): List[String] = {
       in.indexOf(missingMark, from) match {
@@ -61,7 +71,9 @@ object MissingPathParam extends HttpPartConfigChecker {
 object PathParamNoInterp extends HttpPartConfigChecker {
   def warnings(hpc: HttpPartConfig)(implicit messages: Messages): Seq[String] = {
     hpc.parameters.toSeq.collect {
-      case pp: PartParam if pp.paramType == ParamType.Path && !hpc.uriToInterpolate.containsSlice(s"$${${pp.outputName}}") => pp.outputName
+      case pp: PartParam if pp.paramType == ParamType.Path &&
+        !hpc.uriToInterpolate.containsSlice(s"$${${pp.outputName}}") =>
+        pp.outputName
     }.map(Messages("admin.warnings.PathParamNoInterp", _))
   }
 }
@@ -72,7 +84,9 @@ object PathParamNoInterp extends HttpPartConfigChecker {
 object PathParamOption extends HttpPartConfigChecker {
   def warnings(hpc: HttpPartConfig)(implicit messages: Messages): Seq[String] = {
     hpc.parameters.toSeq.collect {
-      case pp: PartParam if pp.paramType == ParamType.Path && !pp.required => pp.outputName
+      case pp: PartParam if pp.paramType == ParamType.Path &&
+        !pp.required =>
+        pp.outputName
     }.map(Messages("admin.warnings.PathParamOption", _))
   }
 }
@@ -95,4 +109,3 @@ case object AlertEmailOff extends HttpPartConfigChecker {
     if (hpc.alertMailsEnabled) Nil else Seq(Messages("admin.warnings.AlertEmailOff"))
   }
 }
-

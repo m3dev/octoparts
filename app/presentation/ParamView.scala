@@ -7,6 +7,7 @@ import org.apache.commons.lang.StringEscapeUtils
  * View adapter for a PartParam.
  */
 case class ParamView(param: PartParam) {
+
   def id: Option[Long] = param.id
 
   def name: String = param.inputNameOverride.getOrElse(param.outputName)
@@ -22,6 +23,7 @@ case class ParamView(param: PartParam) {
   def description = param.description
 
   def inputNameJs = StringEscapeUtils.escapeJavaScript(param.inputName)
+
 }
 
 object ParamView {

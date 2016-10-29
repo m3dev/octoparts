@@ -14,7 +14,10 @@ trait TtlCalculator {
    * given the expiresAt field (based on a Cache-Control: max-age header returned from the backend API)
    * and the part's configured TTL.
    */
-  def calculateTtl(cacheControl: CacheControl, configuredTtl: Option[Duration]): Option[Duration] = {
+  def calculateTtl(
+    cacheControl: CacheControl,
+    configuredTtl: Option[Duration]
+  ): Option[Duration] = {
     if (cacheControl.canRevalidate) {
       // if there is a revalidation method, expiresAt does not relate to memcached eviction
       configuredTtl

@@ -14,7 +14,9 @@ import scala.util.Try
  * A pool to manage HTTP clients.
  * Holds one HTTP client per partId.
  */
-class HttpClientPool(metrics: Metrics) extends KeyedResourcePool[HttpPartConfigClientKey, HttpClientLike] {
+class HttpClientPool(
+    metrics: Metrics
+) extends KeyedResourcePool[HttpPartConfigClientKey, HttpClientLike] {
 
   protected def makeNew(key: HttpPartConfigClientKey) = new InstrumentedHttpClient(
     name = key.partId,
@@ -34,7 +36,14 @@ class HttpClientPool(metrics: Metrics) extends KeyedResourcePool[HttpPartConfigC
 }
 
 object HttpClientPool {
-  case class HttpPartConfigClientKey(partId: String, httpPoolSize: Int, httpConnectionTimeout: FiniteDuration, httpSocketTimeout: FiniteDuration, httpDefaultEncoding: Charset, httpProxySettings: Option[HttpProxySettings])
+  case class HttpPartConfigClientKey(
+    partId: String,
+    httpPoolSize: Int,
+    httpConnectionTimeout: FiniteDuration,
+    httpSocketTimeout: FiniteDuration,
+    httpDefaultEncoding: Charset,
+    httpProxySettings: Option[HttpProxySettings]
+  )
 
   object HttpPartConfigClientKey {
     def apply(part: HttpPartConfig): HttpPartConfigClientKey = HttpPartConfigClientKey(

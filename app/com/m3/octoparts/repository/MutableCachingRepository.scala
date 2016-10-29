@@ -16,14 +16,13 @@ class MutableCachingRepository(
   val delegate: MutableConfigsRepository,
   val cache: Cache,
   val httpClientPool: HttpClientPool
-)(
-  implicit
-  val executionContext: ExecutionContext
-)
+)(implicit val executionContext: ExecutionContext)
     extends CachingRepository
     with MutableConfigsRepository {
 
-  def save[A <: ConfigModel[A]: ConfigMapper](obj: A)(implicit parentSpan: Span): Future[Long] = reloadCacheAfter(delegate.save(obj))
+  def save[A <: ConfigModel[A]: ConfigMapper](
+    obj: A
+  )(implicit parentSpan: Span): Future[Long] = reloadCacheAfter(delegate.save(obj))
 
   def deleteAllConfigs()(implicit parentSpan: Span): Future[Int] = reloadCacheAfter {
     for {
@@ -42,13 +41,17 @@ class MutableCachingRepository(
     } yield deletedCount
   }
 
-  def deleteThreadPoolConfigById(id: Long)(implicit parentSpan: Span): Future[Int] = reloadCacheAfter(delegate.deleteThreadPoolConfigById(id))
+  def deleteThreadPoolConfigById(id: Long)(implicit parentSpan: Span): Future[Int] =
+    reloadCacheAfter(delegate.deleteThreadPoolConfigById(id))
 
-  def deletePartParamById(id: Long)(implicit parentSpan: Span): Future[Int] = reloadCacheAfter(delegate.deletePartParamById(id))
+  def deletePartParamById(id: Long)(implicit parentSpan: Span): Future[Int] =
+    reloadCacheAfter(delegate.deletePartParamById(id))
 
-  def deleteCacheGroupByName(name: String)(implicit parentSpan: Span): Future[Int] = reloadCacheAfter(delegate.deleteCacheGroupByName(name))
+  def deleteCacheGroupByName(name: String)(implicit parentSpan: Span): Future[Int] =
+    reloadCacheAfter(delegate.deleteCacheGroupByName(name))
 
-  def importConfigs(configs: Seq[json.HttpPartConfig])(implicit parentSpan: Span): Future[Seq[String]] = reloadCacheAfter(delegate.importConfigs(configs))
+  def importConfigs(configs: Seq[json.HttpPartConfig])(implicit parentSpan: Span): Future[Seq[String]] =
+    reloadCacheAfter(delegate.importConfigs(configs))
 
   private def reloadCacheAfter[A](f: => Future[A])(implicit parentSpan: Span) = {
     for {

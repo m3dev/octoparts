@@ -18,7 +18,9 @@ trait AuthenticationCheckSupport {
    *
    * @param onUnauthenticated what action to take when a user is not authenticated (e.g. a redirect)
    */
-  protected[support] def authenticationCheckFilter(onUnauthenticated: Request[_] => Future[Result]) = new ActionRefiner[Request, AuthenticatedRequest] {
+  protected[support] def authenticationCheckFilter(
+    onUnauthenticated: Request[_] => Future[Result]
+  ) = new ActionRefiner[Request, AuthenticatedRequest] {
 
     def refine[A](inputReq: Request[A]) = {
       extractPrincipal(inputReq).flatMap { maybePrincipal =>

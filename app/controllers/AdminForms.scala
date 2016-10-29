@@ -36,7 +36,10 @@ object AdminForms {
     data =>
 
     /** Create a brand new HttpPartConfig using the data input into the form */
-    def toNewHttpPartConfig(owner: String, cacheGroups: SortedSet[CacheGroup]): HttpPartConfig = HttpPartConfig(
+    def toNewHttpPartConfig(
+      owner: String,
+      cacheGroups: SortedSet[CacheGroup]
+    ): HttpPartConfig = HttpPartConfig(
       partId = PartData.trimPartId(data.partId),
       owner = owner,
       description = data.description,
@@ -72,7 +75,10 @@ object AdminForms {
     )
 
     /** Update an existing HttpPartConfig using the data input into the form */
-    def toUpdatedHttpPartConfig(originalPart: HttpPartConfig, cacheGroups: SortedSet[CacheGroup]): HttpPartConfig = originalPart.copy(
+    def toUpdatedHttpPartConfig(
+      originalPart: HttpPartConfig,
+      cacheGroups: SortedSet[CacheGroup]
+    ): HttpPartConfig = originalPart.copy(
       partId = PartData.trimPartId(data.partId),
       description = data.description,
       uriToInterpolate = data.httpSettings.uri,
@@ -147,7 +153,11 @@ object AdminForms {
     private def trimPartId(original: String): String = {
       val trimmed = StringUtils.strip(original)
       if (trimmed != original) {
-        LTSVLogger.info("message" -> "Leading and trailing spaces were trimmed from partId", "before" -> s"'$original'", "after" -> s"'$trimmed'")
+        LTSVLogger.info(
+          "message" -> "Leading and trailing spaces were trimmed from partId",
+          "before" -> s"'$original'",
+          "after" -> s"'$trimmed'"
+        )
       }
       trimmed
     }

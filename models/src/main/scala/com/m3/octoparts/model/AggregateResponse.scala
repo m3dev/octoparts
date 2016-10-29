@@ -15,7 +15,7 @@ import scala.concurrent.duration.FiniteDuration
  * @param responses PartResponse
  */
 case class AggregateResponse(
-  @(ApiModelProperty @field)(required = true)@BeanProperty responseMeta: ResponseMeta,
+    @(ApiModelProperty @field)(required = true)@BeanProperty responseMeta: ResponseMeta,
     @BeanProperty responses: Seq[PartResponse] = Nil
 ) {
 
@@ -104,7 +104,7 @@ object CacheControl {
  * @param lastModified a date. we do not parse it and use it as-is
  */
 case class CacheControl(
-  @(ApiModelProperty @field)(required = true)@BooleanBeanProperty noStore: Boolean = false,
+    @(ApiModelProperty @field)(required = true)@BooleanBeanProperty noStore: Boolean = false,
     @(ApiModelProperty @field)(required = true)@BooleanBeanProperty noCache: Boolean = false,
     @(ApiModelProperty @field)(required = false, dataType = "long")@BeanProperty expiresAt: Option[Long] = None,
     @(ApiModelProperty @field)(required = false, dataType = "string")@BeanProperty etag: Option[String] = None,

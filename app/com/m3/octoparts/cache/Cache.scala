@@ -16,8 +16,16 @@ trait Cache {
 
   // TODO shade dependency decoupling
 
-  def get[T](key: CacheKey)(implicit codec: Codec[T], parentSpan: Span): Future[Option[T]]
+  def get[T](
+    key: CacheKey
+  )(implicit
+    codec: Codec[T],
+    parentSpan: Span): Future[Option[T]]
 
-  def put[T](key: CacheKey, v: T, ttl: Option[Duration])(implicit codec: Codec[T], parentSpan: Span): Future[Unit]
+  def put[T](
+    key: CacheKey,
+    v: T,
+    ttl: Option[Duration]
+  )(implicit codec: Codec[T], parentSpan: Span): Future[Unit]
 
 }

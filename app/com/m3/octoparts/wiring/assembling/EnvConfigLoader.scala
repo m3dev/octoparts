@@ -9,7 +9,10 @@ trait EnvConfigLoader {
    * Based on the current config, loads properties/config from an env-specific application.$env.conf file,
    * combining it with the passed-in config
    */
-  protected def withEnvConfig(baseConfig: Configuration, environment: Environment): Configuration = {
+  protected def withEnvConfig(
+    baseConfig: Configuration,
+    environment: Environment
+  ): Configuration = {
     val mode = environment.mode
     val playEnv = baseConfig.getString("application.env").fold(mode.toString.toLowerCase) { parsedEnv =>
       /* "test" mode should cause the environment to be "test" except when
@@ -31,7 +34,10 @@ trait EnvConfigLoader {
     }
   }
 
-  protected def configFileResolvable(configFileName: String, env: Environment): Boolean = {
+  protected def configFileResolvable(
+    configFileName: String,
+    env: Environment
+  ): Boolean = {
     Option(env.classLoader.getResource(configFileName)).isDefined
   }
 

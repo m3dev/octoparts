@@ -19,7 +19,9 @@ private[client] object AggregateResponseExtractor {
   }
 }
 
-private[client] class AggregateResponseExtractor(aggregateRequest: AggregateRequest) extends AsyncCompletionHandler[ResponseWrapper] {
+private[client] class AggregateResponseExtractor(
+    aggregateRequest: AggregateRequest
+) extends AsyncCompletionHandler[ResponseWrapper] {
 
   import com.m3.octoparts.client.AggregateResponseExtractor._
 

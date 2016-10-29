@@ -8,7 +8,9 @@ import skinny.{ ParamType => SkinnyParamType }
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with TimestampsFeature[HystrixConfig] {
+object HystrixConfigRepository
+    extends ConfigMapper[HystrixConfig]
+    with TimestampsFeature[HystrixConfig] {
 
   override lazy val defaultAlias = createAlias("hystrix_config")
 
@@ -35,13 +37,17 @@ object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with Timestam
   */
   lazy val threadConfigOpt = {
     belongsToWithFk[ThreadPoolConfig](
-      ThreadPoolConfigRepository, "threadPoolConfigId", (h, c) => h.copy(threadPoolConfig = c)
-    ).includes[ThreadPoolConfig](merge = (hystrixConfigs, threadConfigs) =>
+      right = ThreadPoolConfigRepository,
+      fk = "threadPoolConfigId",
+      merge = (h, c) => h.copy(threadPoolConfig = c)
+    ).includes[ThreadPoolConfig] { (hystrixConfigs, threadConfigs) =>
       hystrixConfigs.map { h =>
         threadConfigs.collectFirst {
-          case tpc if h.threadPoolConfigId == tpc.id => h.copy(threadPoolConfig = Some(tpc))
+          case tpc if h.threadPoolConfigId == tpc.id =>
+            h.copy(threadPoolConfig = Some(tpc))
         }.getOrElse(h)
-      })
+      }
+    }
   }
 
   // initializes the default references

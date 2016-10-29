@@ -12,12 +12,11 @@ import play.api.mvc._
 import scala.concurrent.duration._
 
 class HystrixController(
-  actorSystem: ActorSystem,
-  defaultDelay: FiniteDuration = 1.second,
-  pollerQueueSize: Int = 10000,
-  defaultMaxClients: Int = 10
-)
-    extends Controller {
+    actorSystem: ActorSystem,
+    defaultDelay: FiniteDuration = 1.second,
+    pollerQueueSize: Int = 10000,
+    defaultMaxClients: Int = 10
+) extends Controller {
 
   import actorSystem.dispatcher
 
@@ -53,10 +52,11 @@ class HystrixController(
     val listener = new MetricsAsJsonPollerListener(pollerQueueSize)
     val poller = new HystrixMetricsPoller(listener, delay.toMillis.toInt)
 
-    Enumerator.outputStream(new Streamer(poller, listener, delay)(actorSystem).produce).onDoneEnumerating({
-      onDisconnect()
-      poller.shutdown()
-    })
+    Enumerator.outputStream(new Streamer(poller, listener, delay)(actorSystem).produce)
+      .onDoneEnumerating({
+        onDisconnect()
+        poller.shutdown()
+      })
   }
 
 }

@@ -19,16 +19,26 @@ import scala.concurrent.{ ExecutionContext, Future }
  *                           - receptiveness to external changes (in case the network cache is shared)
  *
  */
-class MemoryBufferingRawCache(networkCache: RawCache, localCacheDuration: Duration) extends RawCache {
+class MemoryBufferingRawCache(
+    networkCache: RawCache,
+    localCacheDuration: Duration
+) extends RawCache {
 
-  protected val memoryCache: GuavaCache[String, Object] = configureMemoryCache(CacheBuilder.newBuilder()).build[String, Object]()
+  protected val memoryCache: GuavaCache[String, Object] =
+    configureMemoryCache(CacheBuilder.newBuilder()).build[String, Object]()
 
   // exposed for testing
-  protected def configureMemoryCache(builder: CacheBuilder[Object, Object]): CacheBuilder[Object, Object] = {
+  protected def configureMemoryCache(
+    builder: CacheBuilder[Object, Object]
+  ): CacheBuilder[Object, Object] = {
     builder.expireAfterWrite(localCacheDuration.toMillis, TimeUnit.MILLISECONDS)
   }
 
-  def set[T](key: String, value: T, exp: Duration)(implicit codec: Codec[T], parentSpan: Span): Future[Unit] = {
+  def set[T](
+    key: String,
+    value: T,
+    exp: Duration
+  )(implicit codec: Codec[T], parentSpan: Span): Future[Unit] = {
     if (exp >= localCacheDuration) {
       storeInMemoryCache(key, value)
     } else {
@@ -60,10 +70,17 @@ class MemoryBufferingRawCache(networkCache: RawCache, localCacheDuration: Durati
     networkCache.close()
   }
 
-  protected def storeInMemoryCache(key: String, value: Any): Unit = value match {
+  protected def storeInMemoryCache(
+    key: String,
+    value: Any
+  ): Unit = value match {
     case obj: Object => {
       memoryCache.put(key, obj)
-      LTSVLogger.trace("Key set in local cache" -> key, "to" -> obj.toString, "for" -> localCacheDuration.toString)
+      LTSVLogger.trace(
+        "Key set in local cache" -> key,
+        "to" -> obj.toString,
+        "for" -> localCacheDuration.toString
+      )
     }
     case _ =>
   }

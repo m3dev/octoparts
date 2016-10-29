@@ -21,7 +21,12 @@ import scala.util.control.NonFatal
  * @param underlying the underlying raw cache
  * @param keyGen the key generator
  */
-class MemcachedCache(underlying: RawCache, keyGen: MemcachedKeyGenerator)(implicit executionContext: ExecutionContext, zipkinService: ZipkinServiceLike)
+class MemcachedCache(
+  underlying: RawCache,
+  keyGen: MemcachedKeyGenerator
+)(implicit
+  executionContext: ExecutionContext,
+  zipkinService: ZipkinServiceLike)
     extends Cache {
 
   import com.beachape.zipkin.FutureEnrichment._
@@ -35,17 +40,28 @@ class MemcachedCache(underlying: RawCache, keyGen: MemcachedKeyGenerator)(implic
 
   private def serializeKey(key: CacheKey) = keyGen.toMemcachedKey(key)
 
-  def get[T](key: CacheKey)(implicit codec: Codec[T], parentSpan: Span): Future[Option[T]] = {
+  def get[T](
+    key: CacheKey
+  )(implicit codec: Codec[T], parentSpan: Span): Future[Option[T]] = {
     try {
-      underlying.get[T](serializeKey(key)).recoverWith {
-        case NonFatal(err) => throw new CacheException(key, err)
-      }.trace("memcached-get", "key" -> StringUtils.abbreviate(key.toString, 150))
+      underlying.get[T](serializeKey(key))
+        .recoverWith {
+          case NonFatal(err) => throw new CacheException(key, err)
+        }
+        .trace(
+          "memcached-get",
+          "key" -> StringUtils.abbreviate(key.toString, 150)
+        )
     } catch {
       case NonFatal(e) => Future.failed(e)
     }
   }
 
-  def put[T](key: CacheKey, v: T, ttl: Option[Duration])(implicit codec: Codec[T], parentSpan: Span): Future[Unit] = {
+  def put[T](
+    key: CacheKey,
+    v: T,
+    ttl: Option[Duration]
+  )(implicit codec: Codec[T], parentSpan: Span): Future[Unit] = {
     try {
       ttl match {
         case Some(duration) if duration < 1.second =>
@@ -54,12 +70,22 @@ class MemcachedCache(underlying: RawCache, keyGen: MemcachedKeyGenerator)(implic
            *  - there is no point, as the element has already expired, or will do very soon
            *  - The TTL will get rounded down to 0, which Memcached treats as meaning "infinite". This is the exact opposite to what we want.
            */
-          LTSVLogger.debug("message" -> "Skipping cache PUT because ttl is less than 1 second", "key" -> key.toString, "ttl" -> duration.toString)
+          LTSVLogger.debug(
+            "message" -> "Skipping cache PUT because ttl is less than 1 second",
+            "key" -> key.toString,
+            "ttl" -> duration.toString
+          )
           Future.successful(())
         case _ =>
-          underlying.set[T](serializeKey(key), v, ttl.getOrElse(VERY_LONG_TTL)).recoverWith {
-            case NonFatal(err) => throw new CacheException(key, err)
-          }.trace("memcached-set", "key" -> StringUtils.abbreviate(key.toString, 150), "value" -> StringUtils.abbreviate(v.toString, 150))
+          underlying.set[T](serializeKey(key), v, ttl.getOrElse(VERY_LONG_TTL))
+            .recoverWith {
+              case NonFatal(err) => throw new CacheException(key, err)
+            }
+            .trace(
+              "memcached-set",
+              "key" -> StringUtils.abbreviate(key.toString, 150),
+              "value" -> StringUtils.abbreviate(v.toString, 150)
+            )
       }
     } catch {
       case NonFatal(e) => Future.failed(e)

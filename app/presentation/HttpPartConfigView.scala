@@ -52,7 +52,9 @@ case class HttpPartConfigView(config: HttpPartConfig)(implicit messages: Message
 
   def deprecation: Html = config.deprecatedInFavourOf match {
     case Some(s) if s.length() > 0 =>
-      Html(Messages("parts.deprecation.seeOther", s"""<a href="${controllers.routes.AdminController.showPart(s).url}">$s</a>"""))
+      Html(Messages(
+        "parts.deprecation.seeOther", s"""<a href="${controllers.routes.AdminController.showPart(s).url}">$s</a>"""
+      ))
     case _ => Html(Messages("parts.deprecation.none"))
   }
 

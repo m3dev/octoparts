@@ -17,7 +17,9 @@ import scala.util.Try
 /**
  * Custom HttpResponseHandler that returns a [[HttpResponse]] case class
  */
-class HttpResponseHandler(defaultEncoding: Charset) extends ResponseHandler[HttpResponse] {
+class HttpResponseHandler(
+    defaultEncoding: Charset
+) extends ResponseHandler[HttpResponse] {
   /**
    * Given a HttpResponse from the Apache HttpClient lib, returns our nice
    * HttpResponse case class
@@ -104,4 +106,3 @@ class HttpResponseHandler(defaultEncoding: Charset) extends ResponseHandler[Http
     CacheControl(noStore, noCache, expiresAt, etag, lastModified)
   }
 }
-
