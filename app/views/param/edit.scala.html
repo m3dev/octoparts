@@ -1,7 +1,13 @@
-@(form: Form[controllers.AdminForms.ParamData],
-        partId: String,
-        cacheGroups: scala.collection.SortedSet[com.m3.octoparts.model.config.CacheGroup],
-        maybeParam: Option[presentation.ParamView])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, messages: Messages)
+@(
+  form: Form[controllers.AdminForms.ParamData],
+  partId: String,
+  cacheGroups: scala.collection.SortedSet[com.m3.octoparts.model.config.CacheGroup],
+  maybeParam: Option[presentation.ParamView]
+)(implicit
+  flash: Flash,
+  navbarLinks: presentation.NavbarLinks,
+  messages: Messages
+)
 
 @title = @{
     maybeParam match {

@@ -1,7 +1,13 @@
-@(form: Form[controllers.AdminForms.PartData],
+@(
+  form: Form[controllers.AdminForms.PartData],
   threadPoolConfigs: scala.collection.SortedSet[com.m3.octoparts.model.config.ThreadPoolConfig],
   cacheGroups: scala.collection.SortedSet[com.m3.octoparts.model.config.CacheGroup],
-  maybePart: Option[com.m3.octoparts.model.config.HttpPartConfig])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, messages: Messages)
+  maybePart: Option[com.m3.octoparts.model.config.HttpPartConfig]
+)(implicit
+  flash: Flash,
+  navbarLinks: presentation.NavbarLinks,
+  messages: Messages
+)
 
 @* Override the default field constructor and use our simple one instead *@
 @implicitField = @{ helper.FieldConstructor(simplefield.apply) }
