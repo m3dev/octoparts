@@ -11,7 +11,7 @@ def nonPlayProject(projectName: String)(baseFile: String = projectName): Project
     id = projectName,
     base = file(baseFile),
     settings = nonPlayAppSettings
-  ).settings(name := projectName)
+  ).settings(name := projectName).settings(Scalariform.settings)
 }
 
 // -------------------------------------------------------
