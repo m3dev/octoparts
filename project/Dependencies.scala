@@ -14,16 +14,17 @@ object Dependencies {
   }
 
   val thePlayVersion = play.core.PlayVersion.current
-  val slf4jVersion = "1.7.10"
-  val hystrixVersion = "1.4.23"
-  val httpClientVersion = "4.5.1"
-  val scalikejdbcVersion = "2.3.0"
-  val swaggerVersion = "1.3.12"
-  val jacksonVersion = "2.5.1"
-  val macwireVersion = "2.2.1"
+  val slf4jVersion = "1.7.21"
+  val hystrixVersion = "1.4.26"
+  val httpClientVersion = "4.5.2"
+  val scalikejdbcVersion = "2.4.2"
+  val swaggerVersion = "1.3.13"
+  val jacksonVersion = "2.5.5"
+  val jacksonScalaVersion = "2.5.2"
+  val macwireVersion = "2.2.5"
 
   // Logging
-  val logbackClassic      = "ch.qos.logback"            % "logback-classic"               % "1.1.3"
+  val logbackClassic      = "ch.qos.logback"            % "logback-classic"               % "1.1.7"
   val slf4jApi            = "org.slf4j"                 % "slf4j-api"                     % slf4jVersion
   val jclOverSlf4j        = "org.slf4j"                 % "jcl-over-slf4j"                % slf4jVersion
   val log4jOverSlf4j      = "org.slf4j"                 % "log4j-over-slf4j"              % slf4jVersion
@@ -44,18 +45,25 @@ object Dependencies {
   val metricsHttpClient   = "io.dropwizard.metrics"     % "metrics-httpclient"            % "3.1.2"
 
   // DB
-  val postgres            = "org.postgresql"            % "postgresql"                    % "9.4-1201-jdbc41"   % Runtime
-  val skinnyOrm           = "org.skinny-framework"      %% "skinny-orm"                   % "2.0.1"
+  val postgres            = "org.postgresql"            % "postgresql"                    % "9.4.1211"          % Runtime
+  val skinnyOrm           = "org.skinny-framework"      %% "skinny-orm"                   % "2.2.0"             excludeAll(
+    // excluding to avoid upgrading flyway version
+    // skinny's db migration module is not used at all in this project
+    ExclusionRule(organization = "org.flywaydb", name = "flyway-core")
+  )
   val scalikeJdbc         = "org.scalikejdbc"           %% "scalikejdbc"                  % scalikejdbcVersion
   val scalikeJdbcConfig   = "org.scalikejdbc"           %% "scalikejdbc-config"           % scalikejdbcVersion
-  val scalikeJdbcPlay     = "org.scalikejdbc"           %% "scalikejdbc-play-initializer" % "2.4.3"
+  val scalikeJdbcPlay     = "org.scalikejdbc"           %% "scalikejdbc-play-initializer" % "2.4.5"
   val dbcp2               = "org.apache.commons"        % "commons-dbcp2"                 % "2.1.1"
+  // TODO: flyway 4.0 migration
+  val flyway              = "org.flywaydb"              % "flyway-core"                   % "3.1"
 
   // Memcached
-  val shade               = "com.bionicspirit"          %% "shade"                        % "1.7.2"
+  val shade               = "com.bionicspirit"          %% "shade"                        % "1.7.4"
 
   // Play plugins
-  val playFlyway          = "org.flywaydb"              %% "flyway-play"                  % "2.2.0"
+  // TODO: flyway-play 2.3.0+ bumps flyway-core to 4.0
+  val playFlyway          = "org.flywaydb"              %% "flyway-play"                  % "2.2.1"
   val providedPlay        = "com.typesafe.play"         %% "play"                         % thePlayVersion      % Provided
 
   // DI
@@ -67,24 +75,25 @@ object Dependencies {
 
   // Jackson
   val jacksonCore         = "com.fasterxml.jackson.core"   % "jackson-core"               % jacksonVersion
-  val jacksonScala        = "com.fasterxml.jackson.module" %% "jackson-module-scala"      % jacksonVersion
+  val jacksonScala        = "com.fasterxml.jackson.module" %% "jackson-module-scala"      % jacksonScalaVersion
   val jacksonDatabind     = "com.fasterxml.jackson.core"   % "jackson-databind"           % jacksonVersion
 
   // Test
   val playTest            = "com.typesafe.play"         %% "play-test"                    % thePlayVersion      % Test
+  // TODO: Upgrading to 3.0
   val scalatest           = "org.scalatest"             %% "scalatest"                    % "2.2.6"             % Test
-  val scalatestPlay       = "org.scalatestplus"         %% "play"                         % "1.4.0"            % Test
-  val scalacheck          = "org.scalacheck"            %% "scalacheck"                   % "1.12.2"            % Test
-  val groovy              = "org.codehaus.groovy"       %  "groovy"                       % "2.4.1"             % Test
+  val scalatestPlay       = "org.scalatestplus"         %% "play"                         % "1.4.0"             % Test
+  val scalacheck          = "org.scalacheck"            %% "scalacheck"                   % "1.12.5"            % Test
+  val groovy              = "org.codehaus.groovy"       %  "groovy"                       % "2.4.7"             % Test
   val scalikeJdbcTest     = "org.scalikejdbc"           %% "scalikejdbc-test"             % scalikejdbcVersion  % Test
   val mockitoCore         = "org.mockito"               % "mockito-core"                  % "1.10.19"           % Test
 
   // Misc utils
   val commonsValidator    = "commons-validator"         % "commons-validator"             % "1.4.1"             % Runtime
-  val guava               = "com.google.guava"          % "guava"                         % "18.0"
+  val guava               = "com.google.guava"          % "guava"                         % "20.0"
   val jta                 = "javax.transaction"         % "jta"                           % "1.1"
-  val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.6"
-  val findbugs            = "com.google.code.findbugs"  % "jsr305"                        % "3.0.0"
+  val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.16"
+  val findbugs            = "com.google.code.findbugs"  % "jsr305"                        % "3.0.1"
 
   val kenshoo             = "com.kenshoo"               %% "metrics-play"                 % "2.4.0_0.4.1"
 
