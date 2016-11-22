@@ -8,7 +8,9 @@ import skinny.{ ParamType => SkinnyParamType }
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with TimestampsFeature[HystrixConfig] {
+object HystrixConfigRepository
+    extends ConfigMapper[HystrixConfig]
+    with TimestampsFeature[HystrixConfig] {
 
   override lazy val defaultAlias = createAlias("hystrix_config")
 
@@ -26,7 +28,8 @@ object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with Timestam
   // #byDefault is used for now in case we ever need to refer back to the HttpPartConfig
   // to which this HystrixConfig belongs
   lazy val httpPartConfigOpt = belongsToWithFk[HttpPartConfig](
-    HttpPartConfigRepository, "httpPartConfigId", (hc, mbHpc) => hc.copy(httpPartConfig = mbHpc))
+    HttpPartConfigRepository, "httpPartConfigId", (hc, mbHpc) => hc.copy(httpPartConfig = mbHpc)
+  )
 
   /*
     #byDefault should always be used here because we need to be able to eager load the thread
@@ -34,14 +37,17 @@ object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with Timestam
   */
   lazy val threadConfigOpt = {
     belongsToWithFk[ThreadPoolConfig](
-      ThreadPoolConfigRepository, "threadPoolConfigId", (h, c) => h.copy(threadPoolConfig = c)
-    ).includes[ThreadPoolConfig](merge = (hystrixConfigs, threadConfigs) =>
-        hystrixConfigs.map { h =>
-          threadConfigs.collectFirst {
-            case tpc if h.threadPoolConfigId == tpc.id => h.copy(threadPoolConfig = Some(tpc))
-          }.getOrElse(h)
-        }
-      )
+      right = ThreadPoolConfigRepository,
+      fk = "threadPoolConfigId",
+      merge = (h, c) => h.copy(threadPoolConfig = c)
+    ).includes[ThreadPoolConfig] { (hystrixConfigs, threadConfigs) =>
+      hystrixConfigs.map { h =>
+        threadConfigs.collectFirst {
+          case tpc if h.threadPoolConfigId == tpc.id =>
+            h.copy(threadPoolConfig = Some(tpc))
+        }.getOrElse(h)
+      }
+    }
   }
 
   // initializes the default references
@@ -59,5 +65,6 @@ object HystrixConfigRepository extends ConfigMapper[HystrixConfig] with Timestam
     timeout = rs.long(n.timeout).millis,
     localContentsAsFallback = rs.get(n.localContentsAsFallback),
     createdAt = rs.get(n.createdAt),
-    updatedAt = rs.get(n.updatedAt))
+    updatedAt = rs.get(n.updatedAt)
+  )
 }

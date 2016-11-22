@@ -7,7 +7,9 @@ import play.api.Logger
  * Helper for outputting Hystrix metrics logs in LTSV format.
  * These logs are written to a separate log file for tailing by fluentd.
  */
-object HystrixMetricsLogger extends HystrixCommandMetricsRepository with LTSVLoggerLike {
+object HystrixMetricsLogger
+    extends HystrixCommandMetricsRepository
+    with LTSVLoggerLike {
 
   val underlyingLogger = Logger("HystrixMetrics").underlyingLogger
 
@@ -41,7 +43,8 @@ object HystrixMetricsLogger extends HystrixCommandMetricsRepository with LTSVLog
     execTimeMsMedian: Int,
     execTimeMs95: Int,
     execTimeMs99: Int,
-    execTimeMs998: Int): Unit = {
+    execTimeMs998: Int
+  ): Unit = {
 
     info(
       "commandName" -> commandName,

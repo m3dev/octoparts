@@ -39,10 +39,12 @@ class AdminFormsSpec extends FunSpec with Matchers with ConfigDataMocks {
         interval = None,
         absoluteThreshold = None,
         percentThreshold = None,
-        recipients = None),
+        recipients = None
+      ),
       localContentsConfig = LocalContentsConfig(
         enabled = false,
-        contents = None)
+        contents = None
+      )
     )
 
     describe("#toNewHttpPartConfig") {

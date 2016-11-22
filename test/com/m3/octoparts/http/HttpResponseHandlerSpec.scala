@@ -29,7 +29,8 @@ class HttpResponseHandlerSpec extends FunSpec with Matchers with BeforeAndAfter 
     }
     for (body <- httpResp.body) {
       response.setEntity(
-        new ByteArrayEntity(body.getBytes(StandardCharsets.UTF_8), ContentType.create(mimeType, charset)))
+        new ByteArrayEntity(body.getBytes(StandardCharsets.UTF_8), ContentType.create(mimeType, charset))
+      )
     }
 
     for (cookie <- httpResp.cookies) {
@@ -41,7 +42,8 @@ class HttpResponseHandlerSpec extends FunSpec with Matchers with BeforeAndAfter 
 
   val headers = Seq(
     ("header1", "value1"),
-    ("header2", "value2"))
+    ("header2", "value2")
+  )
   val cookie1 = Cookie("session1", "something", true, true, true, -1, None, None)
 
   after {
@@ -62,7 +64,8 @@ class HttpResponseHandlerSpec extends FunSpec with Matchers with BeforeAndAfter 
     val response = buildApacheResponse(
       HttpResponse(HttpStatus.SC_OK, "OK", headers = headers, body = Some("hello world")),
       "application/json",
-      "UTF-8")
+      "UTF-8"
+    )
     it("should return all the headers") {
       handler.handleResponse(response).headers should be(headers)
     }
@@ -79,7 +82,8 @@ class HttpResponseHandlerSpec extends FunSpec with Matchers with BeforeAndAfter 
       val withNullCharset = buildApacheResponse(
         HttpResponse(HttpStatus.SC_OK, "OK", headers = headers, body = Some("hello world")),
         "application/json",
-        null)
+        null
+      )
       handler.handleResponse(withNullCharset).charset should be(None)
     }
 

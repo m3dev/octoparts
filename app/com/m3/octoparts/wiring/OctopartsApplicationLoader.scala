@@ -4,7 +4,9 @@ import com.m3.octoparts.wiring.assembling.{ ApplicationComponents, BeforeStartup
 import play.api.ApplicationLoader.Context
 import play.api._
 
-class OctopartsApplicationLoader extends ApplicationLoader with BeforeStartupSupport {
+class OctopartsApplicationLoader
+    extends ApplicationLoader
+    with BeforeStartupSupport {
 
   def load(context: Context): Application = {
     val appComponents = components(context)

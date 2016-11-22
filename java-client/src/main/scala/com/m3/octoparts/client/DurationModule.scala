@@ -15,9 +15,11 @@ private[client] trait DurationModule extends JacksonModule {
 
   private object DurationSerializerResolver extends Serializers.Base {
 
-    override def findSerializer(config: SerializationConfig,
-                                javaType: JavaType,
-                                beanDescription: BeanDescription): JsonSerializer[_] = {
+    override def findSerializer(
+      config: SerializationConfig,
+      javaType: JavaType,
+      beanDescription: BeanDescription
+    ): JsonSerializer[_] = {
 
       if (classOf[Duration].isAssignableFrom(javaType.getRawClass)) {
         DurationSerializer
@@ -35,9 +37,11 @@ private[client] trait DurationModule extends JacksonModule {
 
   private object DurationDeserializerResolver extends Deserializers.Base {
 
-    override def findBeanDeserializer(javaType: JavaType,
-                                      config: DeserializationConfig,
-                                      beanDesc: BeanDescription) = {
+    override def findBeanDeserializer(
+      javaType: JavaType,
+      config: DeserializationConfig,
+      beanDesc: BeanDescription
+    ) = {
 
       if (classOf[Duration].isAssignableFrom(javaType.getRawClass)) {
         new DurationDeserializer(javaType)

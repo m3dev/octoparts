@@ -7,8 +7,10 @@ import com.m3.octoparts.model.config.HttpPartConfig
 
 import scala.concurrent.ExecutionContext
 
-class SimpleHttpHandlerFactory(httpClientPool: HttpClientPool, implicit val zipkinService: ZipkinServiceLike)(
-    implicit executionContext: ExecutionContext) extends HttpHandlerFactory {
+class SimpleHttpHandlerFactory(
+    httpClientPool: HttpClientPool,
+    implicit val zipkinService: ZipkinServiceLike
+)(implicit executionContext: ExecutionContext) extends HttpHandlerFactory {
 
   def makeHandler(config: HttpPartConfig) = {
     // Get or create the HTTP client corresponding to this partId

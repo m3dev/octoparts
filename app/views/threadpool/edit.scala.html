@@ -1,18 +1,23 @@
 @import com.m3.octoparts.model.config.ThreadPoolConfig
-@(maybeTpc: Option[com.m3.octoparts.model.config.ThreadPoolConfig])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, messages: Messages)
-
+@(
+  maybeTpc: Option[com.m3.octoparts.model.config.ThreadPoolConfig]
+)(implicit
+  flash: Flash,
+  navbarLinks: presentation.NavbarLinks,
+  messages: Messages
+)
 
 @title = @{
-    maybeTpc match {
-        case Some(tpc) => Messages("threadPools.edit", tpc.threadPoolKey)
-        case None => Messages("threadPools.create")
-    }
+  maybeTpc match {
+    case Some(tpc) => Messages("threadPools.edit", tpc.threadPoolKey)
+    case None => Messages("threadPools.create")
+  }
 }
 @postUrl = @{
-    maybeTpc match {
-        case Some(tpc) => controllers.routes.AdminController.updateThreadPool(tpc.id.get)
-        case None => controllers.routes.AdminController.createThreadPool
-    }
+  maybeTpc match {
+    case Some(tpc) => controllers.routes.AdminController.updateThreadPool(tpc.id.get)
+    case None => controllers.routes.AdminController.createThreadPool
+  }
 }
 
 @views.html.adminlayout(title) {

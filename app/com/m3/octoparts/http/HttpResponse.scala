@@ -28,4 +28,5 @@ case class HttpResponse(
   charset: Option[String] = None,
   cacheControl: CacheControl = CacheControl.NotSet,
   fromFallback: Boolean = false,
-  body: Option[String] = None)
+  body: Option[String] = None
+)

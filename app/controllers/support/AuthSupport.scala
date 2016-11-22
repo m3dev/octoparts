@@ -29,7 +29,10 @@ trait AuthSupport
       Action andThen autoAuthenticateRequest
     } { plugin =>
       // Perform authentication check, delegating to plugin if not authenticated
-      Action andThen authenticationCheckFilter(implicit req => plugin.onNotAuthenticated(req, routes.AuthController.callback(req.uri).absoluteURL()))
+      Action andThen
+        authenticationCheckFilter(
+          implicit req => plugin.onNotAuthenticated(req, routes.AuthController.callback(req.uri).absoluteURL())
+        )
     }
   }
 
@@ -44,7 +47,8 @@ trait AuthSupport
       AuthenticatedAction
     } { plugin =>
       // Ask plugin to do authorization check, delegating to plugin if not authenticated
-      AuthenticatedAction andThen authorizationCheckFilter(plugin.isAuthorized, plugin.onUnauthorized)
+      AuthenticatedAction andThen
+        authorizationCheckFilter(plugin.isAuthorized, plugin.onUnauthorized)
     }
   }
 

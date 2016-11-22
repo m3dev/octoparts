@@ -19,11 +19,13 @@ class HystrixExecutorSpec
 
   val noFallbackConfig = mockHttpPartConfig.copy(
     localContents = Some("9"),
-    hystrixConfig = Some(mockHystrixConfig.copy(timeout = 2.seconds)))
+    hystrixConfig = Some(mockHystrixConfig.copy(timeout = 2.seconds))
+  )
 
   val fallbackConfig = mockHttpPartConfig.copy(
     localContents = Some("9"),
-    hystrixConfig = Some(mockHystrixConfig.copy(localContentsAsFallback = true, timeout = 2.seconds)))
+    hystrixConfig = Some(mockHystrixConfig.copy(localContentsAsFallback = true, timeout = 2.seconds))
+  )
 
   describe("#future") {
     it("should return a Future[Result] that makes sense") {

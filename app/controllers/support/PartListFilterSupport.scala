@@ -15,4 +15,6 @@ trait PartListFilterSupport {
 
 }
 
-case class PartListFilter(@(ApiModelProperty @field)(required = true) ids: Seq[String])
+case class PartListFilter(
+  @(ApiModelProperty @field)(required = true) ids: Seq[String]
+)

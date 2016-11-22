@@ -16,7 +16,8 @@ case class CacheGroup(
   httpPartConfigs: SortedSet[HttpPartConfig] = SortedSet.empty,
   partParams: SortedSet[PartParam] = SortedSet.empty,
   createdAt: DateTime,
-  updatedAt: DateTime) extends ConfigModel[CacheGroup]
+  updatedAt: DateTime
+) extends ConfigModel[CacheGroup]
 
 object CacheGroup {
 

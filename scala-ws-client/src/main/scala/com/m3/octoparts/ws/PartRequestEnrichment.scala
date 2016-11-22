@@ -19,8 +19,12 @@ object PartRequestEnrichment {
      * the properly formatted body param [[PartRequestParam]] (key of body, and only one)
      */
     def withBody[A: Writeable](body: A): PartRequest = {
-      val bodyAsString = new String(implicitly[Writeable[A]].transform(body), StandardCharsets.UTF_8)
-      val paramsWithBody = partReq.params.filterNot(_.key == BodyParamKey) :+ PartRequestParam(BodyParamKey, bodyAsString)
+      val bodyAsString = new String(
+        implicitly[Writeable[A]].transform(body),
+        StandardCharsets.UTF_8
+      )
+      val paramsWithBody = partReq.params.filterNot(_.key == BodyParamKey) :+
+        PartRequestParam(BodyParamKey, bodyAsString)
       partReq.copy(params = paramsWithBody)
     }
 

@@ -21,7 +21,11 @@ trait SwaggerScanSupport {
    * Initiates Swagger
    */
   protected def initSwagger(components: ApplicationComponents): Unit = {
-    val scanner = new SwaggerScanner(components.router, components.application, components.applicationLifecycle)
+    val scanner = new SwaggerScanner(
+      components.router,
+      components.application,
+      components.applicationLifecycle
+    )
     scanner.scan()
   }
 
@@ -31,7 +35,11 @@ trait SwaggerScanSupport {
  * Ghetto version of [[pl.matisoft.swagger.SwaggerPluginProvider]] without dependence on
  * injection
  */
-class SwaggerScanner(router: Router, app: Application, lifecycle: ApplicationLifecycle) {
+class SwaggerScanner(
+    router: Router,
+    app: Application,
+    lifecycle: ApplicationLifecycle
+) {
 
   val logger = Logger("swagger")
 

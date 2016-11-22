@@ -14,7 +14,8 @@ case class PartParam(
   @(ApiModelProperty @field)(required = true) outputName: String,
   @(ApiModelProperty @field)(required = false, dataType = "string") description: Option[String],
   @(ApiModelProperty @field)(required = false, dataType = "string") inputNameOverride: Option[String],
-  cacheGroups: Set[CacheGroup])
+  cacheGroups: Set[CacheGroup]
+)
 
 object PartParam {
   implicit val order: Ordering[PartParam] = Ordering.by(pp => (pp.outputName, pp.paramType))

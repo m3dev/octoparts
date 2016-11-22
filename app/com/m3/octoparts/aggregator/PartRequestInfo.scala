@@ -11,7 +11,8 @@ import com.m3.octoparts.model.{ PartRequest, RequestMeta }
 case class PartRequestInfo(
     requestMeta: RequestMeta,
     partRequest: PartRequest,
-    noCache: Boolean = false) {
+    noCache: Boolean = false
+) {
 
   val partRequestId = partRequest.id.getOrElse(partRequest.partId)
 

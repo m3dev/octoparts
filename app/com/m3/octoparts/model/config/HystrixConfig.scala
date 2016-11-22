@@ -51,7 +51,8 @@ case class HystrixConfig(
     timeout: FiniteDuration = HystrixConfig.defaultTimeout,
     localContentsAsFallback: Boolean,
     createdAt: DateTime,
-    updatedAt: DateTime) extends ConfigModel[HystrixConfig] {
+    updatedAt: DateTime
+) extends ConfigModel[HystrixConfig] {
 
   /**
    * Method to use when we are sure we have a ThreadPoolConfig inside the

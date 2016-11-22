@@ -5,8 +5,8 @@ object Scalariform {
 
   val settings = scalariformSettings ++ Seq(
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
-      .setPreference(AlignParameters, true)
-      .setPreference(DoubleIndentClassDeclaration, true)
+      //.setPreference(AlignParameters, true)
+      //.setPreference(DoubleIndentClassDeclaration, true)
   )
 
 }

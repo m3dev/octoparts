@@ -6,7 +6,11 @@ import org.parboiled2._
 
 import scala.util.Try
 
-case class HttpProxySettings(scheme: String, host: String, port: Int) {
+case class HttpProxySettings(
+    scheme: String,
+    host: String,
+    port: Int
+) {
 
   import com.m3.octoparts.model.config.HttpProxySettings._
 
@@ -37,7 +41,9 @@ object HttpProxySettings {
    */
   def isValid(ser: String): Boolean = parse(ser).isSuccess
 
-  private class HttpProxySettingsParser(input: ParserInput) extends DefaultUriParser(input, UriConfig.default) {
+  private class HttpProxySettingsParser(
+      input: ParserInput
+  ) extends DefaultUriParser(input, UriConfig.default) {
     import HttpProxySettingsParser._
     import org.parboiled2._
 

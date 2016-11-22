@@ -5,7 +5,11 @@ import com.twitter.zipkin.gen.Span
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class VersionLookup[T](val versionCache: VersionCache[T])(implicit executionContext: ExecutionContext, parentSpan: Span) {
+class VersionLookup[T](
+    val versionCache: VersionCache[T]
+)(implicit
+  executionContext: ExecutionContext,
+    parentSpan: Span) {
 
   import com.m3.octoparts.cache.versioning.FutureUtil._
 
@@ -22,8 +26,7 @@ class VersionLookup[T](val versionCache: VersionCache[T])(implicit executionCont
 
   // version must be defined and matching the known one
   final def willMatch: Future[Boolean] = externalVersion.map {
-    version =>
-      version.fold(false)(internalVersion.contains)
+    version => version.fold(false)(internalVersion.contains)
   }
 
 }

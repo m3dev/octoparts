@@ -32,11 +32,15 @@ trait CacheOps {
    * @param f block to generate a value if one is not found in the cache
    * @return a Future of the value
    */
-  def putIfAbsent(directive: CacheDirective)(f: => Future[PartResponse])(implicit parentSpan: Span): Future[PartResponse]
+  def putIfAbsent(directive: CacheDirective)(
+    f: => Future[PartResponse]
+  )(implicit parentSpan: Span): Future[PartResponse]
 
   /**
    * Unconditional PUT of a PartResponse
    */
-  def saveLater(partResponse: PartResponse, directive: CacheDirective)(implicit parentSpan: Span): Future[Unit]
+  def saveLater(
+    partResponse: PartResponse,
+    directive: CacheDirective
+  )(implicit parentSpan: Span): Future[Unit]
 }
-

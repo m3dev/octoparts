@@ -8,7 +8,9 @@ import skinny.{ ParamType => SkinnyParamType }
 
 import scala.collection.SortedSet
 
-object PartParamRepository extends ConfigMapper[PartParam] with TimestampsFeature[PartParam] {
+object PartParamRepository
+    extends ConfigMapper[PartParam]
+    with TimestampsFeature[PartParam] {
 
   lazy val defaultAlias = createAlias("part_param")
 
@@ -56,11 +58,13 @@ object PartParamRepository extends ConfigMapper[PartParam] with TimestampsFeatur
     throughFk = "partParamId",
     manyFk = "cacheGroupId",
     merge = (param, cacheGroups) => param.copy(cacheGroups = cacheGroups.to[SortedSet])
-  ).includes[CacheGroup](
-      (params, cacheGroups) => params.map { param =>
-        param.copy(cacheGroups = cacheGroups.filter(_.partParams.exists(_.id == param.id)).to[SortedSet])
-      }
-    )
+  ).includes[CacheGroup] { (params, cacheGroups) =>
+    params.map { param =>
+      param.copy(
+        cacheGroups = cacheGroups.filter(_.partParams.exists(_.id == param.id)).to[SortedSet]
+      )
+    }
+  }
 
   // initializes the default references
   {

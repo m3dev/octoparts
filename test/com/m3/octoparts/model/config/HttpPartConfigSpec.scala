@@ -38,10 +38,12 @@ class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
           threadPoolConfig = json.ThreadPoolConfig(
             threadPoolKey = "testThreadPool",
             coreSize = 2,
-            queueSize = 256),
+            queueSize = 256
+          ),
           commandKey = "command",
           commandGroupKey = "GroupKey",
-          localContentsAsFallback = false),
+          localContentsAsFallback = false
+        ),
         additionalValidStatuses = Set(302),
         httpPoolSize = 5,
         httpConnectionTimeout = 1.second,
@@ -57,7 +59,8 @@ class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
             outputName = "userId",
             inputNameOverride = None,
             cacheGroups = Set.empty
-          )),
+          )
+        ),
         deprecatedInFavourOf = None,
         cacheGroups = Set(mockCacheGroup).map(CacheGroup.toJsonModel),
         cacheTtl = Some(60 seconds),
@@ -69,7 +72,8 @@ class HttpPartConfigSpec extends FunSpec with Matchers with ConfigDataMocks {
           alertMailRecipients = Some("l-chan@m3.com")
         ),
         localContentsEnabled = true,
-        localContents = Some("{}"))
+        localContents = Some("{}")
+      )
       jsonModel should be(expectedModel)
     }
 

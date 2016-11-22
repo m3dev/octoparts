@@ -7,8 +7,10 @@ import scala.concurrent.duration.Duration
  * This config can be combined with information about the parameters of an individual part request
  * in order to create a cache directive for the part request.
  */
-case class CacheConfig(ttl: Option[Duration] = None,
-                       versionedParams: Seq[String] = Nil) {
+case class CacheConfig(
+    ttl: Option[Duration] = None,
+    versionedParams: Seq[String] = Nil
+) {
   // caching is enabled if the TTL is not <= 0
   def cachingEnabled: Boolean = ttl.fold(true)(_.toSeconds > 0)
 }
@@ -16,4 +18,3 @@ case class CacheConfig(ttl: Option[Duration] = None,
 object CacheConfig {
   val NoCache = CacheConfig()
 }
-

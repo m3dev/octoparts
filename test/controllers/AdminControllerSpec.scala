@@ -56,37 +56,44 @@ class AdminControllerCompanionSpec extends FunSpec with Matchers with ConfigData
     it("should return false if nothing important was changed") {
       AdminController.shouldBustCache(
         mockHttpPartConfig,
-        mockHttpPartConfig.copy(alertMailsEnabled = !mockHttpPartConfig.alertMailsEnabled)) should be(false)
+        mockHttpPartConfig.copy(alertMailsEnabled = !mockHttpPartConfig.alertMailsEnabled)
+      ) should be(false)
     }
     it("should return true if URI was changed ") {
       AdminController.shouldBustCache(
         mockHttpPartConfig,
-        mockHttpPartConfig.copy(uriToInterpolate = s"${mockHttpPartConfig.uriToInterpolate}/whoa")) should be(true)
+        mockHttpPartConfig.copy(uriToInterpolate = s"${mockHttpPartConfig.uriToInterpolate}/whoa")
+      ) should be(true)
     }
     it("should return true if CacheTTL was changed to be shorter") {
       AdminController.shouldBustCache(
         mockHttpPartConfig.copy(cacheTtl = Some(3.second)),
-        mockHttpPartConfig.copy(cacheTtl = Some(2.second))) should be(true)
+        mockHttpPartConfig.copy(cacheTtl = Some(2.second))
+      ) should be(true)
     }
     it("should return true if CacheTTL was changed from None to Some(duration)") {
       AdminController.shouldBustCache(
         mockHttpPartConfig.copy(cacheTtl = None),
-        mockHttpPartConfig.copy(cacheTtl = Some(1.second))) should be(true)
+        mockHttpPartConfig.copy(cacheTtl = Some(1.second))
+      ) should be(true)
     }
     it("should return false if CacheTTL was changed to be longer") {
       AdminController.shouldBustCache(
         mockHttpPartConfig.copy(cacheTtl = Some(3.second)),
-        mockHttpPartConfig.copy(cacheTtl = Some(4.second))) should be(false)
+        mockHttpPartConfig.copy(cacheTtl = Some(4.second))
+      ) should be(false)
     }
     it("should return true if additionalValidStatuses was changed ") {
       AdminController.shouldBustCache(
         mockHttpPartConfig,
-        mockHttpPartConfig.copy(additionalValidStatuses = mockHttpPartConfig.additionalValidStatuses + 911)) should be(true)
+        mockHttpPartConfig.copy(additionalValidStatuses = mockHttpPartConfig.additionalValidStatuses + 911)
+      ) should be(true)
     }
     it("should return true if method was changed ") {
       AdminController.shouldBustCache(
         mockHttpPartConfig,
-        mockHttpPartConfig.copy(method = HttpMethod.values.filter(_ != mockHttpPartConfig.method).firstKey)) should be(true)
+        mockHttpPartConfig.copy(method = HttpMethod.values.filter(_ != mockHttpPartConfig.method).firstKey)
+      ) should be(true)
     }
   }
 
@@ -119,7 +126,8 @@ class AdminControllerSpec
       id = Some(3),
       hystrixConfig = Some(mockHystrixConfig.copy(
         threadPoolConfig = Some(mockThreadConfig),
-        threadPoolConfigId = mockThreadConfig.id))
+        threadPoolConfigId = mockThreadConfig.id
+      ))
     )
   }
 

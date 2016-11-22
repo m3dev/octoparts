@@ -12,7 +12,9 @@ import scala.util.{ Failure, Success, Try }
 
 object AggregateResponseEnrichment {
 
-  case class OctopartsException(partResponse: PartResponse) extends RuntimeException(partResponse.errors.mkString(SystemUtils.LINE_SEPARATOR))
+  case class OctopartsException(
+    partResponse: PartResponse
+  ) extends RuntimeException(partResponse.errors.mkString(SystemUtils.LINE_SEPARATOR))
 
   private val logger = Logger("com.m3.octoparts.AggregateResponseEnrichment")
 
@@ -21,7 +23,10 @@ object AggregateResponseEnrichment {
     /**
      * @return The partId and the request-specific id. Used to uniquely identify parts when printing messages.
      */
-    def fullId: String = if (part.id == part.partId) part.id else s"${part.partId} (${part.id})"
+    def fullId: String = {
+      if (part.id == part.partId) part.id
+      else s"${part.partId} (${part.id})"
+    }
 
     /**
      * @return [[PartResponse.contents]] only if there is some non-blank contents.
@@ -84,7 +89,9 @@ object AggregateResponseEnrichment {
   /**
    * Convenience methods to make it easier to work with [[AggregateResponse]]
    */
-  implicit class RichAggregateResponse(val aggResp: AggregateResponse) extends AnyVal {
+  implicit class RichAggregateResponse(
+      val aggResp: AggregateResponse
+  ) extends AnyVal {
 
     /**
      * Extracts the part with the given ID from the Octoparts response and deserializes its JSON content to an [[A]].
@@ -124,14 +131,19 @@ object AggregateResponseEnrichment {
         None
     }
 
-    def getJsonPartOrElse[A: Reads](id: String, default: => A): A = getJsonPart(id).getOrElse(default)
+    def getJsonPartOrElse[A: Reads](id: String, default: => A): A =
+      getJsonPart(id).getOrElse(default)
 
     /**
-     * Deserializes like [[tryJsonPart]], but will try instead to deserialize to an [[E]] if the part response contained errors
+     * Deserializes like [[tryJsonPart]],
+     * but will try instead to deserialize to an [[E]]
+     * if the part response contained errors
      * @tparam A
      * @tparam E
      */
-    def getJsonPartOrError[A: Reads, E: Reads](id: String): Either[Option[E], A] = tryFindPart(id) match {
+    def getJsonPartOrError[A: Reads, E: Reads](
+      id: String
+    ): Either[Option[E], A] = tryFindPart(id) match {
       case Failure(noPart) => {
         logger.warn("Could not retrieve object from response", noPart)
         Left(None)

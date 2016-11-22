@@ -11,7 +11,9 @@ object RichFutureWithTiming {
   /**
    * Enrichment for scala.concurrent.Future adding methods for measuring execution time.
    */
-  implicit class RichFutureWithTimingOps[A](val future: Future[A]) extends AnyVal {
+  implicit class RichFutureWithTimingOps[A](
+      val future: Future[A]
+  ) extends AnyVal {
 
     /**
      * Measures time (the `tapper` callback is called asynchronously)
@@ -44,4 +46,3 @@ object RichFutureWithTiming {
     }
   }
 }
-

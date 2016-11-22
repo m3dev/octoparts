@@ -1,4 +1,11 @@
-@(cacheGroup: com.m3.octoparts.model.config.CacheGroup)(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, messages: Messages)
+@(
+  cacheGroup: com.m3.octoparts.model.config.CacheGroup
+)(implicit
+  flash: Flash,
+  navbarLinks: presentation.NavbarLinks,
+  messages: Messages
+)
+
 @views.html.adminlayout(Messages("cacheGroups.detail")) {
 } {
     <h1>@Messages("cacheGroups.detail")</h1>

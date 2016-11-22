@@ -27,9 +27,11 @@ class PartResponseLocalContentSupportSpec extends FlatSpec
     override implicit def executionContext: ExecutionContext = global
     override def repository: ConfigsRepository = ???
     override def handlerFactory: HttpHandlerFactory = ???
-    override def processWithConfig(ci: HttpPartConfig,
-                                   partRequestInfo: PartRequestInfo,
-                                   params: Map[ShortPartParam, Seq[String]])(implicit parentSpan: Span): Future[PartResponse] = Future(partResponseFromSuper)
+    override def processWithConfig(
+      ci: HttpPartConfig,
+      partRequestInfo: PartRequestInfo,
+      params: Map[ShortPartParam, Seq[String]]
+    )(implicit parentSpan: Span): Future[PartResponse] = Future(partResponseFromSuper)
   }
 
   private val sut = new Super with PartResponseLocalContentSupport
@@ -67,7 +69,8 @@ class PartResponseLocalContentSupportSpec extends FlatSpec
     val fallbackConfig = mockHttpPartConfig.copy(
       localContentsEnabled = false,
       localContents = Some("""{ "hello": "lloyd" }"""),
-      hystrixConfig = Some(mockHystrixConfig.copy(localContentsAsFallback = true, timeout = 500.millis)))
+      hystrixConfig = Some(mockHystrixConfig.copy(localContentsAsFallback = true, timeout = 500.millis))
+    )
     val partRequestInfo = mockPartRequestInfo
     val params = Map.empty[ShortPartParam, Seq[String]]
 

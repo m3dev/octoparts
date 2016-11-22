@@ -4,7 +4,9 @@ import com.m3.octoparts.model.{ AggregateResponse, PartResponse, ResponseMeta }
 
 import scala.collection.convert.WrapAsJava
 
-private[client] case class DefaultResponseWrapper(aggregateResponse: AggregateResponse) extends ResponseWrapper {
+private[client] case class DefaultResponseWrapper(
+    aggregateResponse: AggregateResponse
+) extends ResponseWrapper {
 
   private def wrap(partResponse: Option[PartResponse]): PartResponseWrapper =
     partResponse.fold[PartResponseWrapper](EmptyPartResponseWrapper)(DefaultPartResponseWrapper.apply)

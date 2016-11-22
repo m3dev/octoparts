@@ -1,4 +1,10 @@
-@(maybeCacheGroup: Option[com.m3.octoparts.model.config.CacheGroup])(implicit flash: Flash, navbarLinks: presentation.NavbarLinks, messages: Messages)
+@(
+  maybeCacheGroup: Option[com.m3.octoparts.model.config.CacheGroup]
+)(implicit
+  flash: Flash,
+  navbarLinks: presentation.NavbarLinks,
+  messages: Messages
+)
 
 @title = @{
     maybeCacheGroup match {

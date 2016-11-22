@@ -28,10 +28,12 @@ import com.m3.octoparts.json.format.ConfigModel._ // For serdes of the models
  *                      will result in using the max of this parameter and the timeout on the request (if it exists)
  * @param extraWait Extra margin of wait time for timeouts. Defaults to 50 milliseconds.
  */
-class OctoClient(val client: WSClient,
-                 val baseUrl: String,
-                 protected val clientTimeout: FiniteDuration,
-                 protected val extraWait: FiniteDuration = 50.milliseconds) extends OctoClientLike {
+class OctoClient(
+    val client: WSClient,
+    val baseUrl: String,
+    protected val clientTimeout: FiniteDuration,
+    protected val extraWait: FiniteDuration = 50.milliseconds
+) extends OctoClientLike {
 
   protected def wsRequestFor(url: String, timeout: FiniteDuration) = {
     client.url(url).withRequestTimeout((timeout + extraWait).toMillis.toInt)

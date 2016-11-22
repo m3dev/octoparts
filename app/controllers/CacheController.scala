@@ -20,8 +20,10 @@ import scala.util.control.NonFatal
   produces = "text/plain",
   consumes = "application/json"
 )
-class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
-    extends Controller
+class CacheController(
+  cacheOps: CacheOps,
+  repository: ConfigsRepository
+) extends Controller
     with LoggingSupport
     with ReqHeaderToSpanImplicit {
 
@@ -35,9 +37,13 @@ class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
     httpMethod = "POST"
   )
   def invalidatePart(
-    @ApiParam(value = "The id of the endpoint that you wish to invalidate", required = true)@PathParam("partId") partId: String) = Action.async { implicit request =>
+    @ApiParam(value = "The id of the endpoint that you wish to invalidate", required = true)@PathParam("partId") partId: String
+  ) = Action.async { implicit request =>
     // TODO could check if part exists and return a 404 if not
-    debugRc("action" -> "invalidateAll", "partId" -> partId)
+    debugRc(
+      "action" -> "invalidateAll",
+      "partId" -> partId
+    )
     checkResult(cacheOps.increasePartVersion(partId))
   }
 
@@ -51,9 +57,15 @@ class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
   def invalidatePartParam(
     @ApiParam(value = "The id of the endpoint that you wish to invalidate", required = true)@PathParam("partId") partId: String,
     @ApiParam(value = "The parameter name that you wish to invalidate with", required = true)@PathParam("paramName") paramName: String,
-    @ApiParam(value = "The specific parameter value that you wish to invalidate by", required = true)@PathParam("paramValue") paramValue: String) = Action.async { implicit request =>
+    @ApiParam(value = "The specific parameter value that you wish to invalidate by", required = true)@PathParam("paramValue") paramValue: String
+  ) = Action.async { implicit request =>
     // TODO could check if part exists and return a 404 if not
-    debugRc("action" -> "invalidateAll", "partId" -> partId, "pname" -> paramName, "pvalue" -> paramValue)
+    debugRc(
+      "action" -> "invalidateAll",
+      "partId" -> partId,
+      "pname" -> paramName,
+      "pvalue" -> paramValue
+    )
     checkResult(cacheOps.increaseParamVersion(VersionedParamKey(partId, paramName, paramValue)))
   }
 
@@ -66,16 +78,23 @@ class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
   )
   @ApiResponses(Array(new ApiResponse(code = 404, message = "Cache group not found")))
   def invalidateCacheGroupParts(
-    @ApiParam(value = "The name of the CacheGroup that you wish to invalidate", required = true)@PathParam("cacheGroupName") cacheGroupName: String) = Action.async { implicit request =>
+    @ApiParam(value = "The name of the CacheGroup that you wish to invalidate", required = true)@PathParam("cacheGroupName") cacheGroupName: String
+  ) = Action.async { implicit request =>
     val fMaybeCacheGroup = repository.findCacheGroupByName(cacheGroupName)
-    fMaybeCacheGroup.flatMap[Result] { maybeCacheGroup =>
-      maybeCacheGroup.fold {
-        Future.successful(NotFound(s"CacheGroup $cacheGroupName not found"))
-      } { group =>
-        debugRc("action" -> "invalidateCacheGroupParts", "group" -> group.name)
-        invalidateGroupParts(group).map(renderInvalidated).recover(logAndRenderError("ERROR: " + _.toString))
+    fMaybeCacheGroup
+      .flatMap[Result] { maybeCacheGroup =>
+        maybeCacheGroup.fold {
+          Future.successful(NotFound(s"CacheGroup $cacheGroupName not found"))
+        } { group =>
+          debugRc(
+            "action" -> "invalidateCacheGroupParts",
+            "group" -> group.name
+          )
+          invalidateGroupParts(group)
+            .map(renderInvalidated)
+            .recover(logAndRenderError("ERROR: " + _.toString))
+        }
       }
-    }
   }
 
   @ApiOperation(
@@ -88,16 +107,24 @@ class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
   @ApiResponses(Array(new ApiResponse(code = 404, message = "Cache group not found")))
   def invalidateCacheGroupParam(
     @ApiParam(value = "The name of the CacheGroup that you wish to invalidate", required = true)@PathParam("cacheGroupName") cacheGroupName: String,
-    @ApiParam(value = "The specific parameter value that you wish to invalidate by", required = true)@PathParam("paramValue") paramValue: String) = Action.async { implicit request =>
+    @ApiParam(value = "The specific parameter value that you wish to invalidate by", required = true)@PathParam("paramValue") paramValue: String
+  ) = Action.async { implicit request =>
     val fMaybeCacheGroup = repository.findCacheGroupByName(cacheGroupName)
-    fMaybeCacheGroup.flatMap { maybeCacheGroup =>
-      maybeCacheGroup.fold {
-        Future.successful(NotFound(s"CacheGroup $cacheGroupName not found"))
-      } { group =>
-        debugRc("action" -> "invalidateCacheGroupParams", "group" -> group.name, "pvalue" -> paramValue)
-        invalidateGroupPartParams(group, paramValue).map(renderInvalidated).recover(logAndRenderError("ERROR: " + _.toString))
+    fMaybeCacheGroup
+      .flatMap { maybeCacheGroup =>
+        maybeCacheGroup.fold {
+          Future.successful(NotFound(s"CacheGroup $cacheGroupName not found"))
+        } { group =>
+          debugRc(
+            "action" -> "invalidateCacheGroupParams",
+            "group" -> group.name,
+            "pvalue" -> paramValue
+          )
+          invalidateGroupPartParams(group, paramValue)
+            .map(renderInvalidated)
+            .recover(logAndRenderError("ERROR: " + _.toString))
+        }
       }
-    }
   }
 
   private def checkResult(fu: Future[_])(implicit request: RequestHeader): Future[Result] = {
@@ -112,7 +139,9 @@ class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
     }
   }
 
-  private def logAndRenderError(render: Throwable => String)(implicit request: RequestHeader): PartialFunction[Throwable, Result] = {
+  private def logAndRenderError(
+    render: Throwable => String
+  )(implicit request: RequestHeader): PartialFunction[Throwable, Result] = {
     case NonFatal(err) =>
       errorRc(err)
       InternalServerError(render(err))
@@ -123,7 +152,10 @@ class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
    *
    * @return Future sequence of partParam names that were invalidated
    */
-  private def invalidateGroupPartParams(group: CacheGroup, paramValue: String)(implicit parentSpan: Span): Future[Seq[String]] = Future.sequence {
+  private def invalidateGroupPartParams(
+    group: CacheGroup,
+    paramValue: String
+  )(implicit parentSpan: Span): Future[Seq[String]] = Future.sequence {
     for {
       param <- group.partParams.toSeq
       partConfig <- param.httpPartConfig // Safe to assume at this point that they exist
@@ -138,7 +170,9 @@ class CacheController(cacheOps: CacheOps, repository: ConfigsRepository)
    * Invalidates the given group's parts
    * @return Future sequence of Part names that were invalidated
    */
-  private def invalidateGroupParts(group: CacheGroup)(implicit parentSpan: Span): Future[Seq[String]] = Future.sequence {
+  private def invalidateGroupParts(
+    group: CacheGroup
+  )(implicit parentSpan: Span): Future[Seq[String]] = Future.sequence {
     for {
       part <- group.httpPartConfigs.toSeq
     } yield {

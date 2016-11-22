@@ -14,11 +14,13 @@ import scala.concurrent.duration._
 
 object AdminForms {
 
-  case class AlertMailData(enabled: Boolean,
-                           interval: Option[Int],
-                           absoluteThreshold: Option[Int],
-                           percentThreshold: Option[BigDecimal],
-                           recipients: Option[String])
+  case class AlertMailData(
+    enabled: Boolean,
+    interval: Option[Int],
+    absoluteThreshold: Option[Int],
+    percentThreshold: Option[BigDecimal],
+    recipients: Option[String]
+  )
 
   case class PartData(
       partId: String,
@@ -29,11 +31,15 @@ object AdminForms {
       ttl: Option[Int],
       cacheGroupNames: Seq[String],
       alertMailData: AlertMailData,
-      localContentsConfig: LocalContentsConfig) {
+      localContentsConfig: LocalContentsConfig
+  ) {
     data =>
 
     /** Create a brand new HttpPartConfig using the data input into the form */
-    def toNewHttpPartConfig(owner: String, cacheGroups: SortedSet[CacheGroup]): HttpPartConfig = HttpPartConfig(
+    def toNewHttpPartConfig(
+      owner: String,
+      cacheGroups: SortedSet[CacheGroup]
+    ): HttpPartConfig = HttpPartConfig(
       partId = PartData.trimPartId(data.partId),
       owner = owner,
       description = data.description,
@@ -69,7 +75,10 @@ object AdminForms {
     )
 
     /** Update an existing HttpPartConfig using the data input into the form */
-    def toUpdatedHttpPartConfig(originalPart: HttpPartConfig, cacheGroups: SortedSet[CacheGroup]): HttpPartConfig = originalPart.copy(
+    def toUpdatedHttpPartConfig(
+      originalPart: HttpPartConfig,
+      cacheGroups: SortedSet[CacheGroup]
+    ): HttpPartConfig = originalPart.copy(
       partId = PartData.trimPartId(data.partId),
       description = data.description,
       uriToInterpolate = data.httpSettings.uri,
@@ -117,7 +126,8 @@ object AdminForms {
         httpConnectionTimeoutInMs = part.httpConnectionTimeout.toMillis.toInt,
         httpSocketTimeoutInMs = part.httpSocketTimeout.toMillis.toInt,
         httpDefaultEncoding = part.httpDefaultEncoding.name,
-        httpProxy = part.httpProxy),
+        httpProxy = part.httpProxy
+      ),
       hystrixConfig = HystrixConfigData(
         commandKey = part.hystrixConfigItem.commandKey,
         commandGroupKey = part.hystrixConfigItem.commandGroupKey,
@@ -136,13 +146,18 @@ object AdminForms {
       ),
       localContentsConfig = LocalContentsConfig(
         enabled = part.localContentsEnabled,
-        contents = part.localContents)
+        contents = part.localContents
+      )
     )
 
     private def trimPartId(original: String): String = {
       val trimmed = StringUtils.strip(original)
       if (trimmed != original) {
-        LTSVLogger.info("message" -> "Leading and trailing spaces were trimmed from partId", "before" -> s"'$original'", "after" -> s"'$trimmed'")
+        LTSVLogger.info(
+          "message" -> "Leading and trailing spaces were trimmed from partId",
+          "before" -> s"'$original'",
+          "after" -> s"'$trimmed'"
+        )
       }
       trimmed
     }
@@ -189,7 +204,8 @@ object AdminForms {
 
   case class LocalContentsConfig(
     enabled: Boolean,
-    contents: Option[String])
+    contents: Option[String]
+  )
 
   case class HttpConfigData(
     uri: String,
@@ -199,14 +215,16 @@ object AdminForms {
     httpConnectionTimeoutInMs: Int,
     httpSocketTimeoutInMs: Int,
     httpDefaultEncoding: String,
-    httpProxy: Option[String])
+    httpProxy: Option[String]
+  )
 
   case class HystrixConfigData(
     commandKey: String,
     commandGroupKey: String,
     timeoutInMs: Int,
     threadPoolConfigId: Long,
-    localContentsAsFallback: Boolean)
+    localContentsAsFallback: Boolean
+  )
 
   case class ParamData(
     outputName: String,
@@ -215,7 +233,8 @@ object AdminForms {
     paramType: String,
     required: Boolean,
     versioned: Boolean,
-    cacheGroupNames: Seq[String])
+    cacheGroupNames: Seq[String]
+  )
 
   val paramForm = Form(
     mapping(

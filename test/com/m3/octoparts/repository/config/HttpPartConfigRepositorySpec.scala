@@ -232,7 +232,8 @@ class HttpPartConfigRepositorySpec extends fixture.FunSpec with DBSuite with Mat
         commandGroupKey = "myCommandGroup",
         localContentsAsFallback = false,
         createdAt = DateTime.now,
-        updatedAt = DateTime.now)
+        updatedAt = DateTime.now
+      )
 
     /**
      * Compares two HttpPartConfigs.

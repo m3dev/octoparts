@@ -12,7 +12,7 @@ addSbtPlugin("org.scoverage" %% "sbt-scoverage" % "1.4.0")
 // to show transitive dependencies as a graph
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.7.5")
 // for code formatting
-addSbtPlugin("com.typesafe.sbt" % "sbt-scalariform" % "1.3.0")
+addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.6.0")
 // To check for outdated dependencies (run "sbt dependency-updates")
 addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.2.0")
 // Generate a BuildInfo class

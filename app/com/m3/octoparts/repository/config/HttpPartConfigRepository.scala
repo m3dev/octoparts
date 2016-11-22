@@ -91,7 +91,11 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
     on = (c, p) => sqls.eq(c.id, p.httpPartConfigId),
     // function to merge associations to main entity
     merge = (c, params) => c.copy(parameters = params.to[SortedSet])
-  ).includes[PartParam]((hs, params) => hs.map(h => h.copy(parameters = params.filter(_.httpPartConfigId == h.id).to[SortedSet])))
+  ).includes[PartParam] { (hs, params) =>
+    hs.map(h => h.copy(
+      parameters = params.filter(_.httpPartConfigId == h.id).to[SortedSet]
+    ))
+  }
 
   /*
     References the collection of CacheGroups that each HttpPartConfig has; note that you cannot
@@ -100,13 +104,14 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
 
     See https://github.com/skinny-framework/skinny-framework/commit/13a87c7a3f671c3c77535426ead117cf15e431a9
    */
-  lazy val cacheGroupsRef: HasManyAssociation[HttpPartConfig] = hasManyThrough[HttpPartConfigCacheGroup, CacheGroup](
-    through = HttpPartConfigCacheGroupRepository -> HttpPartConfigCacheGroupRepository.createAlias("httpPartTestGroupJoin"),
-    throughOn = (m1: Alias[HttpPartConfig], m2: Alias[HttpPartConfigCacheGroup]) => sqls.eq(m1.id, m2.httpPartConfigId),
-    many = CacheGroupRepository -> CacheGroupRepository.createAlias("cacheGroupJoin"),
-    on = (m1: Alias[HttpPartConfigCacheGroup], m2: Alias[CacheGroup]) => sqls.eq(m1.cacheGroupId, m2.id),
-    merge = (part, cacheGroups) => part.copy(cacheGroups = cacheGroups.to[SortedSet])
-  )
+  lazy val cacheGroupsRef: HasManyAssociation[HttpPartConfig] =
+    hasManyThrough[HttpPartConfigCacheGroup, CacheGroup](
+      through = HttpPartConfigCacheGroupRepository -> HttpPartConfigCacheGroupRepository.createAlias("httpPartTestGroupJoin"),
+      throughOn = (m1: Alias[HttpPartConfig], m2: Alias[HttpPartConfigCacheGroup]) => sqls.eq(m1.id, m2.httpPartConfigId),
+      many = CacheGroupRepository -> CacheGroupRepository.createAlias("cacheGroupJoin"),
+      on = (m1: Alias[HttpPartConfigCacheGroup], m2: Alias[CacheGroup]) => sqls.eq(m1.cacheGroupId, m2.id),
+      merge = (part, cacheGroups) => part.copy(cacheGroups = cacheGroups.to[SortedSet])
+    )
 
   /*
    This is the magic hasOne+includes definition that allows us to fetch a HttpPartConfig's HystrixConfig AND its
@@ -116,9 +121,13 @@ object HttpPartConfigRepository extends ConfigMapper[HttpPartConfig] with Timest
     right = HystrixConfigRepository,
     fk = "httpPartConfigId",
     merge = (c, hc) => c.copy(hystrixConfig = hc)
-  ).includes[HystrixConfig](
-      merge = (cs, hs) => cs.map { c => c.copy(hystrixConfig = hs.find(_.httpPartConfigId == c.id)) }
-    )
+  ).includes[HystrixConfig] { (cs, hs) =>
+    cs.map { c =>
+      c.copy(
+        hystrixConfig = hs.find(_.httpPartConfigId == c.id)
+      )
+    }
+  }
 
   // initializes the default references
   {

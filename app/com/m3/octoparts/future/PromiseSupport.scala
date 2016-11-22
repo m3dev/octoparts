@@ -24,7 +24,10 @@ trait PromiseSupport {
    * @param duration duration for the scheduled promise
    * @return a scheduled promise
    */
-  def timeout[A](message: => A, duration: scala.concurrent.duration.Duration)(implicit ec: ExecutionContext): Future[A] = {
+  def timeout[A](
+    message: => A,
+    duration: scala.concurrent.duration.Duration
+  )(implicit ec: ExecutionContext): Future[A] = {
     timeout(message, duration.toMillis)
   }
 
@@ -35,7 +38,11 @@ trait PromiseSupport {
    * @param duration duration for the scheduled promise
    * @return a scheduled promise
    */
-  def timeout[A](message: => A, duration: Long, unit: TimeUnit = TimeUnit.MILLISECONDS)(implicit ec: ExecutionContext): Future[A] = {
+  def timeout[A](
+    message: => A,
+    duration: Long,
+    unit: TimeUnit = TimeUnit.MILLISECONDS
+  )(implicit ec: ExecutionContext): Future[A] = {
     val p = SPromise[A]()
     actorSystem.scheduler.scheduleOnce(FiniteDuration(duration, unit)) {
       p.complete(Try(message))

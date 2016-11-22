@@ -4,6 +4,7 @@ import com.m3.octoparts.cache.versioning.LatestVersionCache.{ PartId, Version }
 import com.m3.octoparts.cache.versioning.{ LatestVersionCache, VersionedParamKey }
 
 object DummyLatestVersionCache extends LatestVersionCache {
+
   override def getPartVersion(partId: PartId) = None
 
   /**
@@ -16,5 +17,8 @@ object DummyLatestVersionCache extends LatestVersionCache {
   /**
    * Update the latest known cache version for a given param value
    */
-  override def updateParamVersion(versionedParamKey: VersionedParamKey, version: Version) = {}
+  override def updateParamVersion(
+    versionedParamKey: VersionedParamKey,
+    version: Version
+  ) = {}
 }

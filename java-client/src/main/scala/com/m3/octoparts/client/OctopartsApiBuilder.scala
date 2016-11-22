@@ -29,7 +29,11 @@ private[client] object OctopartsApiBuilder {
   Mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 }
 
-class OctopartsApiBuilder(@Nonnull apiRootUrl: String, @Nullable serviceId: String, @Nonnull asyncHttpClientConfig: AsyncHttpClientConfig) extends Closeable {
+class OctopartsApiBuilder(
+    @Nonnull apiRootUrl: String,
+    @Nullable serviceId: String,
+    @Nonnull asyncHttpClientConfig: AsyncHttpClientConfig
+) extends Closeable {
 
   import com.m3.octoparts.client.OctopartsApiBuilder._
 
@@ -37,8 +41,20 @@ class OctopartsApiBuilder(@Nonnull apiRootUrl: String, @Nullable serviceId: Stri
   private val cacheApiEndpointUrl = s"$octopartsApiEndpointUrl/cache"
   private val asyncHttpClient = new AsyncHttpClient(asyncHttpClientConfig)
 
-  def this(@Nonnull apiRootUrl: String, @Nullable serviceId: String) = this(apiRootUrl, serviceId,
-    new AsyncHttpClientConfig.Builder().setCompressionEnforced(true).setFollowRedirect(false).setAllowPoolingConnections(true).setMaxRequestRetry(0).build
+  def this(
+    @Nonnull apiRootUrl: String,
+    @Nullable serviceId: String
+  ) = this(
+    apiRootUrl,
+    serviceId,
+    {
+      new AsyncHttpClientConfig.Builder()
+        .setCompressionEnforced(true)
+        .setFollowRedirect(false)
+        .setAllowPoolingConnections(true)
+        .setMaxRequestRetry(0)
+        .build()
+    }
   )
 
   def close() = asyncHttpClient.close()
@@ -51,20 +67,39 @@ class OctopartsApiBuilder(@Nonnull apiRootUrl: String, @Nullable serviceId: Stri
    * @param requestUrl optional request URL
    * @param timeoutMs This value is enforced in the octoparts server.
    */
-  def newRequest(@Nullable userId: String, @Nullable sessionId: String, @Nullable userAgent: String, @Nullable requestUrl: String, @Nullable timeoutMs: java.lang.Long): RequestBuilder = {
-    val timeoutOpt = if (timeoutMs == null) None else Some(timeoutMs.longValue().millis)
-    val requestMeta = RequestMeta(UUID.randomUUID.toString, Option(serviceId), Option(userId), Option(sessionId), Option(requestUrl), Option(userAgent), timeoutOpt)
+  def newRequest(
+    @Nullable userId: String,
+    @Nullable sessionId: String,
+    @Nullable userAgent: String,
+    @Nullable requestUrl: String,
+    @Nullable timeoutMs: java.lang.Long
+  ): RequestBuilder = {
+    val timeoutOpt = {
+      if (timeoutMs == null) None
+      else Some(timeoutMs.longValue().millis)
+    }
+    val requestMeta = RequestMeta(
+      UUID.randomUUID.toString,
+      Option(serviceId),
+      Option(userId),
+      Option(sessionId),
+      Option(requestUrl),
+      Option(userAgent), timeoutOpt
+    )
     new RequestBuilder(requestMeta)
   }
 
-  @varargs private[client] def toHttp(aggregateRequest: AggregateRequest, additionalHeaders: (String, String)*) = {
+  @varargs private[client] def toHttp(
+    aggregateRequest: AggregateRequest,
+    additionalHeaders: (String, String)*
+  ) = {
     Log.debug(s"${aggregateRequest.requests.size} octoparts")
     val jsonContent = Mapper.writeValueAsBytes(aggregateRequest)
-    var requestBuilder = asyncHttpClient.
-      preparePost(octopartsApiEndpointUrl).
-      addHeader("Content-Type", "application/json;charset=UTF-8").
-      addHeader("Content-Length", jsonContent.length.toString).
-      setBody(jsonContent)
+    var requestBuilder = asyncHttpClient
+      .preparePost(octopartsApiEndpointUrl)
+      .addHeader("Content-Type", "application/json;charset=UTF-8")
+      .addHeader("Content-Length", jsonContent.length.toString)
+      .setBody(jsonContent)
     additionalHeaders.foreach {
       case (k, v) => requestBuilder = requestBuilder.addHeader(k, v)
     }
@@ -74,8 +109,14 @@ class OctopartsApiBuilder(@Nonnull apiRootUrl: String, @Nullable serviceId: Stri
   /**
    * Sends a request to the Octoparts server.
    */
-  @varargs def submit(@Nonnull aggregateRequest: AggregateRequest, additionalHeaders: (String, String)*): ListenableFuture[ResponseWrapper] = {
-    asyncHttpClient.executeRequest(toHttp(aggregateRequest, additionalHeaders: _*), new AggregateResponseExtractor(aggregateRequest))
+  @varargs def submit(
+    @Nonnull aggregateRequest: AggregateRequest,
+    additionalHeaders: (String, String)*
+  ): ListenableFuture[ResponseWrapper] = {
+    asyncHttpClient.executeRequest(
+      toHttp(aggregateRequest, additionalHeaders: _*),
+      new AggregateResponseExtractor(aggregateRequest)
+    )
   }
 
   /**
@@ -91,8 +132,17 @@ class OctopartsApiBuilder(@Nonnull apiRootUrl: String, @Nullable serviceId: Stri
    * Invalidates a region of the cache for a part.
    * If the part or the region does not exist, returns true anyways.
    */
-  @Nonnull def invalidateCacheFor(@Nonnull partId: String, @Nonnull parameterName: String, @Nullable parameterValue: String): ListenableFuture[java.lang.Boolean] = {
-    val uri = formatWithUriEscape("/invalidate/part/%s/%s/%s", partId, parameterName, parameterValue)
+  @Nonnull def invalidateCacheFor(
+    @Nonnull partId: String,
+    @Nonnull parameterName: String,
+    @Nullable parameterValue: String
+  ): ListenableFuture[java.lang.Boolean] = {
+    val uri = formatWithUriEscape(
+      "/invalidate/part/%s/%s/%s",
+      partId,
+      parameterName,
+      parameterValue
+    )
     sendCachePost(uri)
   }
 
@@ -109,23 +159,34 @@ class OctopartsApiBuilder(@Nonnull apiRootUrl: String, @Nullable serviceId: Stri
    * Invalidates a region for a group of caches
    * If the group does not exist, returns false.
    */
-  @Nonnull def invalidateCacheGroupFor(@Nonnull groupName: String, @Nullable parameterValue: String): ListenableFuture[java.lang.Boolean] = {
-    val uri = formatWithUriEscape("/invalidate/cacheGroup/%s/params/%s", groupName, parameterValue)
+  @Nonnull def invalidateCacheGroupFor(
+    @Nonnull groupName: String,
+    @Nullable parameterValue: String
+  ): ListenableFuture[java.lang.Boolean] = {
+    val uri = formatWithUriEscape(
+      "/invalidate/cacheGroup/%s/params/%s",
+      groupName,
+      parameterValue
+    )
     sendCachePost(uri)
   }
 
   /**
-   * @param partIds when specified, filters the endpoint list. Note: not specifying a filter will prevent Octoparts from using the part config cache.
+   * @param partIds when specified, filters the endpoint list.
+   * Note: not specifying a filter will prevent Octoparts from using the part config cache.
    */
-  @varargs @Nonnull def listEndpoints(@Nonnull partIds: String*): ListenableFuture[java.util.List[HttpPartConfig]] = {
+  @varargs @Nonnull def listEndpoints(
+    @Nonnull partIds: String*
+  ): ListenableFuture[java.util.List[HttpPartConfig]] = {
     import scala.collection.convert.Wrappers._
     val queryParams: java.util.Map[String, java.util.List[String]] = {
-      if (partIds.isEmpty) java.util.Collections.emptyMap() else MutableMapWrapper(scala.collection.mutable.Map("partIdParams" -> SeqWrapper(partIds)))
+      if (partIds.isEmpty) java.util.Collections.emptyMap()
+      else MutableMapWrapper(scala.collection.mutable.Map("partIdParams" -> SeqWrapper(partIds)))
     }
-    val request = asyncHttpClient.
-      prepareGet(s"$octopartsApiEndpointUrl/list").
-      setQueryParams(queryParams).
-      build
+    val request = asyncHttpClient
+      .prepareGet(s"$octopartsApiEndpointUrl/list")
+      .setQueryParams(queryParams)
+      .build()
     asyncHttpClient.executeRequest(request, EndpointListExtractor)
   }
 

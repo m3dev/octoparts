@@ -23,7 +23,10 @@ trait RequestParamSupport {
    *
    * @param partRequestInfo Part request info
    */
-  def combineParams(registeredParams: SortedSet[PartParam], partRequestInfo: PartRequestInfo): Map[ShortPartParam, Seq[String]] = {
+  def combineParams(
+    registeredParams: SortedSet[PartParam],
+    partRequestInfo: PartRequestInfo
+  ): Map[ShortPartParam, Seq[String]] = {
     val combinedParams = {
       val allParams = processMeta(partRequestInfo.requestMeta) ++ partRequestInfo.partRequest.params
       allParams.groupBy(_.key).mapValues(_.map(_.value))
@@ -46,7 +49,10 @@ trait RequestParamSupport {
     }).toMap
   }
 
-  private[service] def validateParams(registeredParams: Set[PartParam], mappedParams: Set[PartParam]): Unit = {
+  private[service] def validateParams(
+    registeredParams: Set[PartParam],
+    mappedParams: Set[PartParam]
+  ): Unit = {
     val missingRequiredParams = (registeredParams -- mappedParams).filter(_.required)
     if (missingRequiredParams.nonEmpty) {
       val missingParamsAsString = missingRequiredParams.map(_.inputName).mkString(", ")

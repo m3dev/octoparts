@@ -22,58 +22,125 @@ trait PartServiceErrorHandler extends LogUtil {
 
   def partRequestLogger: PartRequestLogger
 
-  private def logRejection(partRequestInfo: PartRequestInfo, aReqTimeout: Duration, message: String): PartResponse = {
+  private def logRejection(
+    partRequestInfo: PartRequestInfo,
+    aReqTimeout: Duration,
+    message: String
+  ): PartResponse = {
     val partId = partRequestInfo.partRequest.partId
     val requestMeta = partRequestInfo.requestMeta
-    LTSVLogger.warn("Part" -> partId, "Execution rejected" -> message)
+    LTSVLogger.warn(
+      "Part" -> partId,
+      "Execution rejected" -> message
+    )
     partRequestLogger.logTimeout(partId, requestMeta.id, requestMeta.serviceId, aReqTimeout.toMillis)
-    PartResponse(partId, partRequestInfo.partRequestId, errors = Seq(message))
+    PartResponse(
+      partId,
+      partRequestInfo.partRequestId,
+      errors = Seq(message)
+    )
   }
 
-  private def logTimeout(partRequestInfo: PartRequestInfo, aReqTimeout: Duration, message: String): PartResponse = {
+  private def logTimeout(
+    partRequestInfo: PartRequestInfo,
+    aReqTimeout: Duration,
+    message: String
+  ): PartResponse = {
     val partId = partRequestInfo.partRequest.partId
     val requestMeta = partRequestInfo.requestMeta
-    LTSVLogger.warn("Part" -> partId, "Timed out" -> aReqTimeout.toString)
+    LTSVLogger.warn(
+      "Part" -> partId,
+      "Timed out" -> aReqTimeout.toString
+    )
     partRequestLogger.logTimeout(partId, requestMeta.id, requestMeta.serviceId, aReqTimeout.toMillis)
-    PartResponse(partId, partRequestInfo.partRequestId, errors = Seq(message))
+    PartResponse(
+      partId,
+      partRequestInfo.partRequestId,
+      errors = Seq(message)
+    )
   }
 
-  private def logInvalid(partRequestInfo: PartRequestInfo, message: String): PartResponse = {
+  private def logInvalid(
+    partRequestInfo: PartRequestInfo,
+    message: String
+  ): PartResponse = {
     val partId = partRequestInfo.partRequest.partId
     val requestMeta = partRequestInfo.requestMeta
-    LTSVLogger.warn("Part" -> partId, "Invalid" -> message)
+    LTSVLogger.warn(
+      "Part" -> partId,
+      "Invalid" -> message
+    )
     partRequestLogger.logFailure(partId, requestMeta.id, requestMeta.serviceId, statusCode = None)
-    PartResponse(partId, partRequestInfo.partRequestId, errors = Seq(message))
+    PartResponse(
+      partId,
+      partRequestInfo.partRequestId,
+      errors = Seq(message)
+    )
   }
 
-  private def logShortCircuit(partRequestInfo: PartRequestInfo, message: String): PartResponse = {
+  private def logShortCircuit(
+    partRequestInfo: PartRequestInfo,
+    message: String
+  ): PartResponse = {
     val partId = partRequestInfo.partRequest.partId
     val requestMeta = partRequestInfo.requestMeta
-    LTSVLogger.warn("Part" -> partId, "Hystrix" -> message)
+    LTSVLogger.warn(
+      "Part" -> partId,
+      "Hystrix" -> message
+    )
     partRequestLogger.logFailure(partId, requestMeta.id, requestMeta.serviceId, statusCode = None)
-    PartResponse(partId, partRequestInfo.partRequestId, errors = Seq(message))
+    PartResponse(
+      partId,
+      partRequestInfo.partRequestId,
+      errors = Seq(message)
+    )
   }
 
-  private def logIOException(partRequestInfo: PartRequestInfo, io: Throwable) = {
+  private def logIOException(
+    partRequestInfo: PartRequestInfo,
+    io: IOException
+  ) = {
     val partId = partRequestInfo.partRequest.partId
     val requestMeta = partRequestInfo.requestMeta
-    LTSVLogger.warn(io, "Part" -> partId)
+    LTSVLogger.warn(
+      io,
+      "Part" -> partId
+    )
     partRequestLogger.logFailure(partId, requestMeta.id, requestMeta.serviceId, statusCode = None)
-    PartResponse(partId, partRequestInfo.partRequestId, errors = Seq(io.toString))
+    PartResponse(
+      partId,
+      partRequestInfo.partRequestId,
+      errors = Seq(io.toString)
+    )
   }
 
-  private def logOtherException(partRequestInfo: PartRequestInfo, err: Throwable) = {
+  private def logOtherException(
+    partRequestInfo: PartRequestInfo,
+    err: Throwable
+  ) = {
     val partId = partRequestInfo.partRequest.partId
     val requestMeta = partRequestInfo.requestMeta
-    LTSVLogger.error(err, "Part" -> partId)
+    LTSVLogger.error(
+      err,
+      "Part" -> partId
+    )
     partRequestLogger.logFailure(partId, requestMeta.id, requestMeta.serviceId, statusCode = None)
-    PartResponse(partId, partRequestInfo.partRequestId, errors = Seq(err.toString))
+    PartResponse(
+      partId,
+      partRequestInfo.partRequestId,
+      errors = Seq(err.toString)
+    )
   }
 
-  protected def recoverChain(partRequestInfo: PartRequestInfo, aReqTimeout: Duration, f: Future[PartResponse]): Future[PartResponse] = {
+  protected def recoverChain(
+    partRequestInfo: PartRequestInfo,
+    aReqTimeout: Duration,
+    f: Future[PartResponse]
+  ): Future[PartResponse] = {
     f.recoverWith {
       // unpile command exception
-      case hre: HystrixRuntimeException if Option(hre.getCause).exists(_ != hre) && hre.getFailureType == FailureType.COMMAND_EXCEPTION =>
+      case hre: HystrixRuntimeException if Option(hre.getCause).exists(_ != hre)
+        && hre.getFailureType == FailureType.COMMAND_EXCEPTION =>
         Future.failed(hre.getCause)
 
     }.recover {

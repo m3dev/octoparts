@@ -12,17 +12,27 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * An in-memory cache that can be used as a drop-in replacement for Memcached
  */
-class InMemoryRawCache(zipkinServiceFactory: => ZipkinServiceLike)(implicit executionContext: ExecutionContext) extends RawCache {
+class InMemoryRawCache(
+    zipkinServiceFactory: => ZipkinServiceLike
+)(implicit executionContext: ExecutionContext) extends RawCache {
 
   lazy implicit val zipkinService = zipkinServiceFactory
 
   private val impl = ShadeInMemoryCache(executionContext)
 
-  def get[T](key: String)(implicit codec: Codec[T], parentSpan: Span): Future[Option[T]] = Future {
+  def get[T](
+    key: String
+  )(implicit
+    codec: Codec[T],
+    parentSpan: Span): Future[Option[T]] = Future {
     impl.get(key)
   }
 
-  def set[T](key: String, value: T, exp: Duration)(implicit codec: Codec[T], parentSpan: Span): Future[Unit] = Future {
+  def set[T](
+    key: String,
+    value: T,
+    exp: Duration
+  )(implicit codec: Codec[T], parentSpan: Span): Future[Unit] = Future {
     impl.set(key, value, exp)
   }
 

@@ -33,8 +33,8 @@ class PartsController(
   requestTimeout: Duration,
   readClientCacheHeaders: Boolean,
   val actorSystem: ActorSystem,
-  implicit val zipkinService: ZipkinServiceLike)
-    extends Controller
+  implicit val zipkinService: ZipkinServiceLike
+) extends Controller
     with LoggingSupport
     with PartListFilterSupport
     with ReqHeaderToSpanImplicit
@@ -48,7 +48,8 @@ class PartsController(
     nickname = "Endpoints invocation",
     notes = "Send an AggregateRequest to invoke backend endpoints. Will respond with an AggregateResponse for you to sort through.",
     response = classOf[AggregateResponse],
-    httpMethod = "POST")
+    httpMethod = "POST"
+  )
   @ApiResponses(Array(new ApiResponse(code = 400, message = "Invalid input")))
   @ApiImplicitParams(Array(new ApiImplicitParam(
     value = "An AggregateRequest consisting of PartRequests that individually invoke a registered backend service once.",
@@ -58,18 +59,25 @@ class PartsController(
     name = "body"
   )))
   def retrieveParts = Action.async(BodyParsers.parse.json) { implicit request =>
-    request.body.validate[AggregateRequest].fold[Future[Result]](
-      errors => {
-        warnRc("Body" -> request.body.toString, "Errors" -> errors.toString)
-        Future.successful(BadRequest("Unrecognized request object"))
-      },
-      aggregateRequest => {
-        val noCache = readClientCacheHeaders && request.headers.get(HeaderConstants.CACHE_CONTROL).contains(HeaderConstants.CACHE_CONTROL_NO_CACHE)
-        logAggregateRequest(aggregateRequest, noCache)
-        val fAggregateResponse = partsService.processParts(aggregateRequest, noCache).trace("aggregate-response-processing")
-        withRequestTimeout(fAggregateResponse).trace("aggregate-response-processing-with-timeout")
-      }
-    )
+    request.body.validate[AggregateRequest]
+      .fold[Future[Result]](
+        errors => {
+          warnRc(
+            "Body" -> request.body.toString,
+            "Errors" -> errors.toString
+          )
+          Future.successful(BadRequest("Unrecognized request object"))
+        },
+        aggregateRequest => {
+          val noCache = readClientCacheHeaders &&
+            request.headers.get(HeaderConstants.CACHE_CONTROL).contains(HeaderConstants.CACHE_CONTROL_NO_CACHE)
+          logAggregateRequest(aggregateRequest, noCache)
+          val fAggregateResponse = partsService.processParts(aggregateRequest, noCache)
+            .trace("aggregate-response-processing")
+          withRequestTimeout(fAggregateResponse)
+            .trace("aggregate-response-processing-with-timeout")
+        }
+      )
   }
 
   @ApiOperation(
@@ -78,7 +86,8 @@ class PartsController(
     notes = "Returns a list of registered endpoints in the system.",
     response = classOf[HttpPartConfig],
     responseContainer = "List",
-    httpMethod = "GET")
+    httpMethod = "GET"
+  )
   def list(@ApiParam(value = "Optional part ids to filter on. Note, this should be passed as multiple partIdParams=partId, e.g ?partIdParams=wut&partIdParams=wut3 ", allowMultiple = true)@QueryParam("partIdParams") partIdParams: List[String] = Nil) =
     Action.async { implicit req =>
       retrieveParts(partIdParams)
@@ -90,7 +99,8 @@ class PartsController(
     notes = "Returns a list of registered endpoints in the system. Use this if you want to do filtering with so many IDs that you hit the URL limit of our server",
     response = classOf[HttpPartConfig],
     responseContainer = "List",
-    httpMethod = "POST")
+    httpMethod = "POST"
+  )
   @ApiImplicitParams(Array(new ApiImplicitParam(
     value = "An array of ids",
     required = true,
@@ -105,13 +115,17 @@ class PartsController(
     )
   }
 
-  private def logAggregateRequest(aggregateRequest: AggregateRequest, noCache: Boolean)(implicit request: RequestHeader): Unit = {
+  private def logAggregateRequest(
+    aggregateRequest: AggregateRequest,
+    noCache: Boolean
+  )(implicit request: RequestHeader): Unit = {
     val logData = Seq(
       "requestId" -> aggregateRequest.requestMeta.id,
       "noCache" -> noCache.toString,
       "timeoutMs" -> aggregateRequest.requestMeta.timeout.fold("default")(_.toMillis.toString),
       "requestUrl" -> aggregateRequest.requestMeta.requestUrl.getOrElse("unknown"),
-      "numParts" -> aggregateRequest.requests.size.toString)
+      "numParts" -> aggregateRequest.requests.size.toString
+    )
     if (underlyingLogger.isDebugEnabled) debugRc(logData: _*) else info(logData: _*)
   }
 
@@ -126,7 +140,13 @@ class PartsController(
     val fConfigs = ids match {
       case Nil => configsRepository.findAllConfigs().trace("find-all-configs")
       case partIds => {
-        val fParts = partIds.map(partId => configsRepository.findConfigByPartId(partId).trace("find-config-by-part-ids", "ids" -> partId))
+        val fParts = partIds.map { partId =>
+          configsRepository.findConfigByPartId(partId)
+            .trace(
+              "find-config-by-part-ids",
+              "ids" -> partId
+            )
+        }
         Future.sequence(fParts).map(_.flatten)
       }
     }

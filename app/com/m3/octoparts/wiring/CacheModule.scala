@@ -24,7 +24,8 @@ trait CacheModule extends UtilsModule {
     val queue: BlockingQueue[Runnable] = new ArrayBlockingQueue[Runnable](queueSize)
 
     ExecutionContext.fromExecutor(
-      new ThreadPoolExecutor(0, poolSize, 1L, TimeUnit.MINUTES, queue, namedThreadFactory))
+      new ThreadPoolExecutor(0, poolSize, 1L, TimeUnit.MINUTES, queue, namedThreadFactory)
+    )
   }
 
   lazy val latestVersionCache = {
@@ -58,7 +59,8 @@ trait CacheModule extends UtilsModule {
           protocol = Protocol.withName(protocol),
           authentication = auth,
           failureMode = FailureMode.Redistribute
-        ))(cacheExecutor)
+        )
+      )(cacheExecutor)
 
       new LoggingRawCache(new MemcachedRawCache(shade))(cacheExecutor)
     }
