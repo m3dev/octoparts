@@ -2,7 +2,6 @@ import com.typesafe.sbt.packager.Keys._
 
 import sbt.Keys._
 import sbt._
-import net.virtualvoid.sbt.graph.Plugin._
 import xerial.sbt.Sonatype._
 
 import play.sbt.Play.autoImport._
@@ -26,7 +25,6 @@ object Common {
       .withCachedResolution(true)
   ) ++
     Dependencies.resolverSettings ++
-    graphSettings ++
     compilerSettings ++
     ideSettings ++
     testSettings ++

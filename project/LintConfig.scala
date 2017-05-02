@@ -9,33 +9,29 @@ object LintConfig {
 
   val lintStuff: Seq[Def.Setting[_]] = Seq(
     doLint := lintEnv,
-    libraryDependencies <++= doLint(lintDependencies),
+    libraryDependencies ++= {
+      if (doLint.value) {
+        val scapegoat = "com.sksamuel.scapegoat" %% "scalac-scapegoat-plugin" % "0.94.6"
+        Seq(
+          compilerPlugin("org.psywerx.hairyfotr" %% "linter" % "0.1.17"),
+          scapegoat % Provided,
+          compilerPlugin(scapegoat)
+        )
+      } else Nil
+    },
     resolvers += "Linter Repository" at "https://hairyfotr.github.io/linteRepo/releases",
-    scalacOptions <++= (crossTarget in Compile, doLint)(lintScalacOptions) map identity
-  )
-
-  private def lintScalacOptions(crossTargetFile: File, lint: Boolean): Seq[String] = {
-    Seq("-Xlint") ++ (if (lint) Seq(
-      "-Ywarn-dead-code",
-      "-Ywarn-numeric-widen",
-      "-Ywarn-unused",
-      "-Ywarn-unused-import",
-      "-Ywarn-value-discard",
-      "-P:scapegoat:consoleOutput:true",
-      s"-P:scapegoat:dataDir:${crossTargetFile.getAbsolutePath}/scapegoat-report",
-      s"-P:scapegoat:ignoredFiles:.*\\${java.io.File.separator}target\\${java.io.File.separator}.*"
-    )
-    else Nil)
-  }
-
-  private def lintDependencies(lint: Boolean): Seq[ModuleID] = {
-    if (lint) {
-      val scapegoat = "com.sksamuel.scapegoat" %% "scalac-scapegoat-plugin" % "0.94.6"
-      Seq(
-        compilerPlugin("com.foursquare.lint" %% "linter" % "0.1-SNAPSHOT"),
-        scapegoat % Provided,
-        compilerPlugin(scapegoat)
-      )
-    } else Nil
-  }
+    scalacOptions += "-Xlint",
+    scalacOptions ++= {
+     if (doLint.value) Seq(
+       "-Ywarn-dead-code",
+       "-Ywarn-numeric-widen",
+       "-Ywarn-unused",
+       "-Ywarn-unused-import",
+       "-Ywarn-value-discard",
+       "-P:scapegoat:consoleOutput:true",
+       s"-P:scapegoat:dataDir:${(crossTarget in Compile).value.getAbsolutePath}/scapegoat-report",
+       s"-P:scapegoat:ignoredFiles:.*\\${java.io.File.separator}target\\${java.io.File.separator}.*"
+     )
+     else Nil
+    })
 }

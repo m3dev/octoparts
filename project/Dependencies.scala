@@ -14,17 +14,17 @@ object Dependencies {
   }
 
   val thePlayVersion = play.core.PlayVersion.current
-  val slf4jVersion = "1.7.21"
+  val slf4jVersion = "1.7.25"
   val hystrixVersion = "1.4.26"
   val httpClientVersion = "4.5.2"
-  val scalikejdbcVersion = "2.4.2"
+  val scalikejdbcVersion = "2.4.3"
   val swaggerVersion = "1.3.13"
   val jacksonVersion = "2.5.5"
   val jacksonScalaVersion = "2.5.2"
   val macwireVersion = "2.2.5"
 
   // Logging
-  val logbackClassic      = "ch.qos.logback"            % "logback-classic"               % "1.1.7"
+  val logbackClassic      = "ch.qos.logback"            % "logback-classic"               % "1.1.11"
   val slf4jApi            = "org.slf4j"                 % "slf4j-api"                     % slf4jVersion
   val jclOverSlf4j        = "org.slf4j"                 % "jcl-over-slf4j"                % slf4jVersion
   val log4jOverSlf4j      = "org.slf4j"                 % "log4j-over-slf4j"              % slf4jVersion
@@ -36,13 +36,13 @@ object Dependencies {
   // Hystrix
   val hystrixCore         = "com.netflix.hystrix"       % "hystrix-core"                  % hystrixVersion
   val hystrixStream       = "com.netflix.hystrix"       % "hystrix-metrics-event-stream"  % hystrixVersion
-  val rxJavaScala         = "io.reactivex"              %% "rxscala"                      % "0.26.0" // compatible with the rxjava (1.1.0) used in hystrix-core. Check again if you change.
+  val rxJavaScala         = "io.reactivex"              %% "rxscala"                      % "0.26.5" // compatible with the rxjava (1.1.0) used in hystrix-core. Check again if you change.
 
   // HTTP clients
   val asyncHttpClient     = "com.ning"                  % "async-http-client"             % "1.9.21" // not upgrading because play-ws uses this version
   val httpClient          = "org.apache.httpcomponents" % "httpclient"                    % httpClientVersion
   val httpClientCache     = "org.apache.httpcomponents" % "httpclient-cache"              % httpClientVersion
-  val metricsHttpClient   = "io.dropwizard.metrics"     % "metrics-httpclient"            % "3.1.2"
+  val metricsHttpClient   = "io.dropwizard.metrics"     % "metrics-httpclient"            % "3.1.4"
 
   // DB
   val postgres            = "org.postgresql"            % "postgresql"                    % "9.4.1211"          % Runtime
@@ -83,17 +83,17 @@ object Dependencies {
   // TODO: Upgrading to 3.0
   val scalatest           = "org.scalatest"             %% "scalatest"                    % "2.2.6"             % Test
   val scalatestPlay       = "org.scalatestplus"         %% "play"                         % "1.4.0"             % Test
-  val scalacheck          = "org.scalacheck"            %% "scalacheck"                   % "1.12.5"            % Test
+  val scalacheck          = "org.scalacheck"            %% "scalacheck"                   % "1.12.6"            % Test
   val groovy              = "org.codehaus.groovy"       %  "groovy"                       % "2.4.7"             % Test
   val scalikeJdbcTest     = "org.scalikejdbc"           %% "scalikejdbc-test"             % scalikejdbcVersion  % Test
   val mockitoCore         = "org.mockito"               % "mockito-core"                  % "1.10.19"           % Test
 
   // Misc utils
   val commonsValidator    = "commons-validator"         % "commons-validator"             % "1.4.1"             % Runtime
-  val guava               = "com.google.guava"          % "guava"                         % "20.0"
+  val guava               = "com.google.guava"          % "guava"                         % "21.0"
   val jta                 = "javax.transaction"         % "jta"                           % "1.1"
   val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.16"
-  val findbugs            = "com.google.code.findbugs"  % "jsr305"                        % "3.0.1"
+  val findbugs            = "com.google.code.findbugs"  % "jsr305"                        % "3.0.2"
 
   val kenshoo             = "com.kenshoo"               %% "metrics-play"                 % "2.4.0_0.4.1"
 

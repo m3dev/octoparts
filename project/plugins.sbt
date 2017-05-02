@@ -6,11 +6,11 @@ resolvers ++= Seq(
 
 // The Play plugin
 // TODO: upgrading to 2.5
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.4.8")
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.4.11")
 // scoverage for test coverage
 addSbtPlugin("org.scoverage" %% "sbt-scoverage" % "1.4.0")
 // to show transitive dependencies as a graph
-addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.7.5")
+addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.2")
 // for code formatting
 addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.6.0")
 // To check for outdated dependencies (run "sbt dependency-updates")
