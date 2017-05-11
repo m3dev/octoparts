@@ -1,8 +1,10 @@
 @import com.m3.octoparts.model.config.ThreadPoolConfig
+@import com.m3.octoparts.util.ConfigMode
 @(
   maybeTpc: Option[com.m3.octoparts.model.config.ThreadPoolConfig]
 )(implicit
   flash: Flash,
+  configMode: ConfigMode,
   navbarLinks: presentation.NavbarLinks,
   messages: Messages
 )

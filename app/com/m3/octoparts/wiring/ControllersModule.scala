@@ -1,6 +1,7 @@
 package com.m3.octoparts.wiring
 
 import com.kenshoo.play.metrics.MetricsController
+import com.m3.octoparts.util.ConfigMode
 import com.m3.octoparts.wiring.assembling.ApplicationComponents
 import controllers.hystrix.HystrixController
 import controllers.system._
@@ -11,6 +12,7 @@ import presentation.NavbarLinks
 
 import scala.concurrent.duration._
 import com.softwaremill.macwire._
+import controllers.support.HttpPartConfigChecks
 import play.api.mvc.ControllerComponents
 
 trait ControllersModule
@@ -21,6 +23,10 @@ trait ControllersModule
     with FiltersModule { this: ApplicationComponents.Essentials =>
 
   def controllerComponents: ControllerComponents
+
+  implicit lazy val configMode: ConfigMode = ConfigMode(configuration.get[String]("application.env"))
+
+  lazy val httpPartConfigChecks: HttpPartConfigChecks = new HttpPartConfigChecks(configMode)
 
   lazy val partsController = {
     val requestTimeout = typesafeConfig.getInt("timeouts.asyncRequestTimeout").millis

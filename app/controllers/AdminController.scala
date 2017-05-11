@@ -9,13 +9,14 @@ import com.m3.octoparts.cache.CacheOps
 import com.m3.octoparts.model.config._
 import com.m3.octoparts.model.config.json.{ HttpPartConfig => JsonHttpPartConfig }
 import com.m3.octoparts.repository.MutableConfigsRepository
+import com.m3.octoparts.util.ConfigMode
 import com.twitter.zipkin.gen.Span
-import controllers.support.{ AuthSupport, LoggingSupport }
+import controllers.support.{ AuthSupport, HttpPartConfigChecks, LoggingSupport }
 import org.joda.time.DateTime
 import play.api.Mode
 import play.api.data._
 import play.api.http.MediaType
-import play.api.i18n.{ I18nSupport, Messages, MessagesApi }
+import play.api.i18n.{ I18nSupport, Messages }
 import play.api.libs.Files
 import play.api.libs.json._
 import play.api.mvc.MultipartFormData.FilePart
@@ -33,8 +34,8 @@ class AdminController(
   repository: MutableConfigsRepository,
   val authHandler: Option[OctopartsAuthHandler],
   controllerComponents: ControllerComponents,
-  mode: Mode
-)(implicit val navbarLinks: NavbarLinks, val eCtx: ExecutionContext)
+  configChecks: HttpPartConfigChecks
+)(implicit val navbarLinks: NavbarLinks, val eCtx: ExecutionContext, configMode: ConfigMode)
     extends AbstractController(controllerComponents)
     with AuthSupport
     with LoggingSupport
@@ -59,13 +60,13 @@ class AdminController(
     val partsView: Future[SortedSet[HttpPartConfigView]] =
       repository
         .findAllConfigs()
-        .map { _.map(HttpPartConfigView(_)) }
-    partsView.map(ps => Ok(views.html.part.list(ps, mode)))
+        .map { _.map(p => HttpPartConfigView(p, configChecks)) }
+    partsView.map(ps => Ok(views.html.part.list(ps)))
   }
 
   def showPart(partId: String) = AuthorizedAction.async { implicit req =>
     findAndUsePart(partId) { part =>
-      Future.successful(Ok(views.html.part.show(HttpPartConfigView(part), mode)))
+      Future.successful(Ok(views.html.part.show(HttpPartConfigView(part, configChecks))))
     }
   }
 
@@ -300,7 +301,7 @@ class AdminController(
 
   def testPart(partId: String) = AuthorizedAction.async { implicit req =>
     findAndUsePart(partId) { part =>
-      Future.successful(Ok(views.html.part.test(HttpPartConfigView(part))))
+      Future.successful(Ok(views.html.part.test(HttpPartConfigView(part, configChecks))))
     }
   }
 
@@ -832,7 +833,7 @@ class AdminController(
         val dangerMsg = req.flash.get(BootstrapFlashStyles.danger.toString).toSeq ++ allErrorMsgs
         Flash(req.flash.data + (BootstrapFlashStyles.danger.toString -> dangerMsg.mkString("\n")))
       }
-      Ok(views.html.part.edit(form, tps, cgs, maybePart)(flash, navbarLinks, implicitly[Messages]))
+      Ok(views.html.part.edit(form, tps, cgs, maybePart)(flash, configMode, navbarLinks, implicitly[Messages]))
     }
   }
 

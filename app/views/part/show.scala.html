@@ -1,8 +1,9 @@
+@import com.m3.octoparts.util.ConfigMode
 @(
-  part: presentation.HttpPartConfigView,
-  mode: play.api.Mode
+  part: presentation.HttpPartConfigView
 )(implicit
   flash: Flash,
+  configMode: ConfigMode,
   navbarLinks: presentation.NavbarLinks,
   messages: Messages
 )
@@ -33,7 +34,7 @@
         <a href="@controllers.routes.AdminController.confirmDeletePart(part.partId)" class="btn btn-danger">@Messages("delete")</a>
     </h4>
 
-    @for(warnMsg <- part.warnings(mode)) {
+    @for(warnMsg <- part.warnings) {
         <div class="alert alert-warning">@warnMsg</div>
     }
 

@@ -5,27 +5,30 @@ import java.util.UUID
 import com.m3.octoparts.aggregator.handler.HttpPartRequestHandler
 import com.m3.octoparts.model.config.{ HttpPartConfig, ParamType, PartParam }
 import com.netaporter.uri.dsl._
-import play.api.{ Mode, Play }
-import play.api.i18n.{ Lang, Messages }
+import play.api.i18n.Messages
+import com.m3.octoparts.util.ConfigMode
 
 trait HttpPartConfigChecker {
   def warnings(t: HttpPartConfig)(implicit messages: Messages): Seq[String]
 }
 
-object HttpPartConfigChecker {
-  def checks(mode: Mode): Seq[HttpPartConfigChecker] = Seq(
+class HttpPartConfigChecks(configMode: ConfigMode) {
+
+  private val checks: Seq[HttpPartConfigChecker] = Seq(
     QueryParamInterpolation,
     MissingPathParam,
     PathParamNoInterp,
     PathParamOption,
     WhitespaceInUri
   ) ++ (
-    if (mode == Mode.Prod) Seq(AlertEmailOff)
+    if (configMode.isProd) Seq(AlertEmailOff)
     else Nil
   )
-  def apply(httpPartConfig: HttpPartConfig, mode: Mode)(implicit messages: Messages): Seq[String] = {
-    checks(mode).flatMap(_.warnings(httpPartConfig))
+
+  def apply(httpPartConfig: HttpPartConfig)(implicit messages: Messages): Seq[String] = {
+    checks.flatMap(_.warnings(httpPartConfig))
   }
+
 }
 
 object QueryParamInterpolation extends HttpPartConfigChecker {

@@ -1,3 +1,4 @@
+@import com.m3.octoparts.util.ConfigMode
 @(
   form: Form[controllers.AdminForms.PartData],
   threadPoolConfigs: scala.collection.SortedSet[com.m3.octoparts.model.config.ThreadPoolConfig],
@@ -5,6 +6,7 @@
   maybePart: Option[com.m3.octoparts.model.config.HttpPartConfig]
 )(implicit
   flash: Flash,
+  configMode: ConfigMode,
   navbarLinks: presentation.NavbarLinks,
   messages: Messages
 )
