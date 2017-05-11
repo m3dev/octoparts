@@ -17,8 +17,8 @@ object RichFutureWithTimeout {
   private val timeoutEC = try {
     actorSystem.dispatchers.lookup("contexts.future-timeout")
   } catch {
-    // for tests
-    case NonFatal(e) if Play.maybeApplication.fold(false)(_.mode == Mode.Test) => actorSystem.dispatcher
+    // Fallback to actor system dispatcher
+    case NonFatal(e) => actorSystem.dispatcher
   }
 
   implicit class RichFutureWithTimeoutOps[A](

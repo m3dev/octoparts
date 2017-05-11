@@ -1,5 +1,6 @@
 @(
-  part: presentation.HttpPartConfigView
+  part: presentation.HttpPartConfigView,
+  mode: play.api.Mode
 )(implicit
   flash: Flash,
   navbarLinks: presentation.NavbarLinks,
@@ -32,7 +33,7 @@
         <a href="@controllers.routes.AdminController.confirmDeletePart(part.partId)" class="btn btn-danger">@Messages("delete")</a>
     </h4>
 
-    @for(warnMsg <- part.warnings) {
+    @for(warnMsg <- part.warnings(mode)) {
         <div class="alert alert-warning">@warnMsg</div>
     }
 

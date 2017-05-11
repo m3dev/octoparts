@@ -13,12 +13,12 @@ import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.HttpPartConfig
 import com.m3.octoparts.repository.ConfigsRepository
 import com.wordnik.swagger.annotations._
-import controllers.support.{ PartListFilterSupport, LoggingSupport }
+import controllers.support.{ LoggingSupport, PartListFilterSupport }
 import org.apache.http.client.cache.HeaderConstants
 import play.api.libs.json.Json
 import play.api.mvc._
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
 
 @Api(
@@ -33,33 +33,41 @@ class PartsController(
   requestTimeout: Duration,
   readClientCacheHeaders: Boolean,
   val actorSystem: ActorSystem,
-  implicit val zipkinService: ZipkinServiceLike
-) extends Controller
+  implicit val zipkinService: ZipkinServiceLike,
+  controllerComponents: ControllerComponents
+)(implicit eCtx: ExecutionContext)
+    extends AbstractController(controllerComponents)
     with LoggingSupport
     with PartListFilterSupport
     with ReqHeaderToSpanImplicit
     with PromiseSupport {
 
-  import play.api.libs.concurrent.Execution.Implicits.defaultContext
   import com.beachape.zipkin.FutureEnrichment._
 
   @ApiOperation(
     value = "Invoke registered endpoints",
     nickname = "Endpoints invocation",
-    notes = "Send an AggregateRequest to invoke backend endpoints. Will respond with an AggregateResponse for you to sort through.",
+    notes =
+    "Send an AggregateRequest to invoke backend endpoints. Will respond with an AggregateResponse for you to sort through.",
     response = classOf[AggregateResponse],
     httpMethod = "POST"
   )
   @ApiResponses(Array(new ApiResponse(code = 400, message = "Invalid input")))
-  @ApiImplicitParams(Array(new ApiImplicitParam(
-    value = "An AggregateRequest consisting of PartRequests that individually invoke a registered backend service once.",
-    required = true,
-    dataType = "com.m3.octoparts.model.AggregateRequest",
-    paramType = "body",
-    name = "body"
-  )))
-  def retrieveParts = Action.async(BodyParsers.parse.json) { implicit request =>
-    request.body.validate[AggregateRequest]
+  @ApiImplicitParams(
+    Array(
+      new ApiImplicitParam(
+        value =
+        "An AggregateRequest consisting of PartRequests that individually invoke a registered backend service once.",
+        required = true,
+        dataType = "com.m3.octoparts.model.AggregateRequest",
+        paramType = "body",
+        name = "body"
+      )
+    )
+  )
+  def retrieveParts = Action.async(parse.json) { implicit request =>
+    request.body
+      .validate[AggregateRequest]
       .fold[Future[Result]](
         errors => {
           warnRc(
@@ -70,9 +78,12 @@ class PartsController(
         },
         aggregateRequest => {
           val noCache = readClientCacheHeaders &&
-            request.headers.get(HeaderConstants.CACHE_CONTROL).contains(HeaderConstants.CACHE_CONTROL_NO_CACHE)
+            request.headers
+            .get(HeaderConstants.CACHE_CONTROL)
+            .contains(HeaderConstants.CACHE_CONTROL_NO_CACHE)
           logAggregateRequest(aggregateRequest, noCache)
-          val fAggregateResponse = partsService.processParts(aggregateRequest, noCache)
+          val fAggregateResponse = partsService
+            .processParts(aggregateRequest, noCache)
             .trace("aggregate-response-processing")
           withRequestTimeout(fAggregateResponse)
             .trace("aggregate-response-processing-with-timeout")
@@ -88,7 +99,13 @@ class PartsController(
     responseContainer = "List",
     httpMethod = "GET"
   )
-  def list(@ApiParam(value = "Optional part ids to filter on. Note, this should be passed as multiple partIdParams=partId, e.g ?partIdParams=wut&partIdParams=wut3 ", allowMultiple = true)@QueryParam("partIdParams") partIdParams: List[String] = Nil) =
+  def list(
+    @ApiParam(
+      value =
+      "Optional part ids to filter on. Note, this should be passed as multiple partIdParams=partId, e.g ?partIdParams=wut&partIdParams=wut3 ",
+      allowMultiple = true
+    )@QueryParam("partIdParams") partIdParams: List[String] = Nil
+  ) =
     Action.async { implicit req =>
       retrieveParts(partIdParams)
     }
@@ -96,23 +113,30 @@ class PartsController(
   @ApiOperation(
     value = "Return a list of all registered endpoints in the system, but sent via a POST",
     nickname = "Endpoints listing POST",
-    notes = "Returns a list of registered endpoints in the system. Use this if you want to do filtering with so many IDs that you hit the URL limit of our server",
+    notes =
+    "Returns a list of registered endpoints in the system. Use this if you want to do filtering with so many IDs that you hit the URL limit of our server",
     response = classOf[HttpPartConfig],
     responseContainer = "List",
     httpMethod = "POST"
   )
-  @ApiImplicitParams(Array(new ApiImplicitParam(
-    value = "An array of ids",
-    required = true,
-    dataType = "controllers.support.PartListFilter",
-    paramType = "body",
-    name = "body"
-  )))
-  def listPost = Action.async { implicit req =>
-    partListFilterForm.bindFromRequest().fold(
-      hasErrors => Future.successful(BadRequest("Could no bind ids from request")),
-      bound => retrieveParts(bound.ids)
+  @ApiImplicitParams(
+    Array(
+      new ApiImplicitParam(
+        value = "An array of ids",
+        required = true,
+        dataType = "controllers.support.PartListFilter",
+        paramType = "body",
+        name = "body"
+      )
     )
+  )
+  def listPost = Action.async { implicit req =>
+    partListFilterForm
+      .bindFromRequest()
+      .fold(
+        hasErrors => Future.successful(BadRequest("Could no bind ids from request")),
+        bound => retrieveParts(bound.ids)
+      )
   }
 
   private def logAggregateRequest(
@@ -141,7 +165,8 @@ class PartsController(
       case Nil => configsRepository.findAllConfigs().trace("find-all-configs")
       case partIds => {
         val fParts = partIds.map { partId =>
-          configsRepository.findConfigByPartId(partId)
+          configsRepository
+            .findConfigByPartId(partId)
             .trace(
               "find-config-by-part-ids",
               "ids" -> partId

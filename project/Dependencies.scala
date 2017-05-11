@@ -156,6 +156,8 @@ object Dependencies {
     playFlyway,
     swaggerPlay24,
 
+    openId,
+
     // Test
     playTest,
     scalacheck,
@@ -196,7 +198,7 @@ object Dependencies {
     scalatest
   )
 
-  val playJsonFormatsDependencies = playScalatestDependencies :+ json
+  val playJsonFormatsDependencies = playScalatestDependencies :+ "com.typesafe.play" %% "play-json" % "2.6.0-M7"
 
   val scalaWsClientDependencies = playScalatestDependencies :+ ws
 }

@@ -1,15 +1,15 @@
 package controllers.support
 
-import com.m3.octoparts.auth.{ PrincipalSessionPersistence, OctopartsAuthHandler, AuthenticatedRequest, Principal }
+import com.m3.octoparts.auth.{ AuthenticatedRequest, OctopartsAuthHandler, Principal, PrincipalSessionPersistence }
 import play.api.libs.json.Json
 import play.api.mvc.{ ActionFunction, Request, Result }
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Random
 
 trait DummyPrincipalSupport {
 
-  import play.api.libs.concurrent.Execution.Implicits.defaultContext
+  implicit def eCtx: ExecutionContext
 
   /**
    * Create a new guest principal.
@@ -27,6 +27,9 @@ trait DummyPrincipalSupport {
    * i.e. the user does not need to authenticate - anybody can access the site.
    */
   protected[support] val autoAuthenticateRequest = new ActionFunction[Request, AuthenticatedRequest] {
+
+    protected def executionContext: ExecutionContext = eCtx
+
     def invokeBlock[A](
       inputReq: Request[A],
       block: AuthenticatedRequest[A] => Future[Result]

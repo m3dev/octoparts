@@ -1,13 +1,14 @@
 package com.m3.octoparts.wiring
 
 import scala.concurrent.duration._
-import com.m3.octoparts.aggregator.service.{ PartsService, PartResponseLocalContentSupport, PartRequestService }
+import com.m3.octoparts.aggregator.service.{ PartRequestService, PartResponseLocalContentSupport, PartsService }
 import com.m3.octoparts.cache.PartResponseCachingSupport
+import play.api.BuiltInComponents
 
 trait AggregatorServicesModule
     extends RepositoriesModule
     with AggregatorHandlersModule
-    with ExecutionContextsModule { module =>
+    with ExecutionContextsModule { module: BuiltInComponents =>
 
   private implicit lazy val ec = partsServiceContext
 

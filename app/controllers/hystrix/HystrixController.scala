@@ -3,22 +3,22 @@ package controllers.hystrix
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicInteger
 
+import akka.NotUsed
 import akka.actor.ActorSystem
+import akka.stream.scaladsl.Source
 import com.netflix.config.DynamicPropertyFactory
 import com.netflix.hystrix.contrib.metrics.eventstream.HystrixMetricsPoller
-import play.api.libs.iteratee.Enumerator
 import play.api.mvc._
 
 import scala.concurrent.duration._
 
 class HystrixController(
     actorSystem: ActorSystem,
+    controllerComponents: ControllerComponents,
+    defaultMaxClients: Int = 10,
     defaultDelay: FiniteDuration = 1.second,
-    pollerQueueSize: Int = 10000,
-    defaultMaxClients: Int = 10
-) extends Controller {
-
-  import actorSystem.dispatcher
+    pollerQueueSize: Int = 10000
+) extends AbstractController(controllerComponents) {
 
   private val maxClients = {
     DynamicPropertyFactory
@@ -39,7 +39,7 @@ class HystrixController(
     val maxConnections = maxClients.get()
     if (numberConnections <= maxConnections) {
       val delay = delayMs.map(_.millis).getOrElse(defaultDelay)
-      Ok.chunked(chunks(delay)).withHeaders(ChunkedHeaders: _*)
+      Ok.chunked(source(delay)).withHeaders(ChunkedHeaders: _*)
     } else {
       onDisconnect()
       ServiceUnavailable(s"MaxConcurrentConnections reached: $maxConnections")
@@ -48,15 +48,15 @@ class HystrixController(
 
   private def onDisconnect(): Unit = numClients.decrementAndGet()
 
-  private def chunks(delay: FiniteDuration): Enumerator[Array[Byte]] = {
+  private def source(delay: FiniteDuration): Source[Array[Byte], NotUsed] = {
     val listener = new MetricsAsJsonPollerListener(pollerQueueSize)
     val poller = new HystrixMetricsPoller(listener, delay.toMillis.toInt)
-
-    Enumerator.outputStream(new Streamer(poller, listener, delay)(actorSystem).produce)
-      .onDoneEnumerating({
+    Source.fromGraph(
+      new Streamer(poller, listener, delay, () => {
         onDisconnect()
         poller.shutdown()
       })
+    )
   }
 
 }

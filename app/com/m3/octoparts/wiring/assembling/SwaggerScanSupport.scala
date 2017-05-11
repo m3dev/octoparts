@@ -2,20 +2,21 @@ package com.m3.octoparts.wiring.assembling
 
 import java.net.URL
 
-import com.wordnik.swagger.config.{ FilterFactory, ScannerFactory, ConfigFactory }
+import com.wordnik.swagger.config.{ ConfigFactory, FilterFactory, ScannerFactory }
 import com.wordnik.swagger.core.SwaggerContext
 import com.wordnik.swagger.core.filter.SwaggerSpecFilter
 import com.wordnik.swagger.reader.ClassReaders
 import pl.matisoft.swagger.{ PlayApiReader, PlayApiScanner, SwaggerPlugin }
-import play.api.{ Logger, Application }
+import play.api.{ Application, Logger }
 import play.api.inject.ApplicationLifecycle
 import play.api.routing.Router
 import play.modules.swagger.ApiListingCache
 
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
 trait SwaggerScanSupport {
+
+  implicit def eCtx: ExecutionContext
 
   /**
    * Initiates Swagger
@@ -39,7 +40,7 @@ class SwaggerScanner(
     router: Router,
     app: Application,
     lifecycle: ApplicationLifecycle
-) {
+)(implicit eCtx: ExecutionContext) {
 
   val logger = Logger("swagger")
 
@@ -55,12 +56,12 @@ class SwaggerScanner(
     val config = app.configuration
     logger.info("Swagger - starting initialisation...")
 
-    val apiVersion = config.getString("api.version") match {
+    val apiVersion = config.getOptional[String]("api.version") match {
       case None => "beta"
       case Some(value) => value
     }
 
-    val basePath = config.getString("swagger.api.basepath")
+    val basePath = config.getOptional[String]("swagger.api.basepath")
       .filter(path => !path.isEmpty)
       .map(getPathUrl)
       .getOrElse("http://localhost:9000")
@@ -71,7 +72,7 @@ class SwaggerScanner(
     ScannerFactory.setScanner(new PlayApiScanner(Option(router)))
     ClassReaders.reader = Some(new PlayApiReader(Option(router)))
 
-    app.configuration.getString("swagger.filter")
+    app.configuration.getOptional[String]("swagger.filter")
       .filter(p => !p.isEmpty)
       .foreach(loadFilter)
 

@@ -1,14 +1,14 @@
 package com.m3.octoparts.wiring
 
-import java.util.concurrent.{ TimeUnit, ThreadPoolExecutor, ArrayBlockingQueue, BlockingQueue }
+import java.util.concurrent.{ ArrayBlockingQueue, BlockingQueue, ThreadPoolExecutor, TimeUnit }
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.m3.octoparts.cache.dummy.{ DummyCacheOps, DummyCache, DummyRawCache, DummyLatestVersionCache }
+import com.m3.octoparts.cache.dummy.{ DummyCache, DummyCacheOps, DummyLatestVersionCache, DummyRawCache }
 import com.m3.octoparts.cache.key.MemcachedKeyGenerator
-import com.m3.octoparts.cache.memcached.{ MemcachedCacheOps, MemcachedCache, InMemoryRawCache, MemcachedRawCache }
-import com.m3.octoparts.cache.versioning.InMemoryLatestVersionCache
-import com.m3.octoparts.cache.LoggingRawCache
-import shade.memcached.{ Configuration => ShadeConfig, FailureMode, AuthConfiguration, Memcached, Protocol }
+import com.m3.octoparts.cache.memcached.{ InMemoryRawCache, MemcachedCache, MemcachedCacheOps, MemcachedRawCache }
+import com.m3.octoparts.cache.versioning.{ InMemoryLatestVersionCache, LatestVersionCache }
+import com.m3.octoparts.cache.{ LoggingRawCache, RawCache }
+import shade.memcached.{ AuthConfiguration, FailureMode, Memcached, Protocol, Configuration => ShadeConfig }
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -19,8 +19,8 @@ trait CacheModule extends UtilsModule {
   private implicit lazy val cacheExecutor: ExecutionContext = {
 
     val namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("cache-%d").build()
-    val poolSize = typesafeConfig.getInt("caching.pool.size")
-    val queueSize = typesafeConfig.getInt("caching.queue.size")
+    val poolSize = configuration.get[Int]("caching.pool.size")
+    val queueSize = configuration.get[Int]("caching.queue.size")
     val queue: BlockingQueue[Runnable] = new ArrayBlockingQueue[Runnable](queueSize)
 
     ExecutionContext.fromExecutor(
@@ -28,28 +28,28 @@ trait CacheModule extends UtilsModule {
     )
   }
 
-  lazy val latestVersionCache = {
+  lazy val latestVersionCache: LatestVersionCache = {
     if (cachingDisabled) {
       DummyLatestVersionCache
     } else {
-      val maxInMemoryLVCKeys = configuration.getLong("caching.versionCachingSize").getOrElse(100000L)
+      val maxInMemoryLVCKeys = configuration.getOptional[Long]("caching.versionCachingSize").getOrElse(100000L)
       new InMemoryLatestVersionCache(maxInMemoryLVCKeys)
     }
   }
 
-  lazy val rawCache = if (cachingDisabled) {
+  lazy val rawCache: RawCache = if (cachingDisabled) {
     DummyRawCache
   } else {
     val cache = if (useInMemoryCache) {
       new InMemoryRawCache(zipkinService)(cacheExecutor)
     } else {
-      val hostPort = typesafeConfig.getString("memcached.host")
-      val timeout = typesafeConfig.getInt("memcached.timeout").millis
+      val hostPort = configuration.get[String]("memcached.host")
+      val timeout = configuration.get[Int]("memcached.timeout").millis
       // should be one of "Text" or "Binary"
-      val protocol = typesafeConfig.getString("memcached.protocol")
+      val protocol = configuration.get[String]("memcached.protocol")
       val auth = for {
-        user <- configuration.getString("memcached.user")
-        password <- configuration.getString("memcached.password")
+        user <- configuration.getOptional[String]("memcached.user")
+        password <- configuration.getOptional[String]("memcached.password")
       } yield AuthConfiguration(user, password)
 
       val shade = Memcached(
@@ -88,8 +88,8 @@ trait CacheModule extends UtilsModule {
     }
   }
 
-  lazy val cachingDisabled = configuration.getBoolean("caching.disabled").getOrElse(false)
+  lazy val cachingDisabled = configuration.getOptional[Boolean]("caching.disabled").getOrElse(false)
 
-  lazy val useInMemoryCache = configuration.getBoolean("caching.inmemory").getOrElse(false)
+  lazy val useInMemoryCache = configuration.getOptional[Boolean]("caching.inmemory").getOrElse(false)
 
 }

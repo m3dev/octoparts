@@ -1,6 +1,7 @@
 package controllers
 
 import javax.ws.rs.PathParam
+
 import com.beachape.zipkin.ReqHeaderToSpanImplicit
 import com.m3.octoparts.cache.CacheOps
 import com.m3.octoparts.cache.versioning.VersionedParamKey
@@ -9,9 +10,9 @@ import com.m3.octoparts.repository.ConfigsRepository
 import com.twitter.zipkin.gen.Span
 import com.wordnik.swagger.annotations._
 import controllers.support.LoggingSupport
-import play.api.mvc.{ Action, Controller, RequestHeader, Result }
+import play.api.mvc._
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.control.NonFatal
 
 @Api(
@@ -22,12 +23,12 @@ import scala.util.control.NonFatal
 )
 class CacheController(
   cacheOps: CacheOps,
-  repository: ConfigsRepository
-) extends Controller
+  repository: ConfigsRepository,
+  controllerComponents: ControllerComponents
+)(implicit eCtx: ExecutionContext)
+    extends AbstractController(controllerComponents)
     with LoggingSupport
     with ReqHeaderToSpanImplicit {
-
-  import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
   @ApiOperation(
     value = "Invalidate the cache for a specific endpoint",
@@ -37,7 +38,9 @@ class CacheController(
     httpMethod = "POST"
   )
   def invalidatePart(
-    @ApiParam(value = "The id of the endpoint that you wish to invalidate", required = true)@PathParam("partId") partId: String
+    @ApiParam(value = "The id of the endpoint that you wish to invalidate", required = true)@PathParam(
+      "partId"
+    ) partId: String
   ) = Action.async { implicit request =>
     // TODO could check if part exists and return a 404 if not
     debugRc(
@@ -50,14 +53,22 @@ class CacheController(
   @ApiOperation(
     value = "Invalidate a portion of cache for a specific endpoints",
     nickname = "Wipe out some of the cache for an endpoint",
-    notes = "Looks up a registered endpoint by id and clears the portion of cache corresponding to a given parameter name and parameter value. Useful for example if you have 'user_id' registered as a paremeter for a backend endpoint and need to clear cache for a specific user id.",
+    notes =
+    "Looks up a registered endpoint by id and clears the portion of cache corresponding to a given parameter name and parameter value. Useful for example if you have 'user_id' registered as a paremeter for a backend endpoint and need to clear cache for a specific user id.",
     response = classOf[String],
     httpMethod = "POST"
   )
   def invalidatePartParam(
-    @ApiParam(value = "The id of the endpoint that you wish to invalidate", required = true)@PathParam("partId") partId: String,
-    @ApiParam(value = "The parameter name that you wish to invalidate with", required = true)@PathParam("paramName") paramName: String,
-    @ApiParam(value = "The specific parameter value that you wish to invalidate by", required = true)@PathParam("paramValue") paramValue: String
+    @ApiParam(value = "The id of the endpoint that you wish to invalidate", required = true)@PathParam(
+      "partId"
+    ) partId: String,
+    @ApiParam(value = "The parameter name that you wish to invalidate with", required = true)@PathParam(
+      "paramName"
+    ) paramName: String,
+    @ApiParam(
+      value = "The specific parameter value that you wish to invalidate by",
+      required = true
+    )@PathParam("paramValue") paramValue: String
   ) = Action.async { implicit request =>
     // TODO could check if part exists and return a 404 if not
     debugRc(
@@ -72,13 +83,16 @@ class CacheController(
   @ApiOperation(
     value = "Invalidate the cache of the endpoints registered to a cache group",
     nickname = "Wipe out cache for CacheGroup endpoints",
-    notes = "Given the name of a CacheGroup, looks up the endpoints registered to it and wipes out all their caches.",
+    notes =
+    "Given the name of a CacheGroup, looks up the endpoints registered to it and wipes out all their caches.",
     response = classOf[String],
     httpMethod = "POST"
   )
   @ApiResponses(Array(new ApiResponse(code = 404, message = "Cache group not found")))
   def invalidateCacheGroupParts(
-    @ApiParam(value = "The name of the CacheGroup that you wish to invalidate", required = true)@PathParam("cacheGroupName") cacheGroupName: String
+    @ApiParam(value = "The name of the CacheGroup that you wish to invalidate", required = true)@PathParam(
+      "cacheGroupName"
+    ) cacheGroupName: String
   ) = Action.async { implicit request =>
     val fMaybeCacheGroup = repository.findCacheGroupByName(cacheGroupName)
     fMaybeCacheGroup
@@ -98,16 +112,23 @@ class CacheController(
   }
 
   @ApiOperation(
-    value = "Invalidate parameter-value-specific cache of the endpoints registered to a cache group",
+    value =
+    "Invalidate parameter-value-specific cache of the endpoints registered to a cache group",
     nickname = "Wipe out paramValue-specific cache for CacheGroup endpoints",
-    notes = "Given the name of a CacheGroup, looks up the endpoints registered to it and wipes out the portion of their caches that correspond to the given parameter value. This works because for a given endpoint, you can choose to register specific parameters to a cache group.",
+    notes =
+    "Given the name of a CacheGroup, looks up the endpoints registered to it and wipes out the portion of their caches that correspond to the given parameter value. This works because for a given endpoint, you can choose to register specific parameters to a cache group.",
     response = classOf[String],
     httpMethod = "POST"
   )
   @ApiResponses(Array(new ApiResponse(code = 404, message = "Cache group not found")))
   def invalidateCacheGroupParam(
-    @ApiParam(value = "The name of the CacheGroup that you wish to invalidate", required = true)@PathParam("cacheGroupName") cacheGroupName: String,
-    @ApiParam(value = "The specific parameter value that you wish to invalidate by", required = true)@PathParam("paramValue") paramValue: String
+    @ApiParam(value = "The name of the CacheGroup that you wish to invalidate", required = true)@PathParam(
+      "cacheGroupName"
+    ) cacheGroupName: String,
+    @ApiParam(
+      value = "The specific parameter value that you wish to invalidate by",
+      required = true
+    )@PathParam("paramValue") paramValue: String
   ) = Action.async { implicit request =>
     val fMaybeCacheGroup = repository.findCacheGroupByName(cacheGroupName)
     fMaybeCacheGroup

@@ -1,41 +1,50 @@
 package controllers.hystrix
 
-import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 
-import akka.actor.ActorSystem
+import akka.stream.stage._
+import akka.stream.{ Attributes, Outlet, SourceShape }
 import com.netflix.hystrix.contrib.metrics.eventstream.HystrixMetricsPoller
+import play.api.Logger
 
 import scala.concurrent.duration.FiniteDuration
+import scala.util.control.NonFatal
 
 private class Streamer(
     poller: HystrixMetricsPoller,
     listener: MetricsAsJsonPollerListener,
-    delay: FiniteDuration
-)(implicit actorSystem: ActorSystem) {
+    delay: FiniteDuration,
+    cleanup: () => Unit
+) extends GraphStage[SourceShape[Array[Byte]]] {
 
-  import actorSystem.dispatcher
+  private val out = Outlet[Array[Byte]]("HystrixDataStreamer.Out")
+  val shape: SourceShape[Array[Byte]] = SourceShape(out)
 
-  poller.start()
+  def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
+    new GraphStageLogic(shape) {
 
-  private val scheduleNext = actorSystem.scheduler.scheduleOnce(delay) _
+      private val logger = Logger(this.getClass)
 
-  private def printlnln(
-    out: OutputStream
-  )(s: String): Unit = out.write(s"$s\n\n".getBytes(StandardCharsets.UTF_8))
+      setHandler(
+        out,
+        new OutHandler {
+          def onPull(): Unit =
+            if (poller.isRunning) {
+              val s = listener.poll
+              push(out, s"$s\n\n".getBytes(StandardCharsets.UTF_8))
+            } else {
+              completeStage()
+            }
+        }
+      )
 
-  def produce(out: OutputStream): Unit = {
-    if (poller.isRunning) {
-      listener.poll.foreach(printlnln(out))
-      out.flush()
-      scheduleNext(produce(out))
-    } else {
-      try {
-        out.flush()
-      } finally {
-        out.close()
+      override def postStop(): Unit = {
+        try {
+          cleanup()
+        } catch {
+          case NonFatal(t) => logger.error(s"Failed to cleanup", t)
+        }
       }
     }
-  }
 
 }

@@ -5,7 +5,7 @@ import ch.qos.logback.core.status.StatusUtil
 import ch.qos.logback.core.util.StatusPrinter
 import com.typesafe.config.{ ConfigRenderOptions, ConfigValueFactory, Config => TSConfig }
 import org.slf4j.LoggerFactory
-import play.api.mvc.{ Action, Controller }
+import play.api.mvc._
 
 import scala.collection.convert.Wrappers.{ JListWrapper, JSetWrapper }
 
@@ -16,12 +16,14 @@ import scala.collection.convert.Wrappers.{ JListWrapper, JSetWrapper }
  * It has all system properties and environment variables resolved to their appropriate variables.
  */
 class SystemConfigController(
-    config: TSConfig
-) extends Controller {
+    config: TSConfig,
+    controllerComponents: ControllerComponents
+) extends AbstractController(controllerComponents) {
 
   def showSystemConfig = Action { request =>
     val maskedConfig = maskPasswords(config)
-    Ok(maskedConfig.resolve().root().render(ConfigRenderOptions.concise().setFormatted(true))).as(JSON)
+    Ok(maskedConfig.resolve().root().render(ConfigRenderOptions.concise().setFormatted(true)))
+      .as(JSON)
   }
 
   // prints the status of the logger to the response
@@ -32,7 +34,8 @@ class SystemConfigController(
     }
     // copied from StatusPrinter, because it has a silly design and would keep a reference to the response output stream.
     val sb = new java.lang.StringBuilder
-    val statusList = StatusUtil.filterStatusListByTimeThreshold(statusManager.getCopyOfStatusList, 0)
+    val statusList =
+      StatusUtil.filterStatusListByTimeThreshold(statusManager.getCopyOfStatusList, 0)
     for (s <- JListWrapper(statusList)) {
       StatusPrinter.buildStr(sb, "", s)
     }

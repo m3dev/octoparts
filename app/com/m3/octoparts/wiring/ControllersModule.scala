@@ -8,8 +8,10 @@ import controllers._
 import pl.matisoft.swagger.ApiHelpController
 import play.api.i18n.I18nComponents
 import presentation.NavbarLinks
+
 import scala.concurrent.duration._
 import com.softwaremill.macwire._
+import play.api.mvc.ControllerComponents
 
 trait ControllersModule
     extends AggregatorServicesModule
@@ -17,6 +19,8 @@ trait ControllersModule
     with AuthHandlerModule
     with I18nComponents
     with FiltersModule { this: ApplicationComponents.Essentials =>
+
+  def controllerComponents: ControllerComponents
 
   lazy val partsController = {
     val requestTimeout = typesafeConfig.getInt("timeouts.asyncRequestTimeout").millis
@@ -31,30 +35,32 @@ trait ControllersModule
 
   lazy val adminController = {
     implicit val navbarLinks = NavbarLinks(
-      kibana = configuration.getString("urls.kibana"),
-      hystrixDashboard = configuration.getString("urls.hystrixDashboard"),
-      swaggerUI = configuration.getString("urls.swaggerUI"),
-      wiki = configuration.getString("urls.wiki")
+      kibana = configuration.getOptional[String]("urls.kibana"),
+      hystrixDashboard = configuration.getOptional[String]("urls.hystrixDashboard"),
+      swaggerUI = configuration.getOptional[String]("urls.swaggerUI"),
+      wiki = configuration.getOptional[String]("urls.wiki")
     )
     wire[AdminController]
   }
 
-  lazy val memcachedKeysToCheck = typesafeConfig.getInt("memcached.monitoring.randomChecks") match {
-    case 0 => SingleMemcachedCacheKeyToCheck
-    case n => RandomMemcachedCacheKeysToCheck(n)
-  }
+  lazy val memcachedKeysToCheck =
+    typesafeConfig.getInt("memcached.monitoring.randomChecks") match {
+      case 0 => SingleMemcachedCacheKeyToCheck
+      case n => RandomMemcachedCacheKeysToCheck(n)
+    }
 
   lazy val healthcheckController = wire[HealthcheckController]
 
   lazy val systemConfigController = wire[SystemConfigController]
 
-  lazy val hystrixController = new HystrixController(actorSystem = actorSystem)
+  lazy val hystrixController =
+    new HystrixController(actorSystem = actorSystem, controllerComponents)
 
   lazy val authController = wire[AuthController]
 
   lazy val apiHelpController = new ApiHelpController
 
-  lazy val buildInfoController = new BuildInfoController
+  lazy val buildInfoController = wire[BuildInfoController]
 
   lazy val defaultController = new Default
 

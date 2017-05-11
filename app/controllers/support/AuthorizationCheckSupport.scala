@@ -2,14 +2,13 @@ package controllers.support
 
 import com.m3.octoparts.auth.AuthenticatedRequest
 import com.beachape.logging.LTSVLogger
-import play.api.Logger
 import play.api.mvc.{ ActionFilter, Result }
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
 trait AuthorizationCheckSupport {
 
-  import play.api.libs.concurrent.Execution.Implicits.defaultContext
+  implicit def eCtx: ExecutionContext
 
   /**
    * An action filter that checks whether the user is authorized.
@@ -34,6 +33,8 @@ trait AuthorizationCheckSupport {
         }
       }
     }
+
+    protected def executionContext: ExecutionContext = eCtx
   }
 
 }

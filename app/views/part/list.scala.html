@@ -1,5 +1,7 @@
+@import play.api.Mode
 @(
-  parts: scala.collection.SortedSet[presentation.HttpPartConfigView]
+  parts: scala.collection.SortedSet[presentation.HttpPartConfigView],
+    mode: Mode
 )(implicit
   flash: Flash,
   navbarLinks: presentation.NavbarLinks,
@@ -170,8 +172,10 @@
                 </td>
                 <td>
                     <a href="@controllers.routes.AdminController.showPart(partView.partId)"><span title="@Messages("parts.updated"): @partView.lastUpdate">@partView.partId</span></a>
-                    @if(partView.warnings.nonEmpty) {
-                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true" title="@partView.warnings.mkString("\n")"></span>
+                    @defining(partView.warnings(mode)) { warnings =>
+                        @if(warnings.nonEmpty) {
+                            <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true" title="@warnings.mkString("\n")"></span>
+                        }
                     }
                 </td>
                 <td>@partView.uriToInterpolate</td>
