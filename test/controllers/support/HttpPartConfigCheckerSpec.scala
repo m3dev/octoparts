@@ -4,13 +4,13 @@ import com.m3.octoparts.model.config.ParamType
 import com.m3.octoparts.support.PlayAppSupport
 import com.m3.octoparts.support.mocks.ConfigDataMocks
 import org.scalatest.{ FunSpec, Matchers }
-import play.api.i18n.{ DefaultLangs, DefaultMessagesApi, Messages, Lang }
+import play.api.i18n._
 
 import scala.collection.SortedSet
 
 class HttpPartConfigCheckerSpec extends FunSpec with Matchers with ConfigDataMocks with PlayAppSupport {
 
-  private implicit val messages = Messages(Lang("en"), new DefaultMessagesApi(context.environment, app.configuration, new DefaultLangs(app.configuration)))
+  private implicit val messages = MessagesImpl(Lang("en"), new DefaultMessagesApi())
 
   describe("QueryParamInterpolation") {
     it("Should be ok") {

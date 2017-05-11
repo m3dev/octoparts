@@ -26,7 +26,7 @@ trait ControllersModule
 
   implicit lazy val configMode: ConfigMode = ConfigMode(configuration.get[String]("application.env"))
 
-  lazy val httpPartConfigChecks: HttpPartConfigChecks = new HttpPartConfigChecks(configMode)
+  lazy val configChecks: HttpPartConfigChecks = new HttpPartConfigChecks(configMode)
 
   lazy val partsController = {
     val requestTimeout = typesafeConfig.getInt("timeouts.asyncRequestTimeout").millis

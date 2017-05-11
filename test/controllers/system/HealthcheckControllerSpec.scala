@@ -39,14 +39,25 @@ class HealthcheckControllerSpec
     reset(configsRepo, hystrixHealthReporter, cache)
 
     // Return healthy-looking results by default
-    val mockConfigs = SortedSet(mockHttpPartConfig, mockHttpPartConfig.copy(partId = "another"), mockHttpPartConfig.copy(partId = "yet another"))
+    val mockConfigs = SortedSet(
+      mockHttpPartConfig,
+      mockHttpPartConfig.copy(partId = "another"),
+      mockHttpPartConfig.copy(partId = "yet another")
+    )
     doReturn(Future.successful(mockConfigs)).when(configsRepo).findAllConfigs()(anyObject[Span])
     when(hystrixHealthReporter.getCommandKeysWithOpenCircuitBreakers).thenReturn(Nil)
-    when(cache.get[String](mockitoEq("ping"))(anyObject[Codec[String]], anyObject[Span])).thenReturn(Future.successful(Some("pong")))
+    when(cache.get[String](mockitoEq("ping"))(anyObject[Codec[String]], anyObject[Span]))
+      .thenReturn(Future.successful(Some("pong")))
   }
 
   {
-    val controller = new HealthcheckController(configsRepo, hystrixHealthReporter, cache, SingleMemcachedCacheKeyToCheck)
+    val controller = new HealthcheckController(
+      configsRepo,
+      hystrixHealthReporter,
+      cache,
+      SingleMemcachedCacheKeyToCheck,
+      appComponents.controllerComponents
+    )
 
     it should "return a 200 OK response" in {
       status(controller.healthcheck.apply(FakeRequest())) should be(200)
@@ -62,7 +73,8 @@ class HealthcheckControllerSpec
     }
 
     it should "be YELLOW and show DB as not OK if there are no part configs" in {
-      when(configsRepo.findAllConfigs()(anyObject[Span])).thenReturn(Future.successful(SortedSet.empty[HttpPartConfig]))
+      when(configsRepo.findAllConfigs()(anyObject[Span]))
+        .thenReturn(Future.successful(SortedSet.empty[HttpPartConfig]))
 
       checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
         colour should be("YELLOW")
@@ -71,7 +83,8 @@ class HealthcheckControllerSpec
     }
 
     it should "be YELLOW and show DB as not OK if DB query throws an exception" in {
-      when(configsRepo.findAllConfigs()(anyObject[Span])).thenReturn(Future.failed(new RuntimeException("OH MY GOD!")))
+      when(configsRepo.findAllConfigs()(anyObject[Span]))
+        .thenReturn(Future.failed(new RuntimeException("OH MY GOD!")))
 
       checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
         colour should be("YELLOW")
@@ -81,7 +94,8 @@ class HealthcheckControllerSpec
     }
 
     it should "be GREEN and show Hystrix as not OK if there are any open Hystrix circuits" in {
-      when(hystrixHealthReporter.getCommandKeysWithOpenCircuitBreakers).thenReturn(Seq("mrkun", "career"))
+      when(hystrixHealthReporter.getCommandKeysWithOpenCircuitBreakers)
+        .thenReturn(Seq("mrkun", "career"))
 
       checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
         // https://github.com/m3dev/octoparts/pull/150
@@ -101,14 +115,23 @@ class HealthcheckControllerSpec
     }
 
     {
-      val controller = new HealthcheckController(configsRepo, hystrixHealthReporter, cache, new MemcachedCacheKeysToCheck {
-        def apply() = Seq("1", "2", "3")
-      })
+      val controller = new HealthcheckController(
+        configsRepo,
+        hystrixHealthReporter,
+        cache,
+        new MemcachedCacheKeysToCheck {
+          def apply() = Seq("1", "2", "3")
+        },
+        appComponents.controllerComponents
+      )
 
       it should "be GREEN if DB is healthy, there are no open circuits and all Memcached checks succeeded" in {
-        when(cache.get[String](mockitoEq("1"))(anyObject[Codec[String]], anyObject[Span])).thenReturn(Future.successful(None))
-        when(cache.get[String](mockitoEq("2"))(anyObject[Codec[String]], anyObject[Span])).thenReturn(Future.successful(None))
-        when(cache.get[String](mockitoEq("3"))(anyObject[Codec[String]], anyObject[Span])).thenReturn(Future.successful(None))
+        when(cache.get[String](mockitoEq("1"))(anyObject[Codec[String]], anyObject[Span]))
+          .thenReturn(Future.successful(None))
+        when(cache.get[String](mockitoEq("2"))(anyObject[Codec[String]], anyObject[Span]))
+          .thenReturn(Future.successful(None))
+        when(cache.get[String](mockitoEq("3"))(anyObject[Codec[String]], anyObject[Span]))
+          .thenReturn(Future.successful(None))
 
         checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
           colour should be("GREEN")
@@ -117,9 +140,12 @@ class HealthcheckControllerSpec
       }
 
       it should "be YELLOW and show Memcached as not OK when at least one Memcached GET returns a failure" in {
-        when(cache.get[String](mockitoEq("1"))(anyObject[Codec[String]], anyObject[Span])).thenReturn(Future.successful(None))
-        when(cache.get[String](mockitoEq("2"))(anyObject[Codec[String]], anyObject[Span])).thenReturn(Future.failed(new IOException("Memcached is down!")))
-        when(cache.get[String](mockitoEq("3"))(anyObject[Codec[String]], anyObject[Span])).thenReturn(Future.successful(None))
+        when(cache.get[String](mockitoEq("1"))(anyObject[Codec[String]], anyObject[Span]))
+          .thenReturn(Future.successful(None))
+        when(cache.get[String](mockitoEq("2"))(anyObject[Codec[String]], anyObject[Span]))
+          .thenReturn(Future.failed(new IOException("Memcached is down!")))
+        when(cache.get[String](mockitoEq("3"))(anyObject[Codec[String]], anyObject[Span]))
+          .thenReturn(Future.successful(None))
 
         checkJson(controller.healthcheck.apply(FakeRequest())) { implicit json =>
           colour should be("YELLOW")

@@ -67,6 +67,8 @@ trait FutureFunSpec extends FunSpec with Matchers with ScalaFutures with Integra
  */
 trait PlayAppSupport extends SuiteMixin with TestAppComponents with RequiresDB { this: Suite =>
 
+  implicit def eCtx = appComponents.executionContext
+
   abstract override def run(testName: Option[String], args: Args): Status = {
     Play.start(app)
     try {

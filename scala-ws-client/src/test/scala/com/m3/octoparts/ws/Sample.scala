@@ -4,19 +4,22 @@ import java.util.UUID
 
 import com.m3.octoparts.model._
 import play.api.libs.json.Json
-import play.api.libs.ws.WS
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-
 import PartRequestEnrichment._
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
+import play.api.libs.ws.ahc.AhcWSClient
 
 /**
  * Sample showing how to use the client.
  */
 object Sample {
   import scala.concurrent.ExecutionContext.Implicits.global
-  import play.api.Play.current
+
+  implicit val actorSystem = ActorSystem("client-sample")
+  implicit val actorMaterializer = ActorMaterializer()
 
   // Define some dummy model classes
   case class UserProfile(id: Int, name: String)
@@ -29,7 +32,7 @@ object Sample {
   import AggregateResponseEnrichment._
 
   // Create a client
-  val octoClient = new OctoClient(WS.client, "http://octoparts/", clientTimeout = 1.second)
+  val octoClient = new OctoClient(AhcWSClient.apply(), "http://octoparts/", clientTimeout = 1.second)
 
   implicit object rmb extends RequestMetaBuilder[Int] {
     def apply(userId: Int) = RequestMeta(
