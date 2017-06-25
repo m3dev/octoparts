@@ -39,7 +39,7 @@ class OctoClientSpec
 
     def jsonAsWSResponse(js: JsValue): AhcWSResponse = {
       val mockWSResp = mock[AhcWSResponse]
-      when(mockWSResp.json).thenReturn(js)
+      when(mockWSResp.body[JsValue]).thenReturn(js)
       when(mockWSResp.status).thenReturn(200)
       mockWSResp
     }
@@ -52,9 +52,9 @@ class OctoClientSpec
 
     def mockWSHolder(fWSRespPost: Future[AhcWSResponse], fWSRespGet: Future[AhcWSResponse]): WSRequest = {
       val mockWS = mock[AhcWSRequest]
-      when(mockWS.withQueryString(anyVararg())).thenReturn(mockWS)
+      when(mockWS.addQueryStringParameters(anyVararg())).thenReturn(mockWS)
       when(mockWS.get()).thenReturn(fWSRespGet)
-      when(mockWS.withHeaders(anyVararg())).thenReturn(mockWS)
+      when(mockWS.addHttpHeaders(anyVararg())).thenReturn(mockWS)
       when(mockWS.post(anyObject[JsValue])(anyObject())).thenReturn(fWSRespPost)
       when(mockWS.post(anyObject[EmptyContent])(anyObject())).thenReturn(fWSRespPost)
       mockWS
@@ -189,7 +189,7 @@ class OctoClientSpec
       it("should send the headers properly") {
         val (holder, client) = mockSubjectWithHolder(respPost, respGet)
         client.invoke(mockAggReq, "hello" -> "world")
-        eventually(verify(holder).withHeaders("hello" -> "world"))
+        eventually(verify(holder).addHttpHeaders("hello" -> "world"))
       }
 
     }
@@ -219,7 +219,7 @@ class OctoClientSpec
       it("should send the headers properly") {
         val (holder, client) = mockSubjectWithHolder(respPost, respGet)
         client.invoke((User(Some("hello")), FakeRequest()), Seq(PartRequest("hi")), "hello" -> "world")
-        eventually(verify(holder).withHeaders("hello" -> "world"))
+        eventually(verify(holder).addHttpHeaders("hello" -> "world"))
       }
     }
 

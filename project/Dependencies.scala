@@ -55,15 +55,14 @@ object Dependencies {
   val scalikeJdbcConfig   = "org.scalikejdbc"           %% "scalikejdbc-config"           % scalikejdbcVersion
   val scalikeJdbcPlay     = "org.scalikejdbc"           %% "scalikejdbc-play-initializer" % "2.4.5"
   val dbcp2               = "org.apache.commons"        % "commons-dbcp2"                 % "2.1.1"
-  // TODO: flyway 4.0 migration
-  val flyway              = "org.flywaydb"              % "flyway-core"                   % "4.0"
+
+  val flyway              = "org.flywaydb"              % "flyway-core"                   % "4.2.0"
 
   // Memcached
   val shade               = "com.bionicspirit"          %% "shade"                        % "1.7.4"
 
   // Play plugins
-  // TODO: flyway-play 2.3.0+ bumps flyway-core to 4.0
-  val playFlyway          = "org.flywaydb"              %% "flyway-play"                  % "3.1.0"
+  val playFlyway          = "org.flywaydb"              %% "flyway-play"                  % "4.0.0"
   val providedPlay        = "com.typesafe.play"         %% "play"                         % thePlayVersion      % Provided
 
   // DI

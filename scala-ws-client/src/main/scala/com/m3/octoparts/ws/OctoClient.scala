@@ -159,7 +159,7 @@ trait OctoClientLike {
    */
   def listEndpoints(partIds: String*)(implicit ec: ExecutionContext): Future[Seq[HttpPartConfig]] = {
     wsRequestFor(urlFor(ListEndpoints), clientTimeout)
-      .withQueryString(partIds.map(n => partIdFilterName -> n): _*)
+      .addQueryStringParameters(partIds.map(n => partIdFilterName -> n): _*)
       .get()
       .map(resp => resp.json.as[Seq[HttpPartConfig]])
       .recover(rescuer(rescueHttpPartConfigs))
@@ -230,7 +230,7 @@ trait OctoClientLike {
    */
   protected def wsPost[A](url: String, timeout: FiniteDuration, body: A, headers: Seq[(String, String)] = Nil)(implicit wrt: BodyWritable[A], ct: ContentTypeOf[A]): Future[WSResponse] = {
     wsRequestFor(url, timeout)
-      .withHeaders(headers: _*)
+      .addHttpHeaders(headers: _*)
       .post(body)
   }
 
