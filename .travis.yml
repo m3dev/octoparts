@@ -1,12 +1,15 @@
 language: scala
 
+sudo: false
+
 jdk:
   - oraclejdk8
 
 scala:
   - 2.11.11
 env:
-  - SBT_OPTS="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:PermSize=256m -XX:MaxPermSize=512m -Xms128m -Xmx512m" JAVA_OPTS="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:PermSize=256m -XX:MaxPermSize=512m -Xms1024m -Xmx1024m"
+  - SBT_OPTS="-XX:+UseG1GC -XX:+UseCompressedOops -XX:+UseStringDeduplication -Xms512m -Xmx=512m"
+  - JAVA_OPTS="-XX:+UseG1GC -XX:+UseCompressedOops -XX:+UseStringDeduplication -Xms1548m -Xmx=1548m"
 
 addons:
   postgresql: "9.3"
@@ -24,9 +27,19 @@ script:
 after_success:
   - sbt coverageReport coverageAggregate coveralls
 
-sudo: false
-
 cache:
   directories:
-  - $HOME/.sbt
+  - $HOME/.sbt/0.13
+  - $HOME/.sbt/boot/scala*
+  - $HOME/.sbt/cache
+  - $HOME/.sbt/launchers
   - $HOME/.ivy2
+  - $HOME/.coursier
+
+before_cache:
+  - du -h -d 1 $HOME/.ivy2/
+  - du -h -d 2 $HOME/.sbt/
+  - du -h -d 4 $HOME/.coursier/
+  - find $HOME/.sbt -name "*.lock" -type f -delete
+  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -type f -delete
+  - find $HOME/.coursier/cache -name "*.lock" -type f -delete
