@@ -40,6 +40,9 @@ class OctoClientSpec
     def jsonAsWSResponse(js: JsValue): AhcWSResponse = {
       val mockWSResp = mock[AhcWSResponse]
       when(mockWSResp.body[JsValue]).thenReturn(js)
+      // .json is deprecated on AhcWSResponse but not on WSResponse.
+      // do a cast here for clarity.
+      when(mockWSResp.asInstanceOf[WSResponse].json).thenReturn(js)
       when(mockWSResp.status).thenReturn(200)
       mockWSResp
     }
