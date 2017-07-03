@@ -30,7 +30,7 @@ object HystrixMetricsLogger
       m.getExecutionTimePercentile(50),
       m.getExecutionTimePercentile(95),
       m.getExecutionTimePercentile(99),
-      m.getExecutionTimePercentile(99.8)
+      m.getExecutionTimePercentile(99.9)
     )
   }
 

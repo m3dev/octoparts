@@ -15,7 +15,7 @@ object Dependencies {
 
   val thePlayVersion = play.core.PlayVersion.current
   val slf4jVersion = "1.7.25"
-  val hystrixVersion = "1.4.26"
+  val hystrixVersion = "1.5.12"
   val httpClientVersion = "4.5.2"
   val scalikejdbcVersion = "2.4.3"
   val jacksonVersion = "2.5.5"
@@ -35,7 +35,10 @@ object Dependencies {
   // Hystrix
   val hystrixCore         = "com.netflix.hystrix"       % "hystrix-core"                  % hystrixVersion
   val hystrixStream       = "com.netflix.hystrix"       % "hystrix-metrics-event-stream"  % hystrixVersion
+  val hsytrixSerialization= "com.netflix.hystrix"       % "hystrix-serialization"         % hystrixVersion   % Runtime
+
   val rxJavaScala         = "io.reactivex"              %% "rxscala"                      % "0.26.5" // compatible with the rxjava (1.1.0) used in hystrix-core. Check again if you change.
+  val rxReactiveStreams   = "io.reactivex"              % "rxjava-reactive-streams"       % "1.2.1"
 
   // HTTP clients
   val asyncHttpClient     = "com.ning"                  % "async-http-client"             % "1.9.21" // not upgrading because play-ws uses this version
@@ -120,7 +123,9 @@ object Dependencies {
     //Hystrix
     hystrixCore,
     hystrixStream,
+    hsytrixSerialization,
     rxJavaScala,
+    rxReactiveStreams,
 
     // Apache HTTP client
     httpClient,
