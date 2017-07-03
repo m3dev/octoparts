@@ -73,7 +73,8 @@ object Dependencies {
   // Swagger
   val swaggerPlay26       = "io.swagger"                 %% "swagger-play2"                % "1.6.0-SNAPSHOT" // replace with offical when ready
   val swaggerAnnotations  = "io.swagger"                 % "swagger-annotations"           % "1.5.15"
-
+  val swaggerUI           = "org.webjars"                % "swagger-ui"                    % "3.0.17"
+  val webjarsPlay         = "org.webjars"                %% "webjars-play"                 % "2.6.0"
   // Jackson
   val jacksonCore         = "com.fasterxml.jackson.core"   % "jackson-core"               % jacksonVersion
   val jacksonScala        = "com.fasterxml.jackson.module" %% "jackson-module-scala"      % jacksonScalaVersion
@@ -160,6 +161,8 @@ object Dependencies {
 
     // Swagger
     swaggerPlay26,
+    swaggerUI,
+    webjarsPlay,
 
     openId,
 

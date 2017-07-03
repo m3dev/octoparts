@@ -2,7 +2,8 @@ package com.m3.octoparts.wiring.assembling
 
 import com.m3.octoparts.wiring.ControllersModule
 import com.softwaremill.macwire._
-import controllers.{ Assets, AssetsComponents }
+import controllers.AssetsComponents
+import org.webjars.play.{ RequireJS, WebJarAssets }
 import play.api.ApplicationLoader.Context
 import play.api.{ BuiltInComponents, BuiltInComponentsFromContext }
 import play.api.i18n.I18nComponents
@@ -33,6 +34,11 @@ class ApplicationComponents(context: Context)
   lazy val mode = context.environment.mode
 
   lazy val router: Router = {
+    val webjarRoutes = {
+      val webjarAssets = wire[WebJarAssets]
+      val requireJS = wire[RequireJS]
+      wire[webjars.Routes]
+    }
     val prefix = "/"
     wire[Routes]
   }
