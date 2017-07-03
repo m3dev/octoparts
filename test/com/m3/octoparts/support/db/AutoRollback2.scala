@@ -1,14 +1,12 @@
 package com.m3.octoparts.support.db
 
-import org.scalatest.Outcome
-import org.scalatest.fixture.Suite
-
+import org.scalatest._
 import scalikejdbc._
 
 /**
  * Adapted from scalikejdbc's AutoRollback for scalatest 2
  */
-trait AutoRollback2 { self: Suite =>
+trait AutoRollback2 { self: fixture.TestSuite =>
 
   type FixtureParam = DBSession
 

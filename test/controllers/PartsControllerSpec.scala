@@ -12,7 +12,7 @@ import com.m3.octoparts.model.config.HttpPartConfig
 import com.m3.octoparts.support.PlayAppSupport
 import com.m3.octoparts.support.mocks.{ ConfigDataMocks, MockConfigRepository }
 import com.twitter.zipkin.gen.Span
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{ FlatSpec, Matchers }
 import play.api.libs.json.Json
 import play.api.test.FakeRequest

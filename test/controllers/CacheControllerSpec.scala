@@ -10,7 +10,7 @@ import com.twitter.zipkin.gen.Span
 import org.mockito.Matchers.{ eq => mockitoEq, _ }
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{ FlatSpec, Matchers }
 import play.api.http.FileMimeTypes
 import play.api.i18n.{ Langs, MessagesApi }

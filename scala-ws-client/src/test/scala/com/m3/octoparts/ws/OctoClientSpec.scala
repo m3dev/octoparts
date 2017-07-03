@@ -10,7 +10,7 @@ import com.m3.octoparts.model.config.json._
 import play.api.libs.json._
 import org.scalatest._
 import org.scalatest.concurrent.{ Eventually, IntegrationPatience, PatienceConfiguration, ScalaFutures }
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import play.api.libs.ws._
 import org.mockito.Mockito._

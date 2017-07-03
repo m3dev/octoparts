@@ -11,7 +11,7 @@ import org.scalatest.{ Status, Args, BeforeAndAfterAll, fixture }
  * Ensures that the test database is torn down and migrated to start with.
  * Each test "fixture" is wrapped in a transaction
  */
-trait DBSuite extends AutoRollback2 with BeforeAndAfterAll with PlayAppSupport { this: fixture.Suite =>
+trait DBSuite extends AutoRollback2 with BeforeAndAfterAll with PlayAppSupport { this: fixture.TestSuite =>
 
   override def beforeAll(): Unit = {
     migrate()

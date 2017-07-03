@@ -78,10 +78,10 @@ object Dependencies {
 
   // Test
   val playTest            = "com.typesafe.play"         %% "play-test"                    % thePlayVersion      % Test
-  // TODO: Upgrading to 3.0
-  val scalatest           = "org.scalatest"             %% "scalatest"                    % "2.2.6"             % Test
-  val scalatestPlay       = "org.scalatestplus"         %% "play"                         % "1.4.0"             % Test
-  val scalacheck          = "org.scalacheck"            %% "scalacheck"                   % "1.12.6"            % Test
+
+  val scalatest           = "org.scalatest"             %% "scalatest"                    % "3.0.3"             % Test
+  val scalatestPlay       = "org.scalatestplus.play"    %% "scalatestplus-play"           % "3.0.0"             % Test
+  val scalacheck          = "org.scalacheck"            %% "scalacheck"                   % "1.13.5"            % Test
   val groovy              = "org.codehaus.groovy"       %  "groovy"                       % "2.4.7"             % Test
   val scalikeJdbcTest     = "org.scalikejdbc"           %% "scalikejdbc-test"             % scalikejdbcVersion  % Test
   val mockitoCore         = "org.mockito"               % "mockito-core"                  % "1.10.19"           % Test
