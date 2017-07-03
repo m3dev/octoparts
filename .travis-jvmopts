@@ -5,5 +5,5 @@
 -XX:+UseCompressedOops
 -XX:+UseStringDeduplication
 -Xss2M
--Xms2048M
--Xmx2048M
+-Xms1536M
+-Xmx1536M
