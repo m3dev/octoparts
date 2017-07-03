@@ -6,7 +6,7 @@ import com.m3.octoparts.wiring.assembling.ApplicationComponents
 import controllers.hystrix.HystrixController
 import controllers.system._
 import controllers._
-import pl.matisoft.swagger.ApiHelpController
+import _root_.controllers.ApiHelpController
 import play.api.i18n.I18nComponents
 import presentation.NavbarLinks
 
@@ -64,7 +64,7 @@ trait ControllersModule
 
   lazy val authController = wire[AuthController]
 
-  lazy val apiHelpController = new ApiHelpController
+  lazy val apiHelpController = wire[ApiHelpController]
 
   lazy val buildInfoController = wire[BuildInfoController]
 

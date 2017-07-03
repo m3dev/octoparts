@@ -5,7 +5,7 @@ import java.nio.charset.Charset
 import com.fasterxml.jackson.module.scala.JsonScalaEnumeration
 import com.m3.octoparts.model.HttpMethod
 import com.m3.octoparts.model.jackson.HttpMethodType
-import com.wordnik.swagger.annotations.ApiModelProperty
+import io.swagger.annotations.ApiModelProperty
 
 import scala.annotation.meta.field
 import scala.concurrent.duration.{ Duration, FiniteDuration }

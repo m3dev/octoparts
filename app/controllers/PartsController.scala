@@ -1,7 +1,5 @@
 package controllers
 
-import javax.ws.rs.QueryParam
-
 import akka.actor.ActorSystem
 import com.beachape.zipkin.ReqHeaderToSpanImplicit
 import com.beachape.zipkin.services.ZipkinServiceLike
@@ -12,7 +10,7 @@ import com.m3.octoparts.aggregator.service.PartsService
 import com.m3.octoparts.model._
 import com.m3.octoparts.model.config.HttpPartConfig
 import com.m3.octoparts.repository.ConfigsRepository
-import com.wordnik.swagger.annotations._
+import io.swagger.annotations._
 import controllers.support.{ LoggingSupport, PartListFilterSupport }
 import org.apache.http.client.cache.HeaderConstants
 import play.api.libs.json.Json
@@ -104,7 +102,7 @@ class PartsController(
       value =
       "Optional part ids to filter on. Note, this should be passed as multiple partIdParams=partId, e.g ?partIdParams=wut&partIdParams=wut3 ",
       allowMultiple = true
-    )@QueryParam("partIdParams") partIdParams: List[String] = Nil
+    ) partIdParams: List[String] = Nil
   ) =
     Action.async { implicit req =>
       retrieveParts(partIdParams)

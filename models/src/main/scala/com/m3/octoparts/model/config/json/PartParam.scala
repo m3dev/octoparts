@@ -3,7 +3,7 @@ package com.m3.octoparts.model.config.json
 import com.fasterxml.jackson.module.scala.JsonScalaEnumeration
 import com.m3.octoparts.model.config.ParamType
 import com.m3.octoparts.model.jackson.ParamTypeType
-import com.wordnik.swagger.annotations.ApiModelProperty
+import io.swagger.annotations.ApiModelProperty
 
 import scala.annotation.meta.field
 

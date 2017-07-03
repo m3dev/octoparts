@@ -1,6 +1,6 @@
 package com.m3.octoparts.model.config.json
 
-import com.wordnik.swagger.annotations.ApiModelProperty
+import io.swagger.annotations.ApiModelProperty
 
 import scala.annotation.meta.field
 import scala.concurrent.duration._

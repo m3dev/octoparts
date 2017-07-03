@@ -18,7 +18,6 @@ object Dependencies {
   val hystrixVersion = "1.4.26"
   val httpClientVersion = "4.5.2"
   val scalikejdbcVersion = "2.4.3"
-  val swaggerVersion = "1.3.13"
   val jacksonVersion = "2.5.5"
   val jacksonScalaVersion = "2.5.2"
   val macwireVersion = "2.2.5"
@@ -69,8 +68,8 @@ object Dependencies {
   val macwireMacros       = "com.softwaremill.macwire"  %% "macros"                       % macwireVersion
 
   // Swagger
-  val swaggerPlay24       = "pl.matisoft"               %% "swagger-play24"               % "1.4" // Replace with Official version once 1.3.13 hits
-  val swaggerAnnotations  = "com.wordnik"               % "swagger-annotations"           % swaggerVersion
+  val swaggerPlay26       = "io.swagger"                 %% "swagger-play2"                % "1.6.0-SNAPSHOT" // replace with offical when ready
+  val swaggerAnnotations  = "io.swagger"                 % "swagger-annotations"           % "1.5.15"
 
   // Jackson
   val jacksonCore         = "com.fasterxml.jackson.core"   % "jackson-core"               % jacksonVersion
@@ -153,7 +152,9 @@ object Dependencies {
 
     // Play plugins
     playFlyway,
-    swaggerPlay24,
+
+    // Swagger
+    swaggerPlay26,
 
     openId,
 
