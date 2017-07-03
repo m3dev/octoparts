@@ -10,7 +10,7 @@ import scala.collection.SortedSet
 
 class HttpPartConfigCheckerSpec extends FunSpec with Matchers with ConfigDataMocks with PlayAppSupport {
 
-  private implicit val messages = MessagesImpl(Lang("en"), new DefaultMessagesApi())
+  private implicit val messages = MessagesImpl(Lang("en"), appComponents.messagesApi)
 
   describe("QueryParamInterpolation") {
     it("Should be ok") {

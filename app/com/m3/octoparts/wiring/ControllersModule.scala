@@ -70,5 +70,5 @@ trait ControllersModule
 
   lazy val defaultController = new Default
 
-  lazy val metricsController = wire[MetricsController]
+  //  lazy val metricsController = wire[MetricsController] TODO reenable this
 }

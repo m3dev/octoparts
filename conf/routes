@@ -88,4 +88,4 @@ GET         /system/build                                                       
 GET         /system/config                                                                      controllers.system.SystemConfigController.showSystemConfig
 GET         /system/config/logger                                                               controllers.system.SystemConfigController.showLoggerStatus
 GET         /system/healthcheck                                                                 controllers.system.HealthcheckController.healthcheck
-GET         /system/metrics                                                                     com.kenshoo.play.metrics.MetricsController.metrics
+#GET         /system/metrics                                                                     com.kenshoo.play.metrics.MetricsController.metrics
