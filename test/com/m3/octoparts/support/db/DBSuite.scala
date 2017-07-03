@@ -14,8 +14,11 @@ import org.scalatest.{ Status, Args, BeforeAndAfterAll, fixture }
 trait DBSuite extends AutoRollback2 with BeforeAndAfterAll with PlayAppSupport { this: fixture.Suite =>
 
   override def beforeAll(): Unit = {
-    tearDown()
     migrate()
+  }
+
+  override def afterAll(): Unit = {
+    tearDown()
   }
 
   /*
