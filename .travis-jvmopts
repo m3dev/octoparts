@@ -1,0 +1,9 @@
+# This is used to configure the sbt instance that Travis launches
+
+-XX:MaxMetaspaceSize=512M
+-XX:+UseG1GC
+-XX:+UseCompressedOops
+-XX:+UseStringDeduplication
+-Xss2M
+-Xms2048M
+-Xmx2048M

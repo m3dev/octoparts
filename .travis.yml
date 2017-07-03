@@ -8,11 +8,6 @@ jdk:
 scala:
   - 2.11.11
 
-env:
-  global:
-    - SBT_OPTS="-XX:+UseG1GC -XX:+UseCompressedOops -XX:+UseStringDeduplication -Xms512m -Xmx=512m"
-    - JAVA_OPTS="-XX:+UseG1GC -XX:+UseCompressedOops -XX:+UseStringDeduplication -Xms1548m -Xmx=1548m"
-
 addons:
   postgresql: "9.3"
 
@@ -22,9 +17,8 @@ before_script:
   - psql -c "GRANT ALL PRIVILEGES ON DATABASE octoparts_test to octoparts_app;" -U postgres
 
 script:
-  - sbt clean compile test:compile
-  - sbt coverage test
-  - find $HOME/.sbt -name "*.lock" -type f -delete && find $HOME/.ivy2/cache -name "*[\[\]\(\)]*.properties" -type f -delete
+  - sbt -jvm-opts .travis-jvmopts test:compile
+  - sbt -jvm-opts .travis-jvmopts coverage test
 
 after_success:
   - sbt coverageReport coverageAggregate coveralls
