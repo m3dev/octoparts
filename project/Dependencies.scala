@@ -97,7 +97,7 @@ object Dependencies {
   val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.16"
   val findbugs            = "com.google.code.findbugs"  % "jsr305"                        % "3.0.2"
 
-  val kenshoo             = "com.kenshoo"               %% "metrics-play"                 % "2.4.0_0.4.1"
+  val kenshoo             = "com.kenshoo"               %% "metrics-play"                 % "2.6.6_0.6.2"
 
   val zipkinFutures       = "com.beachape"              %% "zipkin-futures-play"          % "0.3.0"
 

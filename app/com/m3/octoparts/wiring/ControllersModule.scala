@@ -20,7 +20,8 @@ trait ControllersModule
     with HystrixModule
     with AuthHandlerModule
     with I18nComponents
-    with FiltersModule { this: ApplicationComponents.Essentials =>
+    with FiltersModule {
+  this: ApplicationComponents.Essentials =>
 
   def controllerComponents: ControllerComponents
 
@@ -69,5 +70,5 @@ trait ControllersModule
 
   lazy val defaultController = new Default
 
-  //  lazy val metricsController = wire[MetricsController] TODO reenable this
+  lazy val metricsController = wire[MetricsController]
 }
