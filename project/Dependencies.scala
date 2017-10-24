@@ -8,8 +8,7 @@ object Dependencies {
     // Use in-house Maven repo before other remote repos if env var is set
     resolvers ++= Seq(Resolver.defaultLocal) ++ sys.env.get("INHOUSE_MAVEN_REPO").map("Inhouse".at) ++ Seq(
       Resolver.typesafeRepo("releases"),
-      Resolver.sonatypeRepo("releases"),
-      Resolver.sonatypeRepo("snapshots")
+      Resolver.sonatypeRepo("releases")
       )
   }
 
@@ -71,7 +70,7 @@ object Dependencies {
   val macwireMacros       = "com.softwaremill.macwire"  %% "macros"                       % macwireVersion
 
   // Swagger
-  val swaggerPlay26       = "io.swagger"                 %% "swagger-play2"                % "1.6.0-SNAPSHOT" // replace with offical when ready
+  val swaggerPlay26       = "io.swagger"                 %% "swagger-play2"                % "1.6.0"
   val swaggerAnnotations  = "io.swagger"                 % "swagger-annotations"           % "1.5.15"
   val swaggerUI           = "org.webjars"                % "swagger-ui"                    % "3.0.17"
   val webjarsPlay         = "org.webjars"                %% "webjars-play"                 % "2.6.0"
