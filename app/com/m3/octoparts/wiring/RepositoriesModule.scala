@@ -15,7 +15,7 @@ trait RepositoriesModule
   private implicit lazy val ec = dbFetchExecutionContext
 
   lazy val configsRepository = {
-    val localBuffer = configuration.getInt("memcached.configLocalBuffer")
+    val localBuffer = configuration.getOptional[Int]("memcached.configLocalBuffer")
 
     val mutableRepoCache = localBuffer match {
       case Some(localBufferDuration) if localBufferDuration > 0 => {

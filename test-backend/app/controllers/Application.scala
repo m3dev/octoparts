@@ -3,7 +3,7 @@ package controllers
 import play.api._
 import play.api.mvc._
 import play.api.libs.concurrent.Promise
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
 
 object Application extends Controller {
 
@@ -25,7 +25,7 @@ object Application extends Controller {
   /**
    * Emulates a backend with ETag support and/or custom Cache-Control header.
    *
-   * If passed an `etag` query param, 
+   * If passed an `etag` query param,
    * - if request has an `If-None-Match` header, and it matches the query param, returns a 304.
    * - otherwise, return a 200 with an `ETag` header attached.
    *

@@ -1,11 +1,7 @@
 package com.m3.octoparts.support.db
 
-import java.sql.Connection
-
 import com.beachape.logging.LTSVLogger
 import org.flywaydb.core.Flyway
-import org.flywaydb.core.api.MigrationInfo
-import org.flywaydb.core.api.callback.FlywayCallback
 import org.scalatest.Suite
 import scalikejdbc.ConnectionPool
 
@@ -21,41 +17,8 @@ import scala.util.control.NonFatal
  */
 private[support] trait RequiresDB extends Suite {
 
-  lazy val flyway = {
+  def flyway = {
     val flyway = new Flyway
-    flyway.setCallbacks(new FlywayCallback {
-      def beforeInit(conn: Connection) = conn.setReadOnly(false)
-
-      def beforeRepair(conn: Connection) = conn.setReadOnly(false)
-
-      def beforeValidate(conn: Connection) = conn.setReadOnly(false)
-
-      def beforeInfo(conn: Connection) = conn.setReadOnly(false)
-
-      def beforeClean(conn: Connection) = conn.setReadOnly(false)
-
-      def beforeMigrate(conn: Connection) = conn.setReadOnly(false)
-
-      def beforeBaseline(conn: Connection) = conn.setReadOnly(false)
-
-      def beforeEachMigrate(conn: Connection, p2: MigrationInfo) = conn.setReadOnly(false)
-
-      def afterInfo(conn: Connection) = conn.setReadOnly(false)
-
-      def afterInit(conn: Connection) = conn.setReadOnly(false)
-
-      def afterRepair(conn: Connection) = conn.setReadOnly(false)
-
-      def afterValidate(conn: Connection) = conn.setReadOnly(false)
-
-      def afterEachMigrate(conn: Connection, p2: MigrationInfo) = conn.setReadOnly(false)
-
-      def afterMigrate(conn: Connection) = conn.setReadOnly(false)
-
-      def afterClean(conn: Connection) = conn.setReadOnly(false)
-
-      def afterBaseline(conn: Connection) = conn.setReadOnly(false)
-    })
     flyway.setDataSource(ConnectionPool().dataSource)
     flyway.setPlaceholderPrefix("$flyway{")
     flyway
@@ -70,12 +33,12 @@ private[support] trait RequiresDB extends Suite {
   def tearDown(): Unit = {
     try {
       /*
-        Tries to drop all objects in the database.
+            Tries to drop all objects in the database.
 
-        Needs to be in this try because it throws the database doesn't have the schema_version
-        table, which may happen if in an arbitrary test, someone decides to drop everything in the
-        database directly without initiating it again.
-       */
+            Needs to be in this try because it throws the database doesn't have the schema_version
+            table, which may happen if in an arbitrary test, someone decides to drop everything in the
+            database directly without initiating it again.
+           */
       flyway.clean()
     } catch {
       case NonFatal(e) => LTSVLogger.error(e)

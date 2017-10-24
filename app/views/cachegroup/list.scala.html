@@ -1,7 +1,9 @@
+@import com.m3.octoparts.util.ConfigMode
 @(
   cacheGroups: scala.collection.SortedSet[com.m3.octoparts.model.config.CacheGroup]
 )(implicit
   flash: Flash,
+  configMode: ConfigMode,
   navbarLinks: presentation.NavbarLinks,
   messages: Messages
 )

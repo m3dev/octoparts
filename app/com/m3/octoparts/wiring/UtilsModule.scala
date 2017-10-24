@@ -4,16 +4,16 @@ import java.net.InetAddress
 
 import com.beachape.zipkin.services.{ BraveZipkinService, NoopZipkinService, ZipkinServiceLike }
 import com.github.kristofa.brave.zipkin.ZipkinSpanCollector
-
 import com.m3.octoparts.logging.PartRequestLogger
 import com.m3.octoparts.util.OctoMetricsImpl
-import play.api.Mode.Mode
+import play.api.Mode
 import play.api._
 import play.api.inject.ApplicationLifecycle
 
 import scala.util.{ Failure, Success, Try }
-
 import com.softwaremill.macwire._
+
+import scala.concurrent.ExecutionContext
 
 /*
  Random common stuff that doesn't belong in other modules
@@ -26,6 +26,8 @@ trait UtilsModule {
 
   def applicationLifecycle: ApplicationLifecycle
 
+  def executionContext: ExecutionContext
+
   implicit lazy val metrics = wire[OctoMetricsImpl]
 
   /*
@@ -36,21 +38,21 @@ trait UtilsModule {
   lazy val partsReqLogger: PartRequestLogger = PartRequestLogger
 
   implicit lazy val zipkinService: ZipkinServiceLike = {
-    import play.api.libs.concurrent.Execution.Implicits._
+    implicit def eCtx = executionContext
     if (mode == Mode.Test) {
       NoopZipkinService
     } else {
       val maybeService = for {
-        zipkinHost <- configuration.getString("zipkin.host")
-        zipkinPort <- configuration.getInt("zipkin.port")
-        zipkinRate <- configuration.getDouble("zipkin.sampleRate")
-        env <- configuration.getString("application.env")
+        zipkinHost <- configuration.getOptional[String]("zipkin.host")
+        zipkinPort <- configuration.getOptional[Int]("zipkin.port")
+        zipkinRate <- configuration.getOptional[Double]("zipkin.sampleRate")
+        env <- configuration.getOptional[String]("application.env")
       } yield {
         Try {
           val zipkinSpanCollector = new ZipkinSpanCollector(zipkinHost, zipkinPort)
           sys.addShutdownHook(zipkinSpanCollector.close())
           val currentHostName = InetAddress.getLocalHost.getHostName
-          val currentRunningPort = configuration.getInt("http.port").getOrElse(9000)
+          val currentRunningPort = configuration.getOptional[Int]("http.port").getOrElse(9000)
           new BraveZipkinService(
             hostIp = currentHostName,
             hostPort = currentRunningPort,

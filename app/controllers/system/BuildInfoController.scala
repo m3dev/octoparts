@@ -3,12 +3,12 @@ package controllers.system
 import com.m3.octoparts.BuildInfo
 import org.joda.time.{ DateTimeZone, LocalDateTime }
 import play.api.libs.json.{ JsArray, JsString, Json }
-import play.api.mvc.{ Action, Controller }
+import play.api.mvc.{ AbstractController, Action, Controller, ControllerComponents }
 
 /**
  * A controller that simply prints the BuildInfo object as json
  */
-class BuildInfoController extends Controller {
+class BuildInfoController(controllerComponents: ControllerComponents) extends AbstractController(controllerComponents) {
 
   def showBuildInfo = Action {
     val json = Json.obj(

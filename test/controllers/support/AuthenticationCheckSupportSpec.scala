@@ -14,7 +14,7 @@ class AuthenticationCheckSupportSpec extends FlatSpec with Matchers with PlayApp
 
   val authHandler: Option[OctopartsAuthHandler] = None
 
-  val action = Action.andThen(authenticationCheckFilter(_ => Future.successful(Redirect("/login")))).apply(req => Ok(s"Hi, ${req.principal.nickname}"))
+  val action = appComponents.controllerComponents.actionBuilder.andThen(authenticationCheckFilter(_ => Future.successful(Redirect("/login")))).apply(req => Ok(s"Hi, ${req.principal.nickname}"))
 
   it should "redirect an unauthenticated user to a login page" in {
     redirectLocation(action.apply(FakeRequest())) should be(Some("/login"))

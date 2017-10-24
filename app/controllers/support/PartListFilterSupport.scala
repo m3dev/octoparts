@@ -1,6 +1,6 @@
 package controllers.support
 
-import com.wordnik.swagger.annotations.ApiModelProperty
+import io.swagger.annotations.ApiModelProperty
 import play.api.data.Form
 import play.api.data.Forms._
 import scala.annotation.meta.field

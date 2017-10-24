@@ -1,9 +1,11 @@
+@import com.m3.octoparts.util.ConfigMode
 @(
   itemTypeKey: String,
   itemName: String,
   cancelUrl: String
 )(implicit
   flash: Flash,
+  configMode: ConfigMode,
   navbarLinks: presentation.NavbarLinks,
   messages: Messages
 )

@@ -5,8 +5,7 @@ import com.m3.octoparts.json.format.ReqResp._
 import com.m3.octoparts.model._
 
 import java.util.UUID
-import play.api.http.{ ContentTypeOf, Writeable }
-import play.api.mvc.Results.EmptyContent
+import play.api.http.ContentTypeOf
 import play.api.Logger
 import play.api.libs.json._
 import play.api.libs.ws._
@@ -36,7 +35,7 @@ class OctoClient(
 ) extends OctoClientLike {
 
   protected def wsRequestFor(url: String, timeout: FiniteDuration) = {
-    client.url(url).withRequestTimeout((timeout + extraWait).toMillis.toInt)
+    client.url(url).withRequestTimeout(timeout + extraWait)
   }
 
   protected def rescuer[A](defaultReturn: => A): PartialFunction[Throwable, A] = {
@@ -160,7 +159,7 @@ trait OctoClientLike {
    */
   def listEndpoints(partIds: String*)(implicit ec: ExecutionContext): Future[Seq[HttpPartConfig]] = {
     wsRequestFor(urlFor(ListEndpoints), clientTimeout)
-      .withQueryString(partIds.map(n => partIdFilterName -> n): _*)
+      .addQueryStringParameters(partIds.map(n => partIdFilterName -> n): _*)
       .get()
       .map(resp => resp.json.as[Seq[HttpPartConfig]])
       .recover(rescuer(rescueHttpPartConfigs))
@@ -198,7 +197,7 @@ trait OctoClientLike {
    * less than 400 or false otherwise
    */
   def emptyPostOk(url: String)(implicit ec: ExecutionContext): Future[Boolean] =
-    wsPost(url, clientTimeout, EmptyContent()).map { resp =>
+    wsPost(url, clientTimeout, "").map { resp =>
       val code = resp.status
       if (code < 400) {
         logger.trace(s"$url -> ${resp.body}")
@@ -229,9 +228,9 @@ trait OctoClientLike {
    * @param timeout Timeout value for the request
    * @param headers headers to send along with the request
    */
-  protected def wsPost[A](url: String, timeout: FiniteDuration, body: A, headers: Seq[(String, String)] = Nil)(implicit wrt: Writeable[A], ct: ContentTypeOf[A]): Future[WSResponse] = {
+  protected def wsPost[A](url: String, timeout: FiniteDuration, body: A, headers: Seq[(String, String)] = Nil)(implicit wrt: BodyWritable[A], ct: ContentTypeOf[A]): Future[WSResponse] = {
     wsRequestFor(url, timeout)
-      .withHeaders(headers: _*)
+      .addHttpHeaders(headers: _*)
       .post(body)
   }
 

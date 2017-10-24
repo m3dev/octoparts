@@ -1,21 +1,22 @@
 package com.m3.octoparts.support
 
-import com.codahale.metrics.{ SharedMetricRegistries, MetricRegistry }
+import com.codahale.metrics.{ MetricRegistry, SharedMetricRegistries }
 import com.kenshoo.play.metrics.Metrics
-import com.m3.octoparts.support.db.{ RequiresDB, DBSuite }
+import com.m3.octoparts.support.db.RequiresDB
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.openqa.selenium.safari.SafariDriver
 import org.scalatest._
-import org.scalatest.concurrent.{ ScalaFutures, IntegrationPatience, Eventually }
+import org.scalatest.concurrent.{ Eventually, IntegrationPatience, ScalaFutures }
 import org.scalatest.selenium.WebBrowser
-import org.scalatestplus.play.{ PortNumber, BrowserFactory }
+import org.scalatestplus.play.{ BrowserFactory, PortNumber }
 import org.scalatestplus.play.BrowserFactory.UnavailableDriver
 import play.api._
 import play.api.test._
 import org.openqa.selenium.WebDriver
-
 import com.m3.octoparts.wiring.OctopartsApplicationLoader
+
+import scala.util.{ Success, Try }
 
 /*
  * This file holds a number of pre-made "test-harness" Specs for our own convenience
@@ -65,7 +66,9 @@ trait FutureFunSpec extends FunSpec with Matchers with ScalaFutures with Integra
  *
  * DI components for the app can be accessed via the applicationBuilder member
  */
-trait PlayAppSupport extends SuiteMixin with TestAppComponents with RequiresDB { this: Suite =>
+trait PlayAppSupport extends SuiteMixin with TestAppComponents with RequiresDB { this: TestSuite =>
+
+  implicit def eCtx = appComponents.executionContext
 
   abstract override def run(testName: Option[String], args: Args): Status = {
     Play.start(app)
@@ -94,7 +97,7 @@ trait PlayAppSupport extends SuiteMixin with TestAppComponents with RequiresDB {
  * to funny things like failure to enqueue events on the Akka scheduler timer due to the timer having
  * been shut down before it has ever been used.
  */
-trait PlayServerSupport extends SuiteMixin with TestAppComponents with RequiresDB { this: Suite =>
+trait PlayServerSupport extends SuiteMixin with TestAppComponents with RequiresDB { this: TestSuite =>
 
   /**
    * Implicit `PortNumber` instance that wraps `port`. The value returned from `portNumber.value`
@@ -141,11 +144,11 @@ trait PlayServerSupport extends SuiteMixin with TestAppComponents with RequiresD
 }
 
 trait OneDIBrowserPerSuite
-    extends SuiteMixin
+    extends TestSuiteMixin
     with WebBrowser
     with Eventually
     with IntegrationPatience
-    with BrowserFactory { this: Suite =>
+    with BrowserFactory { this: TestSuite =>
 
   /**
    * Override this to your needs
@@ -195,7 +198,7 @@ trait OneDIBrowserPerSuite
    * @return a `Status` object that indicates when all tests and nested suites started by this method have completed, and whether or not a failure occurred.
    */
   abstract override def run(testName: Option[String], args: Args): Status = {
-    val cleanup: Boolean => Unit = { _ =>
+    val cleanup: Try[Boolean] => Unit = { _ =>
       webDriver match {
         case _: UnavailableDriver => // do nothing for UnavailableDriver
         case safariDriver: SafariDriver => safariDriver.quit()
@@ -211,7 +214,7 @@ trait OneDIBrowserPerSuite
       status
     } catch {
       case ex: Throwable =>
-        cleanup(false)
+        cleanup(Success(false))
         throw ex
     }
   }

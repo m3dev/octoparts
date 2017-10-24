@@ -3,9 +3,9 @@ package com.m3.octoparts.ws
 import java.io.IOException
 
 import com.m3.octoparts.model.{ AggregateResponse, PartResponse }
-import org.apache.commons.lang3.{ StringUtils, SystemUtils }
+import org.apache.commons.lang3.StringUtils
 import play.api.Logger
-import play.api.data.validation.ValidationError
+import play.api.libs.json.JsonValidationError
 import play.api.libs.json._
 
 import scala.util.{ Failure, Success, Try }
@@ -14,7 +14,7 @@ object AggregateResponseEnrichment {
 
   case class OctopartsException(
     partResponse: PartResponse
-  ) extends RuntimeException(partResponse.errors.mkString(SystemUtils.LINE_SEPARATOR))
+  ) extends RuntimeException(partResponse.errors.mkString(System.lineSeparator()))
 
   private val logger = Logger("com.m3.octoparts.AggregateResponseEnrichment")
 
@@ -177,7 +177,7 @@ object AggregateResponseEnrichment {
     )
   }
 
-  private def jsonErrorMsg(errors: Seq[(JsPath, Seq[ValidationError])]): String = {
+  private def jsonErrorMsg(errors: Seq[(JsPath, Seq[JsonValidationError])]): String = {
     errors.map {
       case (jsPath, validationErrors) => {
         val validationErrorMsg = validationErrors.map(_.message).mkString(",")

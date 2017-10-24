@@ -1,9 +1,7 @@
 package controllers.support
 
-import com.m3.octoparts.auth.OctopartsAuthHandler
-import com.beachape.logging.LTSVLogger
+import com.m3.octoparts.auth.AuthenticatedRequest
 import controllers.routes
-import play.api.{ Logger, Play }
 import play.api.mvc._
 
 /**
@@ -15,7 +13,7 @@ trait AuthSupport
     with AuthorizationCheckSupport
     with DummyPrincipalSupport { self: Results =>
 
-  import play.api.libs.concurrent.Execution.Implicits.defaultContext
+  def Action: ActionBuilder[Request, AnyContent]
 
   /**
    * An action that requires the user to be authenticated.
@@ -23,7 +21,7 @@ trait AuthSupport
    *  - if there is an enabled auth plugin, the request will be handled by that (e.g. redirected to an auth page).
    *  - otherwise they will be automatically logged in as a guest.
    */
-  lazy val AuthenticatedAction = {
+  lazy val AuthenticatedAction: ActionBuilder[AuthenticatedRequest, AnyContent] = {
     authHandler.fold {
       // No enabled auth plugin, so skip authentication and create a dummy principal
       Action andThen autoAuthenticateRequest

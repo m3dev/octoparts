@@ -1,7 +1,7 @@
 package com.m3.octoparts.aggregator.service
 
 import org.scalatest.{ Matchers, FlatSpec }
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import com.m3.octoparts.logging.PartRequestLogger
 import com.m3.octoparts.model._
 import org.mockito.Mockito._

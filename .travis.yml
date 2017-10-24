@@ -1,12 +1,12 @@
 language: scala
 
+sudo: false
+
 jdk:
   - oraclejdk8
 
 scala:
-  - 2.11.8
-env:
-  - SBT_OPTS="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:PermSize=256m -XX:MaxPermSize=512m -Xms128m -Xmx512m" JAVA_OPTS="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:PermSize=256m -XX:MaxPermSize=512m -Xms1024m -Xmx1024m"
+  - 2.11.11
 
 addons:
   postgresql: "9.3"
@@ -17,16 +17,25 @@ before_script:
   - psql -c "GRANT ALL PRIVILEGES ON DATABASE octoparts_test to octoparts_app;" -U postgres
 
 script:
-  - sbt clean compile test:compile
-  - sbt coverage test
-  - find $HOME/.sbt -name "*.lock" -type f -delete && find $HOME/.ivy2/cache -name "*[\[\]\(\)]*.properties" -type f -delete
+  - sbt -jvm-opts .travis-jvmopts test:compile
+  - sbt -jvm-opts .travis-jvmopts coverage test
 
 after_success:
   - sbt coverageReport coverageAggregate coveralls
 
-sudo: false
-
 cache:
   directories:
-  - $HOME/.sbt
+  - $HOME/.sbt/0.13
+  - $HOME/.sbt/boot/scala*
+  - $HOME/.sbt/cache
+  - $HOME/.sbt/launchers
   - $HOME/.ivy2
+  - $HOME/.coursier
+
+before_cache:
+  - du -h -d 1 $HOME/.ivy2/
+  - du -h -d 2 $HOME/.sbt/
+  - du -h -d 4 $HOME/.coursier/
+  - find $HOME/.sbt -name "*.lock" -type f -delete
+  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -type f -delete
+  - find $HOME/.coursier/cache -name "*.lock" -type f -delete

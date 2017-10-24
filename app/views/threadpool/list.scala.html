@@ -1,7 +1,9 @@
+@import com.m3.octoparts.util.ConfigMode
 @(
   threadPoolConfigs: scala.collection.SortedSet[com.m3.octoparts.model.config.ThreadPoolConfig]
 )(implicit
   flash: Flash,
+  configMode: ConfigMode,
   navbarLinks: presentation.NavbarLinks,
   messages: Messages
 )

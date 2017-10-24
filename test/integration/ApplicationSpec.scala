@@ -9,7 +9,7 @@ class ApplicationSpec extends FunSpec with PlayAppSupport with Matchers {
 
   def shouldReturnOk(path: String, shouldContain: Option[String] = None): Unit = {
     it(s"should return $OK for $path") {
-      val result = route(FakeRequest(GET, path)).get
+      val result = route(app, FakeRequest(GET, path)).get
       status(result) shouldBe OK
       shouldContain.foreach { s =>
         contentAsString(result) should include(s)

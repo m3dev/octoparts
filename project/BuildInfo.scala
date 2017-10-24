@@ -6,7 +6,7 @@ import sbtbuildinfo.Plugin._
 object BuildInfo {
 
   val config = Seq(
-    sourceGenerators in Compile <+= buildInfo,
+    sourceGenerators in Compile += buildInfo,
     buildInfoPackage := "com.m3.octoparts",
     buildInfoKeys := Seq[BuildInfoKey](
       "name" -> "Octoparts",

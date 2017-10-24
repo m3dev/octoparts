@@ -3,11 +3,11 @@ package controllers.support
 import com.m3.octoparts.auth._
 import play.api.mvc.{ ActionRefiner, Request, Result }
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
 trait AuthenticationCheckSupport {
 
-  import play.api.libs.concurrent.Execution.Implicits.defaultContext
+  implicit def eCtx: ExecutionContext
 
   def authHandler: Option[OctopartsAuthHandler]
 
@@ -21,6 +21,8 @@ trait AuthenticationCheckSupport {
   protected[support] def authenticationCheckFilter(
     onUnauthenticated: Request[_] => Future[Result]
   ) = new ActionRefiner[Request, AuthenticatedRequest] {
+
+    protected def executionContext: ExecutionContext = eCtx
 
     def refine[A](inputReq: Request[A]) = {
       extractPrincipal(inputReq).flatMap { maybePrincipal =>

@@ -74,13 +74,11 @@ GET         /hystrix.stream                                                     
 # -- Swagger-related --
 
 # File redirects
-GET         /swagger-ui/*file                                                                   controllers.Assets.at(path = "/public/swagger-ui", file)
-GET         /swagger-ui                                                                         controllers.Default.redirect(to = "/swagger-ui/")
-GET         /swagger-ui/                                                                        controllers.Assets.at(path = "/public/swagger-ui", file = "index.html")
+->          /webjars                                                                            webjars.Routes
 
 # Swagger - Root Resources Listing
-GET         /api-docs                                                                           pl.matisoft.swagger.ApiHelpController.getResources
-GET         /api-docs$path<.+>                                                                  pl.matisoft.swagger.ApiHelpController.getResource(path)
+GET         /api-docs                                                                           controllers.ApiHelpController.getResources
+GET         /api-docs$path<.+>                                                                  controllers.ApiHelpController.getResource(path)
 
 
 # System admin stuff

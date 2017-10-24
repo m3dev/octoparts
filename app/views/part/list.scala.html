@@ -1,7 +1,9 @@
+@import com.m3.octoparts.util.ConfigMode
 @(
   parts: scala.collection.SortedSet[presentation.HttpPartConfigView]
 )(implicit
   flash: Flash,
+  configMode: ConfigMode,
   navbarLinks: presentation.NavbarLinks,
   messages: Messages
 )
@@ -170,9 +172,10 @@
                 </td>
                 <td>
                     <a href="@controllers.routes.AdminController.showPart(partView.partId)"><span title="@Messages("parts.updated"): @partView.lastUpdate">@partView.partId</span></a>
-                    @if(partView.warnings.nonEmpty) {
-                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true" title="@partView.warnings.mkString("\n")"></span>
-                    }
+
+                        @if(partView.warnings.nonEmpty) {
+                            <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true" title="@partView.warnings.mkString("\n")"></span>
+                        }
                 </td>
                 <td>@partView.uriToInterpolate</td>
                 <td>@partView.config.owner</td>

@@ -14,7 +14,7 @@ trait EnvConfigLoader {
     environment: Environment
   ): Configuration = {
     val mode = environment.mode
-    val playEnv = baseConfig.getString("application.env").fold(mode.toString.toLowerCase) { parsedEnv =>
+    val playEnv = baseConfig.getOptional[String]("application.env").fold(mode.toString.toLowerCase) { parsedEnv =>
       /* "test" mode should cause the environment to be "test" except when
           the parsedEnv is "ci", since CI/Jenkins needs it's own test
           environment configuration

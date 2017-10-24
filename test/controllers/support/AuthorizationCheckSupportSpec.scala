@@ -3,7 +3,6 @@ package controllers.support
 import com.m3.octoparts.auth.{ OctopartsAuthHandler, PrincipalSessionPersistence }
 import com.m3.octoparts.support.PlayAppSupport
 import org.scalatest.{ FlatSpec, Matchers }
-import play.api.mvc.Action
 import play.api.mvc.Results._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -16,6 +15,8 @@ class AuthorizationCheckSupportSpec extends FlatSpec with Matchers with PlayAppS
   val authHandler: Option[OctopartsAuthHandler] = None
 
   val acceptedRoles = Set("king", "duke")
+
+  val Action = appComponents.defaultActionBuilder
 
   val action = Action.
     andThen(authenticationCheckFilter(_ => Future.successful(Unauthorized))).

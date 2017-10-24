@@ -12,7 +12,7 @@ import com.m3.octoparts.model.config.HttpPartConfig
 import com.m3.octoparts.support.PlayAppSupport
 import com.m3.octoparts.support.mocks.{ ConfigDataMocks, MockConfigRepository }
 import com.twitter.zipkin.gen.Span
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{ FlatSpec, Matchers }
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
@@ -23,7 +23,12 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with ConfigDataMocks with PlayAppSupport {
+class PartsControllerSpec
+    extends FlatSpec
+    with Matchers
+    with MockitoSugar
+    with ConfigDataMocks
+    with PlayAppSupport {
 
   import scala.concurrent.ExecutionContext.Implicits.global
   private implicit val emptySpan = new Span()
@@ -37,27 +42,44 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
   private val configsRepository = new MockConfigRepository {
     def keys = Seq("void", "error", "slow")
 
-    override def findConfigByPartId(partId: String)(implicit parentSpan: Span): Future[Option[HttpPartConfig]] = Future.successful {
+    override def findConfigByPartId(partId: String)(
+      implicit
+      parentSpan: Span
+    ): Future[Option[HttpPartConfig]] = Future.successful {
       if (keys.contains(partId)) Some(createConfig(partId)) else None
     }
 
-    override def findAllConfigs()(implicit parentSpan: Span): Future[SortedSet[HttpPartConfig]] = Future.successful(keys.map(createConfig).to[SortedSet])
+    override def findAllConfigs()(implicit parentSpan: Span): Future[SortedSet[HttpPartConfig]] =
+      Future.successful(keys.map(createConfig).to[SortedSet])
   }
   private val voidHandler = new Handler {
     val partId = "something"
 
-    def process(pri: PartRequestInfo, args: HandlerArguments)(implicit parentSpan: Span) = Future.successful(PartResponse(partId, partId))
+    def process(pri: PartRequestInfo, args: HandlerArguments)(implicit parentSpan: Span) =
+      Future.successful(PartResponse(partId, partId))
   }
-  private val partsRequestService = new PartRequestService(configsRepository, new HttpHandlerFactory {
-    implicit val zipkinService: ZipkinServiceLike = NoopZipkinService
-    override def makeHandler(ci: HttpPartConfig) = ci.partId match {
-      case "void" => voidHandler
-      case _ => throw new RuntimeException
-    }
-  }, NoopZipkinService)
+  private val partsRequestService = new PartRequestService(
+    configsRepository,
+    new HttpHandlerFactory {
+      implicit val zipkinService: ZipkinServiceLike = NoopZipkinService
+      override def makeHandler(ci: HttpPartConfig) = ci.partId match {
+        case "void" => voidHandler
+        case _ => throw new RuntimeException
+      }
+    },
+    NoopZipkinService
+  )
   private val partsService = new PartsService(partsRequestService)
 
-  private val controller = new PartsController(partsService, configsRepository, 10 seconds, true, actorSystem, NoopZipkinService)
+  private val controller = new PartsController(
+    partsService = partsService,
+    configsRepository = configsRepository,
+    requestTimeout = 10 seconds,
+    readClientCacheHeaders = true,
+    actorSystem = actorSystem,
+    zipkinService = NoopZipkinService,
+    controllerComponents = appComponents.controllerComponents
+  )
 
   it should "return 400 to an unknown json" in {
     val json = Json.parse("""{"json":"unknown"}""")
@@ -106,7 +128,8 @@ class PartsControllerSpec extends FlatSpec with Matchers with MockitoSugar with 
   }
 
   it should "show a filtered list of octoparts when POST is used with a filter" in {
-    val result = controller.listPost.apply(FakeRequest().withJsonBody(Json.obj("ids" -> Json.arr("void"))))
+    val result =
+      controller.listPost.apply(FakeRequest().withJsonBody(Json.obj("ids" -> Json.arr("void"))))
 
     status(result) should be(200)
     contentAsString(result) should include("void")

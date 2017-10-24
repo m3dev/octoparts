@@ -8,17 +8,15 @@ object Dependencies {
     // Use in-house Maven repo before other remote repos if env var is set
     resolvers ++= Seq(Resolver.defaultLocal) ++ sys.env.get("INHOUSE_MAVEN_REPO").map("Inhouse".at) ++ Seq(
       Resolver.typesafeRepo("releases"),
-      Resolver.sonatypeRepo("releases"),
-      Resolver.sonatypeRepo("snapshots")
+      Resolver.sonatypeRepo("releases")
       )
   }
 
   val thePlayVersion = play.core.PlayVersion.current
   val slf4jVersion = "1.7.25"
-  val hystrixVersion = "1.4.26"
+  val hystrixVersion = "1.5.12"
   val httpClientVersion = "4.5.2"
   val scalikejdbcVersion = "2.4.3"
-  val swaggerVersion = "1.3.13"
   val jacksonVersion = "2.5.5"
   val jacksonScalaVersion = "2.5.2"
   val macwireVersion = "2.2.5"
@@ -36,7 +34,10 @@ object Dependencies {
   // Hystrix
   val hystrixCore         = "com.netflix.hystrix"       % "hystrix-core"                  % hystrixVersion
   val hystrixStream       = "com.netflix.hystrix"       % "hystrix-metrics-event-stream"  % hystrixVersion
+  val hsytrixSerialization= "com.netflix.hystrix"       % "hystrix-serialization"         % hystrixVersion   % Runtime
+
   val rxJavaScala         = "io.reactivex"              %% "rxscala"                      % "0.26.5" // compatible with the rxjava (1.1.0) used in hystrix-core. Check again if you change.
+  val rxReactiveStreams   = "io.reactivex"              % "rxjava-reactive-streams"       % "1.2.1"
 
   // HTTP clients
   val asyncHttpClient     = "com.ning"                  % "async-http-client"             % "1.9.21" // not upgrading because play-ws uses this version
@@ -55,24 +56,24 @@ object Dependencies {
   val scalikeJdbcConfig   = "org.scalikejdbc"           %% "scalikejdbc-config"           % scalikejdbcVersion
   val scalikeJdbcPlay     = "org.scalikejdbc"           %% "scalikejdbc-play-initializer" % "2.4.5"
   val dbcp2               = "org.apache.commons"        % "commons-dbcp2"                 % "2.1.1"
-  // TODO: flyway 4.0 migration
-  val flyway              = "org.flywaydb"              % "flyway-core"                   % "3.1"
+
+  val flyway              = "org.flywaydb"              % "flyway-core"                   % "4.2.0"
 
   // Memcached
   val shade               = "com.bionicspirit"          %% "shade"                        % "1.7.4"
 
   // Play plugins
-  // TODO: flyway-play 2.3.0+ bumps flyway-core to 4.0
-  val playFlyway          = "org.flywaydb"              %% "flyway-play"                  % "2.2.1"
+  val playFlyway          = "org.flywaydb"              %% "flyway-play"                  % "4.0.0"
   val providedPlay        = "com.typesafe.play"         %% "play"                         % thePlayVersion      % Provided
 
   // DI
   val macwireMacros       = "com.softwaremill.macwire"  %% "macros"                       % macwireVersion
 
   // Swagger
-  val swaggerPlay24       = "pl.matisoft"               %% "swagger-play24"               % "1.4" // Replace with Official version once 1.3.13 hits
-  val swaggerAnnotations  = "com.wordnik"               % "swagger-annotations"           % swaggerVersion
-
+  val swaggerPlay26       = "io.swagger"                 %% "swagger-play2"                % "1.6.0"
+  val swaggerAnnotations  = "io.swagger"                 % "swagger-annotations"           % "1.5.15"
+  val swaggerUI           = "org.webjars"                % "swagger-ui"                    % "3.0.17"
+  val webjarsPlay         = "org.webjars"                %% "webjars-play"                 % "2.6.0"
   // Jackson
   val jacksonCore         = "com.fasterxml.jackson.core"   % "jackson-core"               % jacksonVersion
   val jacksonScala        = "com.fasterxml.jackson.module" %% "jackson-module-scala"      % jacksonScalaVersion
@@ -80,10 +81,10 @@ object Dependencies {
 
   // Test
   val playTest            = "com.typesafe.play"         %% "play-test"                    % thePlayVersion      % Test
-  // TODO: Upgrading to 3.0
-  val scalatest           = "org.scalatest"             %% "scalatest"                    % "2.2.6"             % Test
-  val scalatestPlay       = "org.scalatestplus"         %% "play"                         % "1.4.0"             % Test
-  val scalacheck          = "org.scalacheck"            %% "scalacheck"                   % "1.12.6"            % Test
+
+  val scalatest           = "org.scalatest"             %% "scalatest"                    % "3.0.3"             % Test
+  val scalatestPlay       = "org.scalatestplus.play"    %% "scalatestplus-play"           % "3.0.0"             % Test
+  val scalacheck          = "org.scalacheck"            %% "scalacheck"                   % "1.13.5"            % Test
   val groovy              = "org.codehaus.groovy"       %  "groovy"                       % "2.4.7"             % Test
   val scalikeJdbcTest     = "org.scalikejdbc"           %% "scalikejdbc-test"             % scalikejdbcVersion  % Test
   val mockitoCore         = "org.mockito"               % "mockito-core"                  % "1.10.19"           % Test
@@ -95,9 +96,9 @@ object Dependencies {
   val scalaUri            = "com.netaporter"            %% "scala-uri"                    % "0.4.16"
   val findbugs            = "com.google.code.findbugs"  % "jsr305"                        % "3.0.2"
 
-  val kenshoo             = "com.kenshoo"               %% "metrics-play"                 % "2.4.0_0.4.1"
+  val kenshoo             = "com.kenshoo"               %% "metrics-play"                 % "2.6.6_0.6.2"
 
-  val zipkinFutures       = "com.beachape"              %% "zipkin-futures-play"          % "0.2.1"
+  val zipkinFutures       = "com.beachape"              %% "zipkin-futures-play"          % "0.3.0"
 
   val withoutExcluded = { (m: ModuleID) =>
     m.excludeAll(
@@ -122,7 +123,9 @@ object Dependencies {
     //Hystrix
     hystrixCore,
     hystrixStream,
+    hsytrixSerialization,
     rxJavaScala,
+    rxReactiveStreams,
 
     // Apache HTTP client
     httpClient,
@@ -154,7 +157,13 @@ object Dependencies {
 
     // Play plugins
     playFlyway,
-    swaggerPlay24,
+
+    // Swagger
+    swaggerPlay26,
+    swaggerUI,
+    webjarsPlay,
+
+    openId,
 
     // Test
     playTest,
@@ -196,7 +205,7 @@ object Dependencies {
     scalatest
   )
 
-  val playJsonFormatsDependencies = playScalatestDependencies :+ json
+  val playJsonFormatsDependencies = playScalatestDependencies :+ "com.typesafe.play" %% "play-json" % "2.6.0-M7"
 
   val scalaWsClientDependencies = playScalatestDependencies :+ ws
 }

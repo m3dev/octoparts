@@ -10,11 +10,12 @@ import com.m3.octoparts.model.config.json._
 import play.api.libs.json._
 import org.scalatest._
 import org.scalatest.concurrent.{ Eventually, IntegrationPatience, PatienceConfiguration, ScalaFutures }
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import play.api.libs.ws._
 import org.mockito.Mockito._
 import org.mockito.Matchers._
+import play.api.libs.ws.ahc.{ AhcWSRequest, AhcWSResponse }
 import play.api.mvc.RequestHeader
 import play.api.mvc.Results.EmptyContent
 import play.api.test.FakeRequest
@@ -36,24 +37,27 @@ class OctoClientSpec
 
   describe("OctoClientLike") {
 
-    def jsonAsWSResponse(js: JsValue): WSResponse = {
-      val mockWSResp = mock[WSResponse]
-      when(mockWSResp.json).thenReturn(js)
+    def jsonAsWSResponse(js: JsValue): AhcWSResponse = {
+      val mockWSResp = mock[AhcWSResponse]
+      when(mockWSResp.body[JsValue]).thenReturn(js)
+      // .json is deprecated on AhcWSResponse but not on WSResponse.
+      // do a cast here for clarity.
+      when(mockWSResp.asInstanceOf[WSResponse].json).thenReturn(js)
       when(mockWSResp.status).thenReturn(200)
       mockWSResp
     }
 
-    def statusWSResponse(status: Int): WSResponse = {
-      val mockWSResp = mock[WSResponse]
+    def statusWSResponse(status: Int): AhcWSResponse = {
+      val mockWSResp = mock[AhcWSResponse]
       when(mockWSResp.status).thenReturn(status)
       mockWSResp
     }
 
-    def mockWSHolder(fWSRespPost: Future[WSResponse], fWSRespGet: Future[WSResponse]): WSRequest = {
-      val mockWS = mock[WSRequest]
-      when(mockWS.withQueryString(anyVararg())).thenReturn(mockWS)
+    def mockWSHolder(fWSRespPost: Future[AhcWSResponse], fWSRespGet: Future[AhcWSResponse]): WSRequest = {
+      val mockWS = mock[AhcWSRequest]
+      when(mockWS.addQueryStringParameters(anyVararg())).thenReturn(mockWS)
       when(mockWS.get()).thenReturn(fWSRespGet)
-      when(mockWS.withHeaders(anyVararg())).thenReturn(mockWS)
+      when(mockWS.addHttpHeaders(anyVararg())).thenReturn(mockWS)
       when(mockWS.post(anyObject[JsValue])(anyObject())).thenReturn(fWSRespPost)
       when(mockWS.post(anyObject[EmptyContent])(anyObject())).thenReturn(fWSRespPost)
       mockWS
@@ -124,11 +128,11 @@ class OctoClientSpec
     val respPost = Future.successful(mockWSRespPost)
     val respGet = Future.successful(mockWSRespGet)
 
-    def mockSubject(respPost: Future[WSResponse], respGet: Future[WSResponse]) = {
+    def mockSubject(respPost: Future[AhcWSResponse], respGet: Future[AhcWSResponse]) = {
       mockSubjectWithHolder(respPost, respGet)._2
     }
 
-    def mockSubjectWithHolder(respPost: Future[WSResponse], respGet: Future[WSResponse]): (WSRequest, OctoClientLike) = {
+    def mockSubjectWithHolder(respPost: Future[AhcWSResponse], respGet: Future[AhcWSResponse]): (WSRequest, OctoClientLike) = {
       val holder = mockWSHolder(respPost, respGet)
       val client = new OctoClientLike {
         val baseUrl = "http://bobby.com/"
@@ -188,7 +192,7 @@ class OctoClientSpec
       it("should send the headers properly") {
         val (holder, client) = mockSubjectWithHolder(respPost, respGet)
         client.invoke(mockAggReq, "hello" -> "world")
-        eventually(verify(holder).withHeaders("hello" -> "world"))
+        eventually(verify(holder).addHttpHeaders("hello" -> "world"))
       }
 
     }
@@ -218,7 +222,7 @@ class OctoClientSpec
       it("should send the headers properly") {
         val (holder, client) = mockSubjectWithHolder(respPost, respGet)
         client.invoke((User(Some("hello")), FakeRequest()), Seq(PartRequest("hi")), "hello" -> "world")
-        eventually(verify(holder).withHeaders("hello" -> "world"))
+        eventually(verify(holder).addHttpHeaders("hello" -> "world"))
       }
     }
 

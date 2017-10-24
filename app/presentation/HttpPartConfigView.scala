@@ -1,10 +1,10 @@
 package presentation
 
 import com.m3.octoparts.model.config.HttpPartConfig
-import controllers.support.HttpPartConfigChecker
+import controllers.support.HttpPartConfigChecks
 import org.apache.commons.lang.StringEscapeUtils
 import org.joda.time.DateTime
-import play.api.Play
+import play.api.{ Mode, Play }
 import play.api.i18n.{ Lang, Messages }
 import play.twirl.api.Html
 
@@ -14,7 +14,7 @@ import scala.concurrent.duration.Duration
 /**
  * View adapter for an HttpPartConfig.
  */
-case class HttpPartConfigView(config: HttpPartConfig)(implicit messages: Messages) {
+case class HttpPartConfigView(config: HttpPartConfig, configChecks: HttpPartConfigChecks)(implicit messages: Messages) {
 
   def addParamLink: String = controllers.routes.AdminController.newParam(config.partId).url
 
@@ -28,7 +28,7 @@ case class HttpPartConfigView(config: HttpPartConfig)(implicit messages: Message
 
   def commandGroup: Option[String] = config.hystrixConfig.map(_.commandGroupKey)
 
-  lazy val warnings: Seq[String] = HttpPartConfigChecker(config)
+  lazy val warnings: Seq[String] = configChecks(config)
 
   def timeoutInMs: Int = config.hystrixConfig.fold(5000)(_.timeout.toMillis.toInt)
 

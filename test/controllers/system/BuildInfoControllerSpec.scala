@@ -8,7 +8,7 @@ import play.api.test.Helpers._
 
 class BuildInfoControllerSpec extends FlatSpec with Matchers with JsonCheckSupport with PlayAppSupport {
 
-  val subject = new BuildInfoController
+  val subject = new BuildInfoController(appComponents.controllerComponents)
 
   it should "return a 200 OK response" in {
     status(subject.showBuildInfo.apply(FakeRequest())) should be(200)

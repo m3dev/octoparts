@@ -1,6 +1,5 @@
 package com.m3.octoparts.auth
 
-import play.api.Plugin
 import play.api.mvc.{ Request, Result }
 
 import scala.concurrent.{ ExecutionContext, Future }

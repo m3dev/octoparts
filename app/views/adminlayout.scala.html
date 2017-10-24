@@ -1,6 +1,8 @@
+@import com.m3.octoparts.util.ConfigMode
 @(title: String)(meta: Html)(body: Html
 )(implicit
   flash: Flash,
+        configMode: ConfigMode,
   navbarLinks: presentation.NavbarLinks,
   messages: Messages
 )
@@ -14,7 +16,7 @@
 
 <html lang="@messages.lang.language">
     <head>
-        <title>[@Play.current.configuration.getString("application.env").getOrElse("dev")] @title</title>
+        <title>[@configMode.value] @title</title>
 
         <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
         <script src="/assets/js/bootstrap.min.js"></script>
@@ -22,7 +24,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
         <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
         <link rel="stylesheet" href="/assets/css/bootstrap-theme.min.css">
-        @if(Play.current.configuration.getString("application.env").exists(_.toLowerCase.startsWith("prod"))) {
+        @if(configMode.isProd) {
             <style>
                 body { background-color : #ffdcdc ; }
             </style>
@@ -30,7 +32,7 @@
     </head>
     <body role="document" style="padding-top: 60px; padding-bottom: 100px">
 
-        @views.html.navbar(navbarLinks)
+        @views.html.navbar(navbarLinks, configMode)
 
         <div class="container-fluid" role="main">
             @if(!flash.isEmpty) {

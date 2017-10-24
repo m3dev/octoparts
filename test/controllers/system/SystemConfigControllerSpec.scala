@@ -23,7 +23,7 @@ class SystemConfigControllerSpec
         |foo.baz = 123
       """.stripMargin
     )
-    val controller = new SystemConfigController(config)
+    val controller = new SystemConfigController(config, appComponents.controllerComponents)
     val result = controller.showSystemConfig.apply(FakeRequest())
     toLines(contentAsString(result)) should equal(toLines(
       """{
@@ -44,7 +44,7 @@ class SystemConfigControllerSpec
         |foo.password.wow = "don't mask me!"
       """.stripMargin
     )
-    val controller = new SystemConfigController(config)
+    val controller = new SystemConfigController(config, appComponents.controllerComponents)
     val result = controller.showSystemConfig.apply(FakeRequest())
     checkJson(result) {
       json =>

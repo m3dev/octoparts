@@ -1,7 +1,9 @@
+@import com.m3.octoparts.util.ConfigMode
 @(
   part: presentation.HttpPartConfigView
 )(implicit
   flash: Flash,
+  configMode: ConfigMode,
   navbarLinks: presentation.NavbarLinks,
   messages: Messages
 )

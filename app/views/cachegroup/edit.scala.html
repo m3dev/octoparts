@@ -1,7 +1,9 @@
+@import com.m3.octoparts.util.ConfigMode
 @(
   maybeCacheGroup: Option[com.m3.octoparts.model.config.CacheGroup]
 )(implicit
   flash: Flash,
+  configMode: ConfigMode,
   navbarLinks: presentation.NavbarLinks,
   messages: Messages
 )

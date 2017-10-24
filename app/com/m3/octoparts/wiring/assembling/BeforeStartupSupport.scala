@@ -3,18 +3,20 @@ package com.m3.octoparts.wiring.assembling
 import java.util.concurrent.TimeUnit
 
 import com.beachape.logging.LTSVLogger
-import com.m3.octoparts.hystrix.{ KeyAndBuilderValuesHystrixPropertiesStrategy, HystrixMetricsLogger }
+import com.m3.octoparts.hystrix.{ HystrixMetricsLogger, KeyAndBuilderValuesHystrixPropertiesStrategy }
 import com.netflix.hystrix.strategy.HystrixPlugins
 import com.twitter.zipkin.gen.Span
 import org.apache.commons.lang3.StringUtils
 import org.flywaydb.play.{ PlayInitializer => FlywayPlayInitializer }
-import pl.matisoft.swagger.{ SwaggerPluginProvider, SwaggerModule }
 import scalikejdbc.PlayInitializer
 
+import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 import scala.concurrent.duration._
 
 trait BeforeStartupSupport extends SwaggerScanSupport {
+
+  implicit def eCtx: ExecutionContext
 
   protected def beforeStart(components: ApplicationComponents): Unit = {
     // Need to initialise the DB first before anything else is run
@@ -45,7 +47,7 @@ trait BeforeStartupSupport extends SwaggerScanSupport {
    * Output warning logs if we find any, as they can be a nightmare to debug and are best avoided.
    */
   private def checkForDodgyParts(components: ApplicationComponents): Unit = {
-    import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
     implicit val emptySpan = new Span() // empty span -> doesn't trace
     val configsRepo = components.configsRepository
     for {

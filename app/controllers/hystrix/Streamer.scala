@@ -1,41 +1,19 @@
 package controllers.hystrix
 
-import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 
-import akka.actor.ActorSystem
-import com.netflix.hystrix.contrib.metrics.eventstream.HystrixMetricsPoller
+import akka.NotUsed
+import akka.stream.scaladsl.Source
+import com.netflix.hystrix.metric.consumer.HystrixDashboardStream
+import com.netflix.hystrix.serial.SerialHystrixDashboardData
+import rx.RxReactiveStreams
 
-import scala.concurrent.duration.FiniteDuration
+// Wraps Hystrix's Dashboard stream into an Akka source
+class Streamer(underlying: HystrixDashboardStream) {
 
-private class Streamer(
-    poller: HystrixMetricsPoller,
-    listener: MetricsAsJsonPollerListener,
-    delay: FiniteDuration
-)(implicit actorSystem: ActorSystem) {
-
-  import actorSystem.dispatcher
-
-  poller.start()
-
-  private val scheduleNext = actorSystem.scheduler.scheduleOnce(delay) _
-
-  private def printlnln(
-    out: OutputStream
-  )(s: String): Unit = out.write(s"$s\n\n".getBytes(StandardCharsets.UTF_8))
-
-  def produce(out: OutputStream): Unit = {
-    if (poller.isRunning) {
-      listener.poll.foreach(printlnln(out))
-      out.flush()
-      scheduleNext(produce(out))
-    } else {
-      try {
-        out.flush()
-      } finally {
-        out.close()
-      }
-    }
+  def source: Source[Array[Byte], NotUsed] = {
+    val observable = underlying.observe()
+    val publisher = RxReactiveStreams.toPublisher(observable)
+    Source.fromPublisher(publisher).map(d => SerialHystrixDashboardData.toJsonString(d).getBytes(StandardCharsets.UTF_8))
   }
-
 }

@@ -10,10 +10,10 @@ import com.m3.octoparts.logging.LogUtil
 import com.m3.octoparts.repository.ConfigsRepository
 import com.twitter.zipkin.gen.Span
 import play.api.libs.json.{ Json, Writes }
-import play.api.mvc.{ Action, Controller }
+import play.api.mvc.{ AbstractController, Action, Controller, ControllerComponents }
 import shade.memcached.MemcachedCodecs
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
@@ -25,13 +25,14 @@ class HealthcheckController(
   configsRepo: ConfigsRepository,
   hystrixHealthReporter: HystrixHealthReporter,
   memcached: RawCache,
-  memcachedCacheKeysToCheck: MemcachedCacheKeysToCheck
-) extends Controller
+  memcachedCacheKeysToCheck: MemcachedCacheKeysToCheck,
+  controllerComponents: ControllerComponents
+)(implicit eCtx: ExecutionContext) extends AbstractController(controllerComponents)
     with LogUtil
     with ReqHeaderToSpanImplicit {
 
   import controllers.system.HealthcheckController._
-  import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
   import MemcachedCodecs.StringBinaryCodec
   import com.m3.octoparts.future.RichFutureWithTiming._
 
